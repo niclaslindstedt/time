@@ -1,0 +1,32 @@
+# Log
+
+The day as a list — what the clock drew, row by row — and the place a wrong
+time is corrected.
+
+## Reading a day
+
+The header names the day (Today, Yesterday, or the date) with arrows to page
+through the days; tapping the name jumps back to today. Under it, four
+figures: first in, last out, worked, and break time. Then three sections:
+
+- **At work** — the sessions, with their times.
+- **Breaks** — each break with its kind and times.
+- **Working on** — each activity with its kind and times.
+
+A span still running shows "still running" in place of an end. A day in the
+past is read up to midnight, so a session nobody closed still ends.
+
+## Editing
+
+Tap a row to open the editor: the kind (for a break or an activity), the
+start, the end, and a **Still running** switch. An end earlier than the start
+is read as the next day's — a night shift. **Delete** removes the row after a
+confirmation. Each section has a button to add a span after the fact.
+
+The editor refuses an edit that would make the span invalid, or would open a
+second running span of the same kind, and says so.
+
+**Delete this day** removes everything logged for the day.
+
+Every edit goes through the same pure functions the Today screen uses (see
+[`../day-model.md`](../day-model.md)), so the totals move at once.

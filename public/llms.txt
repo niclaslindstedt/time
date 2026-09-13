@@ -1,0 +1,29 @@
+# Time
+
+> A local-first time report PWA built on @niclaslindstedt/oss-framework.
+> Clock in when you enter the office and out when you leave; log breaks
+> (lunch, coffee, a walk) and kinds of work (meetings, coding) as they happen
+> or afterwards. One document, stored on-device as JSON, with an optional copy
+> synced to the user's own Dropbox or Google Drive. Totals, balances and
+> charts are derived from the logged spans at read time; nothing about a
+> total is stored.
+
+- App: https://time.niclaslindstedt.se/
+- Source: https://github.com/niclaslindstedt/time
+- Framework: https://github.com/niclaslindstedt/oss-framework
+
+## Features
+
+- Today: a running timer and the share of the day's target it is, a
+  twelve-hour clock with time at work, breaks and kinds of work drawn on it,
+  and one-tap buttons to enter, leave, start a break or switch what you are
+  working on
+- Log: every day as a list of sessions, breaks and activities, each editable
+  or deletable, with breaks and time at work addable after the fact
+- Report: hours worked against target per day for a week or a month, where
+  the hours went by kind of work, break time by kind, and the running balance
+- Employers: one or several, each with its own working days, day length,
+  break types with default lengths, and kinds of work; the employer switcher
+  only appears once there are two
+- Settings: light/dark theme, week start, cloud sync, JSON backup and restore
+- No account, no server, no analytics; installable and fully offline
