@@ -203,6 +203,9 @@ export function App() {
               store={store}
               employer={employer}
               weekStartsOn={settings.weekStartsOn}
+              clockLook={settings.clockLook}
+              clockFont={settings.clockFont}
+              clockSize={settings.clockSize}
               onAddEmployer={() => {
                 setOpenNewEmployer(true);
                 show("employers");

@@ -26,11 +26,13 @@ import {
   formatTimeOfDay,
   formatTimer,
 } from "./format.ts";
+import type { ClockFont, ClockLook, ClockSize } from "./look.ts";
 import { CupIcon, EnterIcon, LeaveIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
 import { breakName, categoryColor } from "./labels.ts";
 import { NewKindModal } from "./NewKindModal.tsx";
+import { ProgressFrame } from "./ProgressFrame.tsx";
 import { runningBalance } from "./report.ts";
 import {
   blankDay,
@@ -62,6 +64,10 @@ type Props = {
   store: DocStore;
   employer: Employer | null;
   weekStartsOn: number;
+  /** The dial the settings ask for. */
+  clockLook: ClockLook;
+  clockFont: ClockFont;
+  clockSize: ClockSize;
   onAddEmployer: () => void;
   onNotice: (message: string) => void;
 };
@@ -71,6 +77,9 @@ type Asking = { kind: "break" | "activity" };
 export function TodayScreen({
   store,
   employer,
+  clockLook,
+  clockFont,
+  clockSize,
   onAddEmployer,
   onNotice,
 }: Props) {
@@ -169,16 +178,18 @@ export function TodayScreen({
 
   return (
     <div className="flex flex-1 flex-col gap-3 px-3 py-3">
-      {/* The readout: the timer, the share of the day it is, and the state
-          the day is in. Tabular digits so the timer does not jitter. The
+      {/* The readout: the timer, the state the day is in, and — as the card's
+          own border — how much of the day's target that is. The border starts
+          at the top edge's middle and runs clockwise, closing the loop at
+          100% and going round again in the flag colour past it, which is why
+          there is no percentage printed beside the figure any more: the frame
+          is the percentage, and a number saying the same thing twice is one
+          of them too many. Tabular digits so the timer does not jitter. The
           timer is a button — the arrival is the time of day that is wrong
           most often, and this is where you are looking when you notice. */}
-      <div
-        className={`rounded-2xl border px-4 py-3 text-center ${
-          onBreak
-            ? "border-flag/40 bg-flag/10"
-            : "border-accent/40 bg-accent/10"
-        }`}
+      <ProgressFrame
+        fraction={progress(totals.worked, employer)}
+        tone={onBreak ? "flag" : "accent"}
       >
         <p
           className={`text-xs font-bold tracking-wide uppercase ${
@@ -192,7 +203,7 @@ export function TodayScreen({
           disabled={!session}
           onClick={() => setArriving(true)}
           aria-label={t("today.arrival")}
-          className="mt-1 flex w-full items-baseline justify-center gap-3 rounded-xl px-2 py-0.5 disabled:cursor-default"
+          className="mt-1 flex w-full items-baseline justify-center rounded-xl px-2 py-0.5 disabled:cursor-default"
         >
           <span
             className="text-4xl font-bold text-fg-bright tabular-nums"
@@ -200,12 +211,10 @@ export function TodayScreen({
           >
             {formatTimer(totals.worked)}
           </span>
-          <span
-            className={`text-2xl font-semibold tabular-nums ${
-              onBreak ? "text-flag" : "text-accent"
-            }`}
-          >
-            {formatPercent(progress(totals.worked, employer))}
+          <span className="sr-only">
+            {t("today.percentOfTarget", {
+              percent: formatPercent(progress(totals.worked, employer)),
+            })}
           </span>
         </button>
         <p className="mt-0.5 text-xs text-muted">
@@ -219,12 +228,15 @@ export function TodayScreen({
           {" · "}
           {t("today.balanceOverall", { balance: formatBalance(overall) })}
         </p>
-      </div>
+      </ProgressFrame>
 
       <ClockFace
         day={day}
         employer={employer}
         now={now.seconds}
+        look={clockLook}
+        font={clockFont}
+        size={clockSize}
         onOpen={(at) => setTimeline({ at: at ?? null })}
       />
 

@@ -2,12 +2,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DIAL_INNER_R,
   DIAL_SECONDS,
   angleOf,
   arcPath,
+  framePath,
   handAngles,
+  numeralRadius,
   polar,
 } from "../src/app/clock.ts";
+import { CLOCK_FONT, CLOCK_LOOK } from "../src/app/look.ts";
 import { h } from "./fixtures/helpers.ts";
 
 describe("angleOf", () => {
@@ -57,5 +61,61 @@ describe("arcPath", () => {
   it("draws a whole ring for a span of a full turn or more", () => {
     const d = arcPath(50, 50, 40, 0, DIAL_SECONDS)!;
     expect(d.split("A")).toHaveLength(3);
+  });
+});
+
+describe("framePath", () => {
+  it("starts at the top edge's middle and closes back there", () => {
+    const d = framePath(200, 100, 20)!;
+    expect(d.startsWith("M 100 0 ")).toBe(true);
+    expect(d.endsWith("L 100 0")).toBe(true);
+    // Clockwise: the first move is along the top, to the right.
+    expect(d).toContain("L 180 0");
+  });
+
+  it("insets the box so a stroke of that width sits inside it", () => {
+    const d = framePath(200, 100, 20, 2)!;
+    expect(d.startsWith("M 100 2 ")).toBe(true);
+    expect(d).toContain("L 198 78");
+  });
+
+  it("clamps the radius to the box and refuses an empty one", () => {
+    // A radius larger than half the short side is a stadium, not a bad path.
+    expect(framePath(200, 100, 999)).toContain("A 50 50");
+    expect(framePath(0, 100, 20)).toBeNull();
+    expect(framePath(200, 4, 20, 2)).toBeNull();
+  });
+});
+
+describe("numeralRadius", () => {
+  it("keeps every look and face clear of the ring they sit inside", () => {
+    for (const [look, spec] of Object.entries(CLOCK_LOOK)) {
+      if (spec.numerals === "none") continue;
+      for (const [font, face] of Object.entries(CLOCK_FONT)) {
+        const size = spec.numeralSize * face.scale;
+        const r = numeralRadius(spec.innerRing, size, face.widthFactor);
+        // Half the width of the widest numeral the face can draw — two
+        // digits, or IIII and VIII — which is what has to fit.
+        const reach = r + size * face.widthFactor;
+        const ringEdge = DIAL_INNER_R - spec.innerRing / 2;
+        const where = `${look} in ${font}`;
+        expect(reach, `${where} runs into the inner ring`).toBeLessThan(
+          ringEdge,
+        );
+        // …and it is a gap you can see, not a hairline.
+        expect(
+          ringEdge - reach,
+          `${where} is a hairline clear`,
+        ).toBeGreaterThanOrEqual(4);
+        // The numerals still have to leave room for the hands inside them.
+        expect(r, `${where} leaves no dial`).toBeGreaterThan(40);
+      }
+    }
+  });
+
+  it("pulls the numerals further in as the ring and the numerals grow", () => {
+    expect(numeralRadius(11, 15)).toBeLessThan(numeralRadius(8, 12));
+    // …and further still for a face whose widest numeral is IIII.
+    expect(numeralRadius(8, 12, 1.1)).toBeLessThan(numeralRadius(8, 12, 0.55));
   });
 });

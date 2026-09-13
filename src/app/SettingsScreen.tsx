@@ -17,6 +17,7 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 import { LogViewer } from "@niclaslindstedt/oss-framework/logging";
 
+import { ClockIcon } from "./icons.tsx";
 import { logStore } from "./log.ts";
 import { downloadBackup, readBackupFile } from "./backup.ts";
 import type { DemoDataToggle } from "./dev/useDemoData.ts";
@@ -24,6 +25,15 @@ import { useT } from "./i18n/index.ts";
 import { mergeDocs } from "./merge.ts";
 import { serializeDoc } from "./migrations.ts";
 import { emptyDoc } from "./types.ts";
+import {
+  CLOCK_FONT,
+  CLOCK_FONTS,
+  CLOCK_LOOKS,
+  CLOCK_SIZES,
+  type ClockFont,
+  type ClockLook,
+  type ClockSize,
+} from "./look.ts";
 import type { AppSettings, ThemeChoice } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
 import {
@@ -101,6 +111,70 @@ export function SettingsScreen({
           ariaLabel={t("settings.theme")}
           fullWidth
         />
+      </Section>
+
+      {/* The dial is the screen this app is looked at on, and one dial does
+          not suit every wrist: this is its shape and its size, not another
+          palette — the two themes above stay the only colour choice. */}
+      <Section
+        title={t("settings.clock")}
+        icon={<ClockIcon className="h-3.5 w-3.5" />}
+      >
+        <Labelled label={t("settings.clockLook")}>
+          <SegmentedControl<ClockLook>
+            value={settings.clockLook}
+            options={CLOCK_LOOKS.map((look) => ({
+              value: look,
+              label: t(
+                `settings.clockLook${cap(look)}` as "settings.clockLookClassic",
+              ),
+            }))}
+            onChange={(next) => update("clockLook", next)}
+            ariaLabel={t("settings.clockLook")}
+            fullWidth
+          />
+        </Labelled>
+        {/* Each option wears the face it picks, so the choice is its own
+            preview: the dial is on another screen, and four words in one
+            font would say nothing about what they do to it. */}
+        <Labelled label={t("settings.clockFont")}>
+          <SegmentedControl<ClockFont>
+            value={settings.clockFont}
+            options={CLOCK_FONTS.map((font) => ({
+              value: font,
+              label: (
+                <span
+                  style={{
+                    fontFamily: CLOCK_FONT[font].family,
+                    fontWeight: 700,
+                  }}
+                >
+                  {t(
+                    `settings.clockFont${cap(font)}` as "settings.clockFontSans",
+                  )}
+                </span>
+              ),
+            }))}
+            onChange={(next) => update("clockFont", next)}
+            ariaLabel={t("settings.clockFont")}
+            fullWidth
+          />
+        </Labelled>
+        <Labelled label={t("settings.clockSize")}>
+          <SegmentedControl<ClockSize>
+            value={settings.clockSize}
+            options={CLOCK_SIZES.map((size) => ({
+              value: size,
+              label: t(
+                `settings.clockSize${cap(size)}` as "settings.clockSizeSmall",
+              ),
+            }))}
+            onChange={(next) => update("clockSize", next)}
+            ariaLabel={t("settings.clockSize")}
+            fullWidth
+          />
+        </Labelled>
+        <p className="text-xs text-muted">{t("settings.clockLookHint")}</p>
       </Section>
 
       <Section
@@ -309,6 +383,12 @@ export function SettingsScreen({
 
 /** A label above a control, matching the spacing the framework's own labelled
  *  inputs use so a segmented control sits in the same rhythm as a text field. */
+/** "classic" → "Classic", so a look's id and its message key stay one word
+ *  apart rather than needing a table of their own. */
+function cap(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
 function Labelled({
   label,
   children,
