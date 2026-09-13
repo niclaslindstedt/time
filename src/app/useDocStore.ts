@@ -1,0 +1,215 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
+
+import { parseDoc, serializeDoc } from "./migrations.ts";
+import {
+  dayKey,
+  emptyDoc,
+  type AppData,
+  type Employer,
+  type WorkDay,
+} from "./types.ts";
+import * as output from "../output.ts";
+
+// The app's data store. Holds the document in state, persists it to
+// localStorage, and exposes the edits the app can make — save or delete a
+// day, save or delete an employer, replace the lot. This is the framework's
+// "store stays in the app" seam: the framework owns the storage adapters and
+// the UI kit, this hook owns where the document lives and what an edit means.
+//
+// The local copy is always the working copy. Cloud sync (see `useSyncEngine`)
+// reads and writes *around* this hook rather than through it, so losing the
+// network never costs an edit.
+
+const DOC_KEY = "time:doc";
+
+/** The document storage seam. The store never touches `localStorage`
+ *  directly — it reads and writes through a `DocBackend`, so a test (or the
+ *  developer demo-data mode) can take over storage without the store
+ *  changing. */
+export type DocBackend = {
+  readonly id: string;
+  /** The current document, or an empty one when nothing is stored. */
+  load(): AppData;
+  /** Persist the document, answering whether the bytes actually landed. A
+   *  best-effort sink — it must not throw — but the answer is what lets the
+   *  app tell a write that happened from one that didn't. */
+  save(doc: AppData): boolean;
+};
+
+/**
+ * The real backend: one JSON document in localStorage, run through the
+ * migration pipeline on the way in and out.
+ *
+ * Both directions are *non-destructive*. A document that exists but this
+ * build can't read — most often one a NEWER build already upgraded, then read
+ * by a stale (service-worker-cached) build mid-update — is left on disk
+ * untouched rather than replaced with a blank starter, so it comes back on
+ * its own once the update finishes.
+ */
+export const localDocBackend: DocBackend = {
+  id: "local",
+  load() {
+    let raw: string | null;
+    try {
+      raw = localStorage.getItem(DOC_KEY);
+    } catch {
+      // Storage unavailable (private mode, quota policy) — boot empty.
+      return emptyDoc();
+    }
+    if (!raw) return emptyDoc();
+    try {
+      return parseDoc(raw);
+    } catch (err) {
+      // Bytes exist but can't be parsed. Keep the original on disk — the
+      // caller must NOT persist the empty document we return here over it
+      // (see the persist guard below) — and quarantine a copy so it stays
+      // recoverable even if a later edit does overwrite the live key.
+      output.error(
+        `Couldn't read the days saved on this device — ${
+          err instanceof Error ? err.message : String(err)
+        }. The stored copy is left untouched and should reappear once the app finishes updating.`,
+      );
+      try {
+        localStorage.setItem(`${DOC_KEY}:unreadable`, raw);
+      } catch {
+        // No room to quarantine — the live key is still left intact.
+      }
+      return emptyDoc();
+    }
+  },
+  save(doc) {
+    try {
+      localStorage.setItem(DOC_KEY, serializeDoc(doc));
+      return true;
+    } catch (err) {
+      output.error(
+        `Couldn't save to this device — ${
+          err instanceof Error ? err.message : String(err)
+        }.`,
+      );
+      return false;
+    }
+  },
+};
+
+export type DocStore = {
+  data: AppData;
+  /** Upsert a day. An empty day is still stored: "I was off" is a claim. */
+  saveDay: (day: WorkDay) => void;
+  /** Remove a day. */
+  deleteDay: (employerId: string, date: DayKey) => void;
+  /** Upsert an employer. */
+  saveEmployer: (employer: Employer) => void;
+  /** Remove an employer and every day logged for it. */
+  deleteEmployer: (employerId: string) => void;
+  /** Replace the whole document — used by the cloud adopt path and by the
+   *  Settings restore flow. */
+  replaceAll: (doc: AppData) => void;
+  /** Monotonic counter bumped on every edit. The sync engine debounces on it
+   *  rather than deep-comparing the document. */
+  editCount: number;
+  /** True once the first load has been applied. */
+  loaded: boolean;
+  /** How many write-throughs have failed. A counter rather than a flag so a
+   *  second failure raises a second warning. */
+  writeFailures: number;
+};
+
+export function useDocStore(backend: DocBackend = localDocBackend): DocStore {
+  // Read synchronously on the first render: localStorage can answer before
+  // the first paint, so there is no empty-state flash to design around.
+  const [data, setData] = useState<AppData>(() => backend.load());
+  const [editCount, setEditCount] = useState(0);
+  const [writeFailures, setWriteFailures] = useState(0);
+  const loadedRef = useRef(true);
+
+  // A backend swap adopts the new backend's document rather than writing
+  // this one over it.
+  useEffect(() => {
+    loadedRef.current = false;
+    setData(backend.load());
+    loadedRef.current = true;
+  }, [backend]);
+
+  // Write-through on every change, guarded so the document is only ever
+  // persisted after a load has been applied.
+  useEffect(() => {
+    if (!loadedRef.current) return;
+    if (!backend.save(data)) setWriteFailures((n) => n + 1);
+  }, [backend, data]);
+
+  const bump = () => setEditCount((n) => n + 1);
+
+  const saveDay = useCallback((day: WorkDay) => {
+    setData((prev) => ({
+      ...prev,
+      days: { ...prev.days, [dayKey(day.employerId, day.date)]: day },
+    }));
+    bump();
+  }, []);
+
+  const deleteDay = useCallback((employerId: string, date: DayKey) => {
+    setData((prev) => {
+      const key = dayKey(employerId, date);
+      if (!prev.days[key]) return prev;
+      const days = { ...prev.days };
+      delete days[key];
+      return { ...prev, days };
+    });
+    bump();
+  }, []);
+
+  const saveEmployer = useCallback((employer: Employer) => {
+    setData((prev) => ({
+      ...prev,
+      employers: { ...prev.employers, [employer.id]: employer },
+    }));
+    bump();
+  }, []);
+
+  const deleteEmployer = useCallback((employerId: string) => {
+    setData((prev) => {
+      if (!prev.employers[employerId]) return prev;
+      const employers = { ...prev.employers };
+      delete employers[employerId];
+      const days: AppData["days"] = {};
+      for (const [key, day] of Object.entries(prev.days)) {
+        if (day.employerId !== employerId) days[key] = day;
+      }
+      return { ...prev, employers, days };
+    });
+    bump();
+  }, []);
+
+  const replaceAll = useCallback((doc: AppData) => {
+    setData(doc);
+    bump();
+  }, []);
+
+  return useMemo(
+    () => ({
+      data,
+      saveDay,
+      deleteDay,
+      saveEmployer,
+      deleteEmployer,
+      replaceAll,
+      editCount,
+      loaded: loadedRef.current,
+      writeFailures,
+    }),
+    [
+      data,
+      saveDay,
+      deleteDay,
+      saveEmployer,
+      deleteEmployer,
+      replaceAll,
+      editCount,
+      writeFailures,
+    ],
+  );
+}
