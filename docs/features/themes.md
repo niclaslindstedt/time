@@ -13,8 +13,8 @@ palette is another surface to keep legible.
 **Settings → The clock** has the one other thing about the look that is
 worth choosing, and it is a _shape_, not a palette:
 
-- **Look.** **Classic** is the wall clock — all twelve numerals and sixty
-  minute ticks. **Minimal** drops the numerals and the second hand and thins
+- **Look.** **Classic** is the wall clock — all twelve numerals, set inside
+  the two rings with air around them, and sixty minute ticks. **Minimal** drops the numerals and the second hand and thins
   the rings, leaving the day and enough of a dial to read a hand position
   off. **Bold** is the one to read across the room: heavy hands, big
   numerals, thick rings.

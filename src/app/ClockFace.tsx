@@ -2,7 +2,15 @@
 import { useMemo } from "react";
 
 import { activityIntervals, daySegments } from "./day.ts";
-import { angleOf, arcPath, handAngles, polar } from "./clock.ts";
+import {
+  DIAL_INNER_R,
+  DIAL_OUTER_R,
+  angleOf,
+  arcPath,
+  handAngles,
+  numeralRadius,
+  polar,
+} from "./clock.ts";
 import { formatTimeOfDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor } from "./labels.ts";
@@ -42,18 +50,16 @@ import type { Employer, Seconds, WorkDay } from "./types.ts";
 
 const SIZE = 240;
 const C = SIZE / 2;
-const OUTER_R = 100;
-const INNER_R = 82;
+const OUTER_R = DIAL_OUTER_R;
+const INNER_R = DIAL_INNER_R;
 const TICK_OUTER = 116;
-/** Where the numerals sit. Inside the inner ring, not outside the outer one:
- *  the two rings are the day, and a numeral in the margin beyond them would
- *  push the whole dial smaller to make room for itself. The hands stop short
- *  of this radius, so they sweep inside the numerals rather than across
- *  them — the one place this dial is not the wall clock it imitates, because
- *  the wall clock does not have the day drawn round its rim. */
-const NUMERAL_R = 68;
+/** The hands stop short of the numerals and sweep inside them rather than
+ *  across them — the one place this dial is not the wall clock it imitates,
+ *  because the wall clock has no day drawn round its rim. */
+const HAND_R = { hour: 34, minute: 50, second: 56 };
 /** The twelve hours of the dial, in the order a clock reads them. */
 const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
 /** Where the break-end chips sit: outside the ticks, as a percentage of the
  *  box, so they are HTML buttons over the SVG rather than text inside it —
  *  a chip is a tap target and wants a real button under the finger. */
@@ -110,13 +116,18 @@ export function ClockFace({ day, employer, now, look, size, onOpen }: Props) {
         ? [12, 3, 6, 9]
         : [];
   const numerals = shown.map((n) => {
-    const [x, y] = polar(C, C, NUMERAL_R, (n % 12) * 30);
+    const [x, y] = polar(
+      C,
+      C,
+      numeralRadius(spec.innerRing, spec.numeralSize),
+      (n % 12) * 30,
+    );
     return { n, x, y };
   });
 
-  const [hx, hy] = polar(C, C, 38, hands.hour);
-  const [mx, my] = polar(C, C, 56, hands.minute);
-  const [sx, sy] = polar(C, C, 62, hands.second);
+  const [hx, hy] = polar(C, C, HAND_R.hour, hands.hour);
+  const [mx, my] = polar(C, C, HAND_R.minute, hands.minute);
+  const [sx, sy] = polar(C, C, HAND_R.second, hands.second);
 
   return (
     <div className={`relative mx-auto w-full ${sizing.maxWidth}`}>

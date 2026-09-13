@@ -2,13 +2,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DIAL_INNER_R,
   DIAL_SECONDS,
   angleOf,
   arcPath,
   framePath,
   handAngles,
+  numeralRadius,
   polar,
 } from "../src/app/clock.ts";
+import { CLOCK_LOOK } from "../src/app/look.ts";
 import { h } from "./fixtures/helpers.ts";
 
 describe("angleOf", () => {
@@ -81,5 +84,25 @@ describe("framePath", () => {
     expect(framePath(200, 100, 999)).toContain("A 50 50");
     expect(framePath(0, 100, 20)).toBeNull();
     expect(framePath(200, 4, 20, 2)).toBeNull();
+  });
+});
+
+describe("numeralRadius", () => {
+  it("keeps every look's numerals clear of the ring they sit inside", () => {
+    for (const [name, spec] of Object.entries(CLOCK_LOOK)) {
+      if (spec.numerals === "none") continue;
+      const r = numeralRadius(spec.innerRing, spec.numeralSize);
+      // Half the width of a two-digit numeral, which is the widest thing on
+      // the dial that has to fit.
+      const reach = r + spec.numeralSize * 0.55;
+      const ringEdge = DIAL_INNER_R - spec.innerRing / 2;
+      expect(reach, `${name} runs into the inner ring`).toBeLessThan(ringEdge);
+      // …and it is a gap you can see, not a hairline.
+      expect(ringEdge - reach).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it("pulls the numerals further in as the ring and the numerals grow", () => {
+    expect(numeralRadius(11, 15)).toBeLessThan(numeralRadius(8, 12));
   });
 });

@@ -13,6 +13,31 @@ import type { Seconds } from "./types.ts";
 /** One turn of the dial. */
 export const DIAL_SECONDS: Seconds = 12 * 3600;
 
+/** The two rings' centre lines, in the 240-unit box `ClockFace` draws in:
+ *  presence and breaks on the outer one, the kind of work on the inner one.
+ *  Here rather than in the component because what has to fit inside them is
+ *  arithmetic, and arithmetic is testable. */
+export const DIAL_OUTER_R = 100;
+export const DIAL_INNER_R = 82;
+
+/**
+ * How far from the centre the hour numerals sit.
+ *
+ * Measured *down* from the inner ring's inner edge rather than set as a
+ * number: a heavier look wears both a thicker ring and a bigger numeral, and
+ * a fixed radius that cleared one of them ran the other into the arcs. The
+ * half-extent that has to clear is half the width of a two-digit numeral —
+ * 10, 11 and 12 are the wide ones — which is about `0.55` of the font size;
+ * the eight units after it are air, so a numeral is never read against a
+ * coloured arc.
+ */
+export function numeralRadius(
+  innerRingWidth: number,
+  numeralSize: number,
+): number {
+  return DIAL_INNER_R - innerRingWidth / 2 - numeralSize * 0.55 - 8;
+}
+
 /** The dial angle of a moment, in degrees clockwise from twelve o'clock. */
 export function angleOf(at: Seconds): number {
   const turn = ((at % DIAL_SECONDS) + DIAL_SECONDS) % DIAL_SECONDS;
