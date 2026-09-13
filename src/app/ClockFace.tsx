@@ -6,6 +6,12 @@ import { angleOf, arcPath, handAngles, polar } from "./clock.ts";
 import { formatTimeOfDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor } from "./labels.ts";
+import {
+  CLOCK_LOOK,
+  CLOCK_SIZE,
+  type ClockLook,
+  type ClockSize,
+} from "./look.ts";
 import type { Employer, Seconds, WorkDay } from "./types.ts";
 
 // The Today screen's clock: a twelve-hour dial with the day drawn on it.
@@ -28,33 +34,45 @@ import type { Employer, Seconds, WorkDay } from "./types.ts";
 // state of its own and re-renders as the second ticks. The part of a break
 // that has not happened yet — the tail between now and its assumed end — is
 // drawn at half strength, because it is a plan rather than a record.
+//
+// The look and the size come from the settings (see `look.ts`): how many
+// numerals the dial carries, whether it counts minutes, how heavy the hands
+// are, how wide it is. None of them touch colour — the accent, the flag and
+// the category hues are the app's, whichever dial is on.
 
 const SIZE = 240;
 const C = SIZE / 2;
 const OUTER_R = 100;
-const OUTER_W = 14;
 const INNER_R = 82;
-const INNER_W = 8;
 const TICK_OUTER = 116;
-const NUMERAL_R = 60;
+/** Where the numerals sit. Inside the inner ring, not outside the outer one:
+ *  the two rings are the day, and a numeral in the margin beyond them would
+ *  push the whole dial smaller to make room for itself. The hands stop short
+ *  of this radius, so they sweep inside the numerals rather than across
+ *  them — the one place this dial is not the wall clock it imitates, because
+ *  the wall clock does not have the day drawn round its rim. */
+const NUMERAL_R = 68;
+/** The twelve hours of the dial, in the order a clock reads them. */
+const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 /** Where the break-end chips sit: outside the ticks, as a percentage of the
  *  box, so they are HTML buttons over the SVG rather than text inside it —
  *  a chip is a tap target and wants a real button under the finger. */
 const LABEL_R = 122;
-/** Two chips closer together than this on the dial would overlap, so the
- *  later one is dropped: twenty minutes of dial is about a chip wide. */
-const LABEL_GAP_DEGREES = 22;
 
 type Props = {
   day: WorkDay;
   employer: Employer;
   now: Seconds;
+  look: ClockLook;
+  size: ClockSize;
   /** Open the day's stretches, optionally at the moment that was tapped. */
   onOpen: (at?: Seconds) => void;
 };
 
-export function ClockFace({ day, employer, now, onOpen }: Props) {
+export function ClockFace({ day, employer, now, look, size, onOpen }: Props) {
   const t = useT();
+  const spec = CLOCK_LOOK[look];
+  const sizing = CLOCK_SIZE[size];
   const segments = useMemo(() => daySegments(day, now), [day, now]);
   const activities = useMemo(() => activityIntervals(day, now), [day, now]);
   const hands = handAngles(now);
@@ -66,31 +84,42 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
     for (const s of segments) {
       if (s.kind !== "break" || s.running) continue;
       const angle = angleOf(s.end);
-      if (out.some((l) => gap(l.angle, angle) < LABEL_GAP_DEGREES)) continue;
+      if (out.some((l) => gap(l.angle, angle) < sizing.labelGap)) continue;
       out.push({ at: s.end, angle, typeId: s.typeId });
     }
     return out.map((l) => {
       const [x, y] = polar(C, C, LABEL_R, l.angle);
       return { ...l, left: (x / SIZE) * 100, top: (y / SIZE) * 100 };
     });
-  }, [segments]);
+  }, [segments, sizing.labelGap]);
 
-  const ticks = Array.from({ length: 12 }, (_, i) => {
-    const [x1, y1] = polar(C, C, TICK_OUTER - 6, i * 30);
-    const [x2, y2] = polar(C, C, TICK_OUTER, i * 30);
-    return { x1, y1, x2, y2 };
+  // A real wall clock counts minutes, and every fifth one is the hour.
+  const count = spec.minuteTicks ? 60 : 12;
+  const ticks = Array.from({ length: count }, (_, i) => {
+    const angle = (i * 360) / count;
+    const hour = spec.minuteTicks ? i % 5 === 0 : true;
+    const length = hour ? 6 : 3;
+    const [x1, y1] = polar(C, C, TICK_OUTER - length, angle);
+    const [x2, y2] = polar(C, C, TICK_OUTER, angle);
+    return { x1, y1, x2, y2, hour };
   });
-  const numerals = [12, 3, 6, 9].map((n) => {
+  const shown =
+    spec.numerals === "all"
+      ? HOURS
+      : spec.numerals === "quarters"
+        ? [12, 3, 6, 9]
+        : [];
+  const numerals = shown.map((n) => {
     const [x, y] = polar(C, C, NUMERAL_R, (n % 12) * 30);
     return { n, x, y };
   });
 
-  const [hx, hy] = polar(C, C, 34, hands.hour);
-  const [mx, my] = polar(C, C, 50, hands.minute);
-  const [sx, sy] = polar(C, C, 56, hands.second);
+  const [hx, hy] = polar(C, C, 38, hands.hour);
+  const [mx, my] = polar(C, C, 56, hands.minute);
+  const [sx, sy] = polar(C, C, 62, hands.second);
 
   return (
-    <div className="relative mx-auto w-full max-w-[15rem]">
+    <div className={`relative mx-auto w-full ${sizing.maxWidth}`}>
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         className="app-clock block h-auto w-full"
@@ -107,7 +136,7 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
           r={OUTER_R}
           fill="none"
           stroke="var(--color-line)"
-          strokeWidth={OUTER_W}
+          strokeWidth={spec.ring}
           opacity={0.45}
         />
         <circle
@@ -116,7 +145,7 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
           r={INNER_R}
           fill="none"
           stroke="var(--color-line)"
-          strokeWidth={INNER_W}
+          strokeWidth={spec.innerRing}
           opacity={0.3}
         />
 
@@ -130,7 +159,7 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
               stroke={
                 s.kind === "break" ? "var(--color-flag)" : "var(--color-accent)"
               }
-              strokeWidth={OUTER_W}
+              strokeWidth={spec.ring}
               strokeLinecap="butt"
             />
           ) : null;
@@ -145,7 +174,7 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
               d={d}
               fill="none"
               stroke="var(--color-flag)"
-              strokeWidth={OUTER_W}
+              strokeWidth={spec.ring}
               strokeLinecap="butt"
               opacity={0.4}
             />
@@ -159,7 +188,7 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
               d={d}
               fill="none"
               stroke={categoryColor(employer, i.categoryId)}
-              strokeWidth={INNER_W}
+              strokeWidth={spec.innerRing}
               strokeLinecap="butt"
             />
           ) : null;
@@ -173,8 +202,9 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
             x2={tick.x2}
             y2={tick.y2}
             stroke="var(--color-muted)"
-            strokeWidth={i % 3 === 0 ? 2.5 : 1.5}
+            strokeWidth={tick.hour ? 2.5 : 1}
             strokeLinecap="round"
+            opacity={tick.hour ? 1 : 0.6}
           />
         ))}
         {numerals.map(({ n, x, y }) => (
@@ -184,7 +214,8 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
             y={y}
             dy="0.35em"
             textAnchor="middle"
-            className="fill-muted text-[13px] font-semibold tabular-nums"
+            className="fill-muted font-semibold tabular-nums"
+            style={{ fontSize: `${spec.numeralSize}px` }}
           >
             {n}
           </text>
@@ -196,7 +227,7 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
           x2={hx}
           y2={hy}
           stroke="var(--color-fg-bright)"
-          strokeWidth={5}
+          strokeWidth={spec.hands.hour}
           strokeLinecap="round"
         />
         <line
@@ -205,19 +236,26 @@ export function ClockFace({ day, employer, now, onOpen }: Props) {
           x2={mx}
           y2={my}
           stroke="var(--color-fg-bright)"
-          strokeWidth={3.5}
+          strokeWidth={spec.hands.minute}
           strokeLinecap="round"
         />
-        <line
-          x1={C}
-          y1={C}
-          x2={sx}
-          y2={sy}
-          stroke="var(--color-accent)"
-          strokeWidth={1.5}
-          strokeLinecap="round"
+        {spec.hands.second !== null && (
+          <line
+            x1={C}
+            y1={C}
+            x2={sx}
+            y2={sy}
+            stroke="var(--color-accent)"
+            strokeWidth={spec.hands.second}
+            strokeLinecap="round"
+          />
+        )}
+        <circle
+          cx={C}
+          cy={C}
+          r={spec.hands.hour * 0.8}
+          fill="var(--color-accent)"
         />
-        <circle cx={C} cy={C} r={4} fill="var(--color-accent)" />
       </svg>
 
       {/* The dial is the button. It sits over the drawing rather than around

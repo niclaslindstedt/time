@@ -46,3 +46,81 @@ export function appearanceFor(choice: ThemeChoice): ThemeAppearance {
  *  the same "follow the device" default `DEFAULT_SETTINGS` carries, so the
  *  first paint never flashes the wrong side. */
 export const APP_LOOK: ThemeAppearance = appearanceFor("system");
+
+// ── The clock ───────────────────────────────────────────────────────────────
+// The dial's look is a *shape* choice, not a palette one: how many numerals it
+// carries, whether it counts minutes, how heavy its hands are, and how much of
+// the screen it takes. The two-themes rule above is about colour and stays
+// exactly as it was — a clock look never introduces a hue, it reads the same
+// accent, flag and category colours whichever one is picked.
+//
+// Three looks, because a clock is either the wall clock it imitates, a quiet
+// ring, or a loud one — and a fourth would be a variation on one of those.
+
+/** Which dial the Today screen draws. */
+export type ClockLook = "classic" | "minimal" | "bold";
+
+/** How much of the screen it takes. */
+export type ClockSize = "small" | "medium" | "large";
+
+export const CLOCK_LOOKS: ClockLook[] = ["classic", "minimal", "bold"];
+export const CLOCK_SIZES: ClockSize[] = ["small", "medium", "large"];
+
+export type ClockLookSpec = {
+  /** Every hour, the quarters only, or none at all. */
+  numerals: "all" | "quarters" | "none";
+  numeralSize: number;
+  /** Sixty ticks rather than twelve — the minutes of a real wall clock. */
+  minuteTicks: boolean;
+  /** Stroke widths: presence and breaks on the outer ring, the kind of work
+   *  on the inner one. */
+  ring: number;
+  innerRing: number;
+  /** The three hands. A dial without a second hand is a calmer object; the
+   *  arcs still redraw every second either way. */
+  hands: { hour: number; minute: number; second: number | null };
+};
+
+export const CLOCK_LOOK: Record<ClockLook, ClockLookSpec> = {
+  // The wall clock: all twelve numerals and sixty ticks.
+  classic: {
+    numerals: "all",
+    numeralSize: 12,
+    minuteTicks: true,
+    ring: 14,
+    innerRing: 8,
+    hands: { hour: 5, minute: 3.5, second: 1.5 },
+  },
+  // The ring, and enough of a clock to read a hand position off.
+  minimal: {
+    numerals: "none",
+    numeralSize: 12,
+    minuteTicks: false,
+    ring: 10,
+    innerRing: 6,
+    hands: { hour: 4, minute: 2.5, second: null },
+  },
+  // Across the room, one-handed, in a hurry.
+  bold: {
+    numerals: "all",
+    numeralSize: 15,
+    minuteTicks: false,
+    ring: 19,
+    innerRing: 11,
+    hands: { hour: 7, minute: 5, second: 2 },
+  },
+};
+
+export type ClockSizeSpec = {
+  /** The dial's width cap. The face is square, so this is its height too. */
+  maxWidth: string;
+  /** Two break-end chips closer together than this on the dial would overlap.
+   *  A smaller dial needs a wider gap: the chips do not shrink with it. */
+  labelGap: number;
+};
+
+export const CLOCK_SIZE: Record<ClockSize, ClockSizeSpec> = {
+  small: { maxWidth: "max-w-[11rem]", labelGap: 34 },
+  medium: { maxWidth: "max-w-[15rem]", labelGap: 22 },
+  large: { maxWidth: "max-w-[19rem]", labelGap: 16 },
+};

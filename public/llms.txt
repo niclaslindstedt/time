@@ -14,8 +14,9 @@
 
 ## Features
 
-- Today: a running timer and the share of the day's target it is, a
-  twelve-hour clock with time at work, breaks and kinds of work drawn on it,
+- Today: a running timer whose card's border fills clockwise with the day's
+  share of its target and overshoots past it, a twelve-hour clock with time
+  at work, breaks and kinds of work drawn on it,
   and one-tap buttons to enter, leave, take a break or switch what you are
   working on
 - Correcting a time without leaving Today: a break is booked for the length
@@ -29,5 +30,6 @@
 - Employers: one or several, each with its own working days, day length,
   break types with default lengths, and kinds of work; the employer switcher
   only appears once there are two
-- Settings: light/dark theme, week start, cloud sync, JSON backup and restore
+- Settings: light/dark theme, the clock's look and size, week start, cloud
+  sync, JSON backup and restore
 - No account, no server, no analytics; installable and fully offline

@@ -35,8 +35,10 @@ describe("durations", () => {
   });
 
   it("formats the timer", () => {
-    expect(formatTimer(h(7, 32) + 15)).toBe("07:32:15");
-    expect(formatTimer(0)).toBe("00:00:00");
+    expect(formatTimer(h(7, 32) + 15)).toBe("7:32:15");
+    expect(formatTimer(0)).toBe("0:00:00");
+    // Past ten hours it grows a digit rather than padding to one.
+    expect(formatTimer(h(11, 5))).toBe("11:05:00");
   });
 });
 

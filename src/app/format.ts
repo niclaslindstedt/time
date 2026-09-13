@@ -38,10 +38,12 @@ export function formatBalance(seconds: Seconds): string {
   return `${sign}${Math.floor(minutes / 60)}h ${pad(minutes % 60)}m`;
 }
 
-/** "07:32:15" — the running timer. */
+/** "7:32:15" — the running timer. The hour is not padded: a working day is
+ *  one digit of hours almost every day, and a leading zero in a number that
+ *  big on the screen reads as part of the figure rather than as nothing. */
 export function formatTimer(seconds: Seconds): string {
   const s = Math.floor(Math.max(0, seconds));
-  return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+  return `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 }
 
 /** "12:04" — a moment on the day's clock. Past midnight the hour keeps

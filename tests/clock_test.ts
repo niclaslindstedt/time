@@ -5,6 +5,7 @@ import {
   DIAL_SECONDS,
   angleOf,
   arcPath,
+  framePath,
   handAngles,
   polar,
 } from "../src/app/clock.ts";
@@ -57,5 +58,28 @@ describe("arcPath", () => {
   it("draws a whole ring for a span of a full turn or more", () => {
     const d = arcPath(50, 50, 40, 0, DIAL_SECONDS)!;
     expect(d.split("A")).toHaveLength(3);
+  });
+});
+
+describe("framePath", () => {
+  it("starts at the top edge's middle and closes back there", () => {
+    const d = framePath(200, 100, 20)!;
+    expect(d.startsWith("M 100 0 ")).toBe(true);
+    expect(d.endsWith("L 100 0")).toBe(true);
+    // Clockwise: the first move is along the top, to the right.
+    expect(d).toContain("L 180 0");
+  });
+
+  it("insets the box so a stroke of that width sits inside it", () => {
+    const d = framePath(200, 100, 20, 2)!;
+    expect(d.startsWith("M 100 2 ")).toBe(true);
+    expect(d).toContain("L 198 78");
+  });
+
+  it("clamps the radius to the box and refuses an empty one", () => {
+    // A radius larger than half the short side is a stadium, not a bad path.
+    expect(framePath(200, 100, 999)).toContain("A 50 50");
+    expect(framePath(0, 100, 20)).toBeNull();
+    expect(framePath(200, 4, 20, 2)).toBeNull();
   });
 });

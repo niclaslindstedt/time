@@ -4,6 +4,13 @@ import { useCallback } from "react";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 import type { WeekStart } from "@niclaslindstedt/oss-framework/calendar";
 
+import {
+  CLOCK_LOOK,
+  CLOCK_SIZE,
+  type ClockLook,
+  type ClockSize,
+} from "./look.ts";
+
 // The app's own (non-document) settings: which of the two themes is active,
 // which day the week starts on, which employer the screens are showing, and
 // the developer knobs. Per device on purpose — the employer you have on
@@ -19,6 +26,10 @@ export type AppSettings = {
   /** First day of the week (`Date.getDay()` numbering: 0 = Sunday,
    *  1 = Monday) — decides what the weekly report covers. */
   weekStartsOn: WeekStart;
+  /** Which dial the Today screen draws, and how big. A shape choice, not a
+   *  palette one — see `look.ts`. */
+  clockLook: ClockLook;
+  clockSize: ClockSize;
   /** The employer the Today, Log and Report screens show. Null until one is
    *  chosen; `App` falls back to the first employer by name. */
   activeEmployerId: string | null;
@@ -31,6 +42,8 @@ export type AppSettings = {
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   weekStartsOn: 1,
+  clockLook: "classic",
+  clockSize: "medium",
   activeEmployerId: null,
   devMode: false,
   captureLogs: false,
@@ -52,6 +65,14 @@ function parseSettings(raw: string): AppSettings {
         ? merged.theme
         : "system",
     weekStartsOn: (week >= 0 && week <= 6 ? week : 1) as WeekStart,
+    clockLook:
+      merged.clockLook in CLOCK_LOOK
+        ? merged.clockLook
+        : DEFAULT_SETTINGS.clockLook,
+    clockSize:
+      merged.clockSize in CLOCK_SIZE
+        ? merged.clockSize
+        : DEFAULT_SETTINGS.clockSize,
     activeEmployerId:
       typeof merged.activeEmployerId === "string"
         ? merged.activeEmployerId

@@ -135,7 +135,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   coffee 15 min), whether a date is a working day, the day's target, the
   clamps.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
-  positions, arc paths. Pure.
+  positions, arc paths — and the timer card's frame path, which is the same
+  arithmetic for a rounded rectangle. Pure.
 - `src/app/format.ts` — durations, timers, times of day, and the parse of a
   typed time.
 - `src/app/merge.ts` — the per-record, last-edit-wins document merge that
@@ -160,6 +161,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   thing you do and leave rather than a place you are. Today is where the day
   is _filed_; Log is where it is _corrected_, because a list is where a wrong
   time is visible.
+- `src/app/ProgressFrame.tsx` — the timer card's border, stroked as the
+  day's progress round the card: clockwise from the top edge's middle,
+  closing at the target and going round again in the flag colour past it.
+  The one number the Today screen draws rather than prints.
 - `src/app/ClockFace.tsx` — the dial. Outer ring presence with breaks marked
   over it, inner ring the kind of work, hands at `now`. Reads `day.ts` only.
   It is also a control: the break ends printed on the rim, and the rings
@@ -298,6 +303,10 @@ with `[Learn more](feature:<slug>)`.
   creation and then live in the document as the user's own words.
 - **Two themes only** — one light, one dark, plus "follow the device". The
   framework ships a dozen palettes; this app deliberately exposes none of them.
+  The clock's **look** and **size** (`CLOCK_LOOK` / `CLOCK_SIZE` in `look.ts`)
+  are not an exception to this: they choose the dial's _shape_ — numerals,
+  ticks, stroke weights, width — and never a colour. A look that introduced a
+  hue of its own would be the palette gallery this rule exists to refuse.
 - **The bottom nav is the navigation.** Four tabs, no sidebar, no drawer, and
   they are _destinations_ — a fixed left-to-right order a swipe moves along.
   Things you do and then leave belong on the top bar, which is where Settings

@@ -79,3 +79,49 @@ export function arcPath(
   const large = sweep > 180 ? 1 : 0;
   return `M ${round(x0)} ${round(y0)} A ${r} ${r} 0 ${large} 1 ${round(x1)} ${round(y1)}`;
 }
+
+/**
+ * The path round a rounded rectangle, starting at the top edge's middle and
+ * running clockwise — the Today screen's timer frame, where the day's
+ * progress is drawn as a stroke along the card's own border.
+ *
+ * Twelve o'clock is where a dial starts, so the frame starts there too: the
+ * stroke leaves the top centre, goes round the right, and meets itself back
+ * at the top when the target is reached. `inset` pulls the path in from the
+ * box's edge, so a stroke of that width sits inside the card rather than
+ * half outside it.
+ *
+ * Pure geometry over a box the caller has measured. The caller sets
+ * `pathLength="1"` on the path, which makes a dash array a plain fraction of
+ * the way round — no measuring of the curve required.
+ */
+export function framePath(
+  width: number,
+  height: number,
+  radius: number,
+  inset = 0,
+): string | null {
+  const w = width - 2 * inset;
+  const h = height - 2 * inset;
+  if (!(w > 0) || !(h > 0)) return null;
+  const r = Math.max(0, Math.min(radius, w / 2, h / 2));
+  const x0 = inset;
+  const y0 = inset;
+  const x1 = inset + w;
+  const y1 = inset + h;
+  const midX = inset + w / 2;
+  const arc = (x: number, y: number) =>
+    `A ${round(r)} ${round(r)} 0 0 1 ${round(x)} ${round(y)}`;
+  return [
+    `M ${round(midX)} ${round(y0)}`,
+    `L ${round(x1 - r)} ${round(y0)}`,
+    arc(x1, y0 + r),
+    `L ${round(x1)} ${round(y1 - r)}`,
+    arc(x1 - r, y1),
+    `L ${round(x0 + r)} ${round(y1)}`,
+    arc(x0, y1 - r),
+    `L ${round(x0)} ${round(y0 + r)}`,
+    arc(x0 + r, y0),
+    `L ${round(midX)} ${round(y0)}`,
+  ].join(" ");
+}

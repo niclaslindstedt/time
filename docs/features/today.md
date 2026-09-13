@@ -6,15 +6,22 @@ The main screen, and the whole app for most of a day.
 
 - **The readout.** The day's state ("Working since 08:02", "Lunch until
   12:30", "Not at work · Left at 17:10"), the running timer of hours worked,
-  and beside it the share of the day's target that is — 94%, or 112% on a
-  long day. Under it, the target, today's balance and the overall balance. The
-  whole card turns the break colour while a break is on, because the timer has
+  and under it the target, today's balance and the overall balance. The whole
+  card turns the break colour while a break is on, because the timer has
   stopped moving and that should be visible from across the room.
+- **The card's border is the percentage.** It starts at the top edge's middle
+  and fills clockwise as the day is worked, closing the loop at 100% of the
+  target — and past it, goes round again in the flag colour, so overtime is
+  the frame overshooting rather than a number to read. There is no percentage
+  printed beside the timer: the frame is it. (A screen reader still gets the
+  figure, from the timer's own label.)
 - **The clock.** A twelve-hour dial with the hands at now. The outer ring is
   time at work, with breaks marked on it in the flag colour; the inner ring is
   the kind of work, one hue per category — the same hue the chips and the
   report use. The legend under the clock names them. The part of a break that
   has not happened yet is drawn at half strength: it is a plan, not a record.
+  Its numerals, its weight and its size are yours to pick under **Settings →
+  The clock** (see [`themes.md`](themes.md)).
 - **The buttons.** One loud one, **Enter office** / **Leave office**. A row of
   break buttons, one per break type the employer defines, each showing the
   length it is assumed to take; tapping one takes it now, and the button turns

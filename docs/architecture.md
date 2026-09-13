@@ -22,7 +22,7 @@ src/app/
   actions.ts        the edits a day can take                       (pure, clock-free)
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   employer.ts       the template, working days, the day's target   (pure)
-  clock.ts          the twelve-hour dial's geometry                (pure)
+  clock.ts          the dial's and the timer frame's geometry      (pure)
   format.ts         durations, timers, times of day
   labels.ts         domain value → label and colour
   merge.ts          two documents → one                            (pure)
@@ -32,6 +32,7 @@ src/app/
   useAppSettings.ts the settings blob
   useNow.ts         the one place the clock is read
   backup.ts         export / restore a JSON file
+  ProgressFrame.tsx the timer card's border, drawn as the day's progress
   ClockFace.tsx     the dial, and the way into the day's stretches
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you got in, corrected from the timer
