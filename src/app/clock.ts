@@ -20,6 +20,30 @@ export const DIAL_SECONDS: Seconds = 12 * 3600;
 export const DIAL_OUTER_R = 100;
 export const DIAL_INNER_R = 82;
 
+/** The twelve hours of the dial, in the order a clock reads them, starting
+ *  at the top. */
+export const DIAL_HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
+
+/** The same twelve in Roman numerals, indexed by `hour % 12`. Subtractive at
+ *  four and nine — IV and IX — which is how Rome wrote them; a dial that
+ *  wears IIII is a clockmaker's habit, not a numeral. Here rather than in the
+ *  component because `widthFactor` in `look.ts` is measured against the
+ *  widest of them (VIII) and the two have to move together. */
+export const ROMAN_HOURS = [
+  "XII",
+  "I",
+  "II",
+  "III",
+  "IV",
+  "V",
+  "VI",
+  "VII",
+  "VIII",
+  "IX",
+  "X",
+  "XI",
+] as const;
+
 /**
  * How far from the centre the hour numerals sit.
  *

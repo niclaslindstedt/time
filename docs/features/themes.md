@@ -21,8 +21,7 @@ worth choosing, and it is a _shape_, not a palette:
 - **Numerals.** The face the hours are set in: **Sans** (the app's own,
   Inter), **Serif** (Source Serif, and the one that stops a dial reading as a
   chart's axis), **Mono** (the wordmark's JetBrains Mono), or **Roman** —
-  serif, and set the way a clock face has always worn them: XII, IIII, VIII.
-  Four o'clock is IIII rather than IV because that is what clock faces do.
+  serif, and set as Rome wrote them: XII, IV, VIII.
   Each option in Settings is written in the face it picks, so the choice
   previews itself. Both faces are bundled with the app and served from its
   own origin — no font host is called, here or anywhere else.

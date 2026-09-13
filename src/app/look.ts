@@ -126,7 +126,7 @@ export type ClockFontSpec = {
   numerals: "arabic" | "roman";
   /** Half the width of the widest numeral, as a share of the font size: what
    *  has to clear the inner ring (see `numeralRadius`). Two digits for
-   *  Arabic; IIII and VIII are twice that. */
+   *  Arabic; VIII is twice that. */
   widthFactor: number;
   /** Size against the look's own, because a serif digit, a mono digit and a
    *  four-letter numeral do not read the same at one size. */
@@ -156,8 +156,8 @@ export const CLOCK_FONT: Record<ClockFont, ClockFontSpec> = {
     widthFactor: 0.6,
     scale: 0.95,
   },
-  // The station clock: serif, and IIII rather than IV at four o'clock, which
-  // is what clock faces have worn for centuries whatever Rome did.
+  // The station clock: serif, and the numerals as Rome wrote them — IV at
+  // four o'clock, IX at nine.
   roman: {
     family: '"Source Serif 4", Georgia, "Times New Roman", serif',
     numerals: "roman",
