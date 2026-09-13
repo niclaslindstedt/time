@@ -11,7 +11,7 @@ import {
   numeralRadius,
   polar,
 } from "../src/app/clock.ts";
-import { CLOCK_LOOK } from "../src/app/look.ts";
+import { CLOCK_FONT, CLOCK_LOOK } from "../src/app/look.ts";
 import { h } from "./fixtures/helpers.ts";
 
 describe("angleOf", () => {
@@ -88,21 +88,34 @@ describe("framePath", () => {
 });
 
 describe("numeralRadius", () => {
-  it("keeps every look's numerals clear of the ring they sit inside", () => {
-    for (const [name, spec] of Object.entries(CLOCK_LOOK)) {
+  it("keeps every look and face clear of the ring they sit inside", () => {
+    for (const [look, spec] of Object.entries(CLOCK_LOOK)) {
       if (spec.numerals === "none") continue;
-      const r = numeralRadius(spec.innerRing, spec.numeralSize);
-      // Half the width of a two-digit numeral, which is the widest thing on
-      // the dial that has to fit.
-      const reach = r + spec.numeralSize * 0.55;
-      const ringEdge = DIAL_INNER_R - spec.innerRing / 2;
-      expect(reach, `${name} runs into the inner ring`).toBeLessThan(ringEdge);
-      // …and it is a gap you can see, not a hairline.
-      expect(ringEdge - reach).toBeGreaterThanOrEqual(4);
+      for (const [font, face] of Object.entries(CLOCK_FONT)) {
+        const size = spec.numeralSize * face.scale;
+        const r = numeralRadius(spec.innerRing, size, face.widthFactor);
+        // Half the width of the widest numeral the face can draw — two
+        // digits, or IIII and VIII — which is what has to fit.
+        const reach = r + size * face.widthFactor;
+        const ringEdge = DIAL_INNER_R - spec.innerRing / 2;
+        const where = `${look} in ${font}`;
+        expect(reach, `${where} runs into the inner ring`).toBeLessThan(
+          ringEdge,
+        );
+        // …and it is a gap you can see, not a hairline.
+        expect(
+          ringEdge - reach,
+          `${where} is a hairline clear`,
+        ).toBeGreaterThanOrEqual(4);
+        // The numerals still have to leave room for the hands inside them.
+        expect(r, `${where} leaves no dial`).toBeGreaterThan(40);
+      }
     }
   });
 
   it("pulls the numerals further in as the ring and the numerals grow", () => {
     expect(numeralRadius(11, 15)).toBeLessThan(numeralRadius(8, 12));
+    // …and further still for a face whose widest numeral is IIII.
+    expect(numeralRadius(8, 12, 1.1)).toBeLessThan(numeralRadius(8, 12, 0.55));
   });
 });

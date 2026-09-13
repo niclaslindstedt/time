@@ -20,8 +20,9 @@ The main screen, and the whole app for most of a day.
   the kind of work, one hue per category — the same hue the chips and the
   report use. The legend under the clock names them. The part of a break that
   has not happened yet is drawn at half strength: it is a plan, not a record.
-  Its numerals, its weight and its size are yours to pick under **Settings →
-  The clock** (see [`themes.md`](themes.md)).
+  Its numerals — how many, and what they are set in, down to Roman — its
+  weight and its size are yours to pick under **Settings → The clock** (see
+  [`themes.md`](themes.md)).
 - **The buttons.** One loud one, **Enter office** / **Leave office**. A row of
   break buttons, one per break type the employer defines, each showing the
   length it is assumed to take; tapping one takes it now, and the button turns

@@ -15,8 +15,10 @@ import { formatTimeOfDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor } from "./labels.ts";
 import {
+  CLOCK_FONT,
   CLOCK_LOOK,
   CLOCK_SIZE,
+  type ClockFont,
   type ClockLook,
   type ClockSize,
 } from "./look.ts";
@@ -43,22 +45,40 @@ import type { Employer, Seconds, WorkDay } from "./types.ts";
 // that has not happened yet — the tail between now and its assumed end — is
 // drawn at half strength, because it is a plan rather than a record.
 //
-// The look and the size come from the settings (see `look.ts`): how many
-// numerals the dial carries, whether it counts minutes, how heavy the hands
-// are, how wide it is. None of them touch colour — the accent, the flag and
-// the category hues are the app's, whichever dial is on.
+// The look, the face and the size come from the settings (see `look.ts`): how
+// many numerals the dial carries, what they are set in, whether it counts
+// minutes, how heavy the hands are, how wide it is. None of them touch colour
+// — the accent, the flag and the category hues are the app's, whichever dial
+// is on.
 
 const SIZE = 240;
 const C = SIZE / 2;
 const OUTER_R = DIAL_OUTER_R;
 const INNER_R = DIAL_INNER_R;
 const TICK_OUTER = 116;
-/** The hands stop short of the numerals and sweep inside them rather than
- *  across them — the one place this dial is not the wall clock it imitates,
- *  because the wall clock has no day drawn round its rim. */
-const HAND_R = { hour: 34, minute: 50, second: 56 };
+/** The hands, as a share of the numeral ring: they stop short of it and
+ *  sweep inside the numerals rather than across them — the one place this
+ *  dial is not the wall clock it imitates, because the wall clock has no day
+ *  drawn round its rim. A share rather than three numbers, so a face that
+ *  pulls the numerals in (IIII is wide) brings the hands in with them. */
+const HAND_SHARE = { hour: 0.55, minute: 0.82, second: 0.92 };
 /** The twelve hours of the dial, in the order a clock reads them. */
 const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+/** The same twelve as a clock face wears them, IIII and all. */
+const ROMAN = [
+  "XII",
+  "I",
+  "II",
+  "III",
+  "IIII",
+  "V",
+  "VI",
+  "VII",
+  "VIII",
+  "IX",
+  "X",
+  "XI",
+];
 
 /** Where the break-end chips sit: outside the ticks, as a percentage of the
  *  box, so they are HTML buttons over the SVG rather than text inside it —
@@ -70,15 +90,33 @@ type Props = {
   employer: Employer;
   now: Seconds;
   look: ClockLook;
+  font: ClockFont;
   size: ClockSize;
   /** Open the day's stretches, optionally at the moment that was tapped. */
   onOpen: (at?: Seconds) => void;
 };
 
-export function ClockFace({ day, employer, now, look, size, onOpen }: Props) {
+export function ClockFace({
+  day,
+  employer,
+  now,
+  look,
+  font,
+  size,
+  onOpen,
+}: Props) {
   const t = useT();
   const spec = CLOCK_LOOK[look];
+  const face = CLOCK_FONT[font];
   const sizing = CLOCK_SIZE[size];
+  const numeralSize = spec.numeralSize * face.scale;
+  // With no numerals to clear, the face is not a thing anyone can see, so the
+  // hands keep the length they would have had under the app's own.
+  const numeralR = numeralRadius(
+    spec.innerRing,
+    numeralSize,
+    spec.numerals === "none" ? 0.55 : face.widthFactor,
+  );
   const segments = useMemo(() => daySegments(day, now), [day, now]);
   const activities = useMemo(() => activityIntervals(day, now), [day, now]);
   const hands = handAngles(now);
@@ -116,18 +154,13 @@ export function ClockFace({ day, employer, now, look, size, onOpen }: Props) {
         ? [12, 3, 6, 9]
         : [];
   const numerals = shown.map((n) => {
-    const [x, y] = polar(
-      C,
-      C,
-      numeralRadius(spec.innerRing, spec.numeralSize),
-      (n % 12) * 30,
-    );
-    return { n, x, y };
+    const [x, y] = polar(C, C, numeralR, (n % 12) * 30);
+    return { n, x, y, text: face.numerals === "roman" ? ROMAN[n % 12]! : n };
   });
 
-  const [hx, hy] = polar(C, C, HAND_R.hour, hands.hour);
-  const [mx, my] = polar(C, C, HAND_R.minute, hands.minute);
-  const [sx, sy] = polar(C, C, HAND_R.second, hands.second);
+  const [hx, hy] = polar(C, C, numeralR * HAND_SHARE.hour, hands.hour);
+  const [mx, my] = polar(C, C, numeralR * HAND_SHARE.minute, hands.minute);
+  const [sx, sy] = polar(C, C, numeralR * HAND_SHARE.second, hands.second);
 
   return (
     <div className={`relative mx-auto w-full ${sizing.maxWidth}`}>
@@ -218,17 +251,21 @@ export function ClockFace({ day, employer, now, look, size, onOpen }: Props) {
             opacity={tick.hour ? 1 : 0.6}
           />
         ))}
-        {numerals.map(({ n, x, y }) => (
+        {numerals.map(({ n, x, y, text }) => (
           <text
             key={n}
             x={x}
             y={y}
             dy="0.35em"
             textAnchor="middle"
-            className="fill-muted font-semibold tabular-nums"
-            style={{ fontSize: `${spec.numeralSize}px` }}
+            className="fill-muted tabular-nums"
+            style={{
+              fontSize: `${numeralSize}px`,
+              fontFamily: face.family,
+              fontWeight: 700,
+            }}
           >
-            {n}
+            {text}
           </text>
         ))}
 

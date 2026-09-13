@@ -25,17 +25,18 @@ export const DIAL_INNER_R = 82;
  *
  * Measured *down* from the inner ring's inner edge rather than set as a
  * number: a heavier look wears both a thicker ring and a bigger numeral, and
- * a fixed radius that cleared one of them ran the other into the arcs. The
- * half-extent that has to clear is half the width of a two-digit numeral —
- * 10, 11 and 12 are the wide ones — which is about `0.55` of the font size;
+ * a fixed radius that cleared one of them ran the other into the arcs. What
+ * has to clear is half the width of the widest numeral — `widthFactor` of the
+ * font size, which is about 0.55 for two digits and twice that for VIII — and
  * the eight units after it are air, so a numeral is never read against a
  * coloured arc.
  */
 export function numeralRadius(
   innerRingWidth: number,
   numeralSize: number,
+  widthFactor = 0.55,
 ): number {
-  return DIAL_INNER_R - innerRingWidth / 2 - numeralSize * 0.55 - 8;
+  return DIAL_INNER_R - innerRingWidth / 2 - numeralSize * widthFactor - 8;
 }
 
 /** The dial angle of a moment, in degrees clockwise from twelve o'clock. */

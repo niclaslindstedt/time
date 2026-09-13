@@ -26,7 +26,7 @@ import {
   formatTimeOfDay,
   formatTimer,
 } from "./format.ts";
-import type { ClockLook, ClockSize } from "./look.ts";
+import type { ClockFont, ClockLook, ClockSize } from "./look.ts";
 import { CupIcon, EnterIcon, LeaveIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
@@ -66,6 +66,7 @@ type Props = {
   weekStartsOn: number;
   /** The dial the settings ask for. */
   clockLook: ClockLook;
+  clockFont: ClockFont;
   clockSize: ClockSize;
   onAddEmployer: () => void;
   onNotice: (message: string) => void;
@@ -77,6 +78,7 @@ export function TodayScreen({
   store,
   employer,
   clockLook,
+  clockFont,
   clockSize,
   onAddEmployer,
   onNotice,
@@ -233,6 +235,7 @@ export function TodayScreen({
         employer={employer}
         now={now.seconds}
         look={clockLook}
+        font={clockFont}
         size={clockSize}
         onOpen={(at) => setTimeline({ at: at ?? null })}
       />

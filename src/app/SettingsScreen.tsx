@@ -26,8 +26,11 @@ import { mergeDocs } from "./merge.ts";
 import { serializeDoc } from "./migrations.ts";
 import { emptyDoc } from "./types.ts";
 import {
+  CLOCK_FONT,
+  CLOCK_FONTS,
   CLOCK_LOOKS,
   CLOCK_SIZES,
+  type ClockFont,
   type ClockLook,
   type ClockSize,
 } from "./look.ts";
@@ -128,6 +131,32 @@ export function SettingsScreen({
             }))}
             onChange={(next) => update("clockLook", next)}
             ariaLabel={t("settings.clockLook")}
+            fullWidth
+          />
+        </Labelled>
+        {/* Each option wears the face it picks, so the choice is its own
+            preview: the dial is on another screen, and four words in one
+            font would say nothing about what they do to it. */}
+        <Labelled label={t("settings.clockFont")}>
+          <SegmentedControl<ClockFont>
+            value={settings.clockFont}
+            options={CLOCK_FONTS.map((font) => ({
+              value: font,
+              label: (
+                <span
+                  style={{
+                    fontFamily: CLOCK_FONT[font].family,
+                    fontWeight: 700,
+                  }}
+                >
+                  {t(
+                    `settings.clockFont${cap(font)}` as "settings.clockFontSans",
+                  )}
+                </span>
+              ),
+            }))}
+            onChange={(next) => update("clockFont", next)}
+            ariaLabel={t("settings.clockFont")}
             fullWidth
           />
         </Labelled>

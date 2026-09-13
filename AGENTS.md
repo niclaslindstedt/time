@@ -303,8 +303,9 @@ with `[Learn more](feature:<slug>)`.
   creation and then live in the document as the user's own words.
 - **Two themes only** — one light, one dark, plus "follow the device". The
   framework ships a dozen palettes; this app deliberately exposes none of them.
-  The clock's **look** and **size** (`CLOCK_LOOK` / `CLOCK_SIZE` in `look.ts`)
-  are not an exception to this: they choose the dial's _shape_ — numerals,
+  The clock's **look**, **numerals** and **size** (`CLOCK_LOOK` /
+  `CLOCK_FONT` / `CLOCK_SIZE` in `look.ts`) are not an exception to this: they
+  choose the dial's _shape_ — how many numerals, the face they are set in,
   ticks, stroke weights, width — and never a colour. A look that introduced a
   hue of its own would be the palette gallery this rule exists to refuse.
 - **The bottom nav is the navigation.** Four tabs, no sidebar, no drawer, and
@@ -316,7 +317,11 @@ with `[Learn more](feature:<slug>)`.
   category chips and the report's donut all read it. Don't colour one of them
   another way.
 - **No dependency creep.** The framework, Preact, a font, and workbox-window.
-  A new runtime dependency needs a reason that the framework can't serve.
+  A new runtime dependency needs a reason that the framework can't serve. The
+  three faces the app ships — Inter, JetBrains Mono (the wordmark) and Source
+  Serif (the dial) — are `@fontsource` packages already in the tree, imported
+  in `main.tsx` a weight and a subset at a time, and bundled from this origin.
+  A font is never reached for over the network.
 
 ## Website staleness
 

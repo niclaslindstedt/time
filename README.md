@@ -115,9 +115,9 @@ Four tabs, on a bottom bar — swipe left or right to move between them:
 
 …and one button on the top bar, for the screen you visit and leave:
 
-| Button | What it does                                                                                                                   |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| **⚙**  | Settings: theme, the clock's look and size, week start, cloud sync, backup / restore / delete, developer tools, and the build. |
+| Button | What it does                                                                                                                             |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **⚙**  | Settings: theme, the clock's look, numerals and size, week start, cloud sync, backup / restore / delete, developer tools, and the build. |
 
 ## Configuration
 

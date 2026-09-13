@@ -5,8 +5,10 @@ import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 import type { WeekStart } from "@niclaslindstedt/oss-framework/calendar";
 
 import {
+  CLOCK_FONT,
   CLOCK_LOOK,
   CLOCK_SIZE,
+  type ClockFont,
   type ClockLook,
   type ClockSize,
 } from "./look.ts";
@@ -26,9 +28,10 @@ export type AppSettings = {
   /** First day of the week (`Date.getDay()` numbering: 0 = Sunday,
    *  1 = Monday) — decides what the weekly report covers. */
   weekStartsOn: WeekStart;
-  /** Which dial the Today screen draws, and how big. A shape choice, not a
-   *  palette one — see `look.ts`. */
+  /** Which dial the Today screen draws, what the hours are set in, and how
+   *  big. A shape choice, not a palette one — see `look.ts`. */
   clockLook: ClockLook;
+  clockFont: ClockFont;
   clockSize: ClockSize;
   /** The employer the Today, Log and Report screens show. Null until one is
    *  chosen; `App` falls back to the first employer by name. */
@@ -43,6 +46,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   weekStartsOn: 1,
   clockLook: "classic",
+  clockFont: "sans",
   clockSize: "medium",
   activeEmployerId: null,
   devMode: false,
@@ -69,6 +73,10 @@ function parseSettings(raw: string): AppSettings {
       merged.clockLook in CLOCK_LOOK
         ? merged.clockLook
         : DEFAULT_SETTINGS.clockLook,
+    clockFont:
+      merged.clockFont in CLOCK_FONT
+        ? merged.clockFont
+        : DEFAULT_SETTINGS.clockFont,
     clockSize:
       merged.clockSize in CLOCK_SIZE
         ? merged.clockSize

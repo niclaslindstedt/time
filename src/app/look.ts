@@ -60,10 +60,16 @@ export const APP_LOOK: ThemeAppearance = appearanceFor("system");
 /** Which dial the Today screen draws. */
 export type ClockLook = "classic" | "minimal" | "bold";
 
+/** The face the hours are set in — and, for `roman`, what they are set as.
+ *  A dial reads as a clock or as a chart largely by this: the same twelve
+ *  hours in the UI's own sans read as data, and in a serif as a wall. */
+export type ClockFont = "sans" | "serif" | "mono" | "roman";
+
 /** How much of the screen it takes. */
 export type ClockSize = "small" | "medium" | "large";
 
 export const CLOCK_LOOKS: ClockLook[] = ["classic", "minimal", "bold"];
+export const CLOCK_FONTS: ClockFont[] = ["sans", "serif", "mono", "roman"];
 export const CLOCK_SIZES: ClockSize[] = ["small", "medium", "large"];
 
 export type ClockLookSpec = {
@@ -108,6 +114,55 @@ export const CLOCK_LOOK: Record<ClockLook, ClockLookSpec> = {
     ring: 19,
     innerRing: 11,
     hands: { hour: 7, minute: 5, second: 2 },
+  },
+};
+
+export type ClockFontSpec = {
+  /** The stack the numerals are set in. Every family named here is bundled
+   *  from `@fontsource` and served from this origin (see `main.tsx`) — a
+   *  webfont host is the one request this app does not make. */
+  family: string;
+  /** Arabic digits, or the numerals a station clock wears. */
+  numerals: "arabic" | "roman";
+  /** Half the width of the widest numeral, as a share of the font size: what
+   *  has to clear the inner ring (see `numeralRadius`). Two digits for
+   *  Arabic; IIII and VIII are twice that. */
+  widthFactor: number;
+  /** Size against the look's own, because a serif digit, a mono digit and a
+   *  four-letter numeral do not read the same at one size. */
+  scale: number;
+};
+
+/** The one place the dial's faces are named. The weight is 700 throughout —
+ *  it is the weight each of these families is bundled in, and a dial numeral
+ *  is read at a glance from across a desk. */
+export const CLOCK_FONT: Record<ClockFont, ClockFontSpec> = {
+  sans: {
+    family: '"Inter", system-ui, sans-serif',
+    numerals: "arabic",
+    widthFactor: 0.55,
+    scale: 1,
+  },
+  serif: {
+    family: '"Source Serif 4", Georgia, "Times New Roman", serif',
+    numerals: "arabic",
+    widthFactor: 0.55,
+    scale: 1.05,
+  },
+  mono: {
+    family:
+      '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+    numerals: "arabic",
+    widthFactor: 0.6,
+    scale: 0.95,
+  },
+  // The station clock: serif, and IIII rather than IV at four o'clock, which
+  // is what clock faces have worn for centuries whatever Rome did.
+  roman: {
+    family: '"Source Serif 4", Georgia, "Times New Roman", serif',
+    numerals: "roman",
+    widthFactor: 1.1,
+    scale: 0.95,
   },
 };
 
