@@ -52,7 +52,13 @@ export type DayTotals = {
   state: DayState;
   /** The running session, break and activity, if any. */
   openSession: Span | null;
+  /** A break nobody wrote an end for — one still running in the old sense. */
   openBreak: BreakSpan | null;
+  /** The break `now` falls inside: the open one, or the one whose assumed
+   *  end has not come yet. This is what "on a break" means — a break taken
+   *  with the length its kind is assumed to take is a break you are on until
+   *  that end passes, not one left hanging. */
+  currentBreak: BreakSpan | null;
   /** The category the running activity names, or null while uncategorised. */
   currentCategoryId: string | null;
   /** First clock-in and last clock-out of the day; the latter null while a
@@ -143,13 +149,14 @@ export function dayTotals(day: WorkDay, now: Seconds): DayTotals {
 
   const openSession = day.sessions.find((s) => s.end === null) ?? null;
   const openBreak = day.breaks.find((b) => b.end === null) ?? null;
+  const currentBreak = breakAt(day, now);
   const openActivity = day.activities.find((a) => a.end === null) ?? null;
 
   // The state follows what is *open*, not what the clipped intervals say —
   // a session opened a moment ago covers zero seconds and is still "in".
   const state: DayState = !openSession
     ? "out"
-    : openBreak
+    : currentBreak
       ? "break"
       : "working";
 
@@ -170,9 +177,141 @@ export function dayTotals(day: WorkDay, now: Seconds): DayTotals {
     state,
     openSession,
     openBreak,
+    currentBreak,
     currentCategoryId: openActivity?.categoryId ?? null,
     firstIn,
     lastOut,
+  };
+}
+
+/** The break `at` falls inside: one with no end, or one whose written end
+ *  has not been reached. Null when nothing is going on. */
+export function breakAt(day: WorkDay, at: Seconds): BreakSpan | null {
+  return (
+    day.breaks.find(
+      (b) =>
+        (b.end === null && b.start <= at) || (b.start <= at && at < b.end!),
+    ) ?? null
+  );
+}
+
+/** How far ahead of `now` the day is drawn. Normally not at all — but a break
+ *  is written down with the end its kind is assumed to have, so at 12:10 of a
+ *  lunch booked until 12:30 the day already reaches twenty minutes into the
+ *  future. The totals never read past `now` (a minute not yet worked is not
+ *  worked); this is only how far the *shape* of the day is known. */
+export function horizon(day: WorkDay, now: Seconds): Seconds {
+  if (!day.sessions.some((s) => s.end === null)) return now;
+  let end = now;
+  for (const b of day.breaks) {
+    if (b.end !== null && b.start <= now && b.end > end) end = b.end;
+  }
+  return end;
+}
+
+/** One stretch of the day: either worked time (of one kind of work, or of
+ *  none) or a break of one kind. Consecutive segments meet — the end of one
+ *  is the start of the next — which is what makes an end movable: pushing a
+ *  break's end later starts the work after it later too. */
+export type DaySegment = {
+  kind: "work" | "break";
+  start: Seconds;
+  end: Seconds;
+  /** The break type for a break, the category for labelled work, null for
+   *  work no activity named. */
+  typeId: string | null;
+  /** True for the stretch `now` falls in. */
+  current: boolean;
+  /** True while the stretch has no end yet — the one the timer is counting. */
+  running: boolean;
+};
+
+/**
+ * The day as the list of stretches it is made of, in order: at work, then
+ * lunch, then at work again. Derived from the same intervals every other
+ * number is (see the header), so the timeline and the clock can never
+ * disagree with the timer.
+ *
+ * Read out to `horizon` rather than to `now`, so a break taken with an
+ * assumed end appears with that end rather than being cut off at the second
+ * it is being read.
+ */
+export function daySegments(day: WorkDay, now: Seconds): DaySegment[] {
+  const upTo = horizon(day, now);
+  const presence = presenceIntervals(day, upTo);
+  const breaks = breakIntervals(day, upTo);
+  const activities = activityIntervals(day, upTo);
+  const open = day.sessions.some((s) => s.end === null);
+
+  const out: DaySegment[] = [];
+  for (const p of presence) {
+    const cuts = new Set<Seconds>([p.start, p.end]);
+    for (const i of [...breaks, ...activities]) {
+      if (i.start > p.start && i.start < p.end) cuts.add(i.start);
+      if (i.end > p.start && i.end < p.end) cuts.add(i.end);
+    }
+    for (const [start, end] of pairs([...cuts].sort((a, b) => a - b))) {
+      const mid = (start + end) / 2;
+      const b = breaks.find((i) => i.start <= mid && mid < i.end);
+      const a = b
+        ? null
+        : activities.find((i) => i.start <= mid && mid < i.end);
+      const kind = b ? "break" : "work";
+      const typeId = b ? b.typeId : (a?.categoryId ?? null);
+      const last = out[out.length - 1];
+      // Two cuts with nothing between them — an activity that starts where a
+      // break ends puts one in — are one stretch, not two.
+      if (
+        last &&
+        last.end === start &&
+        last.kind === kind &&
+        last.typeId === typeId
+      ) {
+        last.end = end;
+      } else {
+        out.push({ kind, start, end, typeId, current: false, running: false });
+      }
+    }
+  }
+
+  for (const s of out) s.current = s.start <= now && now < s.end;
+  const last = out[out.length - 1];
+  if (last && open && last.end >= now) {
+    last.current = true;
+    last.running = last.end <= now;
+  }
+  return out;
+}
+
+function pairs(points: readonly Seconds[]): [Seconds, Seconds][] {
+  const out: [Seconds, Seconds][] = [];
+  for (let i = 0; i + 1 < points.length; i++) {
+    out.push([points[i]!, points[i + 1]!]);
+  }
+  return out;
+}
+
+/** How far a moment two stretches meet at may be moved: up to the moment
+ *  before it and the one after, a minute clear of each so no stretch is
+ *  squeezed out of existence. Null when `at` is not one of the day's edges. */
+export function boundaryRange(
+  day: WorkDay,
+  at: Seconds,
+  now: Seconds,
+): { min: Seconds; max: Seconds } | null {
+  const edges = new Set<Seconds>();
+  for (const s of daySegments(day, now)) {
+    edges.add(s.start);
+    edges.add(s.end);
+  }
+  if (!edges.has(at)) return null;
+  const sorted = [...edges].sort((a, b) => a - b);
+  const index = sorted.indexOf(at);
+  const before = sorted[index - 1];
+  const after = sorted[index + 1];
+  return {
+    min: before === undefined ? 0 : before + 60,
+    max: after === undefined ? 2 * DAY_SECONDS : after - 60,
   };
 }
 

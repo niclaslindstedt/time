@@ -11,17 +11,26 @@
 
 **Time** is a time report that runs entirely in your browser. You press one
 button when you enter the office and the same button when you leave. In
-between, a tap starts a break — lunch, coffee, a walk, whatever your employer's
+between, a tap takes a break — lunch, coffee, a walk, whatever your employer's
 day allows for — and another tap says what kind of work you are doing. The
 main screen is a running timer with the share of the day's target beside it,
 over a twelve-hour clock with the day drawn on: time at work as a ring, breaks
 marked on it, the kind of work on an inner ring.
 
-Forgot to log lunch? Add it afterwards, from the Today screen with one tap ("I
-just had lunch, 30 min") or from the **Log**, where every session, break and
-activity of any day is a row you can edit or delete. The **Report** shows the
-hours worked against the target per day for a week or a month, where the hours
-went by kind of work, what the breaks took, and the running balance.
+A break is written down with an end the moment you take it — the length that
+kind of break usually takes — so you never have to remember to say you are
+back. The guess is printed on the rim of the clock; tap it (or the clock) and
+the day opens stretch by stretch, where moving the end of the lunch moves the
+start of the work after it. Tap the timer to correct when you got in. Every
+one of those times is an estimate and the app says so: work is not timed to
+the second anyway.
+
+Forgot to set up the walk you take on Tuesdays? **Custom**, at the end of the
+break row, names one and starts it. Everything else is corrected in the
+**Log**, where every session, break and activity of any day is a row you can
+edit or delete. The **Report** shows the hours worked against the target per
+day for a week or a month, where the hours went by kind of work, what the
+breaks took, and the running balance.
 
 You set up an **employer** — the working days, the length of a working day,
 the break types with their default lengths, the kinds of work. One employer is
@@ -82,8 +91,9 @@ npm run dev
 Open the printed URL. The app opens on **Today** and asks for an employer:
 give it a name, keep or change the Monday-to-Friday, eight-hour default and the
 two default breaks, and save. Press **Enter office** and the timer starts. Tap
-**Lunch** when you go, tap it again when you are back, tap **Coding** when you
-sit down to it, and **Leave office** when you go home. The **Log** has the day
+**Lunch** when you go (it books the half hour; tap it again if you are back
+early), tap **Coding** when you sit down to it, and **Leave office** when you
+go home. The **Log** has the day
 as a list; the **Report** has the week.
 
 To try the production build the way it deploys:
@@ -96,12 +106,12 @@ npm run build && npm run preview
 
 Four tabs, on a bottom bar — swipe left or right to move between them:
 
-| Tab           | What it does                                                                                                                                                                                                                                                                                                    |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Today**     | The running timer and the share of the day's target it is, a twelve-hour clock with time at work, breaks and kinds of work drawn on it, today's and the overall balance, and the buttons: **Enter / Leave office**, one per break type, one chip per kind of work, and **Add a break…** for the one you forgot. |
-| **Log**       | Any day as a list — time at work, breaks, activities — with the day's first-in, last-out, worked and break totals. Tap a row to edit its times or kind, or delete it; add a session, a break or an activity after the fact; page through the days with the arrows.                                              |
-| **Report**    | A week or a month: worked, target, balance and the running balance since your first day; hours worked against target per day; where the hours went by kind of work; break time by kind.                                                                                                                         |
-| **Employers** | One card per employer with its working days, day length, break types and kinds of work. Add, edit, delete, and — once there are two — choose which is **in use**; the top bar then grows a switcher.                                                                                                            |
+| Tab           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Today**     | The running timer and the share of the day's target it is, a twelve-hour clock with time at work, breaks and kinds of work drawn on it, today's and the overall balance, and the buttons: **Enter / Leave office**, one per break type, one chip per kind of work, and **Custom** for a kind you have not set up. Tap the timer to correct when you got in; tap the clock, or a break's end printed on its rim, to open the day stretch by stretch and move an end. |
+| **Log**       | Any day as a list — time at work, breaks, activities — with the day's first-in, last-out, worked and break totals. Tap a row to edit its times or kind, or delete it; add a session, a break or an activity after the fact; page through the days with the arrows.                                                                                                                                                                                                  |
+| **Report**    | A week or a month: worked, target, balance and the running balance since your first day; hours worked against target per day; where the hours went by kind of work; break time by kind.                                                                                                                                                                                                                                                                             |
+| **Employers** | One card per employer with its working days, day length, break types and kinds of work. Add, edit, delete, and — once there are two — choose which is **in use**; the top bar then grows a switcher.                                                                                                                                                                                                                                                                |
 
 …and one button on the top bar, for the screen you visit and leave:
 
@@ -131,7 +141,7 @@ Build a day and read it back — the derivation is pure, so it runs anywhere, no
 DOM required:
 
 ```ts
-import { clockIn, clockOut, endBreak, startBreak } from "./src/app/actions.ts";
+import { clockIn, clockOut, takeBreak } from "./src/app/actions.ts";
 import { dayTotals } from "./src/app/day.ts";
 import { blankDay } from "./src/app/types.ts";
 
@@ -143,8 +153,7 @@ const h = (hours: number, minutes = 0) => hours * 3600 + minutes * 60;
 
 let day = blankDay("acme", "2026-03-02", ctx.updatedAt);
 day = clockIn(day, h(8), ctx);
-day = startBreak(day, "lunch", h(12), ctx);
-day = endBreak(day, h(12, 30), ctx);
+day = takeBreak(day, "lunch", h(12), 30 * 60, ctx); // ends at 12:30
 day = clockOut(day, h(17), ctx);
 
 dayTotals(day, h(23));

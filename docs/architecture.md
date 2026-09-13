@@ -18,7 +18,7 @@ index.html
 src/app/
   types.ts          the model: Employer, WorkDay (sessions, breaks, activities)
   intervals.ts      union / intersect / subtract over stretches   (pure)
-  day.ts            a day's spans → its totals and state           (pure, clock-free)
+  day.ts            a day's spans → its totals, state, stretches  (pure, clock-free)
   actions.ts        the edits a day can take                       (pure, clock-free)
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   employer.ts       the template, working days, the day's target   (pure)
@@ -32,7 +32,10 @@ src/app/
   useAppSettings.ts the settings blob
   useNow.ts         the one place the clock is read
   backup.ts         export / restore a JSON file
-  ClockFace.tsx     the dial
+  ClockFace.tsx     the dial, and the way into the day's stretches
+  DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
+  ArrivalModal.tsx  when you got in, corrected from the timer
+  NewKindModal.tsx  a kind of break or work, named on the spot
   SpanEditModal.tsx the one editor behind every span
   EmployerEditModal.tsx
   dev/              the demo-data switch: an in-memory DocBackend

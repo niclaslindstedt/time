@@ -16,6 +16,10 @@ figures: first in, last out, worked, and break time. Then three sections:
 A span still running shows "still running" in place of an end. A day in the
 past is read up to midnight, so a session nobody closed still ends.
 
+This is the place for a wrong _span_ — one end of one row at a time. The
+Today screen's clock face edits the day's _edges_ instead, moving both sides
+of a moment at once; see [`today.md`](today.md).
+
 ## Editing
 
 Tap a row to open the editor: the kind (for a break or an activity), the
