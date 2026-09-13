@@ -3,8 +3,10 @@ import { useMemo } from "react";
 
 import { activityIntervals, daySegments } from "./day.ts";
 import {
+  DIAL_HOURS,
   DIAL_INNER_R,
   DIAL_OUTER_R,
+  ROMAN_HOURS,
   angleOf,
   arcPath,
   handAngles,
@@ -60,26 +62,8 @@ const TICK_OUTER = 116;
  *  sweep inside the numerals rather than across them — the one place this
  *  dial is not the wall clock it imitates, because the wall clock has no day
  *  drawn round its rim. A share rather than three numbers, so a face that
- *  pulls the numerals in (IIII is wide) brings the hands in with them. */
+ *  pulls the numerals in (VIII is wide) brings the hands in with them. */
 const HAND_SHARE = { hour: 0.55, minute: 0.82, second: 0.92 };
-/** The twelve hours of the dial, in the order a clock reads them. */
-const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-/** The same twelve as a clock face wears them, IIII and all. */
-const ROMAN = [
-  "XII",
-  "I",
-  "II",
-  "III",
-  "IIII",
-  "V",
-  "VI",
-  "VII",
-  "VIII",
-  "IX",
-  "X",
-  "XI",
-];
-
 /** Where the break-end chips sit: outside the ticks, as a percentage of the
  *  box, so they are HTML buttons over the SVG rather than text inside it —
  *  a chip is a tap target and wants a real button under the finger. */
@@ -149,13 +133,18 @@ export function ClockFace({
   });
   const shown =
     spec.numerals === "all"
-      ? HOURS
+      ? DIAL_HOURS
       : spec.numerals === "quarters"
         ? [12, 3, 6, 9]
         : [];
   const numerals = shown.map((n) => {
     const [x, y] = polar(C, C, numeralR, (n % 12) * 30);
-    return { n, x, y, text: face.numerals === "roman" ? ROMAN[n % 12]! : n };
+    return {
+      n,
+      x,
+      y,
+      text: face.numerals === "roman" ? ROMAN_HOURS[n % 12]! : n,
+    };
   });
 
   const [hx, hy] = polar(C, C, numeralR * HAND_SHARE.hour, hands.hour);

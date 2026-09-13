@@ -246,7 +246,7 @@ export const en = {
     clock: "The clock",
     clockLook: "Look",
     clockLookHint:
-      "The shape of the dial on Today, and the face its hours wear. The colours are the theme's either way, and Roman sets the hours as a station clock does — XII, IIII, VIII.",
+      "The shape of the dial on Today, and the face its hours wear. The colours are the theme's either way, and Roman sets the hours as a station clock does — XII, IV, VIII.",
     clockLookClassic: "Classic",
     clockLookMinimal: "Minimal",
     clockLookBold: "Bold",

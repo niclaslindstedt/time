@@ -2,8 +2,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DIAL_HOURS,
   DIAL_INNER_R,
   DIAL_SECONDS,
+  ROMAN_HOURS,
   angleOf,
   arcPath,
   framePath,
@@ -87,6 +89,44 @@ describe("framePath", () => {
   });
 });
 
+describe("ROMAN_HOURS", () => {
+  it("writes every hour the way Rome did", () => {
+    expect([...ROMAN_HOURS]).toEqual([
+      "XII",
+      "I",
+      "II",
+      "III",
+      "IV",
+      "V",
+      "VI",
+      "VII",
+      "VIII",
+      "IX",
+      "X",
+      "XI",
+    ]);
+  });
+
+  it("is subtractive at four and nine, not IIII and VIIII", () => {
+    expect(ROMAN_HOURS[4]).toBe("IV");
+    expect(ROMAN_HOURS[9]).toBe("IX");
+    expect(ROMAN_HOURS).not.toContain("IIII");
+    expect(ROMAN_HOURS).not.toContain("VIIII");
+  });
+
+  it("has a numeral for each of the dial's hours", () => {
+    expect(ROMAN_HOURS).toHaveLength(DIAL_HOURS.length);
+    for (const hour of DIAL_HOURS) {
+      expect(ROMAN_HOURS[hour % 12]).toMatch(/^[IVX]+$/);
+    }
+  });
+
+  it("is at its widest at VIII, which is what widthFactor is set for", () => {
+    const widest = [...ROMAN_HOURS].sort((a, b) => b.length - a.length)[0]!;
+    expect(widest).toBe("VIII");
+  });
+});
+
 describe("numeralRadius", () => {
   it("keeps every look and face clear of the ring they sit inside", () => {
     for (const [look, spec] of Object.entries(CLOCK_LOOK)) {
@@ -95,7 +135,7 @@ describe("numeralRadius", () => {
         const size = spec.numeralSize * face.scale;
         const r = numeralRadius(spec.innerRing, size, face.widthFactor);
         // Half the width of the widest numeral the face can draw — two
-        // digits, or IIII and VIII — which is what has to fit.
+        // digits, or VIII — which is what has to fit.
         const reach = r + size * face.widthFactor;
         const ringEdge = DIAL_INNER_R - spec.innerRing / 2;
         const where = `${look} in ${font}`;
@@ -115,7 +155,7 @@ describe("numeralRadius", () => {
 
   it("pulls the numerals further in as the ring and the numerals grow", () => {
     expect(numeralRadius(11, 15)).toBeLessThan(numeralRadius(8, 12));
-    // …and further still for a face whose widest numeral is IIII.
+    // …and further still for a face whose widest numeral is VIII.
     expect(numeralRadius(8, 12, 1.1)).toBeLessThan(numeralRadius(8, 12, 0.55));
   });
 });

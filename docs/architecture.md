@@ -22,7 +22,7 @@ src/app/
   actions.ts        the edits a day can take                       (pure, clock-free)
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   employer.ts       the template, working days, the day's target   (pure)
-  clock.ts          the dial's and the timer frame's geometry      (pure)
+  clock.ts          the dial's numerals, its and the frame's geometry (pure)
   format.ts         durations, timers, times of day
   labels.ts         domain value → label and colour
   merge.ts          two documents → one                            (pure)
