@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   activityIntervals,
+  boundaryRange,
   breakIntervals,
   clip,
+  daySegments,
   dayTotals,
+  horizon,
   progress,
   workedIntervals,
 } from "../src/app/day.ts";
@@ -142,5 +145,97 @@ describe("progress", () => {
     expect(progress(h(4), employer())).toBeCloseTo(0.5);
     expect(progress(h(9), employer())).toBeCloseTo(1.125);
     expect(progress(h(3), employer({ hoursPerDay: 6 }))).toBeCloseTo(0.5);
+  });
+});
+
+describe("the day as stretches", () => {
+  it("cuts presence at every break and change of work", () => {
+    expect(
+      daySegments(monday, h(23)).map((s) => [s.kind, s.typeId, s.start, s.end]),
+    ).toEqual([
+      // The first hour was worked but never labelled — an activity only says
+      // what work was, it never claims any.
+      ["work", null, h(8), h(9)],
+      ["work", "meet", h(9), h(10)],
+      ["work", "code", h(10), h(12)],
+      ["break", "lunch", h(12), h(12, 30)],
+      ["work", "code", h(12, 30), h(15)],
+      ["break", "coffee", h(15), h(15, 15)],
+      ["work", "code", h(15, 15), h(17)],
+    ]);
+  });
+
+  it("reads the morning as one stretch when nothing named it", () => {
+    const d = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: h(12) }],
+    });
+    expect(daySegments(d, h(23))).toEqual([
+      {
+        kind: "work",
+        typeId: null,
+        start: h(8),
+        end: h(12),
+        current: false,
+        running: false,
+      },
+    ]);
+  });
+
+  it("draws a break out to its assumed end and marks the rest running", () => {
+    // In at 08:00, still there; lunch taken at 12:00 and booked until 12:30.
+    const d = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: null }],
+      breaks: [{ id: "b1", typeId: "lunch", start: h(12), end: h(12, 30) }],
+    });
+    // Ten minutes into it, the day already knows it reaches 12:30…
+    expect(horizon(d, h(12, 10))).toBe(h(12, 30));
+    const during = daySegments(d, h(12, 10));
+    expect(during.map((s) => [s.kind, s.start, s.end])).toEqual([
+      ["work", h(8), h(12)],
+      ["break", h(12), h(12, 30)],
+    ]);
+    expect(during[1]!.current).toBe(true);
+    // …but the totals still stop at the moment they are read.
+    expect(dayTotals(d, h(12, 10)).worked).toBe(h(4));
+
+    // Once it is over, the stretch after it is the one still running.
+    const after = daySegments(d, h(13));
+    expect(after[2]).toEqual({
+      kind: "work",
+      typeId: null,
+      start: h(12, 30),
+      end: h(13),
+      current: true,
+      running: true,
+    });
+  });
+
+  it("knows the break it is inside, open-ended or assumed", () => {
+    const assumed = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: null }],
+      breaks: [{ id: "b1", typeId: "lunch", start: h(12), end: h(12, 30) }],
+    });
+    expect(dayTotals(assumed, h(12, 10)).currentBreak?.id).toBe("b1");
+    expect(dayTotals(assumed, h(12, 10)).openBreak).toBeNull();
+    expect(dayTotals(assumed, h(12, 40)).currentBreak).toBeNull();
+    expect(dayTotals(assumed, h(12, 40)).state).toBe("working");
+
+    const open = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: null }],
+      breaks: [{ id: "b1", typeId: "lunch", start: h(12), end: null }],
+    });
+    expect(dayTotals(open, h(14)).currentBreak?.id).toBe("b1");
+    expect(dayTotals(open, h(14)).state).toBe("break");
+  });
+
+  it("gives an edge the room between its neighbours, a minute clear", () => {
+    expect(boundaryRange(monday, h(12, 30), h(23))).toEqual({
+      min: h(12) + 60,
+      max: h(15) - 60,
+    });
+    // The very first and the very last edge of the day have one neighbour.
+    expect(boundaryRange(monday, h(8), h(23))?.min).toBe(0);
+    expect(boundaryRange(monday, h(17), h(23))?.max).toBe(2 * 86_400);
+    expect(boundaryRange(monday, h(9, 17), h(23))).toBeNull();
   });
 });

@@ -4,16 +4,19 @@ import { useMemo, useState } from "react";
 import { Button, PlusIcon } from "@niclaslindstedt/oss-framework/components";
 
 import {
-  addBreak,
-  addBreakEndingAt,
   clockIn,
   clockOut,
   endBreak,
+  latestSession,
+  moveBoundary,
   setCategory,
-  startBreak,
+  setSessionStart,
+  takeBreak,
   type EditContext,
 } from "./actions.ts";
+import { ArrivalModal } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
+import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { dayTotals, progress } from "./day.ts";
 import { isWorkDay, targetSeconds } from "./employer.ts";
 import {
@@ -27,9 +30,15 @@ import { CupIcon, EnterIcon, LeaveIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
 import { breakName, categoryColor } from "./labels.ts";
+import { NewKindModal } from "./NewKindModal.tsx";
 import { runningBalance } from "./report.ts";
-import { SpanEditModal } from "./SpanEditModal.tsx";
-import { blankDay, dayFor, type Employer, type WorkDay } from "./types.ts";
+import {
+  blankDay,
+  dayFor,
+  type Employer,
+  type Seconds,
+  type WorkDay,
+} from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
 import { useNow } from "./useNow.ts";
 
@@ -38,7 +47,13 @@ import { useNow } from "./useNow.ts";
 // category when it changes, leave — so everything is one tap from here and
 // nothing needs a second screen.
 //
-// The screen owns no state beyond the modal it opens. Every number is
+// Three of those taps are corrections rather than records, because a time
+// report is written by someone who was busy doing the work: the timer opens
+// the arrival, the clock face opens the day's stretches, and "Custom" invents
+// the kind of break or work that nobody thought to set up in advance. None of
+// them leave this screen.
+//
+// The screen owns no state beyond the modals it opens. Every number is
 // derived from the day's spans up to `now`, once a second, through `day.ts`;
 // every button is one of the pure edits in `actions.ts` applied to the day
 // and handed back to the store.
@@ -51,6 +66,8 @@ type Props = {
   onNotice: (message: string) => void;
 };
 
+type Asking = { kind: "break" | "activity" };
+
 export function TodayScreen({
   store,
   employer,
@@ -59,7 +76,9 @@ export function TodayScreen({
 }: Props) {
   const t = useT();
   const now = useNow(1000);
-  const [adding, setAdding] = useState(false);
+  const [arriving, setArriving] = useState(false);
+  const [timeline, setTimeline] = useState<{ at: Seconds | null } | null>(null);
+  const [asking, setAsking] = useState<Asking | null>(null);
 
   const day = useMemo<WorkDay | null>(() => {
     if (!employer) return null;
@@ -104,42 +123,91 @@ export function TodayScreen({
   const apply = (next: WorkDay) => {
     if (next !== day) store.saveDay(next);
   };
+  const stampEmployer = (patch: Partial<Employer>) =>
+    store.saveEmployer({
+      ...employer,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    });
 
   const target = targetSeconds(employer);
   const expected = isWorkDay(employer, now.today);
   const state = totals.state;
-  const openBreakName = totals.openBreak
-    ? breakName(t, employer, totals.openBreak.typeId)
-    : null;
+  const onBreak = state === "break";
+  const current = totals.currentBreak;
+  const currentName = current ? breakName(t, employer, current.typeId) : null;
+  const session = latestSession(day);
 
   const stateLine =
     state === "working" && totals.openSession
       ? `${t("today.state.working")} · ${t("today.since", { time: formatTimeOfDay(totals.openSession.start) })}`
-      : state === "break" && totals.openBreak
-        ? `${t("today.state.break")} · ${t("today.breakSince", { name: openBreakName ?? "", time: formatTimeOfDay(totals.openBreak.start) })}`
+      : state === "break" && current
+        ? `${t("today.state.break")} · ${
+            current.end === null
+              ? t("today.breakSince", {
+                  name: currentName ?? "",
+                  time: formatTimeOfDay(current.start),
+                })
+              : t("today.breakUntil", {
+                  name: currentName ?? "",
+                  time: formatTimeOfDay(current.end),
+                })
+          }`
         : totals.lastOut !== null
           ? `${t("today.state.out")} · ${t("today.doneAt", { time: formatTimeOfDay(totals.lastOut) })}`
           : t("today.state.out");
 
+  /** The kinds of work are labels over worked time, so a break stops every
+   *  one of them counting (see `day.ts`). The chip says so in the break's own
+   *  colour rather than going on looking like the thing being counted. */
+  const categoryTone = (on: boolean) =>
+    on && onBreak
+      ? "border-flag bg-flag/15 text-fg-bright"
+      : on
+        ? "border-accent bg-accent/15 text-fg-bright"
+        : "border-line bg-surface-3 text-fg hover:bg-surface-2";
+
   return (
     <div className="flex flex-1 flex-col gap-3 px-3 py-3">
       {/* The readout: the timer, the share of the day it is, and the state
-          the day is in. Tabular digits so the timer does not jitter. */}
-      <div className="rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-center">
-        <p className="text-xs font-bold tracking-wide text-accent uppercase">
+          the day is in. Tabular digits so the timer does not jitter. The
+          timer is a button — the arrival is the time of day that is wrong
+          most often, and this is where you are looking when you notice. */}
+      <div
+        className={`rounded-2xl border px-4 py-3 text-center ${
+          onBreak
+            ? "border-flag/40 bg-flag/10"
+            : "border-accent/40 bg-accent/10"
+        }`}
+      >
+        <p
+          className={`text-xs font-bold tracking-wide uppercase ${
+            onBreak ? "text-flag" : "text-accent"
+          }`}
+        >
           {stateLine}
         </p>
-        <div className="mt-1 flex items-baseline justify-center gap-3">
+        <button
+          type="button"
+          disabled={!session}
+          onClick={() => setArriving(true)}
+          aria-label={t("today.arrival")}
+          className="mt-1 flex w-full items-baseline justify-center gap-3 rounded-xl px-2 py-0.5 disabled:cursor-default"
+        >
           <span
             className="text-4xl font-bold text-fg-bright tabular-nums"
             aria-live="off"
           >
             {formatTimer(totals.worked)}
           </span>
-          <span className="text-2xl font-semibold text-accent tabular-nums">
+          <span
+            className={`text-2xl font-semibold tabular-nums ${
+              onBreak ? "text-flag" : "text-accent"
+            }`}
+          >
             {formatPercent(progress(totals.worked, employer))}
           </span>
-        </div>
+        </button>
         <p className="mt-0.5 text-xs text-muted">
           {expected
             ? t("today.ofTarget", { target: formatDuration(target) })
@@ -153,7 +221,12 @@ export function TodayScreen({
         </p>
       </div>
 
-      <ClockFace day={day} employer={employer} now={now.seconds} />
+      <ClockFace
+        day={day}
+        employer={employer}
+        now={now.seconds}
+        onOpen={(at) => setTimeline({ at: at ?? null })}
+      />
 
       <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted">
         <Swatch color="var(--color-accent)" label={t("today.legend.work")} />
@@ -192,33 +265,29 @@ export function TodayScreen({
       </button>
 
       <section className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
-            {t("today.breaks")}
-          </h2>
-          <button
-            type="button"
-            className="text-xs text-accent hover:underline"
-            onClick={() => setAdding(true)}
-          >
-            {t("today.addBreak")}
-          </button>
-        </div>
+        <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
+          {t("today.breaks")}
+        </h2>
         <div className="grid grid-cols-2 gap-2">
           {employer.breakTypes.map((b) => {
-            const running = totals.openBreak?.typeId === b.id;
-            const disabled = state === "out";
+            const running = current?.typeId === b.id;
             return (
               <button
                 key={b.id}
                 type="button"
-                disabled={disabled}
+                disabled={state === "out"}
                 aria-pressed={running}
                 onClick={() =>
                   apply(
                     running
                       ? endBreak(day, now.seconds, ctx())
-                      : startBreak(day, b.id, now.seconds, ctx()),
+                      : takeBreak(
+                          day,
+                          b.id,
+                          now.seconds,
+                          b.defaultMinutes * 60,
+                          ctx(),
+                        ),
                   )
                 }
                 className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-2 text-sm font-semibold transition-colors disabled:opacity-40 ${
@@ -239,86 +308,161 @@ export function TodayScreen({
               </button>
             );
           })}
+          <button
+            type="button"
+            disabled={state === "out"}
+            onClick={() => setAsking({ kind: "break" })}
+            className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent px-2 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40"
+          >
+            <PlusIcon className="h-4 w-4 shrink-0" />
+            <span className="truncate">{t("today.custom")}</span>
+          </button>
         </div>
         <p className="text-xs text-muted">
           {state === "out" ? t("today.breaksOutHint") : t("today.breaksHint")}
         </p>
       </section>
 
-      {employer.categories.length > 0 && (
-        <section className="flex flex-col gap-1.5">
-          <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
-            {t("today.categories")}
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {employer.categories.map((c) => {
-              const on = totals.currentCategoryId === c.id;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  disabled={state === "out"}
-                  aria-pressed={on}
-                  onClick={() =>
-                    apply(
-                      setCategory(day, on ? null : c.id, now.seconds, ctx()),
-                    )
-                  }
-                  className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors disabled:opacity-40 ${
-                    on
-                      ? "border-accent bg-accent/15 text-fg-bright"
-                      : "border-line bg-surface-3 text-fg hover:bg-surface-2"
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ background: categoryColor(employer, c.id) }}
-                  />
-                  {c.name}
-                  {totals.categories[c.id] ? (
-                    <span className="text-xs text-muted tabular-nums">
-                      {formatDuration(totals.categories[c.id]!)}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-xs text-muted">{t("today.categoriesHint")}</p>
-        </section>
+      <section className="flex flex-col gap-1.5">
+        <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
+          {t("today.categories")}
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {employer.categories.map((c) => {
+            const on = totals.currentCategoryId === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                disabled={state === "out"}
+                aria-pressed={on}
+                onClick={() =>
+                  apply(setCategory(day, on ? null : c.id, now.seconds, ctx()))
+                }
+                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors disabled:opacity-40 ${categoryTone(on)}`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{
+                    background:
+                      on && onBreak
+                        ? "var(--color-flag)"
+                        : categoryColor(employer, c.id),
+                  }}
+                />
+                {c.name}
+                {on && onBreak && (
+                  <span className="text-xs font-normal text-flag">
+                    {t("today.paused")}
+                  </span>
+                )}
+                {totals.categories[c.id] ? (
+                  <span className="text-xs text-muted tabular-nums">
+                    {formatDuration(totals.categories[c.id]!)}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            disabled={state === "out"}
+            onClick={() => setAsking({ kind: "activity" })}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-line px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40"
+          >
+            <PlusIcon className="h-4 w-4" />
+            {t("today.custom")}
+          </button>
+        </div>
+        <p className="text-xs text-muted">
+          {onBreak ? t("today.pausedHint") : t("today.categoriesHint")}
+        </p>
+      </section>
+
+      {arriving && session && (
+        <ArrivalModal
+          start={session.start}
+          min={earliestArrival(day, session.start)}
+          max={Math.min(now.seconds, (session.end ?? Infinity) - 60)}
+          workedAt={(start) =>
+            dayTotals(
+              setSessionStart(day, session.id, start, ctx()),
+              now.seconds,
+            ).worked
+          }
+          onSave={(start) => {
+            const next = setSessionStart(day, session.id, start, ctx());
+            if (next === day) {
+              onNotice(t("editor.invalid"));
+              return;
+            }
+            apply(next);
+            onNotice(t("log.saved"));
+            setArriving(false);
+          }}
+          onClose={() => setArriving(false)}
+        />
       )}
 
-      {adding && (
-        <SpanEditModal
-          kind="break"
+      {timeline && (
+        <DayTimelineModal
+          day={day}
           employer={employer}
-          initial={null}
           now={now.seconds}
-          quick={employer.breakTypes.map((b) => ({
-            typeId: b.id,
-            label: t("today.justHad", {
-              name: b.name,
-              minutes: String(b.defaultMinutes),
-            }),
-            seconds: b.defaultMinutes * 60,
-          }))}
-          onQuick={(typeId, seconds) => {
-            apply(addBreakEndingAt(day, typeId, seconds, now.seconds, ctx()));
-            onNotice(t("log.saved"));
-            setAdding(false);
+          highlight={timeline.at}
+          onMove={(at, to) => {
+            const next = moveBoundary(day, at, to, ctx());
+            if (next === day) {
+              onNotice(t("timeline.stuck"));
+              return;
+            }
+            apply(next);
+            setTimeline({ at: to });
           }}
-          onSave={(draft) => {
-            if (draft.end === null || !draft.typeId) return;
-            apply(addBreak(day, draft.typeId, draft.start, draft.end, ctx()));
+          onClose={() => setTimeline(null)}
+        />
+      )}
+
+      {asking && (
+        <NewKindModal
+          kind={asking.kind}
+          onSave={(name, minutes) => {
+            const id = makeId();
+            if (asking.kind === "break") {
+              stampEmployer({
+                breakTypes: [
+                  ...employer.breakTypes,
+                  { id, name, defaultMinutes: minutes },
+                ],
+              });
+              apply(takeBreak(day, id, now.seconds, minutes * 60, ctx()));
+            } else {
+              stampEmployer({
+                categories: [...employer.categories, { id, name }],
+              });
+              apply(setCategory(day, id, now.seconds, ctx()));
+            }
             onNotice(t("log.saved"));
-            setAdding(false);
+            setAsking(null);
           }}
-          onClose={() => setAdding(false)}
+          onClose={() => setAsking(null)}
         />
       )}
     </div>
   );
+}
+
+/** The earliest a session may have started: the end of the one before it, or
+ *  midnight. Keeps an arrival nudged backwards from swallowing the morning
+ *  session on a day with two. */
+function earliestArrival(day: WorkDay, start: Seconds): Seconds {
+  let min = 0;
+  for (const s of day.sessions) {
+    const end = s.end ?? s.start;
+    if (s.start < start && end > min) min = end;
+  }
+  return min;
 }
 
 function Swatch({ color, label }: { color: string; label: string }) {

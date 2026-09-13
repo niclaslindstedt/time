@@ -16,8 +16,12 @@
 
 - Today: a running timer and the share of the day's target it is, a
   twelve-hour clock with time at work, breaks and kinds of work drawn on it,
-  and one-tap buttons to enter, leave, start a break or switch what you are
+  and one-tap buttons to enter, leave, take a break or switch what you are
   working on
+- Correcting a time without leaving Today: a break is booked for the length
+  its kind usually takes and its end is printed on the clock's rim, tapping
+  the clock opens the day stretch by stretch with each end movable, and
+  tapping the timer corrects when you got in
 - Log: every day as a list of sessions, breaks and activities, each editable
   or deletable, with breaks and time at work addable after the fact
 - Report: hours worked against target per day for a week or a month, where

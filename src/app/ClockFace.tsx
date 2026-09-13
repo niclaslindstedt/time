@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { useMemo } from "react";
 
-import { activityIntervals, breakIntervals, presenceIntervals } from "./day.ts";
-import { arcPath, handAngles, polar } from "./clock.ts";
+import { activityIntervals, daySegments } from "./day.ts";
+import { angleOf, arcPath, handAngles, polar } from "./clock.ts";
+import { formatTimeOfDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
-import { categoryColor } from "./labels.ts";
+import { breakName, categoryColor } from "./labels.ts";
 import type { Employer, Seconds, WorkDay } from "./types.ts";
 
 // The Today screen's clock: a twelve-hour dial with the day drawn on it.
@@ -17,8 +18,16 @@ import type { Employer, Seconds, WorkDay } from "./types.ts";
 // wall clock's, so the arc ending under the minute hand is the stretch you
 // are in.
 //
-// Everything is derived from the day's spans up to `now` (see `day.ts`); the
-// face holds no state of its own and re-renders as the second ticks.
+// The dial is also where a break gets corrected. A break is written down with
+// the end its kind is assumed to have (see `takeBreak`), so its end is a
+// guess — and the guess is printed on the rim, next to the arc it ends, where
+// tapping it opens the stretch list at that moment. Tapping the rings
+// themselves opens the same list from the top.
+//
+// Everything is derived from the day's spans (see `day.ts`); the face holds no
+// state of its own and re-renders as the second ticks. The part of a break
+// that has not happened yet — the tail between now and its assumed end — is
+// drawn at half strength, because it is a plan rather than a record.
 
 const SIZE = 240;
 const C = SIZE / 2;
@@ -28,19 +37,43 @@ const INNER_R = 82;
 const INNER_W = 8;
 const TICK_OUTER = 116;
 const NUMERAL_R = 60;
+/** Where the break-end chips sit: outside the ticks, as a percentage of the
+ *  box, so they are HTML buttons over the SVG rather than text inside it —
+ *  a chip is a tap target and wants a real button under the finger. */
+const LABEL_R = 122;
+/** Two chips closer together than this on the dial would overlap, so the
+ *  later one is dropped: twenty minutes of dial is about a chip wide. */
+const LABEL_GAP_DEGREES = 22;
 
 type Props = {
   day: WorkDay;
   employer: Employer;
   now: Seconds;
+  /** Open the day's stretches, optionally at the moment that was tapped. */
+  onOpen: (at?: Seconds) => void;
 };
 
-export function ClockFace({ day, employer, now }: Props) {
+export function ClockFace({ day, employer, now, onOpen }: Props) {
   const t = useT();
-  const presence = useMemo(() => presenceIntervals(day, now), [day, now]);
-  const breaks = useMemo(() => breakIntervals(day, now), [day, now]);
+  const segments = useMemo(() => daySegments(day, now), [day, now]);
   const activities = useMemo(() => activityIntervals(day, now), [day, now]);
   const hands = handAngles(now);
+
+  // One chip per break end, in the order of the dial, dropping any that would
+  // land on top of the one before it.
+  const labels = useMemo(() => {
+    const out: { at: Seconds; angle: number; typeId: string | null }[] = [];
+    for (const s of segments) {
+      if (s.kind !== "break" || s.running) continue;
+      const angle = angleOf(s.end);
+      if (out.some((l) => gap(l.angle, angle) < LABEL_GAP_DEGREES)) continue;
+      out.push({ at: s.end, angle, typeId: s.typeId });
+    }
+    return out.map((l) => {
+      const [x, y] = polar(C, C, LABEL_R, l.angle);
+      return { ...l, left: (x / SIZE) * 100, top: (y / SIZE) * 100 };
+    });
+  }, [segments]);
 
   const ticks = Array.from({ length: 12 }, (_, i) => {
     const [x1, y1] = polar(C, C, TICK_OUTER - 6, i * 30);
@@ -57,128 +90,166 @@ export function ClockFace({ day, employer, now }: Props) {
   const [sx, sy] = polar(C, C, 56, hands.second);
 
   return (
-    <svg
-      viewBox={`0 0 ${SIZE} ${SIZE}`}
-      className="app-clock mx-auto block h-auto w-full max-w-[15rem]"
-      role="img"
-      aria-label={t("today.clockLabel")}
-    >
-      <desc>{t("today.clockDesc")}</desc>
+    <div className="relative mx-auto w-full max-w-[15rem]">
+      <svg
+        viewBox={`0 0 ${SIZE} ${SIZE}`}
+        className="app-clock block h-auto w-full"
+        role="img"
+        aria-label={t("today.clockLabel")}
+      >
+        <desc>{t("today.clockDesc")}</desc>
 
-      {/* The dial's two tracks, recessive, so an empty morning still reads
-          as a clock and the arcs have a groove to sit in. */}
-      <circle
-        cx={C}
-        cy={C}
-        r={OUTER_R}
-        fill="none"
-        stroke="var(--color-line)"
-        strokeWidth={OUTER_W}
-        opacity={0.45}
-      />
-      <circle
-        cx={C}
-        cy={C}
-        r={INNER_R}
-        fill="none"
-        stroke="var(--color-line)"
-        strokeWidth={INNER_W}
-        opacity={0.3}
-      />
+        {/* The dial's two tracks, recessive, so an empty morning still reads
+            as a clock and the arcs have a groove to sit in. */}
+        <circle
+          cx={C}
+          cy={C}
+          r={OUTER_R}
+          fill="none"
+          stroke="var(--color-line)"
+          strokeWidth={OUTER_W}
+          opacity={0.45}
+        />
+        <circle
+          cx={C}
+          cy={C}
+          r={INNER_R}
+          fill="none"
+          stroke="var(--color-line)"
+          strokeWidth={INNER_W}
+          opacity={0.3}
+        />
 
-      {presence.map((i, index) => {
-        const d = arcPath(C, C, OUTER_R, i.start, i.end);
-        return d ? (
-          <path
-            key={`p${index}`}
-            d={d}
-            fill="none"
-            stroke="var(--color-accent)"
-            strokeWidth={OUTER_W}
-            strokeLinecap="butt"
-          />
-        ) : null;
-      })}
-      {breaks.map((i, index) => {
-        const d = arcPath(C, C, OUTER_R, i.start, i.end);
-        return d ? (
-          <path
-            key={`b${index}`}
-            d={d}
-            fill="none"
-            stroke="var(--color-flag)"
-            strokeWidth={OUTER_W}
-            strokeLinecap="butt"
-          />
-        ) : null;
-      })}
-      {activities.map((i, index) => {
-        const d = arcPath(C, C, INNER_R, i.start, i.end);
-        return d ? (
-          <path
-            key={`a${index}`}
-            d={d}
-            fill="none"
-            stroke={categoryColor(employer, i.categoryId)}
-            strokeWidth={INNER_W}
-            strokeLinecap="butt"
-          />
-        ) : null;
-      })}
+        {segments.map((s, index) => {
+          const d = arcPath(C, C, OUTER_R, s.start, Math.min(s.end, now));
+          return d ? (
+            <path
+              key={`s${index}`}
+              d={d}
+              fill="none"
+              stroke={
+                s.kind === "break" ? "var(--color-flag)" : "var(--color-accent)"
+              }
+              strokeWidth={OUTER_W}
+              strokeLinecap="butt"
+            />
+          ) : null;
+        })}
+        {segments.map((s, index) => {
+          // The tail of a break that has not been lived yet: assumed, so
+          // drawn as half a claim.
+          const d = s.end > now ? arcPath(C, C, OUTER_R, now, s.end) : null;
+          return d ? (
+            <path
+              key={`t${index}`}
+              d={d}
+              fill="none"
+              stroke="var(--color-flag)"
+              strokeWidth={OUTER_W}
+              strokeLinecap="butt"
+              opacity={0.4}
+            />
+          ) : null;
+        })}
+        {activities.map((i, index) => {
+          const d = arcPath(C, C, INNER_R, i.start, i.end);
+          return d ? (
+            <path
+              key={`a${index}`}
+              d={d}
+              fill="none"
+              stroke={categoryColor(employer, i.categoryId)}
+              strokeWidth={INNER_W}
+              strokeLinecap="butt"
+            />
+          ) : null;
+        })}
 
-      {ticks.map((tick, i) => (
+        {ticks.map((tick, i) => (
+          <line
+            key={`k${i}`}
+            x1={tick.x1}
+            y1={tick.y1}
+            x2={tick.x2}
+            y2={tick.y2}
+            stroke="var(--color-muted)"
+            strokeWidth={i % 3 === 0 ? 2.5 : 1.5}
+            strokeLinecap="round"
+          />
+        ))}
+        {numerals.map(({ n, x, y }) => (
+          <text
+            key={n}
+            x={x}
+            y={y}
+            dy="0.35em"
+            textAnchor="middle"
+            className="fill-muted text-[13px] font-semibold tabular-nums"
+          >
+            {n}
+          </text>
+        ))}
+
         <line
-          key={`t${i}`}
-          x1={tick.x1}
-          y1={tick.y1}
-          x2={tick.x2}
-          y2={tick.y2}
-          stroke="var(--color-muted)"
-          strokeWidth={i % 3 === 0 ? 2.5 : 1.5}
+          x1={C}
+          y1={C}
+          x2={hx}
+          y2={hy}
+          stroke="var(--color-fg-bright)"
+          strokeWidth={5}
           strokeLinecap="round"
         />
-      ))}
-      {numerals.map(({ n, x, y }) => (
-        <text
-          key={n}
-          x={x}
-          y={y}
-          dy="0.35em"
-          textAnchor="middle"
-          className="fill-muted text-[13px] font-semibold tabular-nums"
-        >
-          {n}
-        </text>
-      ))}
+        <line
+          x1={C}
+          y1={C}
+          x2={mx}
+          y2={my}
+          stroke="var(--color-fg-bright)"
+          strokeWidth={3.5}
+          strokeLinecap="round"
+        />
+        <line
+          x1={C}
+          y1={C}
+          x2={sx}
+          y2={sy}
+          stroke="var(--color-accent)"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+        />
+        <circle cx={C} cy={C} r={4} fill="var(--color-accent)" />
+      </svg>
 
-      <line
-        x1={C}
-        y1={C}
-        x2={hx}
-        y2={hy}
-        stroke="var(--color-fg-bright)"
-        strokeWidth={5}
-        strokeLinecap="round"
+      {/* The dial is the button. It sits over the drawing rather than around
+          it so the chips below stay on top of it. */}
+      <button
+        type="button"
+        aria-label={t("today.openTimeline")}
+        onClick={() => onOpen()}
+        className="absolute inset-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       />
-      <line
-        x1={C}
-        y1={C}
-        x2={mx}
-        y2={my}
-        stroke="var(--color-fg-bright)"
-        strokeWidth={3.5}
-        strokeLinecap="round"
-      />
-      <line
-        x1={C}
-        y1={C}
-        x2={sx}
-        y2={sy}
-        stroke="var(--color-accent)"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-      />
-      <circle cx={C} cy={C} r={4} fill="var(--color-accent)" />
-    </svg>
+
+      {labels.map((l) => (
+        <button
+          key={l.at}
+          type="button"
+          onClick={() => onOpen(l.at)}
+          style={{ left: `${l.left}%`, top: `${l.top}%` }}
+          aria-label={t("today.breakEndLabel", {
+            name: l.typeId ? breakName(t, employer, l.typeId) : "",
+            time: formatTimeOfDay(l.at),
+          })}
+          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-flag/50 bg-surface-2 px-1.5 py-0.5 text-[0.625rem] leading-none font-bold text-flag tabular-nums shadow-sm"
+        >
+          {formatTimeOfDay(l.at)}
+        </button>
+      ))}
+    </div>
   );
+}
+
+/** The shorter way round the dial between two angles, in degrees. */
+function gap(a: number, b: number): number {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
 }

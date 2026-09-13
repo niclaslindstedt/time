@@ -15,10 +15,15 @@ import { parseTimeOfDay, toTimeInput } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import type { Employer, Seconds } from "./types.ts";
 
-// The one editor behind every row in the Log and the "Add a break…" link on
-// Today: a kind (for a break or an activity), a start, an end, and whether
-// the span is still running. It edits a draft and hands the result back;
-// the caller turns it into one of the pure edits in `actions.ts`.
+// The one editor behind every row in the Log: a kind (for a break or an
+// activity), a start, an end, and whether the span is still running. It edits
+// a draft and hands the result back; the caller turns it into one of the pure
+// edits in `actions.ts`.
+//
+// The Today screen has no way in here — a break is taken with its assumed
+// length and corrected on the clock face, and the day's edges are moved in
+// the stretch list. This is where a *span* is corrected, one end at a time,
+// which is a different job and one the Log is the place for.
 
 export type SpanDraft = {
   id: string | null;
@@ -28,8 +33,6 @@ export type SpanDraft = {
   end: Seconds | null;
 };
 
-type Quick = { typeId: string; label: string; seconds: Seconds };
-
 type Props = {
   kind: SpanKind;
   employer: Employer;
@@ -37,10 +40,6 @@ type Props = {
   initial: SpanDraft | null;
   /** The moment "now", for a new span's default start. */
   now: Seconds;
-  /** One-tap shortcuts for a break that just ended (Today's "I just had
-   *  lunch"). Shown above the form when adding. */
-  quick?: Quick[];
-  onQuick?: (typeId: string, seconds: Seconds) => void;
   onSave: (draft: SpanDraft) => void;
   onDelete?: () => void;
   onClose: () => void;
@@ -51,8 +50,6 @@ export function SpanEditModal({
   employer,
   initial,
   now,
-  quick,
-  onQuick,
   onSave,
   onDelete,
   onClose,
@@ -103,19 +100,6 @@ export function SpanEditModal({
               : t("log.add", { kind: kindLabel })}
           </h2>
 
-          {!initial && quick && quick.length > 0 && onQuick && (
-            <div className="flex flex-col gap-1.5">
-              {quick.map((q) => (
-                <Button
-                  key={q.typeId}
-                  onClick={() => onQuick(q.typeId, q.seconds)}
-                >
-                  {q.label}
-                </Button>
-              ))}
-            </div>
-          )}
-
           {options.length > 0 && (
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted">
@@ -133,7 +117,12 @@ export function SpanEditModal({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
+          {/* `min-w-0` on the columns and on the fields inside them: a
+              native time input has an intrinsic width of its own, and
+              without a zero minimum the pair pushes the modal's content
+              wider than the card — which on a phone clips the right-hand
+              field and everything under it. */}
+          <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
             <LabeledInput
               label={t("editor.start")}
               type="time"

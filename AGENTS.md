@@ -162,9 +162,17 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   time is visible.
 - `src/app/ClockFace.tsx` — the dial. Outer ring presence with breaks marked
   over it, inner ring the kind of work, hands at `now`. Reads `day.ts` only.
+  It is also a control: the break ends printed on the rim, and the rings
+  themselves, open the day's stretches.
+- `src/app/DayTimelineModal.tsx` — the day as the stretches `daySegments`
+  makes of it, each end movable. The only edit it can make is `moveBoundary`,
+  which moves both sides of a moment at once.
+- `src/app/ArrivalModal.tsx`, `NewKindModal.tsx` — the Today screen's two
+  small forms: when you got in (opened by the timer), and a kind of break or
+  work named on the spot (the "Custom" pill).
 - `src/app/SpanEditModal.tsx`, `EmployerEditModal.tsx` — the two editors.
-  The span editor is the one form behind every row in the Log and the "Add a
-  break…" link on Today; the employer editor edits a draft and saves whole.
+  The span editor is the one form behind every row in the Log; the employer
+  editor edits a draft and saves whole.
 - `src/app/TopBar.tsx`, `BottomNav.tsx` — the shell's two bars. The top bar
   grows an employer switcher only once there are two employers.
 - `src/app/labels.ts` — domain value → label and colour, in one place, so a
@@ -223,6 +231,7 @@ regression.
 | A change to how the clock draws         | `src/app/clock.ts` (geometry, tested) or `ClockFace.tsx` (paint)                                                                          |
 | A change to what an employer holds      | `src/app/types.ts` + `employer.ts` + `EmployerEditModal.tsx` + `migrations.ts`                                                            |
 | A new control on the span editor        | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
+| A new way to correct a time on Today    | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
 | A new screen                            | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place |
 | A new setting                           | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                      |
 | A new developer-only affordance         | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                |

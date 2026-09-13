@@ -128,6 +128,30 @@ input:disabled,
   cursor: not-allowed;
 }
 
+/* ── Native time fields ──────────────────────────────────────────────────────
+   The editor's Start and End, the stretch list's ends and the arrival are all
+   `<input type="time">`: a native control, so the phone's own wheel picker
+   opens on it rather than a rolled-here spinner that would get the locale's
+   clock wrong.
+
+   The catch is its width. WebKit lays the control out from its own shadow
+   contents and gives it an intrinsic minimum, which `width: 100%` does not
+   beat — so two of them side by side in a two-column grid push their
+   container wider than the card that holds it, and the modal ends up
+   scrolling sideways with its right-hand field clipped off the edge. Turning
+   the native appearance off drops the intrinsic minimum and leaves the field
+   sized by its box, which is the whole fix; the picker is unaffected.
+
+   `field-sizing: content` is deliberately *not* used — it is the same trap
+   from the other side. */
+input[type="time"],
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* ── App shell ───────────────────────────────────────────────────────────────
    The app fills the viewport and never scrolls as a document: the <main>
    between the header and the bottom nav is the one scrolling region, so the

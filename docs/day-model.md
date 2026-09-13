@@ -17,7 +17,10 @@ A `WorkDay` holds, for one employer on one calendar day:
   over presence, never a claim of presence on its own.
 
 Every span is `[start, end)` in seconds since the day's local midnight, `end`
-being null while it is still running.
+being null while it is still running. A break is the exception in practice: it
+is written down with an end from the moment it starts (see
+[the break's assumed end](#the-breaks-assumed-end)), so its end is usually a
+figure to correct rather than one to wait for.
 
 ## The derivation
 
@@ -46,8 +49,40 @@ So:
 
 The **state** of a day at `now` follows what is _open_, not what the clipped
 intervals say: a session opened this second covers zero seconds and is still
-"working"; a running break makes it "on a break"; no open session is "not at
-work".
+"working"; a break `now` falls inside makes it "on a break"; no open session is
+"not at work".
+
+### The break's assumed end
+
+Nobody taps "I'm back" reliably, so a break is not left running until somebody
+remembers it. `takeBreak` writes the end down with the start, the length the
+employer assumes that kind of break takes — lunch half an hour, coffee a
+quarter — and the day is "on a break" until that end passes, whether or not
+anything else is tapped.
+
+That makes the end a **guess**, and the app treats it as one. `horizon` is how
+far past `now` the shape of the day is known: normally not at all, but during
+a break it reaches that break's end, which is what lets the clock draw the
+break to 12:30 at 12:10 and print the time on the rim to be corrected. The
+_totals_ never read past `now` — a minute not yet worked is not worked — so
+the timer is unaffected by a break that has not finished.
+
+Ending a break early is "I'm back": its end moves to now. A break with less
+than a minute left of it after that is dropped rather than kept, because it is
+the wrong pill corrected a second later, not a minute of lunch.
+
+### The day as stretches
+
+`daySegments` reads the same intervals as one ordered list of the stretches
+the day is made of: at work (of one kind of work, or of none), then lunch,
+then at work again. Consecutive stretches meet — the end of one _is_ the start
+of the next — which is what makes an end movable. `boundaryRange` says how far
+an edge may move: up to its neighbours, a minute clear of each, so no stretch
+is squeezed out of existence.
+
+This is the derivation behind the clock face's break times and the stretch
+list they open, and it is derived from the spans like everything else: there
+is no second copy of the day to keep in step.
 
 `dayTotals` returns all of it at once — presence, worked, breaks by type, time
 by category, uncategorised, the state, the open spans, first-in and last-out —
@@ -59,18 +94,24 @@ employer's target for the day, unclamped: 112% is overtime, not an error.
 `actions.ts` is the set of edits a day can take, each a pure function from a
 day to a new day:
 
-| Edit                                    | Rule                                                                                   |
-| --------------------------------------- | -------------------------------------------------------------------------------------- |
-| `clockIn`                               | Opens a session; a no-op while one is open.                                            |
-| `clockOut`                              | Closes the session, and the running break and activity with it.                        |
-| `startBreak`                            | Needs an open session; ends a running break of another type first.                     |
-| `endBreak`                              | Closes the running break.                                                              |
-| `setCategory`                           | Needs an open session; closes the running activity, opens one of the new kind.         |
-| `addBreak`, `addSession`, `addActivity` | After the fact, with both ends (or an open end, if none of that kind is open).         |
-| `addBreakEndingAt`                      | "I just had lunch": a break of the type's default length ending now.                   |
-| `updateSpan`, `removeSpan`              | Move a span's ends or kind, or drop it. An edit that would make it invalid is refused. |
+| Edit                                    | Rule                                                                                                                                           |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clockIn`                               | Opens a session; a no-op while one is open.                                                                                                    |
+| `clockOut`                              | Closes the session, and the running break and activity with it.                                                                                |
+| `takeBreak`                             | Needs an open session; writes a break of the kind's assumed length, ending a break already going on first.                                     |
+| `endBreak`                              | "I'm back": ends the break `now` falls inside, dropping it if under a minute is left of it.                                                    |
+| `setCategory`                           | Needs an open session; closes the running activity, opens one of the new kind.                                                                 |
+| `addBreak`, `addSession`, `addActivity` | After the fact, with both ends (or an open end, if none of that kind is open).                                                                 |
+| `setSessionStart`                       | Moves when a session began — the arrival, corrected from the timer. Refused if it reaches back over an earlier session.                        |
+| `moveBoundary`                          | Moves a moment two stretches meet at: everything that starts or ends there moves, so a later lunch end is a later start for the work after it. |
+| `updateSpan`, `removeSpan`              | Move a span's ends or kind, or drop it. An edit that would make it invalid is refused.                                                         |
 
 A span closed in the second it opened is dropped rather than stored inverted.
+Pushing a boundary forward drags along anything that started inside the stretch
+it swallows and drops what it swallowed whole; a move that would invert a
+session is refused outright, because presence has two ends and both of them are
+the Log's to correct.
+
 Ids and the `updatedAt` stamp come in through a `ctx` argument, so the module
 never touches chance or the clock.
 

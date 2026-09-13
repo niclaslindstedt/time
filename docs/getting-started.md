@@ -31,15 +31,21 @@ requires authentication even for public packages.
    any of it, or come back to it later under **Employers**.
 2. Press **Enter office**. The timer starts, and the clock begins drawing the
    day.
-3. Tap a break — **Lunch**, say — when you go, and tap it again when you are
-   back. The timer stops while the break runs.
+3. Tap a break — **Lunch**, say — when you go. It is written down there and
+   then, ending after the half hour a lunch is assumed to take, so you do not
+   have to tell the app you are back. The timer stops for as long as it runs.
+   Back early? Tap **End Lunch**.
 4. Tap a kind of work when it changes. This only labels the time; it does not
-   start or stop anything.
+   start or stop anything. While a break is on it says **paused**, because a
+   break stops the counting.
 5. Press **Leave office** when you go home.
 
-Forgot a break? **Add a break…** on Today has a one-tap "I just had lunch (30
-min)" for each type, or set the exact times. The **Log** tab shows the day as
-a list where every row can be corrected.
+The lunch ran long? Its end is printed on the rim of the clock — tap it, or
+the clock itself, and the day opens stretch by stretch, where moving one end
+starts the next stretch there. Tap the timer to correct when you got in. A
+kind of break or work nobody set up in advance is **Custom**, at the end of
+either row. The **Log** tab shows the day as a list where every row can be
+corrected one span at a time.
 
 ## Where the data lives
 

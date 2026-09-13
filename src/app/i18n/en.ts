@@ -53,6 +53,7 @@ export const en = {
     },
     since: "since {time}",
     breakSince: "{name} since {time}",
+    breakUntil: "{name} until {time}",
     doneAt: "Left at {time}",
     clockIn: "Enter office",
     clockOut: "Leave office",
@@ -62,12 +63,35 @@ export const en = {
     balanceToday: "Today {balance}",
     balanceOverall: "Overall {balance}",
     breaks: "Breaks",
-    breaksHint: "Tap one to start it now.",
+    breaksHint:
+      "Tap one as you leave the desk — it is written down as the length it usually takes, and the clock is where you correct it.",
     breaksOutHint: "Enter the office first.",
     categories: "Working on",
     categoriesHint: "Tap what you are doing; tap again to stop labelling.",
-    addBreak: "Add a break…",
-    justHad: "I just had {name} ({minutes} min)",
+    paused: "paused",
+    pausedHint: "A break is on, so nothing is being counted towards this.",
+    custom: "Custom",
+    // Tapping the timer: the arrival is the one time of day that is wrong
+    // most often, because the app is opened after the fact.
+    arrival: "Correct when you got in",
+    arrivalTitle: "When did you get in?",
+    arrivalHint:
+      "Moves the start of the stretch you are in. The timer, the day and the balance all follow.",
+    arrivalWorked: "That makes {duration} worked so far.",
+    arrivalEarlier: "{minutes} min earlier",
+    arrivalLater: "{minutes} min later",
+    // Creating a break type or a kind of work from the Today screen, without
+    // going to the employer form for it.
+    newBreak: "A kind of break",
+    newBreakHint:
+      "It joins this employer's breaks, and starts now. The minutes are how long one is assumed to take.",
+    newCategory: "A kind of work",
+    newCategoryHint:
+      "It joins this employer's kinds of work, and you are doing it from now.",
+    kindName: "Name",
+    kindNamePlaceholder: "What to call it",
+    kindMinutes: "Minutes",
+    kindRequired: "Give it a name.",
     clockLabel: "Today on a twelve-hour clock",
     clockDesc:
       "Time at work is drawn as a ring around the dial, with breaks marked on it and the kind of work on an inner ring.",
@@ -75,6 +99,23 @@ export const en = {
       work: "At work",
       break: "Break",
     },
+    openTimeline: "Open today's stretches",
+    breakEndLabel: "{name} ended {time} — tap to change",
+  },
+
+  // The clock face's popup: the day as the stretches it is made of, with the
+  // moment each one ended up for correction.
+  timeline: {
+    title: "Today, stretch by stretch",
+    hint: "Change when a stretch ended and the next one starts there. None of this was timed to the second — it is the shape of the day, not a stopwatch.",
+    empty: "Nothing logged yet today.",
+    running: "still going",
+    ends: "Ended",
+    endOf: "When {name} ended",
+    earlier: "Five minutes earlier",
+    later: "Five minutes later",
+    work: "At work",
+    stuck: "That would leave no room for the stretch next to it.",
   },
 
   // The day as a list — what the clock drew, editable.
@@ -172,7 +213,7 @@ export const en = {
     hoursPerDay: "Hours per working day",
     breakTypes: "Break types",
     breakTypesHint:
-      "One button each on the Today screen. The minutes are what a break added afterwards is assumed to have taken.",
+      "One button each on the Today screen. The minutes are how long a break of that kind is assumed to take when you tap it — correct it on the clock afterwards.",
     breakName: "Name",
     breakMinutes: "Minutes",
     addBreakType: "Add a break type",

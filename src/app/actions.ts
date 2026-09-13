@@ -51,6 +51,38 @@ function closeOpen<S extends Span>(spans: readonly S[], at: Seconds): S[] {
   });
 }
 
+/** Close what is going on at `at`: a span with no end, and one written to
+ *  end later than `at` — a break booked until 12:30 that you came back from
+ *  at 12:12 ended at 12:12. A span that has not started yet is left alone. */
+function closeCurrent<S extends Span>(spans: readonly S[], at: Seconds): S[] {
+  return spans.map((s) => {
+    if (s.start > at) return s;
+    if (s.end !== null && s.end <= at) return s;
+    return { ...s, end: Math.max(s.start, at) };
+  });
+}
+
+/** The shortest break the app will keep. Under this, ending one is a mis-tap
+ *  — the wrong pill, corrected a second later — rather than a minute of
+ *  lunch, and the record is better off without it. */
+const MIN_BREAK_SECONDS: Seconds = 60;
+
+/** Close the break going on at `at`, dropping it when that leaves less than
+ *  a minute of it. Breaks that had already ended, and any that have not
+ *  started, are passed through untouched — a short break somebody typed into
+ *  the Log on purpose is theirs to keep. */
+function closeBreaks(breaks: readonly BreakSpan[], at: Seconds): BreakSpan[] {
+  const out: BreakSpan[] = [];
+  for (const b of breaks) {
+    if (b.start > at || (b.end !== null && b.end <= at)) {
+      out.push(b);
+    } else if (at - b.start >= MIN_BREAK_SECONDS) {
+      out.push({ ...b, end: at });
+    }
+  }
+  return out;
+}
+
 function dropEmpty<S extends Span>(spans: readonly S[]): S[] {
   return spans.filter((s) => s.end === null || s.end > s.start);
 }
@@ -69,34 +101,48 @@ export function clockOut(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
   if (!day.sessions.some((s) => s.end === null)) return day;
   return stamp(day, ctx, {
     sessions: dropEmpty(closeOpen(day.sessions, at)),
-    breaks: dropEmpty(closeOpen(day.breaks, at)),
-    activities: dropEmpty(closeOpen(day.activities, at)),
+    breaks: closeBreaks(day.breaks, at),
+    activities: dropEmpty(closeCurrent(day.activities, at)),
   });
 }
 
-/** Start a break of a type. Requires an open session; a running break of
- *  another type is ended first, so a coffee after lunch is two breaks. */
-export function startBreak(
+/**
+ * Take a break of a kind, now. The end is written down at the same moment,
+ * `seconds` later: nobody taps "I'm back" reliably, and a break whose end is
+ * assumed and then corrected is a truer record than one left running until
+ * somebody remembers it. The clock face is where it gets corrected.
+ *
+ * Requires an open session — a break is a pause inside presence. A break
+ * already going on is ended here, so a coffee during lunch is two breaks.
+ */
+export function takeBreak(
   day: WorkDay,
   typeId: string,
   at: Seconds,
+  seconds: Seconds,
   ctx: EditContext,
 ): WorkDay {
   if (!day.sessions.some((s) => s.end === null)) return day;
-  const open = day.breaks.find((b) => b.end === null);
-  if (open?.typeId === typeId) return day;
+  const length = Math.max(60, Math.round(seconds));
+  if (!isValidSpan(at, at + length)) return day;
   return stamp(day, ctx, {
     breaks: [
-      ...dropEmpty(closeOpen(day.breaks, at)),
-      { id: ctx.id(), typeId, start: at, end: null },
+      ...closeBreaks(day.breaks, at),
+      { id: ctx.id(), typeId, start: at, end: at + length },
     ],
   });
 }
 
-/** End the running break. */
+/** End the break going on at `at` — "I'm back", before the kind's assumed
+ *  end. A break that ends less than a minute after it started is dropped: that
+ *  is a tap and its undo, or the wrong pill. */
 export function endBreak(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
-  if (!day.breaks.some((b) => b.end === null)) return day;
-  return stamp(day, ctx, { breaks: dropEmpty(closeOpen(day.breaks, at)) });
+  if (
+    !day.breaks.some((b) => b.start <= at && (b.end === null || at < b.end))
+  ) {
+    return day;
+  }
+  return stamp(day, ctx, { breaks: closeBreaks(day.breaks, at) });
 }
 
 /** Say what the work is from now on: close the running activity and start
@@ -133,17 +179,6 @@ export function addBreak(
   return stamp(day, ctx, {
     breaks: [...day.breaks, { id: ctx.id(), typeId, start, end }],
   });
-}
-
-/** "I just took a 30-minute lunch": a break of `seconds` ending at `at`. */
-export function addBreakEndingAt(
-  day: WorkDay,
-  typeId: string,
-  seconds: Seconds,
-  at: Seconds,
-  ctx: EditContext,
-): WorkDay {
-  return addBreak(day, typeId, Math.max(0, at - seconds), at, ctx);
 }
 
 /** Add a session after the fact — a morning you forgot to clock in for. */
@@ -246,5 +281,92 @@ export function removeSpan(
   if (!day.activities.some((a) => a.id === id)) return day;
   return stamp(day, ctx, {
     activities: without(day.activities) as ActivitySpan[],
+  });
+}
+
+/** The session the Today screen's timer is counting: the open one, or the
+ *  last one to have started on a day already left. Null on an empty day. */
+export function latestSession(day: WorkDay): Span | null {
+  let latest: Span | null = null;
+  for (const s of day.sessions) {
+    if (!latest || s.start > latest.start) latest = s;
+  }
+  return latest;
+}
+
+/**
+ * Move when a session began — "I actually got in at ten to eight", tapped on
+ * the timer once the morning has run away. Refused when the new start would
+ * reach back over an earlier session of the same day, or past this one's own
+ * end: an arrival that swallows the session before it is a typo, not a
+ * correction.
+ */
+export function setSessionStart(
+  day: WorkDay,
+  id: string,
+  start: Seconds,
+  ctx: EditContext,
+): WorkDay {
+  const session = day.sessions.find((s) => s.id === id);
+  if (!session) return day;
+  for (const other of day.sessions) {
+    if (other.id === id) continue;
+    const end = other.end ?? other.start;
+    if (other.start < session.start && start < end) return day;
+  }
+  return updateSpan(day, "session", id, { start }, ctx);
+}
+
+/**
+ * Move the moment two stretches of the day meet — the end of the break and
+ * the start of the work after it are one edge, so pushing a lunch's end from
+ * 12:10 to 12:20 starts the coding at 12:20 rather than leaving ten minutes
+ * of nobody-knows-what between them.
+ *
+ * Everything that starts or ends at `at` moves to `to`. Moving the edge
+ * forward also drags along anything that started inside the stretch it
+ * swallows, and drops what it swallowed whole — that stretch did not happen.
+ * The edit is refused outright if it would leave a session inverted; presence
+ * is corrected on the Log, where both of its ends are visible.
+ *
+ * The time under a moved edge is an estimate, and says so: the work either
+ * side of a break was never timed to the second anyway.
+ */
+export function moveBoundary(
+  day: WorkDay,
+  at: Seconds,
+  to: Seconds,
+  ctx: EditContext,
+): WorkDay {
+  if (!Number.isFinite(to) || to < 0 || to > MAX_SECONDS || to === at) {
+    return day;
+  }
+  const touches = (spans: readonly Span[]) =>
+    spans.some((s) => s.start === at || s.end === at);
+  if (
+    !touches(day.sessions) &&
+    !touches(day.breaks) &&
+    !touches(day.activities)
+  ) {
+    return day;
+  }
+
+  const moved = <S extends Span>(span: S): S => {
+    let start = span.start === at ? to : span.start;
+    let end = span.end === at ? to : span.end;
+    if (to > at) {
+      if (start > at && start < to) start = to;
+      if (end !== null && end > at && end < to) end = to;
+    }
+    return { ...span, start, end };
+  };
+  const swallowed = (span: Span) => span.end !== null && span.end <= span.start;
+
+  const sessions = day.sessions.map(moved);
+  if (sessions.some(swallowed)) return day;
+  return stamp(day, ctx, {
+    sessions,
+    breaks: day.breaks.map(moved).filter((b) => !swallowed(b)),
+    activities: day.activities.map(moved).filter((a) => !swallowed(a)),
   });
 }
