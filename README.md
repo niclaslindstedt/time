@@ -28,9 +28,10 @@ the second anyway.
 Forgot to set up the walk you take on Tuesdays? **Custom**, at the end of the
 break row, names one and starts it. Everything else is corrected in the
 **Log**, where every session, break and activity of any day is a row you can
-edit or delete. The **Report** shows the hours worked against the target per
-day for a week or a month, where the hours went by kind of work, what the
-breaks took, and the running balance.
+edit or delete. The **Report** shows the week as a column per day against its
+target and the month as a calendar of boxes — a row to the week, a box to the
+day, as wide as the hours it worked — plus where the hours went by kind of
+work, what the breaks took, and the running balance.
 
 You set up an **employer** — the working days, the length of a working day,
 the break types with their default lengths, the kinds of work. One employer is
@@ -110,7 +111,7 @@ Four tabs, on a bottom bar — swipe left or right to move between them:
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Today**     | The running timer, with the card's border filling clockwise as the day's target is worked and overshooting in the flag colour past it, a twelve-hour clock with time at work, breaks and kinds of work drawn on it, today's and the overall balance, and the buttons: **Enter / Leave office**, one per break type, one chip per kind of work, and **Custom** for a kind you have not set up. Tap the timer to correct when you got in; tap the clock, or a break's end printed on its rim, to open the day stretch by stretch and move an end. |
 | **Log**       | Any day as a list — time at work, breaks, activities — with the day's first-in, last-out, worked and break totals. Tap a row to edit its times or kind, or delete it; add a session, a break or an activity after the fact; page through the days with the arrows.                                                                                                                                                                                                                                                                              |
-| **Report**    | A week or a month: worked, target, balance and the running balance since your first day; hours worked against target per day; where the hours went by kind of work; break time by kind.                                                                                                                                                                                                                                                                                                                                                         |
+| **Report**    | A week or a month: worked, target, balance and the running balance since your first day; the week as hours worked against target per day and the month as a calendar of boxes, a row to the week and a box to the day; where the hours went by kind of work; break time by kind.                                                                                                                                                                                                                                                                |
 | **Employers** | One card per employer with its working days, day length, break types and kinds of work. Add, edit, delete, and — once there are two — choose which is **in use**; the top bar then grows a switcher.                                                                                                                                                                                                                                                                                                                                            |
 
 …and one button on the top bar, for the screen you visit and leave:

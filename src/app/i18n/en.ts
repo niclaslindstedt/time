@@ -181,6 +181,13 @@ export const en = {
     perDay: "Hours per day",
     perDayDesc:
       "Hours worked on each day of the range, next to the hours expected.",
+    perWeek: "Hours per week",
+    perWeekDesc:
+      "A row per week and a box per day: a box is as wide as the day's hours, a row as tall as the week's, and the rows stack to the month's total. The dotted lines are the target — a working day's hours across, and what the month should have added up to down.",
+    boxDay: "{day}: {worked} of {target} ({percent})",
+    boxOff: "{day}: {worked} on a day off",
+    boxSpill: "{day}: not this month",
+    scale: "Short of the day's target, on it, a fifth past.",
     seriesWorked: "Worked",
     seriesTarget: "Target",
     categories: "Where the hours went",

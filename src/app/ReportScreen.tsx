@@ -27,6 +27,8 @@ import {
 import { ChartIcon, CupIcon, HourglassIcon, TagIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor, categoryName } from "./labels.ts";
+import { MonthCalendar } from "./MonthCalendar.tsx";
+import { monthChart } from "./monthChart.ts";
 import { monthOf, runningBalance, summarizeRange, weekOf } from "./report.ts";
 import type { AppData, Employer } from "./types.ts";
 import { useNow } from "./useNow.ts";
@@ -75,6 +77,16 @@ export function ReportScreen({ data, employer, weekStartsOn }: Props) {
     () =>
       employer ? runningBalance(data, employer, now.today, now.seconds) : 0,
     [data, employer, now.today, now.seconds],
+  );
+  // A month is twenty-odd working days, and a column per day leaves the axis
+  // a smear of numbers: the month is laid out as a calendar of boxes instead,
+  // a row per week. A week is seven columns and reads fine as bars.
+  const calendar = useMemo(
+    () =>
+      employer && summary && range === "month"
+        ? monthChart(summary, employer, weekStartsOn, now.today)
+        : null,
+    [employer, summary, range, weekStartsOn, now.today],
   );
 
   if (!employer || !summary) {
@@ -194,11 +206,13 @@ export function ReportScreen({ data, employer, weekStartsOn }: Props) {
       </div>
 
       <Section
-        title={t("report.perDay")}
+        title={calendar ? t("report.perWeek") : t("report.perDay")}
         icon={<ChartIcon className="h-3.5 w-3.5" />}
       >
         {summary.worked === 0 ? (
           <p className="text-xs text-muted">{t("report.empty")}</p>
+        ) : calendar ? (
+          <MonthCalendar chart={calendar} />
         ) : (
           <BarChart
             series={[
@@ -212,11 +226,7 @@ export function ReportScreen({ data, employer, weekStartsOn }: Props) {
                 color: "var(--muted)",
               },
             ]}
-            labels={summary.days.map((d) =>
-              range === "week"
-                ? formatWeekday(d.date)
-                : String(parseDayKey(d.date)?.day ?? ""),
-            )}
+            labels={summary.days.map((d) => formatWeekday(d.date))}
             formatValue={(v) => formatHours(v * 3600)}
             ariaLabel={t("report.perDay")}
             desc={t("report.perDayDesc")}

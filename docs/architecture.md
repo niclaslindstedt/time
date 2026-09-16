@@ -21,6 +21,7 @@ src/app/
   day.ts            a day's spans → its totals, state, stretches  (pure, clock-free)
   actions.ts        the edits a day can take                       (pure, clock-free)
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
+  monthChart.ts     a month → week rows of day boxes, and their colour (pure, clock-free)
   employer.ts       the template, working days, the day's target   (pure)
   clock.ts          the dial's numerals, its and the frame's geometry (pure)
   format.ts         durations, timers, times of day
@@ -34,6 +35,7 @@ src/app/
   backup.ts         export / restore a JSON file
   ProgressFrame.tsx the timer card's border, drawn as the day's progress
   ClockFace.tsx     the dial, and the way into the day's stretches
+  MonthCalendar.tsx the month's rows and boxes, scaled into the plot
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you got in, corrected from the timer
   NewKindModal.tsx  a kind of break or work, named on the spot
