@@ -187,6 +187,8 @@ export const en = {
     boxDay: "{day}: {worked} of {target} ({percent})",
     boxOff: "{day}: {worked} on a day off",
     boxSpill: "{day}: not this month",
+    hoverWeek: "{from} – {to}: {worked} of {target} ({balance})",
+    hoverWeekOff: "{from} – {to}: {worked}",
     scale: "Short of the day's target, on it, a fifth past.",
     seriesWorked: "Worked",
     seriesTarget: "Target",

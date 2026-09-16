@@ -194,7 +194,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   each a `Dial` of its own, and the six pickers under Custom.
 - `src/app/MonthCalendar.tsx` — the Report's month chart: the rows and boxes
   `monthChart.ts` lays out in seconds, scaled into the plot the screen has.
-  Decides how many pixels an hour is worth and nothing else.
+  Decides how many pixels an hour is worth, the pixels held between one week
+  and the next, and nothing else. The gaps are pixels the hours do not get, so
+  every position down the plot carries the ones above it — which is what keeps
+  a row's foot and the month's target line comparable. Under the plot is one
+  line that names whatever the pointer is on: a box its day, the rest of a row
+  its week, the colour scale when neither.
 - `src/app/DayTimelineModal.tsx` — the day as the stretches `daySegments`
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.

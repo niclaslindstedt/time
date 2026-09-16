@@ -91,6 +91,16 @@ export function formatDay(day: DayKey): string {
   return formatDayKey(day, { day: "numeric", month: "short" });
 }
 
+/** "Wed, 16 Sep" — a day named as well as dated, for a readout that has to say
+ *  which day without repeating the year its heading already carries. */
+export function formatDayNamed(day: DayKey): string {
+  return formatDayKey(day, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
 /** "Sun, 5 Jul 2026". */
 export function formatFullDay(day: DayKey): string {
   return formatDayKey(day, {

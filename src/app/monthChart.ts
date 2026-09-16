@@ -183,6 +183,46 @@ export function monthChart(
   };
 }
 
+const round = (n: number) => Math.round(n * 1000) / 1000;
+
+/**
+ * The `d` for one day's box, with its two ends rounded independently.
+ *
+ * A week's boxes butt up against each other, so the row wants to read as one
+ * shape: only the first box's left end and the last box's right end are
+ * rounded, and the joins between them stay square. Each radius collapses as
+ * the box shrinks — a week of two hours is a sliver, and a corner bigger than
+ * the box it is cut from would turn it inside out.
+ */
+export function boxPath(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  leftRadius: number,
+  rightRadius: number,
+): string {
+  const cap = Math.min(width / 2, height / 2);
+  const l = Math.max(0, Math.min(leftRadius, cap));
+  const r = Math.max(0, Math.min(rightRadius, cap));
+  const x1 = x + width;
+  const y1 = y + height;
+  const arc = (radius: number, toX: number, toY: number) =>
+    `A ${round(radius)} ${round(radius)} 0 0 1 ${round(toX)} ${round(toY)}`;
+  return [
+    `M ${round(x + l)} ${round(y)}`,
+    `L ${round(x1 - r)} ${round(y)}`,
+    arc(r, x1, y + r),
+    `L ${round(x1)} ${round(y1 - r)}`,
+    arc(r, x1 - r, y1),
+    `L ${round(x + l)} ${round(y1)}`,
+    arc(l, x, y1 - l),
+    `L ${round(x)} ${round(y + l)}`,
+    arc(l, x + l, y),
+    "Z",
+  ].join(" ");
+}
+
 /** How far past the target a day has to go to read as fully blue. */
 export const OVER_RATIO = 1.2;
 

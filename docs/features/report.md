@@ -29,7 +29,8 @@ jump to the current one. The week follows the **Week starts on** setting.
 
 A month is twenty-odd working days, and a column each leaves the axis a smear
 of date numbers. So the month is drawn a **row to the week** and a **box to the
-day**, and both axes are hours:
+day** — each week one rounded bar, divided into its days and held a few pixels
+clear of the week above — and both axes are hours:
 
 - **Across**, a box is as wide as the hours that day worked, and the boxes of a
   week butt up against each other — so a box's right edge is the hours the week
@@ -50,6 +51,13 @@ Two dotted lines, and only two: **across** at a full week of work (the
 employer's working days at its day length), so a row that reaches it did the
 week; **down** at the month's target, so the gap between it and the last row's
 foot is what the month is behind.
+
+Under the chart is a line that names whatever is under the pointer: a **box**
+gives that day — the hours, the target, the percentage — and the **rest of a
+row**, either side of its boxes, gives that week: the days it covers, the hours,
+the target and the balance. With nothing under the pointer it shows the colour
+scale instead. On a touch screen, tap rather than hover. Every box also carries
+the same line as its tooltip.
 
 The **grey boxes** at either end are the neighbouring month's days. A month
 rarely starts on a Monday, and those days are not this month's to count: they

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, expect, it } from "vitest";
 
-import { OVER_RATIO, boxColor, monthChart } from "../src/app/monthChart.ts";
+import {
+  OVER_RATIO,
+  boxColor,
+  boxPath,
+  monthChart,
+} from "../src/app/monthChart.ts";
 import { monthOf, summarizeRange } from "../src/app/report.ts";
 import { dayKey, emptyDoc, type WorkDay } from "../src/app/types.ts";
 import { day, employer, h } from "./fixtures/helpers.ts";
@@ -184,5 +189,46 @@ describe("boxColor", () => {
 
   it("is green on a day there was no target to fall short of", () => {
     expect(boxColor(null)).toBe("var(--success)");
+  });
+});
+
+describe("boxPath", () => {
+  /** The point each command lands on — the last two numbers of an M, an L or
+   *  an A, leaving an arc's radii and flags out of it. */
+  const points = (d: string) =>
+    [...d.matchAll(/([MLA])((?: -?[\d.]+)+)/g)].map((m) => {
+      const n = m[2]!.trim().split(" ").map(Number);
+      return [n[n.length - 2]!, n[n.length - 1]!] as const;
+    });
+
+  it("rounds only the ends it is asked to", () => {
+    // Square both ends: every corner is a corner of the box itself.
+    const square = points(boxPath(10, 20, 60, 30, 0, 0));
+    for (const [x, y] of square) {
+      expect([10, 70]).toContain(x);
+      expect([20, 50]).toContain(y);
+    }
+    // A right end alone pulls the two right corners in by the radius, and
+    // leaves the left ones where they were.
+    const capped = boxPath(10, 20, 60, 30, 0, 4);
+    expect(capped).toContain("L 66 20");
+    expect(capped).toContain("L 10 50");
+  });
+
+  it("never cuts a corner bigger than the box it is cut from", () => {
+    // A three-pixel-tall sliver of a week: the radius has to collapse to 1.5,
+    // or the two arcs would cross and turn the box inside out.
+    const sliver = boxPath(0, 0, 40, 3, 4, 4);
+    for (const [, y] of points(sliver)) {
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(y).toBeLessThanOrEqual(3);
+    }
+    expect(sliver).toContain("A 1.5 1.5");
+    // Likewise a box narrower than two radii.
+    expect(boxPath(0, 0, 2, 30, 4, 4)).toContain("A 1 1");
+  });
+
+  it("closes the shape", () => {
+    expect(boxPath(0, 0, 10, 10, 2, 2).endsWith("Z")).toBe(true);
   });
 });
