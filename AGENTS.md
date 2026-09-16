@@ -135,8 +135,15 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   coffee 15 min), whether a date is a working day, the day's target, the
   clamps.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
-  positions, arc paths — and the timer card's frame path, which is the same
-  arithmetic for a rounded rectangle. Pure.
+  rotations, arc paths, and `dialLayout` — where the day's ring, the hour
+  markers and the hands sit for a given placement and marker size — and the
+  timer card's frame path, which is the same arithmetic for a rounded
+  rectangle. Pure.
+- `src/app/look.ts` — the app's two themes, and the dial's vocabulary: the
+  eight faces, eight typefaces, eight marker styles, eight hour sizes, the
+  three placements against the ring, the three movements, and the eight
+  presets they combine into. Every option is an id and a spec, so the
+  settings can validate and the tests can walk them.
 - `src/app/format.ts` — durations, timers, times of day, and the parse of a
   typed time.
 - `src/app/merge.ts` — the per-record, last-edit-wins document merge that
@@ -165,10 +172,18 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   day's progress round the card: clockwise from the top edge's middle,
   closing at the target and going round again in the flag colour past it.
   The one number the Today screen draws rather than prints.
-- `src/app/ClockFace.tsx` — the dial. Outer ring presence with breaks marked
-  over it, inner ring the kind of work, hands at `now`. Reads `day.ts` only.
-  It is also a control: the break ends printed on the rim, and the rings
-  themselves, open the day's stretches.
+- `src/app/Dial.tsx` — the watch face, drawn: bezel, face, minute track,
+  markers, hands, and the day as coloured bands it is handed. Paint only, no
+  vocabulary, so the same drawing serves Today and the preset cards in
+  Settings. The hands move by CSS transition (`styles.css`), keyed on the
+  movement.
+- `src/app/ClockFace.tsx` — the day on the dial. One ring: presence as the
+  accent band and its thin outer line, a kind of work in its hue on the band
+  with the line left the accent, a break the flag colour on both. Reads
+  `day.ts` only. It is also a control: the break ends printed on the rim, and
+  the dial itself, open the day's stretches.
+- `src/app/DialPicker.tsx` — Settings' dial picker: the eight preset cards,
+  each a `Dial` of its own, and the six pickers under Custom.
 - `src/app/DayTimelineModal.tsx` — the day as the stretches `daySegments`
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.
@@ -233,7 +248,8 @@ regression.
 | A new thing to log about a day          | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds     |
 | A new derived number                    | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                         |
 | A change to what a button on Today does | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                               |
-| A change to how the clock draws         | `src/app/clock.ts` (geometry, tested) or `ClockFace.tsx` (paint)                                                                          |
+| A change to how the clock draws         | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it)                                   |
+| A new face, marker, typeface or preset  | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
 | A change to what an employer holds      | `src/app/types.ts` + `employer.ts` + `EmployerEditModal.tsx` + `migrations.ts`                                                            |
 | A new control on the span editor        | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
 | A new way to correct a time on Today    | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
@@ -303,11 +319,14 @@ with `[Learn more](feature:<slug>)`.
   creation and then live in the document as the user's own words.
 - **Two themes only** — one light, one dark, plus "follow the device". The
   framework ships a dozen palettes; this app deliberately exposes none of them.
-  The clock's **look**, **numerals** and **size** (`CLOCK_LOOK` /
-  `CLOCK_FONT` / `CLOCK_SIZE` in `look.ts`) are not an exception to this: they
-  choose the dial's _shape_ — how many numerals, the face they are set in,
-  ticks, stroke weights, width — and never a colour. A look that introduced a
-  hue of its own would be the palette gallery this rule exists to refuse.
+  The one deliberate exception is the watch **face** (`DIAL_FACE` in
+  `look.ts`): the dial on Today is drawn as a wrist watch, and a watch face has
+  a colour the way an object does, not the way a theme does — a black dial is
+  black on the light theme. Its ink, bezel and gradient are the face's own and
+  never reach the UI around it; the day drawn on it stays the theme's accent,
+  flag and category hues. Everything else about the dial — markers, typeface,
+  size, placement, movement — is shape, not colour. A dial option that tinted
+  a button or a card would be the palette gallery this rule exists to refuse.
 - **The bottom nav is the navigation.** Four tabs, no sidebar, no drawer, and
   they are _destinations_ — a fixed left-to-right order a swipe moves along.
   Things you do and then leave belong on the top bar, which is where Settings
@@ -318,10 +337,11 @@ with `[Learn more](feature:<slug>)`.
   another way.
 - **No dependency creep.** The framework, Preact, a font, and workbox-window.
   A new runtime dependency needs a reason that the framework can't serve. The
-  three faces the app ships — Inter, JetBrains Mono (the wordmark) and Source
-  Serif (the dial) — are `@fontsource` packages already in the tree, imported
-  in `main.tsx` a weight and a subset at a time, and bundled from this origin.
-  A font is never reached for over the network.
+  faces the app ships — Inter, JetBrains Mono (the wordmark), and the dial's
+  eight (Source Serif, Jost, Oswald, Barlow, Playfair Display, Cinzel, plus
+  the two above) — are `@fontsource` packages, imported in `main.tsx` a
+  weight and a subset at a time, and bundled from this origin. A font is
+  never reached for over the network.
 
 ## Website staleness
 

@@ -17,6 +17,7 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 import { LogViewer } from "@niclaslindstedt/oss-framework/logging";
 
+import { DialPicker } from "./DialPicker.tsx";
 import { ClockIcon } from "./icons.tsx";
 import { logStore } from "./log.ts";
 import { downloadBackup, readBackupFile } from "./backup.ts";
@@ -25,15 +26,7 @@ import { useT } from "./i18n/index.ts";
 import { mergeDocs } from "./merge.ts";
 import { serializeDoc } from "./migrations.ts";
 import { emptyDoc } from "./types.ts";
-import {
-  CLOCK_FONT,
-  CLOCK_FONTS,
-  CLOCK_LOOKS,
-  CLOCK_SIZES,
-  type ClockFont,
-  type ClockLook,
-  type ClockSize,
-} from "./look.ts";
+import { CLOCK_SIZES, type ClockSize } from "./look.ts";
 import type { AppSettings, ThemeChoice } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
 import {
@@ -114,52 +107,19 @@ export function SettingsScreen({
       </Section>
 
       {/* The dial is the screen this app is looked at on, and one dial does
-          not suit every wrist: this is its shape and its size, not another
-          palette — the two themes above stay the only colour choice. */}
+          not suit every wrist. The face's colour is the watch's own rather
+          than the theme's — see `look.ts` for why that is not a palette. */}
       <Section
         title={t("settings.clock")}
         icon={<ClockIcon className="h-3.5 w-3.5" />}
       >
-        <Labelled label={t("settings.clockLook")}>
-          <SegmentedControl<ClockLook>
-            value={settings.clockLook}
-            options={CLOCK_LOOKS.map((look) => ({
-              value: look,
-              label: t(
-                `settings.clockLook${cap(look)}` as "settings.clockLookClassic",
-              ),
-            }))}
-            onChange={(next) => update("clockLook", next)}
-            ariaLabel={t("settings.clockLook")}
-            fullWidth
-          />
-        </Labelled>
-        {/* Each option wears the face it picks, so the choice is its own
-            preview: the dial is on another screen, and four words in one
-            font would say nothing about what they do to it. */}
-        <Labelled label={t("settings.clockFont")}>
-          <SegmentedControl<ClockFont>
-            value={settings.clockFont}
-            options={CLOCK_FONTS.map((font) => ({
-              value: font,
-              label: (
-                <span
-                  style={{
-                    fontFamily: CLOCK_FONT[font].family,
-                    fontWeight: 700,
-                  }}
-                >
-                  {t(
-                    `settings.clockFont${cap(font)}` as "settings.clockFontSans",
-                  )}
-                </span>
-              ),
-            }))}
-            onChange={(next) => update("clockFont", next)}
-            ariaLabel={t("settings.clockFont")}
-            fullWidth
-          />
-        </Labelled>
+        <p className="text-xs text-muted">{t("settings.clockHint")}</p>
+        <DialPicker
+          preset={settings.clockPreset}
+          custom={settings.clock}
+          onPreset={(next) => update("clockPreset", next)}
+          onCustom={(next) => update("clock", next)}
+        />
         <Labelled label={t("settings.clockSize")}>
           <SegmentedControl<ClockSize>
             value={settings.clockSize}
@@ -173,8 +133,8 @@ export function SettingsScreen({
             ariaLabel={t("settings.clockSize")}
             fullWidth
           />
+          <p className="text-xs text-muted">{t("settings.clockSizeHint")}</p>
         </Labelled>
-        <p className="text-xs text-muted">{t("settings.clockLookHint")}</p>
       </Section>
 
       <Section

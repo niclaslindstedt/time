@@ -5,12 +5,18 @@ import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 import type { WeekStart } from "@niclaslindstedt/oss-framework/calendar";
 
 import {
-  CLOCK_FONT,
-  CLOCK_LOOK,
   CLOCK_SIZE,
-  type ClockFont,
-  type ClockLook,
+  DEFAULT_DIAL_PRESET,
+  DIAL_FACE,
+  DIAL_FONT,
+  DIAL_MARKERS,
+  DIAL_MOVEMENT,
+  DIAL_PLACEMENTS,
+  DIAL_PRESET,
+  DIAL_SCALE,
   type ClockSize,
+  type DialConfig,
+  type DialPreset,
 } from "./look.ts";
 
 // The app's own (non-document) settings: which of the two themes is active,
@@ -28,10 +34,14 @@ export type AppSettings = {
   /** First day of the week (`Date.getDay()` numbering: 0 = Sunday,
    *  1 = Monday) — decides what the weekly report covers. */
   weekStartsOn: WeekStart;
-  /** Which dial the Today screen draws, what the hours are set in, and how
-   *  big. A shape choice, not a palette one — see `look.ts`. */
-  clockLook: ClockLook;
-  clockFont: ClockFont;
+  /** Which dial the Today screen draws: one of the presets, or the custom
+   *  one below, piece by piece. Both are kept, so going back to a preset and
+   *  then to "Custom" again finds the custom dial as it was left. See
+   *  `look.ts`. */
+  clockPreset: DialPreset | "custom";
+  clock: DialConfig;
+  /** How much of the screen the dial takes. Per device rather than part of
+   *  a preset: a size suits a screen, not a dial. */
   clockSize: ClockSize;
   /** The employer the Today, Log and Report screens show. Null until one is
    *  chosen; `App` falls back to the first employer by name. */
@@ -45,9 +55,9 @@ export type AppSettings = {
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   weekStartsOn: 1,
-  clockLook: "classic",
-  clockFont: "sans",
-  clockSize: "medium",
+  clockPreset: DEFAULT_DIAL_PRESET,
+  clock: DIAL_PRESET[DEFAULT_DIAL_PRESET],
+  clockSize: "large",
   activeEmployerId: null,
   devMode: false,
   captureLogs: false,
@@ -55,7 +65,41 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 const STORAGE_KEY = "time:settings";
 
-function parseSettings(raw: string): AppSettings {
+/** One of a table's keys, or the fallback: what every stored choice is
+ *  clamped to, so a value from an older build (or a hand-edited one) can
+ *  never pick a dial that does not exist. */
+function oneOf<K extends string>(
+  table: Record<K, unknown>,
+  value: unknown,
+  fallback: K,
+): K {
+  return typeof value === "string" && value in table ? (value as K) : fallback;
+}
+
+/** A custom dial, field by field, against the default preset. */
+function parseDial(value: unknown): DialConfig {
+  const base = DIAL_PRESET[DEFAULT_DIAL_PRESET];
+  const raw = (
+    typeof value === "object" && value !== null ? value : {}
+  ) as Partial<Record<keyof DialConfig, unknown>>;
+  const scale = Math.round(Number(raw.scale));
+  return {
+    face: oneOf(DIAL_FACE, raw.face, base.face),
+    font: oneOf(DIAL_FONT, raw.font, base.font),
+    markers: oneOf(DIAL_MARKERS, raw.markers, base.markers),
+    scale: (scale in DIAL_SCALE ? scale : base.scale) as DialConfig["scale"],
+    placement: DIAL_PLACEMENTS.includes(
+      raw.placement as DialConfig["placement"],
+    )
+      ? (raw.placement as DialConfig["placement"])
+      : base.placement,
+    movement: oneOf(DIAL_MOVEMENT, raw.movement, base.movement),
+  };
+}
+
+/** Stored bytes → settings, every field clamped. Exported for the tests;
+ *  the app reads it through `useAppSettings`. */
+export function parseSettings(raw: string): AppSettings {
   const parsed = JSON.parse(raw) as unknown;
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     return DEFAULT_SETTINGS;
@@ -63,24 +107,17 @@ function parseSettings(raw: string): AppSettings {
   const merged = { ...DEFAULT_SETTINGS, ...(parsed as object) } as AppSettings;
   const week = Math.round(Number(merged.weekStartsOn));
   return {
-    ...merged,
     theme:
       merged.theme === "light" || merged.theme === "dark"
         ? merged.theme
         : "system",
     weekStartsOn: (week >= 0 && week <= 6 ? week : 1) as WeekStart,
-    clockLook:
-      merged.clockLook in CLOCK_LOOK
-        ? merged.clockLook
-        : DEFAULT_SETTINGS.clockLook,
-    clockFont:
-      merged.clockFont in CLOCK_FONT
-        ? merged.clockFont
-        : DEFAULT_SETTINGS.clockFont,
-    clockSize:
-      merged.clockSize in CLOCK_SIZE
-        ? merged.clockSize
-        : DEFAULT_SETTINGS.clockSize,
+    clockPreset:
+      merged.clockPreset === "custom"
+        ? "custom"
+        : oneOf(DIAL_PRESET, merged.clockPreset, DEFAULT_DIAL_PRESET),
+    clock: parseDial(merged.clock),
+    clockSize: oneOf(CLOCK_SIZE, merged.clockSize, DEFAULT_SETTINGS.clockSize),
     activeEmployerId:
       typeof merged.activeEmployerId === "string"
         ? merged.activeEmployerId

@@ -15,13 +15,15 @@ The main screen, and the whole app for most of a day.
   the frame overshooting rather than a number to read. There is no percentage
   printed beside the timer: the frame is it. (A screen reader still gets the
   figure, from the timer's own label.)
-- **The clock.** A twelve-hour dial with the hands at now. The outer ring is
-  time at work, with breaks marked on it in the flag colour; the inner ring is
-  the kind of work, one hue per category — the same hue the chips and the
-  report use. The legend under the clock names them. The part of a break that
-  has not happened yet is drawn at half strength: it is a plan, not a record.
-  Its numerals — how many, and what they are set in, down to Roman — its
-  weight and its size are yours to pick under **Settings → The clock** (see
+- **The clock.** A wrist watch's dial with the hands at now, and the day
+  drawn on it as one ring. Time at work is the accent — a band with a thin
+  line along its outer edge. A kind of work takes the band in its own hue
+  (the same hue the chips and the report use) and leaves the thin line the
+  accent; a break is the flag colour, band and line both. The legend under
+  the clock names them. The part of a break that has not happened yet is
+  drawn at half strength: it is a plan, not a record. The watch itself — its
+  face, its markers, its numerals, how its second hand moves, and how much of
+  the screen it takes — is yours to pick under **Settings → The clock** (see
   [`themes.md`](themes.md)).
 - **The buttons.** One loud one, **Enter office** / **Leave office**. A row of
   break buttons, one per break type the employer defines, each showing the

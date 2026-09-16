@@ -30,9 +30,10 @@ export function categoryName(t: TFn, employer: Employer, categoryId: string) {
 
 /** The hues a kind of work may wear: the framework's series order with the
  *  accent and the flag taken out, because those two already mean "at work"
- *  and "break" on the clock's outer ring, and a category in either would
- *  read as the ring's own colour bleeding inward. */
-const CATEGORY_COLORS = SERIES_COLOR_TOKENS.filter(
+ *  and "break" on the clock's ring, and a category in either would read as
+ *  the ring's own colour. Exported for the settings' dial previews, which
+ *  draw an invented morning in the first of them. */
+export const CATEGORY_COLORS = SERIES_COLOR_TOKENS.filter(
   (token) => token !== "var(--accent)" && token !== "var(--flag)",
 );
 
