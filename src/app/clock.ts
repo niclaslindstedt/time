@@ -8,17 +8,25 @@
 // longer than twelve hours; one that is wraps, and a span longer than a full
 // turn is drawn as the whole ring.
 
+import {
+  DIAL_FONT,
+  DIAL_MARKERS,
+  DIAL_SCALE,
+  ROMAN_WIDTH,
+  type DialConfig,
+  type DialPlacement,
+} from "./look.ts";
 import type { Seconds } from "./types.ts";
 
 /** One turn of the dial. */
 export const DIAL_SECONDS: Seconds = 12 * 3600;
 
-/** The two rings' centre lines, in the 240-unit box `ClockFace` draws in:
- *  presence and breaks on the outer one, the kind of work on the inner one.
- *  Here rather than in the component because what has to fit inside them is
- *  arithmetic, and arithmetic is testable. */
-export const DIAL_OUTER_R = 100;
-export const DIAL_INNER_R = 82;
+/** The face's radius in the 240-unit box `ClockFace` draws in, and the
+ *  bezel round it. Here rather than in the component because what has to fit
+ *  inside them is arithmetic, and arithmetic is testable. */
+export const DIAL_R = 117;
+export const BEZEL_R = 118.5;
+export const BEZEL_WIDTH = 3;
 
 /** The twelve hours of the dial, in the order a clock reads them, starting
  *  at the top. */
@@ -44,23 +52,121 @@ export const ROMAN_HOURS = [
   "XI",
 ] as const;
 
+// ── The day's ring, and where the markers sit against it ──
+
+/** The ring the day is drawn as: a band, and a thin line along its outer
+ *  edge. Time at work is the accent on both; a kind of work colours the band
+ *  and leaves the line the accent; a break is the flag colour on both. */
+export const RING_BAND = 12;
+export const RING_EDGE = 2.5;
+/** The rim, between the ring's outer edge and the face's: where the minute
+ *  track's ticks are. */
+const RIM = 5;
+/** The ticks' outer end. */
+export const TRACK_R = 116;
+/** Air between the ring and a marker beside it. */
+const MARKER_GAP = 4;
+/** How far a marker may extend either side of its own radius, per placement
+ *  — outside, it has to fit between the ring and the rim; over the ring, it
+ *  has to stay off the bezel; inside, it has to leave a dial for the hands.
+ *  A numeral that would reach further is set smaller. */
+const MAX_REACH: Record<DialPlacement, number> = {
+  outside: 14,
+  over: 20,
+  inside: 24,
+};
+
+/** An applied marker's length as a share of the numeral size it stands in
+ *  for. */
+const MARKER_SHARE = 1;
+
+/** The hands' widths, the second hand's tail past the centre, and the cap
+ *  over the axle. Thin, the way a wrist watch's are. */
+export const HANDS = {
+  hour: 3.2,
+  minute: 2.2,
+  second: 1,
+  tail: 16,
+  cap: 3,
+} as const;
+
+export type DialLayout = {
+  /** The band's centre line and its inner and outer edges, and the thin
+   *  line's centre. */
+  bandR: number;
+  ringInner: number;
+  ringOuter: number;
+  edgeR: number;
+  /** Where a marker or numeral is centred. */
+  markerR: number;
+  /** The numerals' font size, after the placement's clamp. */
+  numeralSize: number;
+  /** An applied marker's length along the radius, and its width across it. */
+  markerLength: number;
+  markerWidth: number;
+  /** The hands' tips from the centre. */
+  hands: { hour: number; minute: number; second: number };
+};
+
 /**
- * How far from the centre the hour numerals sit.
+ * Where everything sits for one dial: the ring's radius follows the markers'
+ * placement, and the markers' size follows what that placement can fit.
  *
- * Measured *down* from the inner ring's inner edge rather than set as a
- * number: a heavier look wears both a thicker ring and a bigger numeral, and
- * a fixed radius that cleared one of them ran the other into the arcs. What
- * has to clear is half the width of the widest numeral — `widthFactor` of the
- * font size, which is about 0.55 for two digits and twice that for VIII — and
- * the eight units after it are air, so a numeral is never read against a
- * coloured arc.
+ * Inside, the ring is at the rim and the markers are measured in from it;
+ * outside, the markers take the rim and the ring is measured in from them;
+ * over, the ring is at the rim until a marker centred on it would reach the
+ * minute track, and then comes in just far enough. Either way the widest thing the style draws — two digits, VIII, or a
+ * baton's length — is what has to clear, halved into a `reach` either side
+ * of the marker's own radius, and clamped to what the placement leaves room
+ * for. The hands stop at the ring: the minute hand on the band, the second
+ * hand at its outer edge, the hour hand well short of both.
  */
-export function numeralRadius(
-  innerRingWidth: number,
-  numeralSize: number,
-  widthFactor = 0.55,
-): number {
-  return DIAL_INNER_R - innerRingWidth / 2 - numeralSize * widthFactor - 8;
+export function dialLayout(
+  dial: Pick<DialConfig, "placement" | "markers" | "font" | "scale">,
+): DialLayout {
+  const style = DIAL_MARKERS[dial.markers];
+  const font = DIAL_FONT[dial.font];
+  const kinds = DIAL_HOURS.map((h) => style.at(h % 12));
+  const roman = kinds.includes("roman");
+  const numerals = roman || kinds.includes("arabic");
+  // Half the widest thing on the dial, as a share of the size.
+  const share = numerals
+    ? font.widthFactor * (roman ? ROMAN_WIDTH : 1)
+    : MARKER_SHARE / 2;
+  const wanted = DIAL_SCALE[dial.scale] * font.scale;
+  const size = Math.min(wanted, MAX_REACH[dial.placement] / share);
+  const reach = size * share;
+
+  const markerOuter = DIAL_R - RIM - 1;
+  let ringOuter: number;
+  let markerR: number;
+  if (dial.placement === "outside") {
+    markerR = markerOuter - reach;
+    ringOuter = markerR - reach - MARKER_GAP;
+  } else if (dial.placement === "over") {
+    ringOuter = Math.min(
+      DIAL_R - RIM,
+      markerOuter - reach + RING_EDGE + RING_BAND / 2,
+    );
+    markerR = ringOuter - RING_EDGE - RING_BAND / 2;
+  } else {
+    ringOuter = DIAL_R - RIM;
+    markerR = ringOuter - RING_EDGE - RING_BAND - MARKER_GAP - reach;
+  }
+  const edgeR = ringOuter - RING_EDGE / 2;
+  const bandR = ringOuter - RING_EDGE - RING_BAND / 2;
+  const ringInner = ringOuter - RING_EDGE - RING_BAND;
+  return {
+    bandR,
+    ringInner,
+    ringOuter,
+    edgeR,
+    markerR,
+    numeralSize: size,
+    markerLength: size * MARKER_SHARE,
+    markerWidth: size * 0.22,
+    hands: { hour: bandR * 0.62, minute: bandR, second: ringOuter },
+  };
 }
 
 /** The dial angle of a moment, in degrees clockwise from twelve o'clock. */
@@ -84,6 +190,23 @@ export function handAngles(at: Seconds): {
     minute: (minutes / 60) * 360,
     second: (seconds / 60) * 360,
   };
+}
+
+/**
+ * The hands' rotations for a moment, in degrees clockwise from twelve and
+ * *not* wrapped at 360: the second hand's angle at 09:30:15 is 34 215°, not
+ * 90°. That is what a CSS transition needs — a hand told to go from 354° to
+ * 0° would spin backwards round the dial, and one told to go to 360° steps
+ * forward through the same six degrees it always does. `handAngles` is the
+ * wrapped version, for arithmetic.
+ */
+export function handTurns(at: Seconds): {
+  hour: number;
+  minute: number;
+  second: number;
+} {
+  const inDay = ((at % 86_400) + 86_400) % 86_400;
+  return { hour: inDay / 120, minute: inDay / 10, second: inDay * 6 };
 }
 
 /** The point at `angle` degrees clockwise from twelve, `r` from the centre. */
