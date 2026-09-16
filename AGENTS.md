@@ -131,6 +131,14 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   breakdowns: a day is summarised against the employer's target for that
   date, a range is the sum. A day that has not come yet is not a shortfall.
   Pure and clock-free.
+- `src/app/monthChart.ts` — the month laid out as a calendar of boxes: a row
+  per week, a box per day, both axes hours and both cumulative — a box is as
+  wide as the day worked and the boxes butt up, a row is as tall as the week
+  worked and the rows stack, so the last row's foot is the month's total. The
+  neighbouring month's days take the width a working day is meant to take and
+  add nothing to a row's height. Its `boxColor` is the red-green-blue ramp a
+  day's box is filled from — a _scale_ rather than `labels.ts`'s table, mixed
+  from the theme's own tokens. Pure and clock-free.
 - `src/app/employer.ts` — the employer template (Mon–Fri, 8 h, lunch 30 min,
   coffee 15 min), whether a date is a working day, the day's target, the
   clamps.
@@ -184,6 +192,17 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the dial itself, open the day's stretches.
 - `src/app/DialPicker.tsx` — Settings' dial picker: the eight preset cards,
   each a `Dial` of its own, and the six pickers under Custom.
+- `src/app/MonthCalendar.tsx` — the Report's month chart: the rows and boxes
+  `monthChart.ts` lays out in seconds, scaled into the plot the screen has.
+  Decides how many pixels an hour is worth, the pixels held between one week
+  and the next, and nothing else. The gaps are pixels the hours do not get, so
+  every position down the plot carries the ones above it — which is what keeps
+  a row's foot and the month's target line comparable. It also owns the hover:
+  what the pointer is on is outlined, and a card is hung over it — a box's day
+  or a row's week — anchored by whichever edge is nearer so it stays inside the
+  chart without being measured first. A day's box is painted two pixels narrower
+  than its hit area, so the page showing between two days is not a seam the week
+  answers through.
 - `src/app/DayTimelineModal.tsx` — the day as the stretches `daySegments`
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.
@@ -250,6 +269,7 @@ regression.
 | A change to what a button on Today does | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                               |
 | A change to how the clock draws         | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it)                                   |
 | A new face, marker, typeface or preset  | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
+| A change to the Report's month chart    | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
 | A change to what an employer holds      | `src/app/types.ts` + `employer.ts` + `EmployerEditModal.tsx` + `migrations.ts`                                                            |
 | A new control on the span editor        | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
 | A new way to correct a time on Today    | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
@@ -265,8 +285,9 @@ regression.
 
 Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and run under
 Vitest in the `node` environment — they cover the pure domain modules
-(`intervals`, `day`, `actions`, `report`, `clock`, `format`, `employer`,
-`merge`, `migrations`, `demoData`), which is where the app's real logic is. No
+(`intervals`, `day`, `actions`, `report`, `monthChart`, `clock`, `format`,
+`employer`, `merge`, `migrations`, `demoData`), which is where the app's real
+logic is. No
 DOM, no testing-library, no mocked clock. `tests/fixtures/helpers.ts` holds the shared
 fixtures (an employer, a day, a named-id `ctx`).
 
@@ -301,7 +322,7 @@ with `[Learn more](feature:<slug>)`.
 | If you change…                    | Update…                                                                                                        |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | The derivation in `day.ts`        | `docs/day-model.md`, `docs/features/today.md`, and the README's Examples block if the output shape moved       |
-| `report.ts`                       | `docs/day-model.md` (the report section) and `docs/features/report.md`                                         |
+| `report.ts` or `monthChart.ts`    | `docs/day-model.md` (the report section) and `docs/features/report.md`                                         |
 | `actions.ts`                      | `docs/features/today.md` and `docs/features/log.md`                                                            |
 | The `Employer` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/employers.md`, and a `migrations.ts` step                  |
 | The sync engine or the merge      | `docs/sync.md`                                                                                                 |

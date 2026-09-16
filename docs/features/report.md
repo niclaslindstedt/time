@@ -17,12 +17,56 @@ jump to the current one. The week follows the **Week starts on** setting.
 
 ## The charts
 
-- **Hours per day** — a column per day of the range, worked against target.
-  A Saturday has no target column; hours on it are all balance.
+- **Hours per day** (a week) — a column per day of the range, worked against
+  target. A Saturday has no target column; hours on it are all balance.
+- **Hours per week** (a month) — the month as a calendar of boxes. See below.
 - **Where the hours went** — a donut of worked time by kind of work, with the
   uncategorised remainder, in the same colours as the Today screen's chips and
   clock.
 - **Breaks** — break time by kind.
+
+## The month, as a calendar of boxes
+
+A month is twenty-odd working days, and a column each leaves the axis a smear
+of date numbers. So the month is drawn a **row to the week** and a **box to the
+day** — each week one rounded bar, divided into its days and held a few pixels
+clear of the week above — and both axes are hours:
+
+- **Across**, a box is as wide as the hours that day worked, and the boxes of a
+  week butt up against each other — so a box's right edge is the hours the week
+  had put in by the end of that day. A day nothing was worked takes no width at
+  all, which is why a normal week shows five boxes rather than seven.
+- **Down**, a row is as tall as the hours that week worked, and the rows stack —
+  so a row's bottom edge, which is what the hours down the side are counting, is
+  the hours the month had put in by the end of that week. The last one is the
+  month's total, the same figure the **Worked** tile prints.
+
+A box's **colour** is how the day went against its target: red at nothing
+worked, green on the target, blue a fifth past it, and the mixes between. A day
+the employer expects nothing of — a Saturday — is green whatever was worked,
+because there was no target to fall short of, and a day that has not come yet is
+not coloured at all.
+
+Two dotted lines, and only two: **across** at a full week of work (the
+employer's working days at its day length), so a row that reaches it did the
+week; **down** at the month's target, so the gap between it and the last row's
+foot is what the month is behind.
+
+Pointing at the chart outlines what you are on and hangs a card over it. On a
+**box** the card gives that day: the hours worked as the figure, then the target
+and the balance under it, keyed by the day's own colour. On the **rest of a
+row** — either side of its boxes, the margins included, so a week that fills the
+width is still reachable from the left — it gives that week: the days it covers,
+its hours, its target and its balance. On a touch screen, tap rather than hover.
+
+The card is a convenience, not the only way to the numbers: the tiles above hold
+the month's, and the **Log** has every day as a list.
+
+The **grey boxes** at either end are the neighbouring month's days. A month
+rarely starts on a Monday, and those days are not this month's to count: they
+are laid out at the width a working day is meant to take, which keeps the days
+after them at the hour a whole week would put them at, and they add nothing to
+any row's height, which keeps the hours down the side this month's alone.
 
 The line at the foot says how many days were worked out of how many were
 expected.
