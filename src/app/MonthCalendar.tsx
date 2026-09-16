@@ -2,9 +2,9 @@
 // The month, painted: the rows and boxes `monthChart.ts` lays out in seconds,
 // scaled into the plot the screen has. Nothing is derived here — the geometry
 // is the module's, the colours are its scale, and this file only decides how
-// many pixels an hour is worth.
+// many pixels an hour is worth and what the pointer is told.
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 import {
   formatBalance,
@@ -12,7 +12,6 @@ import {
   formatDayNamed,
   formatDuration,
   formatHours,
-  formatPercent,
 } from "./format.ts";
 import { useT, type TFn } from "./i18n/index.ts";
 import {
@@ -34,15 +33,27 @@ const HEADROOM = 1.05;
 /** The pixels held between one week and the next, so each row reads as its
  *  own shape rather than as a column of colour. */
 const ROW_GAP = 3;
+/** The page showing between one day and the next. Taken out of the box's own
+ *  width rather than added after it, so a box still *starts* at the hour it
+ *  means and the row still ends at the hours the week worked. */
+const DAY_GAP = 2;
 /** The corner a row's two ends are cut with. */
 const RADIUS = 4;
 /** Two hour labels closer together than this would sit on each other, so the
  *  upper one is dropped. */
 const LABEL_ROOM = 13;
+/** The pointer has to be able to leave the plot without the card following it
+ *  off the edge. */
+const EDGE = 6;
 
-/** What the readout under the chart is naming. */
+/** Where a tooltip hangs from, and the outline that shows what it is about. */
+type Anchor = { x: number; y: number; w: number; h: number; outline: string };
+
+/** What the pointer is on. */
 type Hover =
-  { kind: "day"; box: DayBox } | { kind: "week"; row: WeekRow } | null;
+  | { kind: "day"; box: DayBox; at: Anchor }
+  | { kind: "week"; row: WeekRow; at: Anchor }
+  | null;
 
 type Props = {
   chart: MonthChart;
@@ -141,20 +152,36 @@ export function MonthCalendar({ chart, className = "" }: Props) {
         {/* Behind the boxes, so a box always wins the pointer: the rest of a
             row's band, the margins to either side included, answers for the
             week. */}
-        {rows.map(({ row, gapIndex }) =>
-          row.height <= 0 ? null : (
+        {rows.map(({ row, gapIndex }) => {
+          if (row.height <= 0) return null;
+          const top = yAt(row.y, gapIndex);
+          const foot = yAt(row.y + row.height, gapIndex);
+          const drawn = row.boxes.filter((box) => box.width > 0);
+          const first = drawn[0];
+          const last = drawn[drawn.length - 1];
+          if (!first || !last) return null;
+          const from = sx(first.x);
+          const to = sx(last.x + last.width);
+          const at: Anchor = {
+            x: from,
+            y: top,
+            w: to - from,
+            h: foot - top,
+            outline: boxPath(from, top, to - from, foot - top, RADIUS, RADIUS),
+          };
+          return (
             <rect
               key={`row-${row.from}`}
               x={0}
-              y={yAt(row.y, gapIndex)}
+              y={top}
               width={plotW}
-              height={yAt(row.y + row.height, gapIndex) - yAt(row.y, gapIndex)}
+              height={foot - top}
               fill="transparent"
-              onPointerEnter={() => setHover({ kind: "week", row })}
-              onPointerDown={() => setHover({ kind: "week", row })}
+              onPointerEnter={() => setHover({ kind: "week", row, at })}
+              onPointerDown={() => setHover({ kind: "week", row, at })}
             />
-          ),
-        )}
+          );
+        })}
 
         {rows.map(({ row, gapIndex }) => {
           const top = yAt(row.y, gapIndex);
@@ -164,26 +191,65 @@ export function MonthCalendar({ chart, className = "" }: Props) {
           const drawn = row.boxes.filter((box) => box.width > 0);
           return (
             <g key={row.from}>
-              {drawn.map((box, i) => (
-                <Box
-                  key={box.date}
-                  box={box}
-                  x={sx(box.x)}
-                  w={sx(box.x + box.width) - sx(box.x)}
-                  y={top}
-                  h={foot - top}
-                  leftRadius={i === 0 ? RADIUS : 0}
-                  rightRadius={i === drawn.length - 1 ? RADIUS : 0}
-                  divided={i < drawn.length - 1}
-                  t={t}
-                  onEnter={() => setHover({ kind: "day", box })}
-                />
-              ))}
+              {drawn.map((box, i) => {
+                const x = sx(box.x);
+                const full = sx(box.x + box.width) - x;
+                const isLast = i === drawn.length - 1;
+                // Nothing follows the last box, so nothing has to show past
+                // it — and its right edge stays the week's true total.
+                const w = isLast
+                  ? full
+                  : full - Math.min(DAY_GAP, Math.max(0, full - 1));
+                const d = boxPath(
+                  x,
+                  top,
+                  w,
+                  foot - top,
+                  i === 0 ? RADIUS : 0,
+                  isLast ? RADIUS : 0,
+                );
+                const at: Anchor = { x, y: top, w, h: foot - top, outline: d };
+                const enter = () => setHover({ kind: "day", box, at });
+                return (
+                  <g key={box.date}>
+                    <path
+                      d={d}
+                      fill={box.spill ? "var(--muted)" : boxColor(box.ratio)}
+                      fillOpacity={box.spill ? 0.25 : 1}
+                    />
+                    {/* The day's hit area keeps the width the gap was taken
+                        out of, so the page showing between two boxes is not a
+                        seam the week answers through. */}
+                    <rect
+                      x={x}
+                      y={top}
+                      width={full}
+                      height={foot - top}
+                      fill="transparent"
+                      onPointerEnter={enter}
+                      onPointerDown={enter}
+                    />
+                  </g>
+                );
+              })}
             </g>
           );
         })}
 
         <g pointerEvents="none">
+          {/* What the card is about, ringed so the eye can see the pointer
+              land. */}
+          {hover && (
+            <path
+              d={hover.at.outline}
+              fill="none"
+              stroke="var(--fg-bright)"
+              strokeWidth={hover.at.h < 8 ? 1 : 2}
+              strokeLinejoin="round"
+              opacity={0.85}
+            />
+          )}
+
           {/* The two targets, and only those two: across, a full week of work,
               so a row that reaches it did the week; down, the month's, so the
               gap to the last row's foot is what the month is behind. They go
@@ -246,121 +312,162 @@ export function MonthCalendar({ chart, className = "" }: Props) {
     );
   };
 
-  const readout =
-    hover === null
-      ? null
-      : hover.kind === "day"
-        ? dayLabel(t, hover.box)
-        : weekLabel(t, hover.row);
-
   return (
     <div className={className}>
-      <div ref={ref}>
+      <div ref={ref} className="relative">
         {plotWidth > GUTTER + MARGIN.right ? (
           body(plotWidth)
         ) : (
           <div style={{ height }} />
         )}
-      </div>
-      {/* One line, whatever is in it: the scale when nothing is under the
-          pointer, and what is under it when something is. Swapping in place
-          rather than appearing keeps the chart from jumping. */}
-      <div
-        className="mt-2 flex min-h-5 items-center gap-2 text-[0.65rem] text-muted"
-        aria-live="polite"
-      >
-        {readout ? (
-          <span className="text-fg tabular-nums">{readout}</span>
-        ) : (
-          <Legend />
+        {hover && plotWidth > 0 && (
+          <Tooltip card={cardFor(t, hover)} at={hover.at} width={plotWidth} />
         )}
       </div>
+      <Legend />
     </div>
   );
 }
 
-/** What a day's box says about itself, in its tooltip and in the readout. */
-function dayLabel(t: TFn, box: DayBox): string {
-  const day = formatDayNamed(box.date);
-  if (box.spill) return t("report.boxSpill", { day });
-  const worked = formatDuration(box.worked);
-  if (box.target === 0) return t("report.boxOff", { day, worked });
-  return t("report.boxDay", {
-    day,
-    worked,
-    target: formatDuration(box.target),
-    percent: formatPercent(box.worked / box.target),
-  });
+/** What the card says. The figure leads and the naming follows it: whoever is
+ *  pointing at a box already knows which day they are on. */
+type Card = {
+  /** The day's own colour, as a key back to the box. A week has no one
+   *  colour, so it has no key. */
+  key: string | null;
+  title: string;
+  value: string | null;
+  /** What it was measured against, when there was anything. */
+  of: string | null;
+  balance: number | null;
+  note: string | null;
+};
+
+function cardFor(t: TFn, hover: NonNullable<Hover>): Card {
+  if (hover.kind === "week") return weekCard(t, hover.row);
+  return dayCard(t, hover.box);
 }
 
-/** What a week's row says about itself. It is named by this month's days, not
- *  by the neighbouring month's the row is padded out with. */
-function weekLabel(t: TFn, row: WeekRow): string {
+function dayCard(t: TFn, box: DayBox): Card {
+  const title = formatDayNamed(box.date);
+  const blank = { key: null, value: null, of: null, balance: null, note: null };
+  if (box.spill) return { ...blank, title, note: t("report.notThisMonth") };
+  const value = formatDuration(box.worked);
+  // A day the employer expects nothing of has no target to be measured
+  // against: every minute of it is balance.
+  if (box.target === 0) {
+    return {
+      ...blank,
+      key: boxColor(null),
+      title,
+      value,
+      balance: box.worked,
+      note: t("report.dayOff"),
+    };
+  }
+  return {
+    key: boxColor(box.ratio),
+    title,
+    value,
+    of: t("report.ofTarget", { target: formatDuration(box.target) }),
+    balance: box.worked - box.target,
+    note: null,
+  };
+}
+
+/** A week is named by this month's days, not by the neighbouring month's the
+ *  row is padded out with. */
+function weekCard(t: TFn, row: WeekRow): Card {
   const own = row.boxes.filter((box) => !box.spill);
   const first = own[0];
   const last = own[own.length - 1];
-  if (!first || !last) return "";
-  const named = {
-    from: formatDay(first.date),
-    to: formatDay(last.date),
-    worked: formatDuration(row.height),
+  const title =
+    first && last
+      ? t("report.weekRange", {
+          from: formatDay(first.date),
+          to: formatDay(last.date),
+        })
+      : "";
+  return {
+    key: null,
+    title,
+    value: formatDuration(row.height),
+    of:
+      row.target > 0
+        ? t("report.ofTarget", { target: formatDuration(row.target) })
+        : null,
+    balance: row.target > 0 ? row.height - row.target : null,
+    note: null,
   };
-  if (row.target === 0) return t("report.hoverWeekOff", named);
-  return t("report.hoverWeek", {
-    ...named,
-    target: formatDuration(row.target),
-    balance: formatBalance(row.height - row.target),
-  });
 }
 
-function Box({
-  box,
-  x,
-  y,
-  w,
-  h,
-  leftRadius,
-  rightRadius,
-  divided,
-  t,
-  onEnter,
+/**
+ * The card itself: hung over the thing it names, flipped under it near the top
+ * of the plot, and anchored by whichever edge is nearer when the thing sits
+ * out at one side — which is how it stays inside the chart without having to
+ * be measured first.
+ */
+function Tooltip({
+  card,
+  at,
+  width,
 }: {
-  box: DayBox;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  leftRadius: number;
-  rightRadius: number;
-  divided: boolean;
-  t: TFn;
-  onEnter: () => void;
+  card: Card;
+  at: Anchor;
+  width: number;
 }) {
+  const centre = at.x + at.w / 2;
+  const below = at.y < 76;
+  const style: CSSProperties = below
+    ? { top: at.y + at.h + 8 }
+    : { top: at.y - 8 };
+  const lift = below ? "0" : "-100%";
+  if (centre < width / 3) {
+    style.left = Math.max(EDGE, at.x);
+    style.transform = `translate(0, ${lift})`;
+  } else if (centre > (width * 2) / 3) {
+    style.right = Math.max(EDGE, width - (at.x + at.w));
+    style.transform = `translate(0, ${lift})`;
+  } else {
+    style.left = centre;
+    style.transform = `translate(-50%, ${lift})`;
+  }
+
   return (
-    <g onPointerEnter={onEnter} onPointerDown={onEnter}>
-      <path
-        d={boxPath(x, y, w, h, leftRadius, rightRadius)}
-        fill={box.spill ? "var(--muted)" : boxColor(box.ratio)}
-        fillOpacity={box.spill ? 0.25 : 1}
-        stroke={box.spill ? "var(--surface-3)" : "none"}
-        strokeWidth={box.spill ? 1 : 0}
-      >
-        <title>{dayLabel(t, box)}</title>
-      </path>
-      {/* Neighbours of a similar colour would read as one long bar, so every
-          box but the row's last is closed off at its right edge. */}
-      {divided && (
-        <line
-          x1={x + w}
-          x2={x + w}
-          y1={y}
-          y2={y + h}
-          stroke="var(--surface-3)"
-          strokeWidth={1}
-          pointerEvents="none"
-        />
+    <div
+      aria-hidden="true"
+      style={style}
+      className="pointer-events-none absolute z-10 rounded-xl border border-line bg-surface px-2.5 py-1.5 shadow-lg"
+    >
+      <div className="flex items-center gap-1.5">
+        {card.key && (
+          <span
+            aria-hidden="true"
+            className="h-0.5 w-3 shrink-0 rounded-full"
+            style={{ background: card.key }}
+          />
+        )}
+        <span className="text-[0.7rem] whitespace-nowrap text-muted">
+          {card.title}
+        </span>
+      </div>
+      {card.value && (
+        <p className="text-base leading-tight font-bold text-fg-bright tabular-nums">
+          {card.value}
+        </p>
       )}
-    </g>
+      <p className="flex items-center gap-1.5 text-[0.7rem] whitespace-nowrap text-muted tabular-nums">
+        {card.note && <span>{card.note}</span>}
+        {card.of && <span>{card.of}</span>}
+        {card.balance !== null && (
+          <span
+            className={`font-bold ${card.balance < 0 ? "text-danger" : "text-accent"}`}
+          >
+            {formatBalance(card.balance)}
+          </span>
+        )}
+      </p>
+    </div>
   );
 }
 
@@ -394,7 +501,7 @@ function Legend() {
   const t = useT();
   const green = `${(100 / OVER_RATIO).toFixed(1)}%`;
   return (
-    <>
+    <div className="mt-2 flex items-center gap-2 text-[0.65rem] text-muted">
       <span
         aria-hidden="true"
         className="h-2 w-16 shrink-0 rounded-full"
@@ -403,6 +510,6 @@ function Legend() {
         }}
       />
       <span>{t("report.scale")}</span>
-    </>
+    </div>
   );
 }

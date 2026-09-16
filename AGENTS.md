@@ -197,9 +197,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   Decides how many pixels an hour is worth, the pixels held between one week
   and the next, and nothing else. The gaps are pixels the hours do not get, so
   every position down the plot carries the ones above it — which is what keeps
-  a row's foot and the month's target line comparable. Under the plot is one
-  line that names whatever the pointer is on: a box its day, the rest of a row
-  its week, the colour scale when neither.
+  a row's foot and the month's target line comparable. It also owns the hover:
+  what the pointer is on is outlined, and a card is hung over it — a box's day
+  or a row's week — anchored by whichever edge is nearer so it stays inside the
+  chart without being measured first. A day's box is painted two pixels narrower
+  than its hit area, so the page showing between two days is not a seam the week
+  answers through.
 - `src/app/DayTimelineModal.tsx` — the day as the stretches `daySegments`
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.

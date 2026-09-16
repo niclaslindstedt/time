@@ -52,12 +52,15 @@ employer's working days at its day length), so a row that reaches it did the
 week; **down** at the month's target, so the gap between it and the last row's
 foot is what the month is behind.
 
-Under the chart is a line that names whatever is under the pointer: a **box**
-gives that day — the hours, the target, the percentage — and the **rest of a
-row**, either side of its boxes, gives that week: the days it covers, the hours,
-the target and the balance. With nothing under the pointer it shows the colour
-scale instead. On a touch screen, tap rather than hover. Every box also carries
-the same line as its tooltip.
+Pointing at the chart outlines what you are on and hangs a card over it. On a
+**box** the card gives that day: the hours worked as the figure, then the target
+and the balance under it, keyed by the day's own colour. On the **rest of a
+row** — either side of its boxes, the margins included, so a week that fills the
+width is still reachable from the left — it gives that week: the days it covers,
+its hours, its target and its balance. On a touch screen, tap rather than hover.
+
+The card is a convenience, not the only way to the numbers: the tiles above hold
+the month's, and the **Log** has every day as a list.
 
 The **grey boxes** at either end are the neighbouring month's days. A month
 rarely starts on a Monday, and those days are not this month's to count: they
