@@ -29,7 +29,7 @@ import { demoBackendModule, useDemoData } from "./app/dev/useDemoData.ts";
 import { EmployersScreen } from "./app/EmployersScreen.tsx";
 import { useT } from "./app/i18n/index.ts";
 import { LogScreen } from "./app/LogScreen.tsx";
-import { appearanceFor } from "./app/look.ts";
+import { appearanceFor, resolveDial } from "./app/look.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { ReportScreen } from "./app/ReportScreen.tsx";
@@ -203,8 +203,7 @@ export function App() {
               store={store}
               employer={employer}
               weekStartsOn={settings.weekStartsOn}
-              clockLook={settings.clockLook}
-              clockFont={settings.clockFont}
+              dial={resolveDial(settings.clockPreset, settings.clock)}
               clockSize={settings.clockSize}
               onAddEmployer={() => {
                 setOpenNewEmployer(true);

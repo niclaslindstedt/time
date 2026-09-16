@@ -20,9 +20,14 @@
     "check:seo": "node scripts/check-seo.mjs"
   },
   "dependencies": {
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/cinzel": "^5.3.0",
     "@fontsource/inter": "^5.2.5",
     "@fontsource/jetbrains-mono": "^5.2.5",
+    "@fontsource/jost": "^5.3.0",
     "@fontsource/opendyslexic": "^5.2.5",
+    "@fontsource/oswald": "^5.3.0",
+    "@fontsource/playfair-display": "^5.3.0",
     "@fontsource/source-serif-4": "^5.2.5",
     "@niclaslindstedt/oss-framework": "^3.3.3",
     "preact": "^10.29.8",

@@ -3,17 +3,30 @@ import { describe, expect, it } from "vitest";
 
 import {
   DIAL_HOURS,
-  DIAL_INNER_R,
+  DIAL_R,
   DIAL_SECONDS,
   ROMAN_HOURS,
+  TRACK_R,
   angleOf,
   arcPath,
+  dialLayout,
   framePath,
   handAngles,
-  numeralRadius,
+  handTurns,
   polar,
 } from "../src/app/clock.ts";
-import { CLOCK_FONT, CLOCK_LOOK } from "../src/app/look.ts";
+import {
+  DIAL_FONT,
+  DIAL_FONTS,
+  DIAL_MARKERS,
+  DIAL_MARKER_STYLES,
+  DIAL_PLACEMENTS,
+  DIAL_SCALE,
+  DIAL_SCALES,
+  ROMAN_WIDTH,
+  isNumeral,
+  type DialConfig,
+} from "../src/app/look.ts";
 import { h } from "./fixtures/helpers.ts";
 
 describe("angleOf", () => {
@@ -127,35 +140,154 @@ describe("ROMAN_HOURS", () => {
   });
 });
 
-describe("numeralRadius", () => {
-  it("keeps every look and face clear of the ring they sit inside", () => {
-    for (const [look, spec] of Object.entries(CLOCK_LOOK)) {
-      if (spec.numerals === "none") continue;
-      for (const [font, face] of Object.entries(CLOCK_FONT)) {
-        const size = spec.numeralSize * face.scale;
-        const r = numeralRadius(spec.innerRing, size, face.widthFactor);
-        // Half the width of the widest numeral the face can draw — two
-        // digits, or VIII — which is what has to fit.
-        const reach = r + size * face.widthFactor;
-        const ringEdge = DIAL_INNER_R - spec.innerRing / 2;
-        const where = `${look} in ${font}`;
-        expect(reach, `${where} runs into the inner ring`).toBeLessThan(
-          ringEdge,
+describe("handTurns", () => {
+  it("never wraps, so a transition always goes forward", () => {
+    const a = handTurns(h(9, 30) + 15);
+    expect(a.hour).toBeCloseTo(285.125, 3);
+    expect(a.minute).toBeCloseTo(3421.5, 3);
+    expect(a.second).toBeCloseTo(205_290);
+    // 21:30:15 is the same dial position as 09:30:15, a full turn on.
+    const b = handTurns(h(21, 30) + 15);
+    expect(b.hour).toBeCloseTo(a.hour + 360, 3);
+    expect(b.second).toBeGreaterThan(a.second);
+  });
+
+  it("agrees with handAngles once wrapped", () => {
+    for (const at of [0, h(3), h(9, 30) + 15, h(23, 59) + 59]) {
+      const turns = handTurns(at);
+      const angles = handAngles(at);
+      expect(turns.hour % 360).toBeCloseTo(angles.hour, 6);
+      expect(turns.minute % 360).toBeCloseTo(angles.minute, 6);
+      expect(turns.second % 360).toBeCloseTo(angles.second, 6);
+    }
+  });
+});
+
+describe("dialLayout", () => {
+  const every: Pick<DialConfig, "placement" | "markers" | "font" | "scale">[] =
+    [];
+  for (const placement of DIAL_PLACEMENTS)
+    for (const markers of DIAL_MARKER_STYLES)
+      for (const font of DIAL_FONTS)
+        for (const scale of DIAL_SCALES)
+          every.push({ placement, markers, font, scale });
+
+  /** Half the widest thing a style draws at a size, the way the layout
+   *  measures it. */
+  const reachOf = (
+    dial: Pick<DialConfig, "markers" | "font">,
+    size: number,
+  ) => {
+    const kinds = DIAL_HOURS.map((hour) =>
+      DIAL_MARKERS[dial.markers].at(hour % 12),
+    );
+    const roman = kinds.includes("roman");
+    const numerals = kinds.some(isNumeral);
+    const share = numerals
+      ? DIAL_FONT[dial.font].widthFactor * (roman ? ROMAN_WIDTH : 1)
+      : 0.5;
+    return size * share;
+  };
+
+  it("keeps every marker clear of the ring and on the face, whatever the dial", () => {
+    for (const dial of every) {
+      const l = dialLayout(dial);
+      const reach = reachOf(dial, l.numeralSize);
+      const where = JSON.stringify(dial);
+      const outer = l.markerR + reach;
+      const inner = l.markerR - reach;
+      // On the face, inside the minute track.
+      expect(outer, `${where} runs off the face`).toBeLessThanOrEqual(
+        TRACK_R - 4,
+      );
+      if (dial.placement === "inside") {
+        expect(outer, `${where} runs into the ring`).toBeLessThanOrEqual(
+          l.ringInner,
         );
-        // …and it is a gap you can see, not a hairline.
-        expect(
-          ringEdge - reach,
-          `${where} is a hairline clear`,
-        ).toBeGreaterThanOrEqual(4);
-        // The numerals still have to leave room for the hands inside them.
-        expect(r, `${where} leaves no dial`).toBeGreaterThan(40);
+        expect(inner, `${where} leaves no dial`).toBeGreaterThan(40);
+      } else if (dial.placement === "outside") {
+        expect(inner, `${where} runs into the ring`).toBeGreaterThanOrEqual(
+          l.ringOuter,
+        );
+      } else {
+        // Over the ring: centred on the band.
+        expect(l.markerR).toBeCloseTo(l.bandR, 6);
       }
+      // The ring itself is a ring, not a dot.
+      expect(l.ringInner, `${where} has no ring`).toBeGreaterThan(50);
+      expect(l.ringOuter).toBeLessThan(DIAL_R);
     }
   });
 
-  it("pulls the numerals further in as the ring and the numerals grow", () => {
-    expect(numeralRadius(11, 15)).toBeLessThan(numeralRadius(8, 12));
-    // …and further still for a face whose widest numeral is VIII.
-    expect(numeralRadius(8, 12, 1.1)).toBeLessThan(numeralRadius(8, 12, 0.55));
+  it("stops the hands at the ring: minute on the band, second at its edge", () => {
+    for (const dial of every) {
+      const l = dialLayout(dial);
+      expect(l.hands.minute).toBeCloseTo(l.bandR, 6);
+      expect(l.hands.second).toBeCloseTo(l.ringOuter, 6);
+      expect(l.hands.hour).toBeLessThan(l.hands.minute);
+      expect(l.hands.hour).toBeGreaterThan(30);
+    }
+  });
+
+  it("pulls the ring in to make room for markers outside it", () => {
+    const base = { markers: "numerals", font: "grotesque", scale: 4 } as const;
+    const inside = dialLayout({ ...base, placement: "inside" });
+    const over = dialLayout({ ...base, placement: "over" });
+    const outside = dialLayout({ ...base, placement: "outside" });
+    // Over the ring, a marker this size wants a little room too — but far
+    // less than a marker beside it.
+    expect(over.ringOuter).toBeLessThanOrEqual(inside.ringOuter);
+    expect(outside.ringOuter).toBeLessThan(over.ringOuter);
+    expect(outside.markerR).toBeGreaterThan(outside.ringOuter);
+    expect(inside.markerR).toBeLessThan(inside.ringInner);
+  });
+
+  it("grows the numerals step by step where there is room", () => {
+    let last = 0;
+    for (const scale of DIAL_SCALES) {
+      const l = dialLayout({
+        placement: "inside",
+        markers: "numerals",
+        font: "grotesque",
+        scale,
+      });
+      expect(l.numeralSize).toBeGreaterThan(last);
+      last = l.numeralSize;
+    }
+    expect(last).toBe(DIAL_SCALE[8] * DIAL_FONT.grotesque.scale);
+  });
+
+  it("sets a numeral smaller rather than let it run off the rim", () => {
+    // VIII in the widest face, at the biggest step, over the ring: the size
+    // the step asks for cannot fit, and the one drawn is what does.
+    const l = dialLayout({
+      placement: "over",
+      markers: "roman",
+      font: "inscribed",
+      scale: 8,
+    });
+    expect(l.numeralSize).toBeLessThan(DIAL_SCALE[8]);
+    const reach = reachOf(
+      { markers: "roman", font: "inscribed" },
+      l.numeralSize,
+    );
+    expect(l.markerR + reach).toBeLessThanOrEqual(TRACK_R - 4);
+  });
+
+  it("scales the applied markers with the step", () => {
+    const small = dialLayout({
+      placement: "inside",
+      markers: "batons",
+      font: "grotesque",
+      scale: 1,
+    });
+    const large = dialLayout({
+      placement: "inside",
+      markers: "batons",
+      font: "grotesque",
+      scale: 8,
+    });
+    expect(large.markerLength).toBeGreaterThan(small.markerLength);
+    expect(large.markerWidth).toBeGreaterThan(small.markerWidth);
   });
 });

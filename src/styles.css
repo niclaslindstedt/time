@@ -322,9 +322,47 @@ body {
    The Today screen's dial redraws once a second as the timer ticks. The arcs
    are plain SVG strokes with no transition, on purpose: a stroke that eased
    toward its new end every second would read as the day *moving*, and the
-   day is not — it is one second longer. The second hand alone is allowed to
-   step, because that is what a second hand does. */
+   day is not — it is one second longer.
+
+   The hands are the exception, and how they move is the movement (see
+   `look.ts`). Each hand is a group with a CSS rotation set once a second,
+   and the transition between one rotation and the next is what the eye
+   sees: the hour and minute hands sweep, and the second hand steps once (a
+   quartz), steps eight times (a mechanical calibre at 28 800 vph), or glides
+   (a spring-driven glide wheel). A dial without `data-movement` — the
+   previews in Settings — has no transition and simply shows the time. */
 .app-clock {
   user-select: none;
   -webkit-user-select: none;
+}
+
+.app-clock[data-movement] [data-hand="hour"],
+.app-clock[data-movement] [data-hand="minute"] {
+  transition: transform 1s linear;
+}
+
+/* A quartz tick: the hand snaps to the next second with the small
+   overshoot a stepper motor gives it. */
+.app-clock[data-movement="quartz"] [data-hand="second"] {
+  transition: transform 140ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.app-clock[data-movement="mechanical"] [data-hand="second"] {
+  transition: transform 1s steps(8, end);
+}
+
+.app-clock[data-movement="sweep"] [data-hand="second"] {
+  transition: transform 1s linear;
+}
+
+/* The tab came back from the background, or it is midnight: the hands go
+   straight to the time rather than spinning to it. */
+.app-clock [data-jump] [data-hand] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-clock [data-hand] {
+    transition: none;
+  }
 }

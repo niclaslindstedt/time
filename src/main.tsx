@@ -24,17 +24,22 @@ import "@fontsource/inter/latin-ext-700.css";
 import "@fontsource/jetbrains-mono/latin-700.css";
 import "@fontsource/jetbrains-mono/latin-ext-700.css";
 
-// The clock's serif, for the two faces on the dial that ask for one (see
-// `CLOCK_FONT` in `app/look.ts`) — a serif is what makes twelve numerals read
-// as a wall clock rather than as a chart's axis, and Roman numerals in a sans
-// read as nothing at all.
+// The dial's typefaces, for the eight faces the hours can be set in (see
+// `DIAL_FONT` in `app/look.ts`): a geometric sans, a condensed one, an
+// engineered one, a serif, a didone, the inscriptional capitals a Roman dial
+// is cut in — and Inter and JetBrains Mono, already above.
 //
-// Bold only, and Latin only, because the entire text set in it is twelve
-// numerals: digits and I, V, X are all ASCII, so the extended subset would be
-// bytes precached for glyphs a dial cannot use. Same reasoning as the
-// wordmark's mono above — bundled from `@fontsource`, served from our own
-// origin, a request to nobody.
+// One weight each, and Latin only, because the entire text set in any of
+// them is twelve numerals: digits and I, V, X are all ASCII, so a second
+// subset would be bytes precached for glyphs a dial cannot use. Same
+// reasoning as the wordmark's mono above — bundled from `@fontsource`,
+// served from our own origin, a request to nobody.
 import "@fontsource/source-serif-4/latin-700.css";
+import "@fontsource/jost/latin-500.css";
+import "@fontsource/oswald/latin-500.css";
+import "@fontsource/barlow/latin-600.css";
+import "@fontsource/playfair-display/latin-700.css";
+import "@fontsource/cinzel/latin-700.css";
 
 import "./styles.css";
 import { App } from "./App.tsx";

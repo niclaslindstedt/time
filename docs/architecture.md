@@ -23,7 +23,8 @@ src/app/
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   monthChart.ts     a month → week rows of day boxes, and their colour (pure, clock-free)
   employer.ts       the template, working days, the day's target   (pure)
-  clock.ts          the dial's numerals, its and the frame's geometry (pure)
+  clock.ts          the dial's layout, hands, arcs, the frame's path  (pure)
+  look.ts           the theme, and the dial's faces, fonts, markers, presets
   format.ts         durations, timers, times of day
   labels.ts         domain value → label and colour
   merge.ts          two documents → one                            (pure)
@@ -34,7 +35,9 @@ src/app/
   useNow.ts         the one place the clock is read
   backup.ts         export / restore a JSON file
   ProgressFrame.tsx the timer card's border, drawn as the day's progress
-  ClockFace.tsx     the dial, and the way into the day's stretches
+  Dial.tsx          the watch face, drawn — shared by Today and Settings
+  ClockFace.tsx     the day on the dial, and the way into its stretches
+  DialPicker.tsx    the presets and the custom pickers in Settings
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you got in, corrected from the timer
