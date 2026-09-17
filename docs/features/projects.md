@@ -26,7 +26,7 @@ back up with the days.
 A card is the week at a glance: a pill for each working day, Monday first,
 with a day that falls on a weekend drawn in the flag colour rather than the
 accent — a Saturday worked is the exception, and it should look like one.
-Beside them sits the day's length, "8 hours per day". What the project holds
+Beside them sits the day's length, "8 hour workday". What the project holds
 beyond that is the editor's business: a card counts nothing.
 
 Editing and deleting are two glyphs in the card's top right — a pen and a

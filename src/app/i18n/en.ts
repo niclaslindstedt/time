@@ -216,7 +216,7 @@ export const en = {
     deleteConfirm: "Delete {name}?",
     deleteHint:
       "The project and every day logged for it are removed. This can't be undone.",
-    summaryHours: "{hours} hours per day",
+    summaryHours: "{hours} hour workday",
     summaryNoDays: "No working days",
     name: "Name",
     namePlaceholder: "What you are working on",
