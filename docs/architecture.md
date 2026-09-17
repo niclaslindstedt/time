@@ -36,15 +36,16 @@ src/app/
   useNow.ts         the one place the clock is read
   useHands.ts       the hands: the movement's beat, and setting the watch
   useDesk.ts        whether the window is a desk (≥ 64rem) or a phone
-  shortcuts.ts      key → command                                   (pure)
+  shortcuts.ts      key → command, and whether Enter saves a modal   (pure)
   useShortcuts.ts   the window's keydown, turned into those commands
+  useModalSave.ts   Enter inside a modal's card, turned into its Save
   backup.ts         export / restore a JSON file
   Dial.tsx          the watch face, drawn, with the day's progress on the bezel — shared by Today and Settings
   ClockFace.tsx     the day on the dial, the switch, the light, and the way into the stretches
   DialPicker.tsx    the presets and the custom pickers in Settings
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
   DayGlance.tsx     the Log's header: the day on a dial, and its worked / break ring
-  ModalHeader.tsx   a dialog's top bar: cancel, the title, save
+  ModalHeader.tsx   a dialog's top bar: cancel, the title, save — and Enter / Escape
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you started, corrected from the timer
   NewKindModal.tsx  a kind of break or work, named on the spot

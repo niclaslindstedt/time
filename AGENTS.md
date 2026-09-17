@@ -213,7 +213,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/shortcuts.ts` — key → command, pure and tested: `S` for the face,
   the digits for the kinds of work, `,` and `P` for the two panels.
   `useShortcuts.ts` binds it to the window and stands down while a field or
-  a dialog has the keyboard.
+  a dialog has the keyboard. It also holds `savesModal` — whether Enter in a
+  dialog is asking for its Save — which `useModalSave.ts` binds for
+  `ModalHeader`: a document listener, because the header is a _sibling_ of
+  the form it saves, scoped to its own `aria-modal` card so only the top
+  dialog answers, and deferred a tick so a field that commits on blur has
+  committed before the save reads the draft. Escape is the framework's.
 - `src/app/useDesk.ts` — whether the window is a desk (64rem and wider) or a
   phone. The one number, shared with every `lg:` and `@media (min-width:
 64rem)` in the app.
@@ -318,7 +323,7 @@ regression.
 | A change to the Log's two rings         | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day   |
 | A change to what a project holds        | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
 | A new control on the span editor        | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
-| A modal's save / cancel                 | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet                                                  |
+| A modal's save / cancel                 | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's   |
 | A new way to correct a time on Today    | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
 | A new screen                            | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place |
 | A new setting                           | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                      |

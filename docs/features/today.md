@@ -120,6 +120,13 @@ the kinds of work in the order the project lists them, `,` opens Settings and
 `P` the projects. A key held with ⌘, Ctrl or Alt is left to the browser, and
 nothing fires while you are typing in a field or a dialog is open.
 
+A dialog has two keys of its own. **Enter** is its Save button — so the
+"Custom" pill is a name typed and filed without the pointer ever moving, and
+the field has the keyboard the moment the dialog opens. **Escape** is its
+Cancel. Enter is left alone wherever it already does a job: on a focused
+button it presses that button, and it saves nothing while Save is greyed
+out.
+
 While the day is being counted the browser tab's title carries the time
 worked and the state, so the tab strip is a glance at the day.
 

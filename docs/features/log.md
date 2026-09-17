@@ -42,8 +42,8 @@ of a moment at once; see [`today.md`](today.md).
 Tap a row to open the editor: the kind (for a break or an activity), the
 start, the end, and a **Still running** switch. **Cancel** and **Save** sit at
 the top of the dialog, left and right of its title, well clear of the tabs at
-the foot of the screen. An end earlier than the start is read as the next
-day's — a night shift. **Delete** sits at the end of the form and removes the
+the foot of the screen; **Enter** presses Save and **Escape** presses Cancel.
+An end earlier than the start is read as the next day's — a night shift. **Delete** sits at the end of the form and removes the
 row after a confirmation. The **+** in a section's corner adds a span of that
 kind after the fact; it is greyed out when the project has no kind to add one
 of yet.
