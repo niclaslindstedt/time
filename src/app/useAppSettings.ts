@@ -6,6 +6,7 @@ import type { WeekStart } from "@niclaslindstedt/oss-framework/calendar";
 
 import {
   CLOCK_SIZE,
+  DEFAULT_BACKLIGHT,
   DEFAULT_DIAL_PRESET,
   DIAL_FACE,
   DIAL_FONT,
@@ -14,6 +15,8 @@ import {
   DIAL_PLACEMENTS,
   DIAL_PRESET,
   DIAL_SCALE,
+  clampBacklight,
+  type Backlight,
   type ClockSize,
   type DialConfig,
   type DialPreset,
@@ -43,6 +46,9 @@ export type AppSettings = {
   /** How much of the screen the dial takes. Per device rather than part of
    *  a preset: a size suits a screen, not a dial. */
   clockSize: ClockSize;
+  /** The light behind the dial while working: its colour, its beat and how
+   *  bright. Per device, like the size — a light suits a room. */
+  backlight: Backlight;
   /** The project the Today, Log and Report screens show. Null until one is
    *  chosen; `App` falls back to the first project by name. */
   activeProjectId: string | null;
@@ -58,6 +64,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   clockPreset: DEFAULT_DIAL_PRESET,
   clock: DIAL_PRESET[DEFAULT_DIAL_PRESET],
   clockSize: "large",
+  backlight: DEFAULT_BACKLIGHT,
   activeProjectId: null,
   devMode: false,
   captureLogs: false,
@@ -129,6 +136,7 @@ export function parseSettings(raw: string): AppSettings {
         : oneOf(DIAL_PRESET, merged.clockPreset, DEFAULT_DIAL_PRESET),
     clock: parseDial(merged.clock),
     clockSize: oneOf(CLOCK_SIZE, merged.clockSize, DEFAULT_SETTINGS.clockSize),
+    backlight: clampBacklight(merged.backlight),
     activeProjectId,
     devMode: merged.devMode === true,
     captureLogs: merged.captureLogs === true,

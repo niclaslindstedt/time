@@ -538,3 +538,83 @@ export const CLOCK_SIZE: Record<ClockSize, ClockSizeSpec> = {
   medium: { maxWidth: "max-w-[19rem]", labelGap: 16 },
   large: { maxWidth: "max-w-none", labelGap: 14 },
 };
+
+// ── The backlight ───────────────────────────────────────────────────────────
+// Whether you are working is said with light rather than a word: a glow
+// behind the dial, the way a television lights the wall behind it, that
+// beats while the day is being counted, holds steady and dimmer on a break,
+// and is off when you are not working. Like the face, it is the watch's own
+// light rather than the theme's — a colour an object has — so it may be any
+// of these without being a palette. The default is the theme's accent, so a
+// fresh install glows in the colour the ring already uses.
+
+export type BacklightColor =
+  "accent" | "white" | "amber" | "green" | "teal" | "blue" | "violet" | "rose";
+
+export const BACKLIGHT_COLORS: BacklightColor[] = [
+  "accent",
+  "white",
+  "amber",
+  "green",
+  "teal",
+  "blue",
+  "violet",
+  "rose",
+];
+
+/** The CSS colour each light is, for the glow and for its swatch. */
+export const BACKLIGHT_COLOR: Record<BacklightColor, string> = {
+  accent: "var(--color-accent)",
+  white: "#f4f4f5",
+  amber: "#f59e0b",
+  green: "#22c55e",
+  teal: "#14b8a6",
+  blue: "#3b82f6",
+  violet: "#8b5cf6",
+  rose: "#f43f5e",
+};
+
+export type Backlight = {
+  color: BacklightColor;
+  /** How often it beats, in hertz. Zero is a steady light. */
+  hz: number;
+  /** How bright, 0 – 100. Zero is no light at all. */
+  intensity: number;
+};
+
+/** The beat's range: from steady to twice a second, which is as fast as a
+ *  glow can go before it is a strobe. */
+export const BACKLIGHT_HZ = { min: 0, max: 2, step: 0.05 };
+export const BACKLIGHT_INTENSITY = { min: 0, max: 100, step: 5 };
+
+export const DEFAULT_BACKLIGHT: Backlight = {
+  color: "accent",
+  hz: 0.25,
+  intensity: 60,
+};
+
+/** A stored backlight, field by field, clamped into range. */
+export function clampBacklight(value: unknown): Backlight {
+  const raw = (
+    typeof value === "object" && value !== null ? value : {}
+  ) as Partial<Record<keyof Backlight, unknown>>;
+  const hz = Number(raw.hz);
+  const intensity = Number(raw.intensity);
+  return {
+    color:
+      typeof raw.color === "string" && raw.color in BACKLIGHT_COLOR
+        ? (raw.color as BacklightColor)
+        : DEFAULT_BACKLIGHT.color,
+    hz: Number.isFinite(hz)
+      ? Math.min(BACKLIGHT_HZ.max, Math.max(BACKLIGHT_HZ.min, hz))
+      : DEFAULT_BACKLIGHT.hz,
+    intensity: Number.isFinite(intensity)
+      ? Math.round(
+          Math.min(
+            BACKLIGHT_INTENSITY.max,
+            Math.max(BACKLIGHT_INTENSITY.min, intensity),
+          ),
+        )
+      : DEFAULT_BACKLIGHT.intensity,
+  };
+}

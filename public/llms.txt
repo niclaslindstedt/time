@@ -14,15 +14,19 @@
 
 ## Features
 
-- Today: a running timer whose card's border fills clockwise with the day's
-  share of its target and overshoots past it, a twelve-hour clock with time
-  worked, breaks and kinds of work drawn on it,
-  and one-tap buttons to start, stop, take a break or switch what you are
-  working on
+- Today: a wrist watch's dial with time worked, breaks and kinds of work
+  drawn on it, the day's share of its target filling the bezel, and a light
+  behind the case that beats while you are working; the face is the switch
+  (press to start, press again to stop) and one-tap buttons take a break or
+  switch what you are working on
 - Correcting a time without leaving Today: a break is booked for the length
-  its kind usually takes and its end is printed on the clock's rim, tapping
-  the clock opens the day stretch by stretch with each end movable, and
-  tapping the timer corrects when you started
+  its kind usually takes and its end is printed on the clock's rim, pressing
+  a stretch on the ring opens the day stretch by stretch with each end
+  movable, and the line under the dial corrects when you started
+- On a desk (1024px and wider): the places as tabs on the top bar, Settings
+  as a side panel, hover on the ring to read a stretch, a right-click menu on
+  the dial, and keyboard shortcuts (S, 1–9, comma, P); the tab title carries
+  the time worked
 - Log: every day as a list of sessions, breaks and activities, each editable
   or deletable, with breaks and time worked addable after the fact
 - Report: hours worked against target per day for a week or a month, where
@@ -31,5 +35,6 @@
   break types with default lengths, and kinds of work; the project switcher
   only appears once there are two
 - Settings: light/dark theme, the clock's look, numerals (sans, serif, mono
-  or Roman) and size, week start, cloud sync, JSON backup and restore
+  or Roman) and size, the backlight's colour, beat and brightness, week
+  start, cloud sync, JSON backup and restore
 - No account, no server, no analytics; installable and fully offline

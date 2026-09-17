@@ -30,20 +30,21 @@ requires authentication even for public packages.
    15-minute coffee break and a 5-minute toilet break as break types, and four
    kinds of work. Change any of it, or come back to it later under
    **Projects**.
-2. Press **Start working**. The timer starts, and the clock begins drawing the
-   day.
+2. Press the clock. The light behind it comes up, and the clock begins
+   drawing the day.
 3. Tap a break — **Lunch**, say — when you go. It is written down there and
    then, ending after the half hour a lunch is assumed to take, so you do not
-   have to tell the app you are back. The timer stops for as long as it runs.
+   have to tell the app you are back. The light dims for as long as it runs.
    Back early? Tap **End Lunch**.
 4. Tap a kind of work when it changes. This only labels the time; it does not
    start or stop anything. While a break is on it says **paused**, because a
    break stops the counting.
-5. Press **Stop working** when you are done for the day.
+5. Press the clock again when you are done for the day.
 
 The lunch ran long? Its end is printed on the rim of the clock — tap it, or
-the clock itself, and the day opens stretch by stretch, where moving one end
-starts the next stretch there. Tap the timer to correct when you started. A
+the stretch on the ring, and the day opens stretch by stretch, where moving
+one end starts the next stretch there. Tap the line under the clock to
+correct when you started. A
 kind of break or work nobody set up in advance is **Custom**, at the end of
 either row. The **Log** tab shows the day as a list where every row can be
 corrected one span at a time.
