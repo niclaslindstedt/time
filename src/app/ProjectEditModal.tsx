@@ -28,7 +28,7 @@ import {
   type GlyphId,
 } from "./kinds.ts";
 import { KindPicker, MarkButton } from "./KindPicker.tsx";
-import { CATEGORY_COLORS, weekdayLabel } from "./labels.ts";
+import { CATEGORY_COLORS, WEEK, weekdayLabel } from "./labels.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
 import type { Project, Weekday } from "./types.ts";
 
@@ -47,8 +47,6 @@ type Props = {
   onSave: (project: Project) => void;
   onClose: () => void;
 };
-
-const WEEK: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
 export function ProjectEditModal({ project, onSave, onClose }: Props) {
   const t = useT();

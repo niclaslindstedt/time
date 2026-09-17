@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { addDays, type DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {
-  Button,
+  ActionMenuList,
   ChevronLeftIcon,
   ChevronRightIcon,
   ConfirmDialog,
-  Section,
+  FloatingPanel,
+  IconButton,
+  PlusIcon,
+  TrashIcon,
+  type FloatingPlacement,
+  type RowAction,
 } from "@niclaslindstedt/oss-framework/components";
 
 import {
@@ -20,8 +25,9 @@ import {
   type SpanKind,
 } from "./actions.ts";
 import { END_OF_DAY, dayTotals } from "./day.ts";
-import { formatDuration, formatFullDay, formatTimeOfDay } from "./format.ts";
-import { CupIcon, EnterIcon, KindGlyph, TagIcon } from "./icons.tsx";
+import { formatFullDay, formatTimeOfDay } from "./format.ts";
+import { DayGlance } from "./DayGlance.tsx";
+import { CupIcon, EnterIcon, KindGlyph, MoreIcon, TagIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
 import type { GlyphId } from "./kinds.ts";
@@ -62,6 +68,8 @@ export function LogScreen({ store, project, onNotice }: Props) {
   const [date, setDate] = useState<DayKey>(now.today);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [dayMenu, setDayMenu] = useState(false);
+  const dayMenuRef = useRef<HTMLButtonElement>(null);
 
   const stored = project ? dayFor(store.data, project.id, date) : null;
   const day = useMemo<WorkDay | null>(
@@ -175,13 +183,16 @@ export function LogScreen({ store, project, onNotice }: Props) {
             />
           ))}
         <span className="min-w-0 flex-1 truncate text-fg-bright">{label}</span>
-        <span className="shrink-0 text-muted tabular-nums">
-          {span.end === null
-            ? `${formatTimeOfDay(span.start)} – ${t("log.running")}`
-            : t("log.span", {
-                start: formatTimeOfDay(span.start),
-                end: formatTimeOfDay(span.end),
-              })}
+        <span className="flex shrink-0 items-center gap-1">
+          <TimePill>{formatTimeOfDay(span.start)}</TimePill>
+          <span aria-hidden="true" className="text-muted">
+            –
+          </span>
+          {span.end === null ? (
+            <TimePill running>{t("log.running")}</TimePill>
+          ) : (
+            <TimePill>{formatTimeOfDay(span.end)}</TimePill>
+          )}
         </span>
       </button>
     </li>
@@ -190,132 +201,135 @@ export function LogScreen({ store, project, onNotice }: Props) {
   const empty =
     day.sessions.length + day.breaks.length + day.activities.length === 0;
 
+  const dayActions: RowAction[] = [
+    {
+      label: t("common.delete"),
+      icon: <TrashIcon className="h-4 w-4" />,
+      danger: true,
+      onSelect: () => setConfirmDelete(true),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-3 px-3 py-3">
       <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          aria-label={t("common.previous")}
+        <IconButton
+          label={t("common.previous")}
           onClick={() => setDate((d) => addDays(d, -1))}
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-line text-muted hover:bg-surface-2"
         >
           <ChevronLeftIcon className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setDate(now.today)}
-          className="min-w-0 flex-1 text-center"
-        >
-          <span className="block text-lg font-bold text-fg-bright">
-            {dayHeadline(t, date, now.today)}
-          </span>
-          <span className="block text-xs text-muted">
-            {formatFullDay(date)}
-          </span>
-        </button>
-        <button
-          type="button"
-          aria-label={t("common.next")}
+        </IconButton>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
+          <button
+            type="button"
+            onClick={() => setDate(now.today)}
+            className="min-w-0 rounded-md px-2 py-0.5 text-center hover:bg-surface-2"
+          >
+            <span className="block truncate text-lg font-bold text-fg-bright">
+              {dayHeadline(t, date, now.today)}
+            </span>
+            <span className="block truncate text-xs text-muted">
+              {formatFullDay(date)}
+            </span>
+          </button>
+          <IconButton
+            ref={dayMenuRef}
+            label={t("log.dayMenu")}
+            expanded={dayMenu}
+            disabled={!stored}
+            className="h-8 w-8 border-transparent"
+            onClick={() => setDayMenu((open) => !open)}
+          >
+            <MoreIcon className="h-5 w-5" />
+          </IconButton>
+        </div>
+        <IconButton
+          label={t("common.next")}
           onClick={() => setDate((d) => addDays(d, 1))}
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-line text-muted hover:bg-surface-2"
         >
           <ChevronRightIcon className="h-5 w-5" />
-        </button>
+        </IconButton>
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
-        <Stat
-          label={t("log.firstIn")}
-          value={
-            totals.firstIn === null ? "—" : formatTimeOfDay(totals.firstIn)
-          }
-        />
-        <Stat
-          label={t("log.lastOut")}
-          value={
-            totals.lastOut === null ? "—" : formatTimeOfDay(totals.lastOut)
-          }
-        />
-        <Stat label={t("log.worked")} value={formatDuration(totals.worked)} />
-        <Stat
-          label={t("log.breakTotal")}
-          value={formatDuration(totals.breakTotal)}
-        />
-      </div>
+      <DayGlance day={day} totals={totals} upTo={upTo} />
 
       {empty && <p className="px-1 text-xs text-muted">{t("log.empty")}</p>}
 
-      <Section
+      <LogSection
         title={t("log.sessions")}
         icon={<EnterIcon className="h-3.5 w-3.5" />}
+        addLabel={t("log.addSession")}
+        onAdd={() => setEditing({ kind: "session", draft: null })}
       >
-        <ul className="-mx-2 flex flex-col">
-          {[...day.sessions]
-            .sort((a, b) => a.start - b.start)
-            .map((s) => spanRow("session", s, t("log.sessions"), null, null))}
-        </ul>
-        <Button onClick={() => setEditing({ kind: "session", draft: null })}>
-          {t("log.addSession")}
-        </Button>
-      </Section>
+        {[...day.sessions]
+          .sort((a, b) => a.start - b.start)
+          .map((x) => spanRow("session", x, t("log.sessions"), null, null))}
+      </LogSection>
 
-      <Section
+      <LogSection
         title={t("log.breaks")}
         icon={<CupIcon className="h-3.5 w-3.5" />}
+        addLabel={t("log.addBreak")}
+        onAdd={
+          project.breakTypes.length === 0
+            ? null
+            : () => setEditing({ kind: "break", draft: null })
+        }
       >
-        <ul className="-mx-2 flex flex-col">
-          {[...day.breaks]
-            .sort((a, b) => a.start - b.start)
-            .map((b) =>
-              spanRow(
-                "break",
-                b,
-                breakName(t, project, b.typeId),
-                "var(--color-flag)",
-                b.typeId,
-                breakGlyph(project, b.typeId),
-              ),
-            )}
-        </ul>
-        <Button
-          disabled={project.breakTypes.length === 0}
-          onClick={() => setEditing({ kind: "break", draft: null })}
-        >
-          {t("log.addBreak")}
-        </Button>
-      </Section>
+        {[...day.breaks]
+          .sort((a, b) => a.start - b.start)
+          .map((x) =>
+            spanRow(
+              "break",
+              x,
+              breakName(t, project, x.typeId),
+              "var(--color-flag)",
+              x.typeId,
+              breakGlyph(project, x.typeId),
+            ),
+          )}
+      </LogSection>
 
-      <Section
+      <LogSection
         title={t("log.activities")}
         icon={<TagIcon className="h-3.5 w-3.5" />}
+        addLabel={t("log.addActivity")}
+        onAdd={
+          project.categories.length === 0
+            ? null
+            : () => setEditing({ kind: "activity", draft: null })
+        }
       >
-        <ul className="-mx-2 flex flex-col">
-          {[...day.activities]
-            .sort((a, b) => a.start - b.start)
-            .map((a) =>
-              spanRow(
-                "activity",
-                a,
-                categoryName(t, project, a.categoryId),
-                categoryColor(project, a.categoryId),
-                a.categoryId,
-                categoryGlyph(project, a.categoryId),
-              ),
-            )}
-        </ul>
-        <Button
-          disabled={project.categories.length === 0}
-          onClick={() => setEditing({ kind: "activity", draft: null })}
-        >
-          {t("log.addActivity")}
-        </Button>
-      </Section>
+        {[...day.activities]
+          .sort((a, b) => a.start - b.start)
+          .map((x) =>
+            spanRow(
+              "activity",
+              x,
+              categoryName(t, project, x.categoryId),
+              categoryColor(project, x.categoryId),
+              x.categoryId,
+              categoryGlyph(project, x.categoryId),
+            ),
+          )}
+      </LogSection>
 
-      {stored && (
-        <Button variant="danger" onClick={() => setConfirmDelete(true)}>
-          {t("log.deleteDay")}
-        </Button>
-      )}
+      <FloatingPanel
+        open={dayMenu && stored !== null}
+        onClose={() => setDayMenu(false)}
+        triggerRef={dayMenuRef}
+        placement={DAY_MENU}
+        className="py-1"
+      >
+        <ActionMenuList
+          actions={dayActions}
+          ariaLabel={t("log.dayMenu")}
+          onActivate={(action) => {
+            setDayMenu(false);
+            action.onSelect();
+          }}
+        />
+      </FloatingPanel>
 
       {editing && (
         <SpanEditModal
@@ -347,15 +361,91 @@ export function LogScreen({ store, project, onNotice }: Props) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+/** Where the day's menu hangs: off the right edge of the button, so a menu
+ *  opened from the middle of the header falls back under the date rather than
+ *  off the side of a phone. */
+const DAY_MENU: FloatingPlacement = {
+  width: { kind: "min", minPx: 168 },
+  anchor: "right",
+  gap: 4,
+  coordinateSpace: "viewport",
+};
+
+/**
+ * One of the three lists, as a card: the framework's `Section` chrome with an
+ * add button in the corner.
+ *
+ * The framework's own `Section` is a title and a body, and the button that
+ * adds a row used to sit under the rows as a full-width bar — which read as
+ * part of the list, and put three of the screen's loudest elements down its
+ * middle. Adding a span after the fact is a corner affordance: the title says
+ * what the card holds and the `+` beside it adds one. `onAdd` of `null` is a
+ * card with nothing to add yet — a project with no kinds of break — and the
+ * button is disabled rather than missing, so the row of cards keeps its shape.
+ */
+function LogSection({
+  title,
+  icon,
+  addLabel,
+  onAdd,
+  children,
+}: {
+  title: string;
+  icon: ReactNode;
+  addLabel: string;
+  onAdd: (() => void) | null;
+  children: ReactNode;
+}) {
+  const titleId = useId();
   return (
-    <div className="rounded-xl border border-line bg-surface-3 px-2 py-2 text-center">
-      <p className="text-[0.65rem] tracking-wide text-muted uppercase">
-        {label}
-      </p>
-      <p className="mt-0.5 text-sm font-bold text-fg-bright tabular-nums">
-        {value}
-      </p>
+    <div
+      role="group"
+      aria-labelledby={titleId}
+      className="rounded border border-line bg-surface-3 p-3"
+    >
+      <div className="mb-2 flex items-center gap-1.5">
+        <span
+          id={titleId}
+          className="flex min-w-0 flex-1 items-center gap-1.5 text-xs font-bold tracking-wide text-muted uppercase"
+        >
+          <span aria-hidden="true" className="shrink-0">
+            {icon}
+          </span>
+          <span className="truncate">{title}</span>
+        </span>
+        <button
+          type="button"
+          aria-label={addLabel}
+          title={addLabel}
+          disabled={onAdd === null}
+          onClick={() => onAdd?.()}
+          className="-my-1 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-line text-muted transition-colors hover:bg-surface-2 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+        >
+          <PlusIcon className="h-4 w-4" />
+        </button>
+      </div>
+      <ul className="-mx-2 flex flex-col">{children}</ul>
     </div>
+  );
+}
+
+/** A time of day, as a chip. A row is two of them either side of a dash, and
+ *  the pair is what the eye lands on — the label beside it is the kind, and
+ *  the kind is rarely what a wrong row is wrong about. */
+function TimePill({
+  children,
+  running = false,
+}: {
+  children: ReactNode;
+  running?: boolean;
+}) {
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${
+        running ? "bg-accent/15 text-accent" : "bg-surface-2 text-fg-bright"
+      }`}
+    >
+      {children}
+    </span>
   );
 }

@@ -31,6 +31,7 @@ import {
   BACKLIGHT_COLORS,
   BACKLIGHT_HZ,
   BACKLIGHT_INTENSITY,
+  BACKLIGHT_SPREAD,
   CLOCK_SIZES,
   type ClockSize,
 } from "./look.ts";
@@ -221,6 +222,26 @@ export function SettingsScreen({
               update("backlight", { ...settings.backlight, intensity })
             }
           />
+          {/* How far the light lands, as against how strong it is. A large
+              dial has little room around it, and a halo wider than that room
+              runs into the bars and is cut off at them — so the reach is a
+              knob of its own rather than a constant. */}
+          <Slider
+            label={t("settings.backlightSpread")}
+            value={settings.backlight.spread}
+            min={BACKLIGHT_SPREAD.min}
+            max={BACKLIGHT_SPREAD.max}
+            step={BACKLIGHT_SPREAD.step}
+            display={t("settings.backlightPercent", {
+              percent: String(settings.backlight.spread),
+            })}
+            onChange={(spread) =>
+              update("backlight", { ...settings.backlight, spread })
+            }
+          />
+          <p className="text-xs text-muted">
+            {t("settings.backlightSpreadHint")}
+          </p>
         </Labelled>
       </Section>
 

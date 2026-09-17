@@ -233,6 +233,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   chart without being measured first. A day's box is painted two pixels narrower
   than its hit area, so the page showing between two days is not a seam the week
   answers through.
+- `src/app/DayGlance.tsx` — the Log's header, where the day's four figures
+  are drawn rather than printed. Two rings: the day on a twelve-hour dial —
+  every stretch it was present as an arc, so a day worked in two shows the gap,
+  with the first clock-in and last clock-out as hands — and beside it the
+  framework's `DonutChart` split between worked and breaks. Paint only: the
+  arcs are `presenceIntervals` and the figures are `dayTotals`, the same
+  readings the Today screen and the Report use.
 - `src/app/DayTimelineModal.tsx` — the day as the stretches `daySegments`
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.
@@ -320,6 +327,7 @@ regression.
 | Something only the desk does             | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                     |
 | A new face, marker, typeface or preset   | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
 | A change to the Report's month chart     | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
+| A change to the Log's two rings          | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day   |
 | A change to what a project holds         | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
 | A new glyph, or a colour a kind can wear | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                  |
 | A new control on the span editor         | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |

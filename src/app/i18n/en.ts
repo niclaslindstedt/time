@@ -35,7 +35,6 @@ export const en = {
     tomorrow: "Tomorrow",
     previous: "Previous",
     next: "Next",
-    none: "None",
     uncategorised: "Uncategorised",
     project: "Project",
   },
@@ -139,12 +138,19 @@ export const en = {
     addActivity: "Add an activity",
     span: "{start} – {end}",
     running: "still running",
+    // The two rings above the lists. The dial is the day's shape — where it
+    // started and where it stopped, on the twelve-hour clock — and the ring
+    // beside it is how the stretch between them split.
+    dialLabel: "The day on the clock",
+    dialDesc: "Started at {start}, stopped at {end}.",
+    splitLabel: "Worked and breaks",
+    splitDesc: "{worked} worked and {breaks} of breaks.",
+    dayMenu: "This day",
     unknownType: "Deleted type",
     worked: "Worked",
     breakTotal: "Breaks",
     firstIn: "Started",
     lastOut: "Stopped",
-    deleteDay: "Delete this day",
     deleteDayConfirm: "Delete this day?",
     deleteDayHint:
       "Everything logged for {day} is removed, and every total derived from it moves. This can't be undone.",
@@ -217,10 +223,8 @@ export const en = {
     deleteConfirm: "Delete {name}?",
     deleteHint:
       "The project and every day logged for it are removed. This can't be undone.",
-    summaryDays: "{days}",
-    summaryHours: "{hours} h a day",
-    summaryBreaks: "{count} break types",
-    summaryCategories: "{count} kinds of work",
+    summaryHours: "{hours} hour workday",
+    summaryNoDays: "No working days",
     name: "Name",
     namePlaceholder: "What you are working on",
     nameRequired: "Give the project a name.",
@@ -420,7 +424,7 @@ export const en = {
     },
     clockSize: "Size",
     clockSizeHint:
-      "How much of the screen the dial takes. Large fills the width on a phone and the height on a desk.",
+      "How much of the screen the dial takes: on a phone a share of the width, on a desk a share of the window's height — about half of it, most of it, or nearly all of it.",
     clockSizeSmall: "Small",
     clockSizeMedium: "Medium",
     clockSizeLarge: "Large",
@@ -443,6 +447,9 @@ export const en = {
     backlightSteady: "Steady",
     backlightHz: "{hz} Hz",
     backlightIntensity: "Brightness",
+    backlightSpread: "Spread",
+    backlightSpreadHint:
+      "How far the light reaches past the case. Turn it down if the glow runs into the bars around a large dial.",
     backlightOff: "Off",
     backlightPercent: "{percent}%",
     calendar: "Week",

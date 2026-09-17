@@ -369,12 +369,19 @@ body {
     display: none;
   }
 
+  /* The size, on a desk, is a share of the window's height — `--dial-share`,
+     set inline from `CLOCK_SIZE` (see `look.ts`). The slot grows into the
+     row it stands in and stops at that share, so small, medium and large are
+     half the window, most of it and nearly all of it rather than three width
+     caps two of which looked alike. A short window has less than the share
+     to spare, and then the row's own height is the cap. */
   .app-dial-slot {
     flex: 1 1 0;
     min-height: 14rem;
     width: auto;
     aspect-ratio: 1;
     max-width: 100%;
+    max-height: calc(var(--dial-share, 0.85) * 100svh);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -407,24 +414,33 @@ body {
 }
 
 /* ── The backlight ───────────────────────────────────────────────────────────
-   The light behind the case (`ClockFace.tsx`). A blurred disc a little
-   larger than the dial, in the colour the settings chose, at the strength
-   they chose; it fades up when the day starts and down when it stops, and
-   while the day is being counted it beats at the settings' rate. On a break
-   it holds at half, steady, in the flag colour. `--glow-color`,
-   `--glow-alpha` and `--glow-period` are set inline from the settings.
+   The light behind the case (`ClockFace.tsx`). A blurred disc larger than
+   the dial, in the colour the settings chose, at the strength they chose;
+   it fades up when the day starts and down when it stops, and while the day
+   is being counted it beats at the settings' rate. On a break it holds at
+   half, steady, in the flag colour. `--glow-color`, `--glow-alpha` and
+   `--glow-period` are set inline from the settings.
+
+   How far it reaches is the spread, and it arrives as geometry rather than
+   as one number: `--glow-inset` inflates the disc past the dial, and
+   `--glow-hold` / `--glow-fade` are where along the disc's radius the light
+   is still full and where it has gone. They are computed together by
+   `glowGeometry` (`look.ts`), because the circle is sized `closest-side` —
+   inflate the disc and the dial's own edge moves inward along the gradient,
+   so the stops have to follow or the halo stops short of the case. Only the
+   part outside the dial is ever seen: the watch covers the rest.
 
    Opacity is the only thing that animates: the blur is rendered once and
    the beat is a compositor job, which is what lets it run all day on a
    laptop without being noticed by the fan. */
 .app-glow {
   position: absolute;
-  inset: -16%;
+  inset: calc(-1 * var(--glow-inset, 17.5%));
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
   background: radial-gradient(
-    circle,
+    circle closest-side,
     color-mix(
         in oklab,
         var(--glow-color) calc(var(--glow-alpha) * 100%),
@@ -433,19 +449,19 @@ body {
       0%,
     color-mix(
         in oklab,
-        var(--glow-color) calc(var(--glow-alpha) * 85%),
+        var(--glow-color) calc(var(--glow-alpha) * 90%),
         transparent
       )
-      52%,
+      var(--glow-hold, 74%),
     color-mix(
         in oklab,
         var(--glow-color) calc(var(--glow-alpha) * 30%),
         transparent
       )
-      63%,
-    transparent 72%
+      var(--glow-fade, 87%),
+    transparent 100%
   );
-  filter: blur(16px);
+  filter: blur(var(--glow-blur, 16px));
   transition: opacity 700ms ease;
   will-change: opacity;
 }
@@ -479,7 +495,7 @@ body {
 }
 
 /* ── Range inputs ────────────────────────────────────────────────────────────
-   The backlight's two sliders. The native control, tinted the accent. */
+   The backlight's sliders. The native control, tinted the accent. */
 .app-range {
   accent-color: var(--accent);
 }
