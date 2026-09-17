@@ -150,7 +150,7 @@ export function TagIcon({ className }: IconProps) {
   );
 }
 
-/** A kind of time — a small hourglass, for the balance tiles. */
+/** A kind of time — a small hourglass, for the report's days-worked line. */
 export function HourglassIcon({ className }: IconProps) {
   return (
     <Glyph className={className}>

@@ -189,11 +189,17 @@ export const en = {
     target: "Target",
     balance: "Balance",
     overall: "Overall balance",
-    overallHint: "Since the first day you logged.",
+    overallShort: "Overall",
+    overallHint: "Overall is since the first day you logged.",
     workedDays: "{count} of {expected} days",
+    // The two rings over the charts — the Log's header, one screen up.
+    shareLabel: "Worked against target",
+    shareDesc: "{worked} worked of a target of {target}.",
+    balanceLabel: "The balance, against the range's target",
+    balanceDesc: "{balance} against a target of {target}.",
     perDay: "Hours per day",
     perDayDesc:
-      "Hours worked on each day of the range, next to the hours expected.",
+      "A column a day: the target is the track, the hours worked fill it from the floor up, and a day that ran long carries on past the top.",
     perWeek: "Hours per week",
     perWeekDesc:
       "A row per week and a box per day: a box is as wide as the day's hours, a row as tall as the week's, and the rows stack to the month's total. The dotted lines are the target — a working day's hours across, and what the month should have added up to down.",
@@ -203,6 +209,7 @@ export const en = {
     weekRange: "{from} – {to}",
     scale: "Short of the day's target, on it, a fifth past.",
     seriesWorked: "Worked",
+    seriesOver: "Over",
     seriesTarget: "Target",
     categories: "Where the hours went",
     categoriesDesc: "Worked hours by kind of work over the range.",
