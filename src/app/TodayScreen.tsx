@@ -26,9 +26,15 @@ import { dayTotals, progress } from "./day.ts";
 import { isWorkDay } from "./project.ts";
 import { formatDuration, formatPercent, formatTimeOfDay } from "./format.ts";
 import type { Backlight, ClockSize, DialConfig } from "./look.ts";
-import { CupIcon, EnterIcon, LeaveIcon } from "./icons.tsx";
+import { EnterIcon, KindGlyph, LeaveIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
+import {
+  DEFAULT_BREAK_GLYPH,
+  DEFAULT_CATEGORY_GLYPH,
+  glyphOr,
+  type GlyphId,
+} from "./kinds.ts";
 import { breakName, categoryColor } from "./labels.ts";
 import { NewKindModal } from "./NewKindModal.tsx";
 import { KEY_HINT, type Command } from "./shortcuts.ts";
@@ -277,7 +283,12 @@ export function TodayScreen({
                   name: b.name,
                   minutes: String(b.defaultMinutes),
                 }),
-          icon: <CupIcon className="h-4 w-4 text-flag" />,
+          icon: (
+            <KindGlyph
+              id={glyphOr(b.glyph, DEFAULT_BREAK_GLYPH)}
+              className="h-4 w-4 text-flag"
+            />
+          ),
           onSelect: () => pickBreak(b.id, b.defaultMinutes),
         }))
       : []),
@@ -287,10 +298,10 @@ export function TodayScreen({
           return {
             label: on ? t("today.stopLabelling", { name: c.name }) : c.name,
             icon: (
-              <span
-                aria-hidden="true"
-                className="inline-block h-2.5 w-2.5 rounded-full"
-                style={{ background: categoryColor(project, c.id) }}
+              <KindGlyph
+                id={glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH)}
+                className="h-4 w-4"
+                style={{ color: categoryColor(project, c.id) }}
               />
             ),
             onSelect: () => pickCategory(c.id),
@@ -367,6 +378,7 @@ export function TodayScreen({
           <Swatch
             key={c.id}
             color={categoryColor(project, c.id)}
+            glyph={glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH)}
             label={c.name}
           />
         ))}
@@ -402,7 +414,10 @@ export function TodayScreen({
                     : "border-line bg-surface-3 text-fg hover:bg-surface-2"
                 }`}
               >
-                <CupIcon className="h-4 w-4 shrink-0 text-flag" />
+                <KindGlyph
+                  id={glyphOr(b.glyph, DEFAULT_BREAK_GLYPH)}
+                  className="h-4 w-4 shrink-0 text-flag"
+                />
                 <span className="truncate">
                   {running ? t("today.endBreak", { name: b.name }) : b.name}
                 </span>
@@ -449,11 +464,11 @@ export function TodayScreen({
                 }
                 className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors disabled:opacity-40 lg:min-h-12 lg:rounded-xl lg:font-semibold ${categoryTone(on)}`}
               >
-                <span
-                  aria-hidden="true"
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                <KindGlyph
+                  id={glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH)}
+                  className="h-4 w-4 shrink-0"
                   style={{
-                    background:
+                    color:
                       on && onBreak
                         ? "var(--color-flag)"
                         : categoryColor(project, c.id),
@@ -542,19 +557,26 @@ export function TodayScreen({
       {asking && (
         <NewKindModal
           kind={asking.kind}
-          onSave={(name, minutes) => {
+          // A kind of work added now takes the next slot of the positional
+          // ramp if no colour is picked — which is what `categoryColor` gives
+          // an id the project does not have yet.
+          autoColor={categoryColor(project, "")}
+          onSave={({ name, minutes, glyph, color }) => {
             const id = makeId();
             if (asking.kind === "break") {
               stampProject({
                 breakTypes: [
                   ...project.breakTypes,
-                  { id, name, defaultMinutes: minutes },
+                  { id, name, defaultMinutes: minutes, glyph },
                 ],
               });
               apply(takeBreak(day, id, now.seconds, minutes * 60, ctx()));
             } else {
               stampProject({
-                categories: [...project.categories, { id, name }],
+                categories: [
+                  ...project.categories,
+                  { id, name, glyph, ...(color ? { color } : {}) },
+                ],
               });
               apply(setCategory(day, id, now.seconds, ctx()));
             }
@@ -589,14 +611,33 @@ function earliestArrival(day: WorkDay, start: Seconds): Seconds {
   return min;
 }
 
-function Swatch({ color, label }: { color: string; label: string }) {
+/** One entry of the legend under the dial: work, break, or a kind of work.
+ *  The first two are bands of the ring and stay dots; a kind of work wears
+ *  the mark it wears everywhere else, in its own colour. */
+function Swatch({
+  color,
+  glyph,
+  label,
+}: {
+  color: string;
+  glyph?: GlyphId;
+  label: string;
+}) {
   return (
     <li className="inline-flex items-center gap-1.5">
-      <span
-        aria-hidden="true"
-        className="h-2.5 w-2.5 rounded-full"
-        style={{ background: color }}
-      />
+      {glyph ? (
+        <KindGlyph
+          id={glyph}
+          className="h-3.5 w-3.5 shrink-0"
+          style={{ color }}
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="h-2.5 w-2.5 rounded-full"
+          style={{ background: color }}
+        />
+      )}
       {label}
     </li>
   );

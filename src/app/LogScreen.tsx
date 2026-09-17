@@ -21,12 +21,15 @@ import {
 } from "./actions.ts";
 import { END_OF_DAY, dayTotals } from "./day.ts";
 import { formatDuration, formatFullDay, formatTimeOfDay } from "./format.ts";
-import { CupIcon, EnterIcon, TagIcon } from "./icons.tsx";
+import { CupIcon, EnterIcon, KindGlyph, TagIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
+import type { GlyphId } from "./kinds.ts";
 import {
+  breakGlyph,
   breakName,
   categoryColor,
+  categoryGlyph,
   categoryName,
   dayHeadline,
 } from "./labels.ts";
@@ -134,12 +137,17 @@ export function LogScreen({ store, project, onNotice }: Props) {
     setEditing(null);
   };
 
+  // A row's mark is the kind's own, in the kind's own colour — a break in the
+  // flag colour, a kind of work in its hue — so the list is scanned the same
+  // way the Today screen's buttons are. A session has neither: it is presence,
+  // not a kind of anything.
   const spanRow = (
     kind: SpanKind,
     span: Span,
     label: string,
     color: string | null,
     typeId: string | null,
+    glyph: GlyphId | null = null,
   ) => (
     <li key={span.id}>
       <button
@@ -152,13 +160,20 @@ export function LogScreen({ store, project, onNotice }: Props) {
         }
         className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-surface-2"
       >
-        {color && (
-          <span
-            aria-hidden="true"
-            className="h-2.5 w-2.5 shrink-0 rounded-full"
-            style={{ background: color }}
-          />
-        )}
+        {color &&
+          (glyph ? (
+            <KindGlyph
+              id={glyph}
+              className="h-4 w-4 shrink-0"
+              style={{ color }}
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ background: color }}
+            />
+          ))}
         <span className="min-w-0 flex-1 truncate text-fg-bright">{label}</span>
         <span className="shrink-0 text-muted tabular-nums">
           {span.end === null
@@ -258,6 +273,7 @@ export function LogScreen({ store, project, onNotice }: Props) {
                 breakName(t, project, b.typeId),
                 "var(--color-flag)",
                 b.typeId,
+                breakGlyph(project, b.typeId),
               ),
             )}
         </ul>
@@ -283,6 +299,7 @@ export function LogScreen({ store, project, onNotice }: Props) {
                 categoryName(t, project, a.categoryId),
                 categoryColor(project, a.categoryId),
                 a.categoryId,
+                categoryGlyph(project, a.categoryId),
               ),
             )}
         </ul>

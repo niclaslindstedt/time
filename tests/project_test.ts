@@ -22,6 +22,30 @@ const labels = {
 };
 
 describe("projectTemplate", () => {
+  it("gives every default break and kind of work a mark of its own", () => {
+    let n = 0;
+    const e = projectTemplate("Acme", labels, () => `id${++n}`, "now");
+    expect(e.breakTypes.map((b) => b.glyph)).toEqual([
+      "meal",
+      "coffee",
+      "toilet",
+    ]);
+    expect(e.categories.map((c) => c.glyph)).toEqual([
+      "meeting",
+      "planning",
+      "review",
+      "admin",
+    ]);
+  });
+
+  it("picks no colours, so the four take the hues their order gives them", () => {
+    // A new project looks exactly as one always did until someone chooses
+    // otherwise — the colour is stored only when it is picked.
+    let n = 0;
+    const e = projectTemplate("Acme", labels, () => `id${++n}`, "now");
+    expect(e.categories.every((c) => c.color === undefined)).toBe(true);
+  });
+
   it("builds a Monday-to-Friday, eight-hour project with the default breaks", () => {
     let n = 0;
     const e = projectTemplate("Acme", labels, () => `id${++n}`, "now");

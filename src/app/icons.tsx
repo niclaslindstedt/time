@@ -9,11 +9,17 @@
 // framework glyphs, and stroked with `currentColor`, so a mark from either
 // set sits on the same line without retuning.
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+import { GLYPH, type GlyphId } from "./kinds.ts";
 
 export type IconProps = { className?: string };
 
-function Glyph({ className, children }: IconProps & { children: ReactNode }) {
+function Glyph({
+  className,
+  style,
+  children,
+}: IconProps & { style?: CSSProperties; children: ReactNode }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -23,6 +29,7 @@ function Glyph({ className, children }: IconProps & { children: ReactNode }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
+      style={style}
       aria-hidden="true"
       focusable="false"
     >
@@ -151,6 +158,28 @@ export function HourglassIcon({ className }: IconProps) {
       <path d="M5 2h14" />
       <path d="M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22" />
       <path d="M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2" />
+    </Glyph>
+  );
+}
+
+/**
+ * The mark a break type or a kind of work wears — one entry of `kinds.ts`'s
+ * catalogue, drawn.
+ *
+ * `currentColor` is the whole trick: the element around it sets the colour, so
+ * the same glyph is the flag colour on a break button and its own kind of
+ * work's hue on a category chip, without this component knowing either.
+ */
+export function KindGlyph({
+  id,
+  className,
+  style,
+}: IconProps & { id: GlyphId; style?: CSSProperties }) {
+  return (
+    <Glyph className={className} style={style}>
+      {GLYPH[id].d.map((d) => (
+        <path key={d} d={d} />
+      ))}
     </Glyph>
   );
 }

@@ -19,13 +19,27 @@ import {
 } from "./project.ts";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
+import {
+  CATEGORY_COLOR,
+  DEFAULT_BREAK_GLYPH,
+  DEFAULT_CATEGORY_GLYPH,
+  glyphOr,
+  type CategoryColor,
+  type GlyphId,
+} from "./kinds.ts";
+import { KindPicker, MarkButton } from "./KindPicker.tsx";
+import { CATEGORY_COLORS, weekdayLabel } from "./labels.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
-import { weekdayLabel } from "./labels.ts";
 import type { Project, Weekday } from "./types.ts";
 
 // The project editor: name, working days, the day's length, the break types
 // and the kinds of work. One sheet, edited as a draft and saved whole, so a
 // half-finished rename never reaches the document.
+//
+// Each break type and kind of work carries a mark, and a kind of work a
+// colour; both are picked from the row itself. The picker unfolds under the
+// row rather than opening over it — one row at a time, because the sheet is
+// already a sheet and a dialog on a dialog is a trap on a phone.
 
 type Props = {
   /** The project to edit, or null to create one. */
@@ -56,11 +70,44 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
         new Date().toISOString(),
       ),
   );
+  /** Which row has its picker unfolded — one at a time, so the sheet does not
+   *  turn into a wall of grids. */
+  const [picking, setPicking] = useState<string | null>(null);
   const name = draft.name.trim();
   const valid =
     name.length > 0 &&
     draft.breakTypes.every((b) => b.name.trim().length > 0) &&
     draft.categories.every((c) => c.name.trim().length > 0);
+
+  /** The hue a kind of work with no colour of its own takes, by its place in
+   *  the list — the same ramp `categoryColor` falls back to, read here off the
+   *  draft rather than the saved project so the row previews what a reordered
+   *  or newly added kind will actually be drawn in. */
+  const autoColor = (index: number) =>
+    CATEGORY_COLORS[index % CATEGORY_COLORS.length] ?? "var(--link)";
+
+  const setGlyph = (
+    list: "breakTypes" | "categories",
+    id: string,
+    glyph: GlyphId,
+  ) =>
+    setDraft((d) => ({
+      ...d,
+      [list]: d[list].map((x) => (x.id === id ? { ...x, glyph } : x)),
+    }));
+
+  /** A colour, or null for "automatic" — which is stored as no colour at all,
+   *  so the kind goes on taking its position's hue if the list is reordered. */
+  const setColor = (id: string, color: CategoryColor | null) =>
+    setDraft((d) => ({
+      ...d,
+      categories: d.categories.map((x) => {
+        if (x.id !== id) return x;
+        const rest = { ...x };
+        delete rest.color;
+        return color ? { ...rest, color } : rest;
+      }),
+    }));
 
   const toggleDay = (day: Weekday) =>
     setDraft((d) => ({
@@ -155,72 +202,102 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
 
         <div className="flex flex-col gap-2">
           <span className="text-xs text-muted">{t("projects.breakTypes")}</span>
-          {draft.breakTypes.map((b) => (
-            <div key={b.id} className="flex items-end gap-2">
-              <div className="min-w-0 flex-1">
-                <LabeledInput
-                  label={t("projects.breakName")}
-                  value={b.name}
-                  required
-                  invalid={b.name.trim().length === 0}
-                  onCommit={(name) =>
-                    setDraft((d) => ({
-                      ...d,
-                      breakTypes: d.breakTypes.map((x) =>
-                        x.id === b.id ? { ...x, name } : x,
-                      ),
-                    }))
-                  }
-                />
+          {draft.breakTypes.map((b) => {
+            const glyph = glyphOr(b.glyph, DEFAULT_BREAK_GLYPH);
+            return (
+              <div key={b.id} className="flex flex-col gap-2">
+                <div className="flex items-end gap-2">
+                  {/* A break is the flag colour wherever it is drawn — on the
+                      clock's ring, on the Today button, in the Log — so its
+                      mark is too, and there is no colour to pick. */}
+                  <MarkButton
+                    glyph={glyph}
+                    tint="var(--color-flag)"
+                    label={t("kinds.markOf", { name: b.name })}
+                    open={picking === b.id}
+                    onToggle={() =>
+                      setPicking((p) => (p === b.id ? null : b.id))
+                    }
+                  />
+                  <div className="min-w-0 flex-1">
+                    <LabeledInput
+                      label={t("projects.breakName")}
+                      value={b.name}
+                      required
+                      invalid={b.name.trim().length === 0}
+                      onCommit={(name) =>
+                        setDraft((d) => ({
+                          ...d,
+                          breakTypes: d.breakTypes.map((x) =>
+                            x.id === b.id ? { ...x, name } : x,
+                          ),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="w-20">
+                    <LabeledInput
+                      label={t("projects.breakMinutes")}
+                      type="number"
+                      inputMode="numeric"
+                      min={MIN_BREAK_MINUTES}
+                      max={MAX_BREAK_MINUTES}
+                      value={String(b.defaultMinutes)}
+                      onCommit={(next) =>
+                        setDraft((d) => ({
+                          ...d,
+                          breakTypes: d.breakTypes.map((x) =>
+                            x.id === b.id
+                              ? {
+                                  ...x,
+                                  defaultMinutes: clampBreakMinutes(
+                                    next,
+                                    x.defaultMinutes,
+                                  ),
+                                }
+                              : x,
+                          ),
+                        }))
+                      }
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={t("common.remove")}
+                    onClick={() =>
+                      setDraft((d) => ({
+                        ...d,
+                        breakTypes: d.breakTypes.filter((x) => x.id !== b.id),
+                      }))
+                    }
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line text-muted hover:text-danger"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </div>
+                {picking === b.id && (
+                  <KindPicker
+                    kind="break"
+                    glyph={glyph}
+                    tint="var(--color-flag)"
+                    onGlyph={(next) => setGlyph("breakTypes", b.id, next)}
+                  />
+                )}
               </div>
-              <div className="w-20">
-                <LabeledInput
-                  label={t("projects.breakMinutes")}
-                  type="number"
-                  inputMode="numeric"
-                  min={MIN_BREAK_MINUTES}
-                  max={MAX_BREAK_MINUTES}
-                  value={String(b.defaultMinutes)}
-                  onCommit={(next) =>
-                    setDraft((d) => ({
-                      ...d,
-                      breakTypes: d.breakTypes.map((x) =>
-                        x.id === b.id
-                          ? {
-                              ...x,
-                              defaultMinutes: clampBreakMinutes(
-                                next,
-                                x.defaultMinutes,
-                              ),
-                            }
-                          : x,
-                      ),
-                    }))
-                  }
-                />
-              </div>
-              <button
-                type="button"
-                aria-label={t("common.remove")}
-                onClick={() =>
-                  setDraft((d) => ({
-                    ...d,
-                    breakTypes: d.breakTypes.filter((x) => x.id !== b.id),
-                  }))
-                }
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line text-muted hover:text-danger"
-              >
-                <TrashIcon className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
+            );
+          })}
           <Button
             onClick={() =>
               setDraft((d) => ({
                 ...d,
                 breakTypes: [
                   ...d.breakTypes,
-                  { id: makeId(), name: "", defaultMinutes: 15 },
+                  {
+                    id: makeId(),
+                    name: "",
+                    defaultMinutes: 15,
+                    glyph: DEFAULT_BREAK_GLYPH,
+                  },
                 ],
               }))
             }
@@ -232,44 +309,74 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
 
         <div className="flex flex-col gap-2">
           <span className="text-xs text-muted">{t("projects.categories")}</span>
-          {draft.categories.map((c) => (
-            <div key={c.id} className="flex items-end gap-2">
-              <div className="min-w-0 flex-1">
-                <LabeledInput
-                  label={t("projects.categoryName")}
-                  value={c.name}
-                  required
-                  invalid={c.name.trim().length === 0}
-                  onCommit={(name) =>
-                    setDraft((d) => ({
-                      ...d,
-                      categories: d.categories.map((x) =>
-                        x.id === c.id ? { ...x, name } : x,
-                      ),
-                    }))
-                  }
-                />
+          {draft.categories.map((c, i) => {
+            const glyph = glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH);
+            const auto = autoColor(i);
+            const tint = c.color ? CATEGORY_COLOR[c.color] : auto;
+            return (
+              <div key={c.id} className="flex flex-col gap-2">
+                <div className="flex items-end gap-2">
+                  <MarkButton
+                    glyph={glyph}
+                    tint={tint}
+                    label={t("kinds.markOf", { name: c.name })}
+                    open={picking === c.id}
+                    onToggle={() =>
+                      setPicking((p) => (p === c.id ? null : c.id))
+                    }
+                  />
+                  <div className="min-w-0 flex-1">
+                    <LabeledInput
+                      label={t("projects.categoryName")}
+                      value={c.name}
+                      required
+                      invalid={c.name.trim().length === 0}
+                      onCommit={(name) =>
+                        setDraft((d) => ({
+                          ...d,
+                          categories: d.categories.map((x) =>
+                            x.id === c.id ? { ...x, name } : x,
+                          ),
+                        }))
+                      }
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={t("common.remove")}
+                    onClick={() =>
+                      setDraft((d) => ({
+                        ...d,
+                        categories: d.categories.filter((x) => x.id !== c.id),
+                      }))
+                    }
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line text-muted hover:text-danger"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                </div>
+                {picking === c.id && (
+                  <KindPicker
+                    kind="category"
+                    glyph={glyph}
+                    tint={tint}
+                    autoTint={auto}
+                    color={c.color ?? null}
+                    onGlyph={(next) => setGlyph("categories", c.id, next)}
+                    onColor={(next) => setColor(c.id, next)}
+                  />
+                )}
               </div>
-              <button
-                type="button"
-                aria-label={t("common.remove")}
-                onClick={() =>
-                  setDraft((d) => ({
-                    ...d,
-                    categories: d.categories.filter((x) => x.id !== c.id),
-                  }))
-                }
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line text-muted hover:text-danger"
-              >
-                <TrashIcon className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
+            );
+          })}
           <Button
             onClick={() =>
               setDraft((d) => ({
                 ...d,
-                categories: [...d.categories, { id: makeId(), name: "" }],
+                categories: [
+                  ...d.categories,
+                  { id: makeId(), name: "", glyph: DEFAULT_CATEGORY_GLYPH },
+                ],
               }))
             }
           >

@@ -37,11 +37,11 @@ The main screen, and the whole app for most of a day.
 - **The line under the dial.** The day's state in words — "Working · since
   08:02", "On a break · Lunch until 12:30", "Not working · Stopped at 17:10".
 - **The buttons.** A row of break buttons, one per break type the project
-  defines, each showing the length it is assumed to take; tapping one takes it
-  now, and the button turns into **End lunch** for as long as you are on it. A
-  row of chips, one per kind of work; tapping one says that is what you are
-  doing from now, tapping it again stops labelling. Both rows end in
-  **Custom**. Breaks and chips are disabled until you have started working.
+  defines, each showing its mark and the length it is assumed to take; tapping
+  one takes it now, and the button turns into **End lunch** for as long as you
+  are on it. A row of chips, one per kind of work, each wearing its own mark in
+  its own colour; tapping one says that is what you are doing from now, tapping
+  it again stops labelling. Both rows end in **Custom**. Breaks and chips are disabled until you have started working.
   On a desk the two rows stand either side of the dial, breaks to its left
   and kinds of work to its right.
 
@@ -92,8 +92,8 @@ of the day, not a stopwatch.
 ## Custom
 
 The last pill in each row is **Custom**. It names a kind of break (with the
-minutes one is assumed to take) or a kind of work, adds it to the project, and
-starts it — so the walk nobody set up in advance is two taps rather than a trip
+minutes one is assumed to take) or a kind of work, gives it a mark — and a
+kind of work a colour — adds it to the project, and starts it — so the walk nobody set up in advance is two taps rather than a trip
 to the project form. It stays there afterwards as another pill; renaming or
 removing it is the project form's job (see [`projects.md`](projects.md)).
 

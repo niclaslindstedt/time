@@ -123,6 +123,77 @@ describe("shape validation", () => {
     expect(Object.keys(doc.projects)).toEqual(["e2"]);
   });
 
+  it("keeps the mark and colour a kind was given", () => {
+    const doc = normalizeDoc({
+      version: 2,
+      projects: {
+        e: {
+          id: "e",
+          name: "E",
+          breakTypes: [
+            { id: "l", name: "Lunch", defaultMinutes: 30, glyph: "meal" },
+          ],
+          categories: [
+            { id: "c", name: "Coding", glyph: "coding", color: "red" },
+          ],
+        },
+      },
+      days: {},
+    });
+    expect(doc.projects.e!.breakTypes[0]!.glyph).toBe("meal");
+    expect(doc.projects.e!.categories[0]).toEqual({
+      id: "c",
+      name: "Coding",
+      glyph: "coding",
+      color: "red",
+    });
+  });
+
+  it("drops a mark or a colour this version cannot draw", () => {
+    // A document written by a later version can name a glyph or a hue this
+    // build has no entry for. Dropping it leaves the kind looking like one
+    // that never had either, rather than like nothing at all.
+    const doc = normalizeDoc({
+      version: 2,
+      projects: {
+        e: {
+          id: "e",
+          name: "E",
+          breakTypes: [
+            { id: "l", name: "Lunch", defaultMinutes: 30, glyph: "teleport" },
+          ],
+          categories: [
+            { id: "c", name: "Coding", glyph: 7, color: "chartreuse" },
+          ],
+        },
+      },
+      days: {},
+    });
+    expect(doc.projects.e!.breakTypes[0]).toEqual({
+      id: "l",
+      name: "Lunch",
+      defaultMinutes: 30,
+    });
+    expect(doc.projects.e!.categories[0]).toEqual({ id: "c", name: "Coding" });
+  });
+
+  it("leaves a document from before there were marks alone", () => {
+    const doc = normalizeDoc({
+      version: 2,
+      projects: {
+        e: {
+          id: "e",
+          name: "E",
+          breakTypes: [{ id: "l", name: "Lunch", defaultMinutes: 30 }],
+          categories: [{ id: "c", name: "Coding" }],
+        },
+      },
+      days: {},
+    });
+    expect(doc.projects.e!.breakTypes[0]!.glyph).toBeUndefined();
+    expect(doc.projects.e!.categories[0]!.color).toBeUndefined();
+  });
+
   it("clamps a project's numbers and fills in the defaults", () => {
     const doc = normalizeDoc({
       version: 2,
