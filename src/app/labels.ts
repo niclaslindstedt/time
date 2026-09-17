@@ -53,3 +53,14 @@ export function categoryColor(project: Project, categoryId: string): string {
 export function weekdayLabel(day: Weekday): string {
   return formatWeekday(addDays("2026-03-01", day));
 }
+
+/** The week as it is shown, Monday first — the order the day picker offers
+ *  and the order a project's working days are listed in. */
+export const WEEK: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
+
+/** Saturday and Sunday. A working day that falls on one is still a working
+ *  day; it is only drawn in the flag colour so it reads as the exception it
+ *  usually is. */
+export function isWeekend(day: Weekday): boolean {
+  return day === 0 || day === 6;
+}

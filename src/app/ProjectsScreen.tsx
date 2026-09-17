@@ -6,16 +6,23 @@ import {
   Button,
   ConfirmDialog,
   FolderIcon,
+  IconButton,
+  PencilIcon,
   PlusIcon,
+  TrashIcon,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { ProjectEditModal } from "./ProjectEditModal.tsx";
 import { useT } from "./i18n/index.ts";
-import { weekdayLabel } from "./labels.ts";
+import { WEEK, isWeekend, weekdayLabel } from "./labels.ts";
 import { projectList, type Project } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
 
 // What the hours are for. One card per project, and the editor behind each.
+// A card is the shape of the week: a pill per working day (a weekend in the
+// flag colour) and a pill for the day's length. What the project holds
+// beyond that — its breaks and its kinds of work — is the editor's business,
+// not a count on a card. Editing and deleting are the two glyphs top right.
 // With one project the rest of the app never asks which; with two or more
 // the top bar grows a switcher and this is where "in use" is set.
 
@@ -31,6 +38,11 @@ type Props = {
 };
 
 type Editing = { project: Project | null };
+
+/** The shape every figure on a card wears: a working day, a weekend worked,
+ *  and the length of the day. One class so the row reads as one row. */
+const PILL =
+  "inline-flex min-h-6 items-center rounded-full border px-2.5 text-xs font-semibold";
 
 export function ProjectsScreen({
   store,
@@ -63,6 +75,7 @@ export function ProjectsScreen({
 
       {projects.map((e) => {
         const active = e.id === activeId;
+        const workDays = WEEK.filter((day) => e.workDays.includes(day));
         return (
           <div
             key={e.id}
@@ -73,42 +86,62 @@ export function ProjectsScreen({
             }`}
           >
             <div className="flex items-start justify-between gap-2">
-              <h2 className="min-w-0 truncate text-lg font-bold text-fg-bright">
-                {e.name}
-              </h2>
-              {active && projects.length > 1 && (
-                <Badge tone="accent">{t("projects.active")}</Badge>
-              )}
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <h2 className="min-w-0 truncate text-lg font-bold text-fg-bright">
+                  {e.name}
+                </h2>
+                {active && projects.length > 1 && (
+                  <Badge tone="accent">{t("projects.active")}</Badge>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <IconButton
+                  label={t("common.edit")}
+                  onClick={() => setEditing({ project: e })}
+                >
+                  <PencilIcon className="h-4 w-4" />
+                </IconButton>
+                <IconButton
+                  label={t("projects.delete")}
+                  className="hover:border-danger/50 hover:text-danger!"
+                  onClick={() => setConfirmDelete(e)}
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </IconButton>
+              </div>
             </div>
-            <p className="mt-1 text-xs text-muted">
-              {t("projects.summaryDays", {
-                days:
-                  e.workDays.map(weekdayLabel).join(" ") || t("common.none"),
-              })}
-              {" · "}
-              {t("projects.summaryHours", { hours: String(e.hoursPerDay) })}
-              {" · "}
-              {t("projects.summaryBreaks", {
-                count: String(e.breakTypes.length),
-              })}
-              {" · "}
-              {t("projects.summaryCategories", {
-                count: String(e.categories.length),
-              })}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button onClick={() => setEditing({ project: e })}>
-                {t("common.edit")}
-              </Button>
-              {!active && (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              {workDays.length === 0 ? (
+                <span
+                  className={`${PILL} border-dashed border-line bg-surface-2 text-muted`}
+                >
+                  {t("projects.summaryNoDays")}
+                </span>
+              ) : (
+                workDays.map((day) => (
+                  <span
+                    key={day}
+                    className={`${PILL} ${
+                      isWeekend(day)
+                        ? "border-flag/40 bg-flag/15 text-flag"
+                        : "border-accent/40 bg-accent/15 text-accent"
+                    }`}
+                  >
+                    {weekdayLabel(day)}
+                  </span>
+                ))
+              )}
+              <span className={`${PILL} border-line bg-surface-2 text-muted`}>
+                {t("projects.summaryHours", { hours: String(e.hoursPerDay) })}
+              </span>
+            </div>
+            {!active && (
+              <div className="mt-3">
                 <Button variant="primary" onClick={() => onActivate(e.id)}>
                   {t("projects.use")}
                 </Button>
-              )}
-              <Button variant="danger" onClick={() => setConfirmDelete(e)}>
-                {t("projects.delete")}
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
         );
       })}
