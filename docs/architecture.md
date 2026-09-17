@@ -24,6 +24,7 @@ src/app/
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   monthChart.ts     a month → week rows of day boxes, and their colour (pure, clock-free)
   project.ts       the template, working days, the day's target   (pure)
+  kinds.ts          the marks a kind wears, and a kind of work's hues (pure)
   clock.ts          the dial's layout, hands, arcs, the frame's path, the wind  (pure)
   look.ts           the theme, and the dial's faces, fonts, markers, presets
   format.ts         durations, timers, times of day
@@ -44,6 +45,7 @@ src/app/
   DialPicker.tsx    the presets and the custom pickers in Settings
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
   DayGlance.tsx     the Log's header: the day on a dial, and its worked / break ring
+  KindPicker.tsx    a kind's mark, and a kind of work's colour
   ModalHeader.tsx   a dialog's top bar: cancel, the title, save
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you started, corrected from the timer
@@ -85,8 +87,18 @@ type Project = {
   name: string;
   workDays: Weekday[]; // 0 = Sunday … 6 = Saturday
   hoursPerDay: number;
-  breakTypes: { id: string; name: string; defaultMinutes: number }[];
-  categories: { id: string; name: string }[];
+  breakTypes: {
+    id: string;
+    name: string;
+    defaultMinutes: number;
+    glyph?: GlyphId; // its mark; absent takes the cup
+  }[];
+  categories: {
+    id: string;
+    name: string;
+    glyph?: GlyphId; // its mark; absent takes the label
+    color?: CategoryColor; // its hue; absent takes its place in the list
+  }[];
   updatedAt: string; // ISO — the merge tiebreak
 };
 

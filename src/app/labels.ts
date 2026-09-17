@@ -3,8 +3,15 @@
 // same way.
 
 import { addDays, type DayKey } from "@niclaslindstedt/oss-framework/calendar";
-import { SERIES_COLOR_TOKENS } from "@niclaslindstedt/oss-framework/charts";
 
+import {
+  AUTO_CATEGORY_COLORS,
+  CATEGORY_COLOR,
+  DEFAULT_BREAK_GLYPH,
+  DEFAULT_CATEGORY_GLYPH,
+  glyphOr,
+  type GlyphId,
+} from "./kinds.ts";
 import { breakTypeOf, categoryOf } from "./project.ts";
 import { formatDay, formatWeekday } from "./format.ts";
 import type { TFn } from "./i18n/index.ts";
@@ -28,24 +35,43 @@ export function categoryName(t: TFn, project: Project, categoryId: string) {
   return categoryOf(project, categoryId)?.name ?? t("log.unknownType");
 }
 
-/** The hues a kind of work may wear: the framework's series order with the
- *  accent and the flag taken out, because those two already mean "at work"
- *  and "break" on the clock's ring, and a category in either would read as
- *  the ring's own colour. Exported for the settings' dial previews, which
- *  draw an invented morning in the first of them. */
-export const CATEGORY_COLORS = SERIES_COLOR_TOKENS.filter(
-  (token) => token !== "var(--accent)" && token !== "var(--flag)",
+/** The hues a kind of work falls back to when nobody has picked one — the
+ *  first four of `kinds.ts`'s palette, taken by position in the project's
+ *  list. Exported for the settings' dial previews, which draw an invented
+ *  morning in the first of them. */
+export const CATEGORY_COLORS = AUTO_CATEGORY_COLORS.map(
+  (id) => CATEGORY_COLOR[id],
 );
 
 /** The colour a category is drawn in, everywhere it is drawn: the clock's
- *  inner ring, the chips and the report's charts read the same table, so a
- *  kind of work is one hue across the app. By position in the project's
- *  list; a category the project has since deleted takes the slot after the
+ *  inner ring, the chips, its own glyph and the report's charts read this one
+ *  table, so a kind of work is one hue across the app.
+ *
+ *  The project's own choice first; failing that, the hue its position in the
+ *  list gives it, which is what every kind of work wore before one could be
+ *  picked. A category the project has since deleted takes the slot after the
  *  last. */
 export function categoryColor(project: Project, categoryId: string): string {
   const index = project.categories.findIndex((c) => c.id === categoryId);
+  const chosen = index === -1 ? undefined : project.categories[index]?.color;
+  if (chosen) return CATEGORY_COLOR[chosen];
   const slot = index === -1 ? project.categories.length : index;
   return CATEGORY_COLORS[slot % CATEGORY_COLORS.length] ?? "var(--link)";
+}
+
+/** The mark a break type wears — its own, or the cup every break started
+ *  out with. */
+export function breakGlyph(project: Project, typeId: string): GlyphId {
+  return glyphOr(breakTypeOf(project, typeId)?.glyph, DEFAULT_BREAK_GLYPH);
+}
+
+/** The mark a kind of work wears — its own, or the label every kind of work
+ *  started out with. */
+export function categoryGlyph(project: Project, categoryId: string): GlyphId {
+  return glyphOr(
+    categoryOf(project, categoryId)?.glyph,
+    DEFAULT_CATEGORY_GLYPH,
+  );
 }
 
 /** The week's day names, from the locale rather than the catalog: 1 March
