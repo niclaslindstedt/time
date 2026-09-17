@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { useState } from "react";
 
-import { Button, Modal } from "@niclaslindstedt/oss-framework/components";
+import { Modal } from "@niclaslindstedt/oss-framework/components";
 
 import {
   formatDuration,
@@ -10,6 +10,7 @@ import {
   toTimeInput,
 } from "./format.ts";
 import { useT } from "./i18n/index.ts";
+import { ModalHeader } from "./ModalHeader.tsx";
 import type { Seconds } from "./types.ts";
 
 // What the timer opens: the moment you got in, moved.
@@ -60,16 +61,16 @@ export function ArrivalModal({
       centered
       size="max-w-sm"
     >
+      <ModalHeader
+        titleId="arrival-title"
+        title={t("today.arrivalTitle")}
+        onCancel={onClose}
+        onSave={() => onSave(at)}
+        saveDisabled={at === start}
+      />
+
       <div className="flex flex-col gap-4 overflow-y-auto px-3 py-4">
-        <div>
-          <h2
-            id="arrival-title"
-            className="text-lg leading-tight font-bold text-fg-bright"
-          >
-            {t("today.arrivalTitle")}
-          </h2>
-          <p className="mt-1 text-xs text-muted">{t("today.arrivalHint")}</p>
-        </div>
+        <p className="text-xs text-muted">{t("today.arrivalHint")}</p>
 
         <div className="flex items-baseline justify-center gap-3">
           <span className="text-3xl font-bold text-fg-bright tabular-nums">
@@ -115,17 +116,6 @@ export function ArrivalModal({
             className="w-full min-w-0 rounded-md border border-line bg-surface-2 px-2 py-1.5 text-sm text-fg tabular-nums outline-none focus:border-accent"
           />
         </label>
-
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose}>{t("common.cancel")}</Button>
-          <Button
-            variant="primary"
-            disabled={at === start}
-            onClick={() => onSave(at)}
-          >
-            {t("common.save")}
-          </Button>
-        </div>
       </div>
     </Modal>
   );

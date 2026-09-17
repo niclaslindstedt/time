@@ -209,6 +209,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/ArrivalModal.tsx`, `NewKindModal.tsx` — the Today screen's two
   small forms: when you started (opened by the timer), and a kind of break or
   work named on the spot (the "Custom" pill).
+- `src/app/ModalHeader.tsx` — the top bar of every modal that is saved or
+  abandoned: cancel on the left, the title between, save on the right. It is
+  a sibling of the modal's scrolling body, so it stays put over a long form —
+  and it keeps the buttons off the bottom edge, where the nav is.
 - `src/app/SpanEditModal.tsx`, `ProjectEditModal.tsx` — the two editors.
   The span editor is the one form behind every row in the Log; the project
   editor edits a draft and saves whole.
@@ -272,6 +276,7 @@ regression.
 | A change to the Report's month chart    | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
 | A change to what a project holds        | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
 | A new control on the span editor        | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
+| A modal's save / cancel                 | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet                                                  |
 | A new way to correct a time on Today    | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
 | A new screen                            | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place |
 | A new setting                           | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                      |

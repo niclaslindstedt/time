@@ -19,6 +19,7 @@ import {
 } from "./project.ts";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
+import { ModalHeader } from "./ModalHeader.tsx";
 import { weekdayLabel } from "./labels.ts";
 import type { Project, Weekday } from "./types.ts";
 
@@ -75,41 +76,33 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
       onClose={onClose}
       labelledBy="project-editor-title"
       closeLabel={t("common.close")}
-      footer={
-        <div className="flex justify-end gap-2 bg-surface-3 px-3 py-3">
-          <Button onClick={onClose}>{t("common.cancel")}</Button>
-          <Button
-            variant="primary"
-            disabled={!valid}
-            onClick={() =>
-              onSave({
-                ...draft,
-                name,
-                breakTypes: draft.breakTypes.map((b) => ({
-                  ...b,
-                  name: b.name.trim(),
-                })),
-                categories: draft.categories.map((c) => ({
-                  ...c,
-                  name: c.name.trim(),
-                })),
-                updatedAt: new Date().toISOString(),
-              })
-            }
-          >
-            {t("common.save")}
-          </Button>
-        </div>
-      }
     >
-      <div className="flex flex-col gap-5 overflow-y-auto px-3 py-4">
-        <h2
-          id="project-editor-title"
-          className="text-lg leading-tight font-bold text-fg-bright"
-        >
-          {project ? t("projects.edit") : t("projects.add")}
-        </h2>
+      <ModalHeader
+        titleId="project-editor-title"
+        title={project ? t("projects.edit") : t("projects.add")}
+        onCancel={onClose}
+        onSave={() =>
+          onSave({
+            ...draft,
+            name,
+            breakTypes: draft.breakTypes.map((b) => ({
+              ...b,
+              name: b.name.trim(),
+            })),
+            categories: draft.categories.map((c) => ({
+              ...c,
+              name: c.name.trim(),
+            })),
+            updatedAt: new Date().toISOString(),
+          })
+        }
+        saveDisabled={!valid}
+      />
 
+      {/* The sheet has no footer any more, and the framework only lays the
+          bottom safe area in under one — so the body keeps clear of the home
+          indicator itself. */}
+      <div className="flex flex-col gap-5 overflow-y-auto px-3 pt-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <LabeledInput
           label={t("projects.name")}
           value={draft.name}

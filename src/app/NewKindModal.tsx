@@ -2,13 +2,13 @@
 import { useState } from "react";
 
 import {
-  Button,
   LABELED_FIELD_CLASS,
   Modal,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { clampBreakMinutes } from "./project.ts";
 import { useT } from "./i18n/index.ts";
+import { ModalHeader } from "./ModalHeader.tsx";
 
 // The "Custom" pill on the Today screen: a kind of break, or a kind of work,
 // named on the spot and used immediately.
@@ -44,20 +44,20 @@ export function NewKindModal({ kind, onSave, onClose }: Props) {
       centered
       size="max-w-sm"
     >
+      <ModalHeader
+        titleId="new-kind-title"
+        title={kind === "break" ? t("today.newBreak") : t("today.newCategory")}
+        onCancel={onClose}
+        onSave={() => onSave(trimmed, minutes)}
+        saveDisabled={trimmed === ""}
+      />
+
       <div className="flex flex-col gap-4 overflow-y-auto px-3 py-4">
-        <div>
-          <h2
-            id="new-kind-title"
-            className="text-lg leading-tight font-bold text-fg-bright"
-          >
-            {kind === "break" ? t("today.newBreak") : t("today.newCategory")}
-          </h2>
-          <p className="mt-1 text-xs text-muted">
-            {kind === "break"
-              ? t("today.newBreakHint")
-              : t("today.newCategoryHint")}
-          </p>
-        </div>
+        <p className="text-xs text-muted">
+          {kind === "break"
+            ? t("today.newBreakHint")
+            : t("today.newCategoryHint")}
+        </p>
 
         {/* Controlled on every keystroke rather than committed on blur: the
             Save button is disabled until there is a name, and a field that
@@ -88,17 +88,6 @@ export function NewKindModal({ kind, onSave, onClose }: Props) {
             />
           </label>
         )}
-
-        <div className="flex justify-end gap-2">
-          <Button onClick={onClose}>{t("common.cancel")}</Button>
-          <Button
-            variant="primary"
-            disabled={trimmed === ""}
-            onClick={() => onSave(trimmed, minutes)}
-          >
-            {t("common.save")}
-          </Button>
-        </div>
       </div>
     </Modal>
   );

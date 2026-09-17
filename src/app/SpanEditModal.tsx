@@ -13,6 +13,7 @@ import {
 import { isValidSpan, type SpanKind } from "./actions.ts";
 import { parseTimeOfDay, toTimeInput } from "./format.ts";
 import { useT } from "./i18n/index.ts";
+import { ModalHeader } from "./ModalHeader.tsx";
 import type { Project, Seconds } from "./types.ts";
 
 // The one editor behind every row in the Log: a kind (for a break or an
@@ -90,16 +91,19 @@ export function SpanEditModal({
         centered
         size="max-w-sm"
       >
-        <div className="flex flex-col gap-4 overflow-y-auto px-3 py-4">
-          <h2
-            id="span-editor-title"
-            className="text-lg leading-tight font-bold text-fg-bright"
-          >
-            {initial
+        <ModalHeader
+          titleId="span-editor-title"
+          title={
+            initial
               ? t("log.edit", { kind: kindLabel })
-              : t("log.add", { kind: kindLabel })}
-          </h2>
+              : t("log.add", { kind: kindLabel })
+          }
+          onCancel={onClose}
+          onSave={() => onSave(draft)}
+          saveDisabled={!valid}
+        />
 
+        <div className="flex flex-col gap-4 overflow-y-auto px-3 py-4">
           {options.length > 0 && (
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted">
@@ -164,25 +168,18 @@ export function SpanEditModal({
             <p className="text-xs text-danger">{t("editor.invalid")}</p>
           )}
 
-          <div className="flex items-center justify-between gap-2">
-            {initial && onDelete ? (
-              <Button variant="danger" onClick={() => setConfirmDelete(true)}>
-                {t("editor.delete")}
-              </Button>
-            ) : (
-              <span />
-            )}
-            <div className="flex gap-2">
-              <Button onClick={onClose}>{t("common.cancel")}</Button>
-              <Button
-                variant="primary"
-                disabled={!valid}
-                onClick={() => onSave(draft)}
-              >
-                {t("common.save")}
-              </Button>
-            </div>
-          </div>
+          {/* The one thing left down here: deleting the span is neither
+              saving nor abandoning the draft, and it wants to be away from
+              the two buttons that are. */}
+          {initial && onDelete && (
+            <Button
+              variant="danger"
+              className="w-full"
+              onClick={() => setConfirmDelete(true)}
+            >
+              {t("editor.delete")}
+            </Button>
+          )}
         </div>
       </Modal>
 

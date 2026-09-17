@@ -23,9 +23,12 @@ of a moment at once; see [`today.md`](today.md).
 ## Editing
 
 Tap a row to open the editor: the kind (for a break or an activity), the
-start, the end, and a **Still running** switch. An end earlier than the start
-is read as the next day's — a night shift. **Delete** removes the row after a
-confirmation. Each section has a button to add a span after the fact.
+start, the end, and a **Still running** switch. **Cancel** and **Save** sit at
+the top of the dialog, left and right of its title, well clear of the tabs at
+the foot of the screen. An end earlier than the start is read as the next
+day's — a night shift. **Delete** sits at the end of the form and removes the
+row after a confirmation. Each section has a button to add a span after the
+fact.
 
 The editor refuses an edit that would make the span invalid, or would open a
 second running span of the same kind, and says so.
