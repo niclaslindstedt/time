@@ -3,7 +3,7 @@
 // — so Vitest never tries to run it.
 
 import type { EditContext } from "../../src/app/actions.ts";
-import type { Employer, WorkDay } from "../../src/app/types.ts";
+import type { Project, WorkDay } from "../../src/app/types.ts";
 
 export const STAMP = "2026-03-02T09:00:00.000Z";
 
@@ -15,7 +15,7 @@ export function ctx(prefix = "id"): EditContext {
 
 export const h = (hours: number, minutes = 0) => hours * 3600 + minutes * 60;
 
-export function employer(patch: Partial<Employer> = {}): Employer {
+export function project(patch: Partial<Project> = {}): Project {
   return {
     id: "acme",
     name: "Acme",
@@ -37,7 +37,7 @@ export function employer(patch: Partial<Employer> = {}): Employer {
 export function day(date: string, patch: Partial<WorkDay> = {}): WorkDay {
   return {
     date,
-    employerId: "acme",
+    projectId: "acme",
     sessions: [],
     breaks: [],
     activities: [],

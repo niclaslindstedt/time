@@ -119,7 +119,7 @@ input[type="file"] {
 
 /* A control that cannot be used says so instead of going on inviting the
    click it will ignore — which is the state the break and category buttons
-   are in before anyone has entered the office. */
+   are in before the work has started. */
 button:disabled,
 select:disabled,
 input:disabled,

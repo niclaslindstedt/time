@@ -8,14 +8,14 @@ import {
   dayKey,
   emptyDoc,
   type AppData,
-  type Employer,
+  type Project,
   type WorkDay,
 } from "./types.ts";
 import * as output from "../output.ts";
 
 // The app's data store. Holds the document in state, persists it to
 // localStorage, and exposes the edits the app can make — save or delete a
-// day, save or delete an employer, replace the lot. This is the framework's
+// day, save or delete a project, replace the lot. This is the framework's
 // "store stays in the app" seam: the framework owns the storage adapters and
 // the UI kit, this hook owns where the document lives and what an edit means.
 //
@@ -100,11 +100,11 @@ export type DocStore = {
   /** Upsert a day. An empty day is still stored: "I was off" is a claim. */
   saveDay: (day: WorkDay) => void;
   /** Remove a day. */
-  deleteDay: (employerId: string, date: DayKey) => void;
-  /** Upsert an employer. */
-  saveEmployer: (employer: Employer) => void;
-  /** Remove an employer and every day logged for it. */
-  deleteEmployer: (employerId: string) => void;
+  deleteDay: (projectId: string, date: DayKey) => void;
+  /** Upsert a project. */
+  saveProject: (project: Project) => void;
+  /** Remove a project and every day logged for it. */
+  deleteProject: (projectId: string) => void;
   /** Replace the whole document — used by the cloud adopt path and by the
    *  Settings restore flow. */
   replaceAll: (doc: AppData) => void;
@@ -146,14 +146,14 @@ export function useDocStore(backend: DocBackend = localDocBackend): DocStore {
   const saveDay = useCallback((day: WorkDay) => {
     setData((prev) => ({
       ...prev,
-      days: { ...prev.days, [dayKey(day.employerId, day.date)]: day },
+      days: { ...prev.days, [dayKey(day.projectId, day.date)]: day },
     }));
     bump();
   }, []);
 
-  const deleteDay = useCallback((employerId: string, date: DayKey) => {
+  const deleteDay = useCallback((projectId: string, date: DayKey) => {
     setData((prev) => {
-      const key = dayKey(employerId, date);
+      const key = dayKey(projectId, date);
       if (!prev.days[key]) return prev;
       const days = { ...prev.days };
       delete days[key];
@@ -162,24 +162,24 @@ export function useDocStore(backend: DocBackend = localDocBackend): DocStore {
     bump();
   }, []);
 
-  const saveEmployer = useCallback((employer: Employer) => {
+  const saveProject = useCallback((project: Project) => {
     setData((prev) => ({
       ...prev,
-      employers: { ...prev.employers, [employer.id]: employer },
+      projects: { ...prev.projects, [project.id]: project },
     }));
     bump();
   }, []);
 
-  const deleteEmployer = useCallback((employerId: string) => {
+  const deleteProject = useCallback((projectId: string) => {
     setData((prev) => {
-      if (!prev.employers[employerId]) return prev;
-      const employers = { ...prev.employers };
-      delete employers[employerId];
+      if (!prev.projects[projectId]) return prev;
+      const projects = { ...prev.projects };
+      delete projects[projectId];
       const days: AppData["days"] = {};
       for (const [key, day] of Object.entries(prev.days)) {
-        if (day.employerId !== employerId) days[key] = day;
+        if (day.projectId !== projectId) days[key] = day;
       }
-      return { ...prev, employers, days };
+      return { ...prev, projects, days };
     });
     bump();
   }, []);
@@ -194,8 +194,8 @@ export function useDocStore(backend: DocBackend = localDocBackend): DocStore {
       data,
       saveDay,
       deleteDay,
-      saveEmployer,
-      deleteEmployer,
+      saveProject,
+      deleteProject,
       replaceAll,
       editCount,
       loaded: loadedRef.current,
@@ -205,8 +205,8 @@ export function useDocStore(backend: DocBackend = localDocBackend): DocStore {
       data,
       saveDay,
       deleteDay,
-      saveEmployer,
-      deleteEmployer,
+      saveProject,
+      deleteProject,
       replaceAll,
       editCount,
       writeFailures,

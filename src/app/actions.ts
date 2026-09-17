@@ -87,7 +87,7 @@ function dropEmpty<S extends Span>(spans: readonly S[]): S[] {
   return spans.filter((s) => s.end === null || s.end > s.start);
 }
 
-/** Enter the office. A no-op while a session is already open. */
+/** Start working. A no-op while a session is already open. */
 export function clockIn(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
   if (day.sessions.some((s) => s.end === null)) return day;
   return stamp(day, ctx, {
@@ -95,8 +95,8 @@ export function clockIn(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
   });
 }
 
-/** Leave the office. Closes the running session, and with it whatever break
- *  or activity was running — nothing runs while nobody is there. */
+/** Stop working. Closes the running session, and with it whatever break
+ *  or activity was running — nothing runs once the work has stopped. */
 export function clockOut(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
   if (!day.sessions.some((s) => s.end === null)) return day;
   return stamp(day, ctx, {

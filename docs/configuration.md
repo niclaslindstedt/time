@@ -30,12 +30,12 @@ Under the **⚙** on the top bar. Persisted per device in localStorage
 | ---------------------- | ------------------------- | ------- |
 | Theme                  | Light / Dark / Device     | Device  |
 | Week starts on         | Monday / Sunday           | Monday  |
-| Employer in use        | any employer              | first   |
+| Project in use         | any project               | first   |
 | Developer mode         | on / off                  | off     |
 | Capture console output | on / off (developer mode) | off     |
 
-The employer in use is chosen from the **Employers** tab (or the top-bar
-switcher once there are two). Everything about an employer — working days,
+The project in use is chosen from the **Projects** tab (or the top-bar
+switcher once there are two). Everything about a project — working days,
 hours per day, break types, kinds of work — is data in the document, not a
 setting, so it syncs and backs up with the days.
 
@@ -43,7 +43,7 @@ setting, so it syncs and backs up with the days.
 
 | Key                        | Holds                                                       |
 | -------------------------- | ----------------------------------------------------------- |
-| `time:doc`                 | The document: employers and days (see `docs/day-model.md`)  |
+| `time:doc`                 | The document: projects and days (see `docs/day-model.md`)   |
 | `time:doc:unreadable`      | A quarantined copy of a document this build could not parse |
 | `time:settings`            | The runtime settings above                                  |
 | `time:sync:backend`        | Which backend is active (`local`, `dropbox`, `gdrive`)      |

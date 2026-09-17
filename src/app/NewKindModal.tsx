@@ -7,17 +7,17 @@ import {
   Modal,
 } from "@niclaslindstedt/oss-framework/components";
 
-import { clampBreakMinutes } from "./employer.ts";
+import { clampBreakMinutes } from "./project.ts";
 import { useT } from "./i18n/index.ts";
 
 // The "Custom" pill on the Today screen: a kind of break, or a kind of work,
 // named on the spot and used immediately.
 //
-// A new kind is a change to the *employer*, not to the day — which is why it
+// A new kind is a change to the *project*, not to the day — which is why it
 // sticks around afterwards as another pill next to the rest, and why the
 // minutes are asked for here: a break type without a length would have
 // nothing to assume when it is tapped tomorrow. Editing or removing one is
-// still the employer form's job; this is only the way in.
+// still the project form's job; this is only the way in.
 
 /** What a break invented on the spot is assumed to take, before anyone says
  *  otherwise. */

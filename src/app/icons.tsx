@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // App-owned glyphs — the marks the framework's set has no vocabulary for
-// because they are this app's domain: a clock, a coffee cup, a bar chart, a
-// building for an employer. Everything else (cog, cloud, chevrons, plus,
-// trash) comes from `@niclaslindstedt/oss-framework/components`, so the two
-// sets only ever differ where the domain does.
+// because they are this app's domain: a clock, a coffee cup, a bar chart.
+// Everything else (cog, cloud, chevrons, folder, plus, trash) comes from
+// `@niclaslindstedt/oss-framework/components`, so the two sets only ever
+// differ where the domain does.
 //
 // Traced on the same Lucide 24×24 grid at the same 2px stroke weight as the
 // framework glyphs, and stroked with `currentColor`, so a mark from either

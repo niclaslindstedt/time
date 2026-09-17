@@ -7,22 +7,22 @@ below runs in the browser tab.
 index.html
   └── src/main.tsx            mounts <App> inside the i18n LanguageRoot
        └── src/App.tsx        theme, store, sync, tab switch, chrome
-            ├── TopBar            mark + wordmark, employer switcher, sync glyph, cog
+            ├── TopBar            mark + wordmark, project switcher, sync glyph, cog
             ├── TodayScreen       the timer, the clock, the buttons — writes the day
             ├── LogScreen         the day as a list — corrects it
             ├── ReportScreen      a week or a month, as tiles and charts
-            ├── EmployersScreen   the employers, and the editor behind each
+            ├── ProjectsScreen   the projects, and the editor behind each
             ├── SettingsScreen    settings, sync controls, backup, about
             └── BottomNav         the four destinations
 
 src/app/
-  types.ts          the model: Employer, WorkDay (sessions, breaks, activities)
+  types.ts          the model: Project, WorkDay (sessions, breaks, activities)
   intervals.ts      union / intersect / subtract over stretches   (pure)
   day.ts            a day's spans → its totals, state, stretches  (pure, clock-free)
   actions.ts        the edits a day can take                       (pure, clock-free)
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   monthChart.ts     a month → week rows of day boxes, and their colour (pure, clock-free)
-  employer.ts       the template, working days, the day's target   (pure)
+  project.ts       the template, working days, the day's target   (pure)
   clock.ts          the dial's layout, hands, arcs, the frame's path  (pure)
   look.ts           the theme, and the dial's faces, fonts, markers, presets
   format.ts         durations, timers, times of day
@@ -40,10 +40,10 @@ src/app/
   DialPicker.tsx    the presets and the custom pickers in Settings
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
-  ArrivalModal.tsx  when you got in, corrected from the timer
+  ArrivalModal.tsx  when you started, corrected from the timer
   NewKindModal.tsx  a kind of break or work, named on the spot
   SpanEditModal.tsx the one editor behind every span
-  EmployerEditModal.tsx
+  ProjectEditModal.tsx  name, working days, breaks, kinds of work
   dev/              the demo-data switch: an in-memory DocBackend
   i18n/             the catalog and the runtime
 ```
@@ -69,12 +69,12 @@ One document (`time:doc` in localStorage):
 
 ```ts
 type AppData = {
-  version: 1;
-  employers: Record<string, Employer>;
-  days: Record<string, WorkDay>; // keyed "<YYYY-MM-DD>:<employerId>"
+  version: 2;
+  projects: Record<string, Project>;
+  days: Record<string, WorkDay>; // keyed "<YYYY-MM-DD>:<projectId>"
 };
 
-type Employer = {
+type Project = {
   id: string;
   name: string;
   workDays: Weekday[]; // 0 = Sunday … 6 = Saturday
@@ -86,8 +86,8 @@ type Employer = {
 
 type WorkDay = {
   date: string; // the local calendar day
-  employerId: string;
-  sessions: Span[]; // presence: in the office
+  projectId: string;
+  sessions: Span[]; // presence: at work on the project
   breaks: (Span & { typeId: string })[];
   activities: (Span & { categoryId: string })[];
   updatedAt: string;
@@ -98,9 +98,9 @@ type Span = { id: string; start: number; end: number | null };
 ```
 
 Times are seconds since the day's **local** midnight, on purpose: a time
-report is about the clock on the office wall, and a document that changed
-meaning when a phone changed timezone would sync wrong between two devices set
-differently. A span past midnight has an end past 86 400 and belongs to the
+report is about the clock on the wall where the work happens, and a document
+that changed meaning when a phone changed timezone would sync wrong between
+two devices set differently. A span past midnight has an end past 86 400 and belongs to the
 day it started on.
 
 Nothing derived is stored. Totals, the state, the balance and the charts are
@@ -109,9 +109,12 @@ all recomputed from the spans on render — see [`day-model.md`](day-model.md).
 ## The document pipeline
 
 Every read goes through `migrations.ts`: localStorage, the cloud copy, a
-restored backup. `normalizeDoc` runs the framework's migrator (one step so
-far: stamping an unversioned document as v1), then coerces every employer and
-day into the shape above, dropping what is not a span, a name or a date.
+restored backup. `normalizeDoc` runs the framework's migrator (two steps so
+far: stamping an unversioned document as v1, then v1 → v2, which renames
+`employers` to `projects` and each day's `employerId` to `projectId` — ids are
+untouched, so every day stays under the key it was filed under), then coerces
+every project and day into the shape above, dropping what is not a span, a
+name or a date.
 `serializeDoc` writes keys in sorted order so equal documents are equal bytes,
 which keeps cloud revisions from churning.
 

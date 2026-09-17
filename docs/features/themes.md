@@ -15,7 +15,7 @@ choosing, and it is the one place a colour of its own is allowed: the dial on
 Today is drawn as a wrist watch, and a watch face has a colour the way an
 object does, not the way a theme does. A black dial is black on the light
 theme and a white one white on the dark. Nothing else on the face is the
-theme's but the day itself — time at work in the accent, breaks in the flag
+theme's but the day itself — time worked in the accent, breaks in the flag
 colour, a kind of work in the hue the report gave it — so the dial can be any
 of its eight faces without a second palette leaking into the app around it.
 
@@ -75,7 +75,7 @@ were looking at, so changing one thing about a preset is two taps.
 
 Small, medium or large, separately from the dial, because a size suits a
 screen rather than a watch. Small is the dial as it used to be; large fills
-the width, to the same margins as the **Enter office** button, and is the
+the width, to the same margins as the **Start working** button, and is the
 default. The face is square, so this is its height as much as its width — a
 large dial pushes the break buttons down, a small one keeps the whole screen
 in one view.

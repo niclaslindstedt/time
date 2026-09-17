@@ -9,13 +9,13 @@ import {
 } from "../src/app/monthChart.ts";
 import { monthOf, summarizeRange } from "../src/app/report.ts";
 import { dayKey, emptyDoc, type WorkDay } from "../src/app/types.ts";
-import { day, employer, h } from "./fixtures/helpers.ts";
+import { day, project, h } from "./fixtures/helpers.ts";
 
 function docOf(...days: WorkDay[]) {
   const doc = emptyDoc();
-  const e = employer();
-  doc.employers[e.id] = e;
-  for (const d of days) doc.days[dayKey(d.employerId, d.date)] = d;
+  const e = project();
+  doc.projects[e.id] = e;
+  for (const d of days) doc.days[dayKey(d.projectId, d.date)] = d;
   return doc;
 }
 
@@ -32,7 +32,7 @@ const AFTER = "2026-05-31";
 /** The month laid out, with whatever days are given worked. */
 function chartOf(days: WorkDay[], today = AFTER) {
   const data = docOf(...days);
-  const e = employer();
+  const e = project();
   const summary = summarizeRange(data, e, APRIL.from, APRIL.to, today, 0);
   return { chart: monthChart(summary, e, 1, today), summary };
 }

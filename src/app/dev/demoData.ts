@@ -10,14 +10,14 @@
 
 import { addDays, type DayKey } from "@niclaslindstedt/oss-framework/calendar";
 
-import { weekdayOf } from "../employer.ts";
+import { weekdayOf } from "../project.ts";
 import {
   DOC_VERSION,
   dayKey,
   type ActivitySpan,
   type AppData,
   type BreakSpan,
-  type Employer,
+  type Project,
   type Span,
   type WorkDay,
 } from "../types.ts";
@@ -25,7 +25,7 @@ import {
 /** How far back the demo reaches. */
 export const DEMO_DAYS = 63;
 
-export const DEMO_EMPLOYER_ID = "demo-employer";
+export const DEMO_PROJECT_ID = "demo-project";
 
 const STAMP = "2026-01-01T00:00:00.000Z";
 
@@ -41,9 +41,9 @@ function lcg(seed: number): () => number {
 
 const h = (hours: number, minutes = 0) => hours * 3600 + minutes * 60;
 
-function demoEmployer(): Employer {
+function demoProject(): Project {
   return {
-    id: DEMO_EMPLOYER_ID,
+    id: DEMO_PROJECT_ID,
     name: "Demo AB",
     workDays: [1, 2, 3, 4, 5],
     hoursPerDay: 8,
@@ -143,7 +143,7 @@ function demoDay(date: DayKey, index: number, open: boolean): WorkDay {
 
   return {
     date,
-    employerId: DEMO_EMPLOYER_ID,
+    projectId: DEMO_PROJECT_ID,
     sessions,
     breaks,
     activities,
@@ -155,7 +155,7 @@ function demoDay(date: DayKey, index: number, open: boolean): WorkDay {
  *  skipped so the report has a shortfall to show; today's day is left open
  *  (still at work) so the Today screen has something ticking. */
 export function buildDemoData(today: DayKey): AppData {
-  const employer = demoEmployer();
+  const project = demoProject();
   const days: AppData["days"] = {};
   for (let back = DEMO_DAYS; back >= 0; back--) {
     const date = addDays(today, -back);
@@ -164,11 +164,11 @@ export function buildDemoData(today: DayKey): AppData {
     // Every ninth working day is missing — a sick day, a holiday.
     if (back > 0 && back % 9 === 4) continue;
     const day = demoDay(date, back, back === 0);
-    days[dayKey(employer.id, date)] = day;
+    days[dayKey(project.id, date)] = day;
   }
   return {
     version: DOC_VERSION,
-    employers: { [employer.id]: employer },
+    projects: { [project.id]: project },
     days,
   };
 }

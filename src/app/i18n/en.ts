@@ -18,7 +18,7 @@ export const en = {
     today: "Today",
     log: "Log",
     report: "Report",
-    employers: "Employers",
+    projects: "Projects",
     settings: "Settings",
   },
 
@@ -37,26 +37,26 @@ export const en = {
     next: "Next",
     none: "None",
     uncategorised: "Uncategorised",
-    employer: "Employer",
+    project: "Project",
   },
 
   // The main screen: the clock, the timer, and the buttons that move the day
-  // along. Every label here is read one-handed on the way in or out of a
-  // room, so they are short.
+  // along. Every label here is read one-handed as the work starts or stops,
+  // so they are short.
   today: {
-    noEmployer: "Add the employer you work for, and the clock is ready.",
-    addEmployer: "Add employer",
+    noProject: "Add the project you work on, and the clock is ready.",
+    addProject: "Add project",
     state: {
-      out: "Not at work",
+      out: "Not working",
       working: "Working",
       break: "On a break",
     },
     since: "since {time}",
     breakSince: "{name} since {time}",
     breakUntil: "{name} until {time}",
-    doneAt: "Left at {time}",
-    clockIn: "Enter office",
-    clockOut: "Leave office",
+    doneAt: "Stopped at {time}",
+    clockIn: "Start working",
+    clockOut: "Stop working",
     endBreak: "End {name}",
     ofTarget: "of {target} today",
     percentOfTarget: "{percent} of today's target",
@@ -65,39 +65,39 @@ export const en = {
     balanceOverall: "Overall {balance}",
     breaks: "Breaks",
     breaksHint:
-      "Tap one as you leave the desk — it is written down as the length it usually takes, and the clock is where you correct it.",
-    breaksOutHint: "Enter the office first.",
+      "Tap one as you step away — it is written down as the length it usually takes, and the clock is where you correct it.",
+    breaksOutHint: "Start working first.",
     categories: "Working on",
     categoriesHint: "Tap what you are doing; tap again to stop labelling.",
     paused: "paused",
     pausedHint: "A break is on, so nothing is being counted towards this.",
     custom: "Custom",
-    // Tapping the timer: the arrival is the one time of day that is wrong
-    // most often, because the app is opened after the fact.
-    arrival: "Correct when you got in",
-    arrivalTitle: "When did you get in?",
+    // Tapping the timer: the moment the work started is the one time of day
+    // that is wrong most often, because the app is opened after the fact.
+    arrival: "Correct when you started",
+    arrivalTitle: "When did you start?",
     arrivalHint:
       "Moves the start of the stretch you are in. The timer, the day and the balance all follow.",
     arrivalWorked: "That makes {duration} worked so far.",
     arrivalEarlier: "{minutes} min earlier",
     arrivalLater: "{minutes} min later",
     // Creating a break type or a kind of work from the Today screen, without
-    // going to the employer form for it.
+    // going to the project form for it.
     newBreak: "A kind of break",
     newBreakHint:
-      "It joins this employer's breaks, and starts now. The minutes are how long one is assumed to take.",
+      "It joins this project's breaks, and starts now. The minutes are how long one is assumed to take.",
     newCategory: "A kind of work",
     newCategoryHint:
-      "It joins this employer's kinds of work, and you are doing it from now.",
+      "It joins this project's kinds of work, and you are doing it from now.",
     kindName: "Name",
     kindNamePlaceholder: "What to call it",
     kindMinutes: "Minutes",
     kindRequired: "Give it a name.",
     clockLabel: "Today on a twelve-hour clock",
     clockDesc:
-      "Time at work is drawn as a ring around the dial, with breaks marked on it and the kind of work on an inner ring.",
+      "Time worked is drawn as a ring around the dial, with breaks marked on it and the kind of work on an inner ring.",
     legend: {
-      work: "At work",
+      work: "Working",
       break: "Break",
     },
     openTimeline: "Open today's stretches",
@@ -115,19 +115,19 @@ export const en = {
     endOf: "When {name} ended",
     earlier: "Five minutes earlier",
     later: "Five minutes later",
-    work: "At work",
+    work: "Working",
     stuck: "That would leave no room for the stretch next to it.",
   },
 
   // The day as a list — what the clock drew, editable.
   log: {
     title: "Log",
-    noEmployer: "Add an employer to start logging.",
+    noProject: "Add a project to start logging.",
     empty: "Nothing logged this day.",
-    sessions: "At work",
+    sessions: "Working",
     breaks: "Breaks",
     activities: "Working on",
-    addSession: "Add time at work",
+    addSession: "Add time worked",
     addBreak: "Add a break",
     addActivity: "Add an activity",
     span: "{start} – {end}",
@@ -135,8 +135,8 @@ export const en = {
     unknownType: "Deleted type",
     worked: "Worked",
     breakTotal: "Breaks",
-    firstIn: "In",
-    lastOut: "Out",
+    firstIn: "Started",
+    lastOut: "Stopped",
     deleteDay: "Delete this day",
     deleteDayConfirm: "Delete this day?",
     deleteDayHint:
@@ -150,7 +150,7 @@ export const en = {
   // The span editor, shared by the three lists.
   editor: {
     kind: {
-      session: "time at work",
+      session: "time worked",
       break: "break",
       activity: "activity",
     },
@@ -167,7 +167,7 @@ export const en = {
 
   report: {
     title: "Report",
-    noEmployer: "Add an employer to see a report.",
+    noProject: "Add a project to see a report.",
     week: "Week",
     month: "Month",
     thisWeek: "This week",
@@ -199,24 +199,24 @@ export const en = {
     total: "Total",
   },
 
-  employers: {
-    title: "Employers",
-    empty: "No employer yet. Add one and the clock is ready.",
-    add: "Add employer",
-    edit: "Edit employer",
+  projects: {
+    title: "Projects",
+    empty: "No project yet. Add one and the clock is ready.",
+    add: "Add project",
+    edit: "Edit project",
     active: "In use",
     use: "Use",
     delete: "Delete",
     deleteConfirm: "Delete {name}?",
     deleteHint:
-      "The employer and every day logged for it are removed. This can't be undone.",
+      "The project and every day logged for it are removed. This can't be undone.",
     summaryDays: "{days}",
     summaryHours: "{hours} h a day",
     summaryBreaks: "{count} break types",
     summaryCategories: "{count} kinds of work",
     name: "Name",
-    namePlaceholder: "Where you work",
-    nameRequired: "Give the employer a name.",
+    namePlaceholder: "What you are working on",
+    nameRequired: "Give the project a name.",
     workDays: "Working days",
     workDaysHint: "The days a full day is expected. Any other day is extra.",
     hoursPerDay: "Hours per working day",
@@ -231,10 +231,10 @@ export const en = {
       "Optional labels for what you are doing, so the report can say where the hours went.",
     categoryName: "Name",
     addCategory: "Add a kind of work",
-    saved: "Employer saved",
-    deleted: "Employer deleted",
-    // The names a new employer starts with. Stored in the document once
-    // created, so renaming one here only affects employers made afterwards.
+    saved: "Project saved",
+    deleted: "Project deleted",
+    // The names a new project starts with. Stored in the document once
+    // created, so renaming one here only affects projects made afterwards.
     defaults: {
       lunch: "Lunch",
       coffee: "Coffee",
@@ -332,7 +332,7 @@ export const en = {
     },
     clockSize: "Size",
     clockSizeHint:
-      "How much of the screen the dial takes. Large fills the width, to the same margins as the Enter office button.",
+      "How much of the screen the dial takes. Large fills the width, to the same margins as the Start working button.",
     clockSizeSmall: "Small",
     clockSizeMedium: "Medium",
     clockSizeLarge: "Large",
@@ -352,7 +352,7 @@ export const en = {
     disconnect: "Disconnect",
     data: "Your data",
     export: "Download a backup",
-    exportHint: "A JSON file with every employer and every day.",
+    exportHint: "A JSON file with every project and every day.",
     import: "Restore a backup",
     importHint:
       "Merges the file into what is here — the newer copy of each day wins.",
@@ -360,7 +360,7 @@ export const en = {
     importFailed: "That file is not a Time backup.",
     deleteAll: "Delete everything",
     deleteAllHint:
-      "Removes every employer and day from this device. A connected cloud copy is not touched.",
+      "Removes every project and day from this device. A connected cloud copy is not touched.",
     deleteAllConfirm: "Delete everything on this device?",
     deleted: "Everything deleted",
     developer: "Developer",

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Reconciling two copies of the document — the phone's and the cloud's.
 //
-// Employers are keyed by id and days by `dayKey`, and each carries the
+// Projects are keyed by id and days by `dayKey`, and each carries the
 // timestamp of its last edit, so two copies merge record by record with the
 // later edit winning. Nobody is asked which side to keep: a day logged on the
 // phone and a break corrected on the laptop both survive.
@@ -35,7 +35,7 @@ function mergeRecords<T extends { updatedAt: string }>(
 export function mergeDocs(local: AppData, remote: AppData): AppData {
   return {
     version: DOC_VERSION,
-    employers: mergeRecords(local.employers, remote.employers),
+    projects: mergeRecords(local.projects, remote.projects),
     days: mergeRecords(local.days, remote.days),
   };
 }

@@ -13,7 +13,7 @@ import {
 import { isValidSpan, type SpanKind } from "./actions.ts";
 import { parseTimeOfDay, toTimeInput } from "./format.ts";
 import { useT } from "./i18n/index.ts";
-import type { Employer, Seconds } from "./types.ts";
+import type { Project, Seconds } from "./types.ts";
 
 // The one editor behind every row in the Log: a kind (for a break or an
 // activity), a start, an end, and whether the span is still running. It edits
@@ -35,7 +35,7 @@ export type SpanDraft = {
 
 type Props = {
   kind: SpanKind;
-  employer: Employer;
+  project: Project;
   /** The span being edited, or null when adding one. */
   initial: SpanDraft | null;
   /** The moment "now", for a new span's default start. */
@@ -47,7 +47,7 @@ type Props = {
 
 export function SpanEditModal({
   kind,
-  employer,
+  project,
   initial,
   now,
   onSave,
@@ -57,9 +57,9 @@ export function SpanEditModal({
   const t = useT();
   const options =
     kind === "break"
-      ? employer.breakTypes.map((b) => ({ value: b.id, label: b.name }))
+      ? project.breakTypes.map((b) => ({ value: b.id, label: b.name }))
       : kind === "activity"
-        ? employer.categories.map((c) => ({ value: c.id, label: c.name }))
+        ? project.categories.map((c) => ({ value: c.id, label: c.name }))
         : [];
   const [draft, setDraft] = useState<SpanDraft>(
     () =>

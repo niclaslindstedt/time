@@ -10,13 +10,13 @@ import {
   weekOf,
 } from "../src/app/report.ts";
 import { dayKey, emptyDoc, type WorkDay } from "../src/app/types.ts";
-import { day, employer, h } from "./fixtures/helpers.ts";
+import { day, project, h } from "./fixtures/helpers.ts";
 
 function docOf(...days: WorkDay[]) {
   const doc = emptyDoc();
-  const e = employer();
-  doc.employers[e.id] = e;
-  for (const d of days) doc.days[dayKey(d.employerId, d.date)] = d;
+  const e = project();
+  doc.projects[e.id] = e;
+  for (const d of days) doc.days[dayKey(d.projectId, d.date)] = d;
   return doc;
 }
 
@@ -43,7 +43,7 @@ describe("readUpTo", () => {
 
 describe("summarizeDay", () => {
   it("measures a work day against the target", () => {
-    const s = summarizeDay(mon, employer(), "2026-03-02", 86_400);
+    const s = summarizeDay(mon, project(), "2026-03-02", 86_400);
     expect(s.expected).toBe(true);
     expect(s.target).toBe(h(8));
     expect(s.worked).toBe(h(8));
@@ -54,14 +54,14 @@ describe("summarizeDay", () => {
   });
 
   it("counts every second of a day off as overtime", () => {
-    const s = summarizeDay(sat, employer(), "2026-03-07", 86_400);
+    const s = summarizeDay(sat, project(), "2026-03-07", 86_400);
     expect(s.expected).toBe(false);
     expect(s.target).toBe(0);
     expect(s.balance).toBe(h(2));
   });
 
   it("reports an unlogged work day as a full shortfall", () => {
-    const s = summarizeDay(null, employer(), "2026-03-04", 86_400);
+    const s = summarizeDay(null, project(), "2026-03-04", 86_400);
     expect(s.logged).toBe(false);
     expect(s.balance).toBe(-h(8));
   });
@@ -73,7 +73,7 @@ describe("summarizeRange", () => {
   it("sums a whole week seen from its end", () => {
     const r = summarizeRange(
       doc,
-      employer(),
+      project(),
       "2026-03-02",
       "2026-03-08",
       "2026-03-08",
@@ -92,7 +92,7 @@ describe("summarizeRange", () => {
   it("does not count days that have not come yet against the balance", () => {
     const r = summarizeRange(
       doc,
-      employer(),
+      project(),
       "2026-03-02",
       "2026-03-08",
       "2026-03-03",
@@ -111,7 +111,7 @@ describe("summarizeRange", () => {
     });
     const r = summarizeRange(
       docOf(open),
-      employer(),
+      project(),
       "2026-03-04",
       "2026-03-04",
       "2026-03-04",
@@ -149,7 +149,7 @@ describe("runningBalance", () => {
   it("runs from the first logged day to today", () => {
     const doc = docOf(mon, tue);
     // Wednesday noon: Mon 0, Tue −1h, Wed −8h so far (nothing logged).
-    expect(runningBalance(doc, employer(), "2026-03-04", h(12))).toBe(-h(9));
-    expect(runningBalance(emptyDoc(), employer(), "2026-03-04", h(12))).toBe(0);
+    expect(runningBalance(doc, project(), "2026-03-04", h(12))).toBe(-h(9));
+    expect(runningBalance(emptyDoc(), project(), "2026-03-04", h(12))).toBe(0);
   });
 });

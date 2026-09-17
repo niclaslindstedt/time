@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import { normalizeDoc, parseDoc, serializeDoc } from "../src/app/migrations.ts";
 import { DOC_VERSION, dayKey, emptyDoc } from "../src/app/types.ts";
-import { day, employer } from "./fixtures/helpers.ts";
+import { day, project } from "./fixtures/helpers.ts";
 
 describe("parseDoc", () => {
   it("round-trips a document", () => {
     const doc = emptyDoc();
-    doc.employers.acme = employer();
+    doc.projects.acme = project();
     const d = day("2026-03-02", {
       sessions: [{ id: "s", start: 100, end: null }],
       breaks: [{ id: "b", typeId: "lunch", start: 200, end: 300 }],
@@ -34,15 +34,60 @@ describe("parseDoc", () => {
   });
 
   it("stamps an unversioned document with the current version", () => {
-    expect(normalizeDoc({ employers: {}, days: {} }).version).toBe(DOC_VERSION);
+    expect(normalizeDoc({ projects: {}, days: {} }).version).toBe(DOC_VERSION);
+  });
+});
+
+describe("v1 → v2: employers became projects", () => {
+  const v1 = {
+    version: 1,
+    employers: {
+      acme: {
+        id: "acme",
+        name: "Acme",
+        hoursPerDay: 8,
+        workDays: [1, 2, 3, 4, 5],
+        breakTypes: [{ id: "lunch", name: "Lunch", defaultMinutes: 30 }],
+        categories: [{ id: "code", name: "Coding" }],
+      },
+    },
+    days: {
+      "2026-03-02:acme": {
+        date: "2026-03-02",
+        employerId: "acme",
+        sessions: [{ id: "s", start: 100, end: 400 }],
+        breaks: [],
+        activities: [],
+      },
+    },
+  };
+
+  it("carries the employers over as projects, ids intact", () => {
+    const doc = normalizeDoc(v1);
+    expect(doc.version).toBe(DOC_VERSION);
+    expect(Object.keys(doc.projects)).toEqual(["acme"]);
+    expect(doc.projects.acme!.name).toBe("Acme");
+    expect(doc.projects.acme!.categories).toEqual([
+      { id: "code", name: "Coding" },
+    ]);
+  });
+
+  it("points each day at its project, under the same key", () => {
+    const doc = normalizeDoc(v1);
+    // The key is `date:id` and the id did not change, so a day that was
+    // already filed stays where it was — the rename moves no day.
+    const d = doc.days[dayKey("acme", "2026-03-02")]!;
+    expect(d.projectId).toBe("acme");
+    expect(d.sessions).toEqual([{ id: "s", start: 100, end: 400 }]);
+    expect(d).not.toHaveProperty("employerId");
   });
 });
 
 describe("shape validation", () => {
   it("drops spans that are not spans, and duplicate ids", () => {
     const doc = normalizeDoc({
-      version: 1,
-      employers: {},
+      version: 2,
+      projects: {},
       days: {
         "2026-03-02:acme": {
           sessions: [
@@ -59,7 +104,7 @@ describe("shape validation", () => {
     });
     const d = doc.days["2026-03-02:acme"]!;
     expect(d.date).toBe("2026-03-02");
-    expect(d.employerId).toBe("acme");
+    expect(d.projectId).toBe("acme");
     expect(d.sessions).toEqual([{ id: "ok", start: 10, end: 20 }]);
     // A break with no type is meaningless and dropped.
     expect(d.breaks).toEqual([]);
@@ -68,20 +113,20 @@ describe("shape validation", () => {
     ]);
   });
 
-  it("drops a day without a real date and an employer without a name", () => {
+  it("drops a day without a real date and a project without a name", () => {
     const doc = normalizeDoc({
-      version: 1,
-      employers: { e1: { id: "e1", name: "  " }, e2: { id: "e2", name: "E2" } },
+      version: 2,
+      projects: { e1: { id: "e1", name: "  " }, e2: { id: "e2", name: "E2" } },
       days: { "nope:acme": { sessions: [] } },
     });
     expect(Object.keys(doc.days)).toEqual([]);
-    expect(Object.keys(doc.employers)).toEqual(["e2"]);
+    expect(Object.keys(doc.projects)).toEqual(["e2"]);
   });
 
-  it("clamps an employer's numbers and fills in the defaults", () => {
+  it("clamps a project's numbers and fills in the defaults", () => {
     const doc = normalizeDoc({
-      version: 1,
-      employers: {
+      version: 2,
+      projects: {
         e: {
           id: "e",
           name: "E",
@@ -92,7 +137,7 @@ describe("shape validation", () => {
       },
       days: {},
     });
-    const e = doc.employers.e!;
+    const e = doc.projects.e!;
     expect(e.hoursPerDay).toBe(16);
     expect(e.workDays).toEqual([1, 3]);
     expect(e.breakTypes[0]!.defaultMinutes).toBe(1);

@@ -16,7 +16,7 @@
 // counts for nothing — presence is the one claim of time, and the other two
 // lists can only describe it.
 
-import { targetSeconds } from "./employer.ts";
+import { targetSeconds } from "./project.ts";
 import {
   contains,
   intersect,
@@ -28,7 +28,7 @@ import {
 import {
   DAY_SECONDS,
   type BreakSpan,
-  type Employer,
+  type Project,
   type Seconds,
   type Span,
   type WorkDay,
@@ -323,7 +323,7 @@ export function isPresentAt(day: WorkDay, at: Seconds, now: Seconds) {
 /** How far through the day's target the worked time is, as a fraction.
  *  Unclamped above one — a day past its target is overtime, and the Today
  *  screen says 112% rather than pretending the day stopped at 100. */
-export function progress(worked: Seconds, employer: Employer): number {
-  const target = targetSeconds(employer);
+export function progress(worked: Seconds, project: Project): number {
+  const target = targetSeconds(project);
   return target > 0 ? worked / target : 0;
 }

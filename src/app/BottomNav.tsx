@@ -3,7 +3,7 @@ import { useMemo, type ReactNode } from "react";
 
 import {
   BottomNav as NavBar,
-  BuildingIcon,
+  FolderIcon,
   stepDirection,
 } from "@niclaslindstedt/oss-framework/components";
 
@@ -17,17 +17,17 @@ import { useT } from "./i18n/index.ts";
 //
 // The order is the order of the questions: what is happening *now* (Today),
 // what happened today and on other days (Log), what it adds up to (Report),
-// and who it is for (Employers). Settings is not a place you are but a thing
+// and what it is for (Projects). Settings is not a place you are but a thing
 // you do, so it lives on the top bar.
 
 /** Every screen the shell can show. */
-export type Tab = "today" | "log" | "report" | "employers" | "settings";
+export type Tab = "today" | "log" | "report" | "projects" | "settings";
 
 /** The screens that are *destinations* — the ones the bottom bar carries and
  *  a swipe moves between. */
-export type NavTab = "today" | "log" | "report" | "employers";
+export type NavTab = "today" | "log" | "report" | "projects";
 
-export const TABS: NavTab[] = ["today", "log", "report", "employers"];
+export const TABS: NavTab[] = ["today", "log", "report", "projects"];
 
 export function isNavTab(tab: Tab): tab is NavTab {
   return (TABS as Tab[]).includes(tab);
@@ -45,7 +45,7 @@ const ICONS: Record<NavTab, (props: { className?: string }) => ReactNode> = {
   today: ClockIcon,
   log: LogIcon,
   report: ChartIcon,
-  employers: BuildingIcon,
+  projects: FolderIcon,
 };
 
 export function BottomNav({

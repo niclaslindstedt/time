@@ -14,8 +14,8 @@ maps the scope to the registry and carries no token.
 
 ## The numbers
 
-**The break buttons are greyed out.** Breaks live inside time at work. Press
-**Enter office** first; a break logged outside a session counts for nothing
+**The break buttons are greyed out.** Breaks live inside time worked. Press
+**Start working** first; a break logged outside a session counts for nothing
 either way (see [`day-model.md`](day-model.md)).
 
 **The timer did not stop when I took a break.** Only a break stops it; a kind
@@ -27,12 +27,12 @@ the editor. A session nobody closed on a past day is read up to midnight.
 
 **The overall balance is very negative.** It counts every expected working day
 from the first day you logged, so a week of holiday without a logged day is a
-week of shortfall. Adjust the employer's working days for the weeks that
-differ, or log the days off — a day with no time at work still counts as
+week of shortfall. Adjust the project's working days for the weeks that
+differ, or log the days off — a day with no time worked still counts as
 logged.
 
-**Today's target shows a day off.** The employer's working days do not include
-today's weekday. Edit the employer under **Employers**.
+**Today's target shows a day off.** The project's working days do not include
+today's weekday. Edit the project under **Projects**.
 
 **The percentage is over 100%.** That is overtime; the timer does not stop at
 the target.

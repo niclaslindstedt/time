@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The report: many days → the totals, the balance and the breakdowns the
 // Report screen draws. Everything here is a fold over `dayTotals` — a day is
-// summarised once, against the employer's target for that date, and a range
+// summarised once, against the project's target for that date, and a range
 // is the sum of its days. Pure and clock-free: `today` and `now` are passed
 // in so an open session today counts up to the moment asked about and a day
 // in the past is read to its midnight.
@@ -16,20 +16,20 @@ import {
 } from "@niclaslindstedt/oss-framework/calendar";
 
 import { END_OF_DAY, dayTotals } from "./day.ts";
-import { isWorkDay, targetSeconds } from "./employer.ts";
+import { isWorkDay, targetSeconds } from "./project.ts";
 import {
   dayFor,
   type AppData,
-  type Employer,
+  type Project,
   type Seconds,
   type WorkDay,
 } from "./types.ts";
 
 export type DaySummary = {
   date: DayKey;
-  /** Whether the employer expects a full day. */
+  /** Whether the project expects a full day. */
   expected: boolean;
-  /** The target for the day — the employer's day length on a work day, zero
+  /** The target for the day — the project's day length on a work day, zero
    *  otherwise. */
   target: Seconds;
   worked: Seconds;
@@ -57,7 +57,7 @@ export type RangeSummary = {
   uncategorised: Seconds;
   /** Days with any time worked. */
   workedDays: number;
-  /** Days the employer expected. */
+  /** Days the project expected. */
   expectedDays: number;
 };
 
@@ -68,15 +68,15 @@ export function readUpTo(date: DayKey, today: DayKey, now: Seconds): Seconds {
   return date < today ? END_OF_DAY : 0;
 }
 
-/** One day against its employer's expectations. */
+/** One day against its project's expectations. */
 export function summarizeDay(
   day: WorkDay | null,
-  employer: Employer,
+  project: Project,
   date: DayKey,
   upTo: Seconds,
 ): DaySummary {
-  const expected = isWorkDay(employer, date);
-  const target = expected ? targetSeconds(employer) : 0;
+  const expected = isWorkDay(project, date);
+  const target = expected ? targetSeconds(project) : 0;
   const totals = day ? dayTotals(day, upTo) : null;
   const worked = totals?.worked ?? 0;
   return {
@@ -106,7 +106,7 @@ function addInto(into: Record<string, Seconds>, from: Record<string, Seconds>) {
  *  come — a Friday not yet worked is not a shortfall on Wednesday. */
 export function summarizeRange(
   data: AppData,
-  employer: Employer,
+  project: Project,
   from: DayKey,
   to: DayKey,
   today: DayKey,
@@ -126,8 +126,8 @@ export function summarizeRange(
   for (let date = from; date <= to; date = addDays(date, 1)) {
     const upTo = readUpTo(date, today, now);
     const summary = summarizeDay(
-      dayFor(data, employer.id, date),
-      employer,
+      dayFor(data, project.id, date),
+      project,
       date,
       upTo,
     );
@@ -190,15 +190,15 @@ export function monthOf(date: DayKey): { from: DayKey; to: DayKey } {
  *  so a day skipped shows as the shortfall it is. */
 export function runningBalance(
   data: AppData,
-  employer: Employer,
+  project: Project,
   today: DayKey,
   now: Seconds,
 ): Seconds {
   const dates = Object.values(data.days)
-    .filter((d) => d.employerId === employer.id && d.date <= today)
+    .filter((d) => d.projectId === project.id && d.date <= today)
     .map((d) => d.date)
     .sort();
   const first = dates[0];
   if (!first) return 0;
-  return summarizeRange(data, employer, first, today, today, now).balance;
+  return summarizeRange(data, project, first, today, today, now).balance;
 }
