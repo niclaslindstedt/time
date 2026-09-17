@@ -13,7 +13,7 @@
 //   y — a row's height is the week's worked seconds, and the rows stack, so a
 //       row's bottom edge reads the hours the month had put in by the end of
 //       that week. The last one is the month's total — the figure on the
-//       Report's "Worked" tile.
+//       Report's "Worked" ring.
 //
 // A month rarely starts on the week's first day. Those leading days (and the
 // trailing ones at the other end) belong to the neighbouring month, so they

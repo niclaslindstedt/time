@@ -135,3 +135,11 @@ shortfall on Wednesday.
 The **running balance** is `summarizeRange` from the first logged day to
 today. It is honest about gaps: an expected day with nothing logged is a full
 day short.
+
+Two modules lay a `RangeSummary` out for drawing, and neither reads a day
+again: `dayBars.ts` splits each day's hours at its target — the part inside
+it, the part past it, and the part of the target left unworked — so the week
+is one column a day rather than two bars to compare; `monthChart.ts` packs a
+month into week rows of day boxes. Both are pure and clock-free, and both take
+`today` as an argument, so a day that has not come is a track waiting rather
+than a shortfall.

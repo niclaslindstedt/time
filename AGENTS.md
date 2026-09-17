@@ -131,6 +131,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   breakdowns: a day is summarised against the project's target for that
   date, a range is the sum. A day that has not come yet is not a shortfall.
   Pure and clock-free.
+- `src/app/dayBars.ts` — a range laid out as a bar a day, and the one rule
+  that makes it one bar rather than two: the target is the _track_, standing
+  at the height the day was asked for, and the hours worked fill it from the
+  floor up and carry on past the top when the day ran long — so the target
+  ends up underneath the bar that overtook it, and a short day's shortfall is
+  the rest of the track left showing. Splits each day at its target (`inside`,
+  `over`, `short`) and says how tall the plot stands. Pure and clock-free.
 - `src/app/monthChart.ts` — the month laid out as a calendar of boxes: a row
   per week, a box per day, both axes hours and both cumulative — a box is as
   wide as the day worked and the boxes butt up, a row is as tall as the week
@@ -238,6 +245,16 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   chart without being measured first. A day's box is painted two pixels narrower
   than its hit area, so the page showing between two days is not a seam the week
   answers through.
+- `src/app/DayBars.tsx` — the Report's week chart: the columns `dayBars.ts`
+  splits in seconds, scaled into the plot the screen has. Decides how many
+  pixels an hour is worth and nothing else. The part of a bar past the target
+  wears the flag colour — the Today screen's bezel overshoot, so a long day
+  looks the same wherever the app draws one.
+- `src/app/RangeGlance.tsx` — the Report's header: `DayGlance`'s two rings,
+  one screen up. The range's share of its target, filled from twelve and going
+  round again in the flag colour past it, and its balance as an arc out of
+  twelve in the red of a shortfall or the green of time in hand. Paint only;
+  the geometry is `clock.ts`'s and the figures are `summarizeRange`'s.
 - `src/app/DayGlance.tsx` — the Log's header, where the day's four figures
   are drawn rather than printed. Two rings: the day on a twelve-hour dial —
   every stretch it was present as an arc, so a day worked in two shows the gap,
@@ -332,6 +349,8 @@ regression.
 | Something only the desk does             | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                     |
 | A new face, marker, typeface or preset   | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
 | A change to the Report's month chart     | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
+| A change to the Report's week chart      | `src/app/dayBars.ts` (how a day splits at its target, tested in `tests/dayBars_test.ts`) or `DayBars.tsx` (paint)                         |
+| A change to the Report's two rings       | `src/app/RangeGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `report.ts`, never a second fold of the days     |
 | A change to the Log's two rings          | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day   |
 | A change to what a project holds         | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
 | A new glyph, or a colour a kind can wear | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                  |

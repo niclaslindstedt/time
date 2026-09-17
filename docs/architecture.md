@@ -10,7 +10,7 @@ index.html
             ├── TopBar            mark + wordmark, the desk's tabs, project switcher, sync glyph, cog
             ├── TodayScreen       the timer, the clock, the buttons — writes the day
             ├── LogScreen         the day as a list — corrects it
-            ├── ReportScreen      a week or a month, as tiles and charts
+            ├── ReportScreen      a week or a month, as two rings and charts
             ├── ProjectsScreen   the projects, and the editor behind each
             ├── SettingsScreen    settings, sync controls, backup, about
             ├── SidePanel         Settings on the desk, over the right-hand edge
@@ -23,6 +23,7 @@ src/app/
   actions.ts        the edits a day can take                       (pure, clock-free)
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   monthChart.ts     a month → week rows of day boxes, and their colour (pure, clock-free)
+  dayBars.ts        a range → a bar a day: the target's track and the hours in it (pure, clock-free)
   project.ts       the template, working days, the day's target   (pure)
   kinds.ts          the marks a kind wears, and a kind of work's hues (pure)
   clock.ts          the dial's layout, hands, arcs, the frame's path, the wind  (pure)
@@ -45,6 +46,8 @@ src/app/
   ClockFace.tsx     the day on the dial, the switch, the light, and the way into the stretches
   DialPicker.tsx    the presets and the custom pickers in Settings
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
+  DayBars.tsx       the range's day bars, scaled into the plot
+  RangeGlance.tsx   the Report's header: the range's share of its target, and its balance
   DayGlance.tsx     the Log's header: the day on a dial, and its worked / break ring
   KindPicker.tsx    a kind's mark, and a kind of work's colour
   ModalHeader.tsx   a dialog's top bar: cancel, the title, save — and Enter / Escape

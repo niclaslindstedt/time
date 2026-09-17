@@ -29,8 +29,10 @@
   the time worked
 - Log: every day as a list of sessions, breaks and activities, each editable
   or deletable, with breaks and time worked addable after the fact
-- Report: hours worked against target per day for a week or a month, where
-  the hours went by kind of work, break time by kind, and the running balance
+- Report: a week or a month as two rings — the range's share of its target and
+  its balance — over a column per day whose target is the track the hours
+  worked fill and overshoot, where the hours went by kind of work, break time
+  by kind, and the running balance
 - Projects: one or several, each with its own working days, day length,
   break types with default lengths, and kinds of work; the project switcher
   only appears once there are two

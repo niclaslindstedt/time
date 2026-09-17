@@ -16,13 +16,13 @@ import {
   SegmentedControl,
 } from "@niclaslindstedt/oss-framework/components";
 
+import { DayBars } from "./DayBars.tsx";
+import { dayBars } from "./dayBars.ts";
 import {
-  formatBalance,
   formatDay,
   formatDuration,
   formatHours,
   formatMonth,
-  formatWeekday,
 } from "./format.ts";
 import {
   ChartIcon,
@@ -40,6 +40,7 @@ import {
 } from "./labels.ts";
 import { MonthCalendar } from "./MonthCalendar.tsx";
 import { monthChart } from "./monthChart.ts";
+import { RangeGlance } from "./RangeGlance.tsx";
 import { monthOf, runningBalance, summarizeRange, weekOf } from "./report.ts";
 import type { AppData, Project } from "./types.ts";
 import { useNow } from "./useNow.ts";
@@ -97,6 +98,13 @@ export function ReportScreen({ data, project, weekStartsOn }: Props) {
         ? monthChart(summary, project, weekStartsOn, now.today)
         : null,
     [project, summary, range, weekStartsOn, now.today],
+  );
+  const bars = useMemo(
+    () =>
+      project && summary && range === "week"
+        ? dayBars(summary, project, now.today)
+        : null,
+    [project, summary, range, now.today],
   );
 
   if (!project || !summary) {
@@ -193,54 +201,25 @@ export function ReportScreen({ data, project, weekStartsOn }: Props) {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Stat
-          label={t("report.worked")}
-          value={formatDuration(summary.worked)}
-        />
-        <Stat
-          label={t("report.target")}
-          value={formatDuration(summary.target)}
-        />
-        <Stat
-          label={t("report.balance")}
-          value={formatBalance(summary.balance)}
-          tone={summary.balance < 0 ? "danger" : "accent"}
-        />
-        <Stat
-          label={t("report.overall")}
-          value={formatBalance(overall)}
-          tone={overall < 0 ? "danger" : "accent"}
-          hint={t("report.overallHint")}
-        />
-      </div>
+      <RangeGlance
+        worked={summary.worked}
+        target={summary.target}
+        balance={summary.balance}
+        overall={overall}
+      />
 
       <Section
         title={calendar ? t("report.perWeek") : t("report.perDay")}
         icon={<ChartIcon className="h-3.5 w-3.5" />}
       >
-        {summary.worked === 0 ? (
-          <p className="text-xs text-muted">{t("report.empty")}</p>
-        ) : calendar ? (
-          <MonthCalendar chart={calendar} />
+        {calendar ? (
+          summary.worked === 0 ? (
+            <p className="text-xs text-muted">{t("report.empty")}</p>
+          ) : (
+            <MonthCalendar chart={calendar} />
+          )
         ) : (
-          <BarChart
-            series={[
-              {
-                label: t("report.seriesWorked"),
-                values: summary.days.map((d) => d.worked / 3600),
-              },
-              {
-                label: t("report.seriesTarget"),
-                values: summary.days.map((d) => d.target / 3600),
-                color: "var(--muted)",
-              },
-            ]}
-            labels={summary.days.map((d) => formatWeekday(d.date))}
-            formatValue={(v) => formatHours(v * 3600)}
-            ariaLabel={t("report.perDay")}
-            desc={t("report.perDayDesc")}
-          />
+          bars && <DayBars chart={bars} today={now.today} />
         )}
       </Section>
 
@@ -343,32 +322,6 @@ export function ReportScreen({ data, project, weekStartsOn }: Props) {
           expected: String(summary.expectedDays),
         })}
       </p>
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  tone = "default",
-  hint,
-}: {
-  label: string;
-  value: string;
-  tone?: "default" | "accent" | "danger";
-  hint?: string;
-}) {
-  const color =
-    tone === "danger"
-      ? "text-danger"
-      : tone === "accent"
-        ? "text-accent"
-        : "text-fg-bright";
-  return (
-    <div className="rounded-2xl border border-line bg-surface-3 p-3">
-      <p className="text-xs tracking-wide text-muted uppercase">{label}</p>
-      <p className={`mt-1 text-lg font-bold tabular-nums ${color}`}>{value}</p>
-      {hint && <p className="text-[0.65rem] text-muted">{hint}</p>}
     </div>
   );
 }
