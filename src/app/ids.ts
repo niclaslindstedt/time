@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Identifiers for employers, break types, categories and spans. Random rather
+// Identifiers for projects, break types, categories and spans. Random rather
 // than sequential so two devices creating things between syncs cannot collide
 // (see `merge.ts`); short rather than a full UUID because every one of them
 // lives in the document forever and there are a lot of spans in a year.

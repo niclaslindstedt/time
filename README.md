@@ -1,6 +1,6 @@
 # Time
 
-> A local-first time report PWA — enter the office, take your breaks, leave, and read your working hours back as a clock, a log and charts. No account, no server.
+> A local-first time report PWA — start working, take your breaks, stop, and read your working hours back as a clock, a log and charts. No account, no server.
 
 [![ci](https://github.com/niclaslindstedt/time/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/time/actions/workflows/ci.yml)
 [![seo](https://github.com/niclaslindstedt/time/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/time/actions/workflows/seo.yml)
@@ -10,18 +10,18 @@
 ## What
 
 **Time** is a time report that runs entirely in your browser. You press one
-button when you enter the office and the same button when you leave. In
-between, a tap takes a break — lunch, coffee, a walk, whatever your employer's
+button when you start working and the same button when you stop. In
+between, a tap takes a break — lunch, coffee, a walk, whatever your project's
 day allows for — and another tap says what kind of work you are doing. The
 main screen is a running timer with the share of the day's target beside it,
-over a twelve-hour clock with the day drawn on: time at work as a ring, breaks
+over a twelve-hour clock with the day drawn on: time worked as a ring, breaks
 marked on it, the kind of work on an inner ring.
 
 A break is written down with an end the moment you take it — the length that
 kind of break usually takes — so you never have to remember to say you are
 back. The guess is printed on the rim of the clock; tap it (or the clock) and
 the day opens stretch by stretch, where moving the end of the lunch moves the
-start of the work after it. Tap the timer to correct when you got in. Every
+start of the work after it. Tap the timer to correct when you started. Every
 one of those times is an estimate and the app says so: work is not timed to
 the second anyway.
 
@@ -33,12 +33,12 @@ target and the month as a calendar of boxes — a row to the week, a box to the
 day, as wide as the hours it worked — plus where the hours went by kind of
 work, what the breaks took, and the running balance.
 
-You set up an **employer** — the working days, the length of a working day,
-the break types with their default lengths, the kinds of work. One employer is
+You set up an **project** — the working days, the length of a working day,
+the break types with their default lengths, the kinds of work. One project is
 the default and the app never asks which; register a second and a switcher
 appears.
 
-Nothing about a total is stored: the document holds employers and the spans of
+Nothing about a total is stored: the document holds projects and the spans of
 each day, and every number is derived from them at read time, so a corrected
 break moves every downstream figure.
 
@@ -89,12 +89,12 @@ works fully offline.
 npm run dev
 ```
 
-Open the printed URL. The app opens on **Today** and asks for an employer:
+Open the printed URL. The app opens on **Today** and asks for a project:
 give it a name, keep or change the Monday-to-Friday, eight-hour default and the
-default breaks, and save. Press **Enter office** and the timer starts. Tap
+default breaks, and save. Press **Start working** and the timer starts. Tap
 **Lunch** when you go (it books the half hour; tap it again if you are back
-early), tap **Planning** when you sit down to it, and **Leave office** when you
-go home. The **Log** has the day
+early), tap **Planning** when you sit down to it, and **Stop working** when you
+are done for the day. The **Log** has the day
 as a list; the **Report** has the week.
 
 To try the production build the way it deploys:
@@ -107,12 +107,12 @@ npm run build && npm run preview
 
 Four tabs, on a bottom bar — swipe left or right to move between them:
 
-| Tab           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Today**     | The running timer, with the card's border filling clockwise as the day's target is worked and overshooting in the flag colour past it, a wrist watch's dial with time at work, breaks and kinds of work drawn on it as one ring, today's and the overall balance, and the buttons: **Enter / Leave office**, one per break type, one chip per kind of work, and **Custom** for a kind you have not set up. Tap the timer to correct when you got in; tap the clock, or a break's end printed on its rim, to open the day stretch by stretch and move an end. |
-| **Log**       | Any day as a list — time at work, breaks, activities — with the day's first-in, last-out, worked and break totals. Tap a row to edit its times or kind, or delete it; add a session, a break or an activity after the fact; page through the days with the arrows.                                                                                                                                                                                                                                                                                           |
-| **Report**    | A week or a month: worked, target, balance and the running balance since your first day; the week as hours worked against target per day and the month as a calendar of boxes, a row to the week and a box to the day; where the hours went by kind of work; break time by kind.                                                                                                                                                                                                                                                                             |
-| **Employers** | One card per employer with its working days, day length, break types and kinds of work. Add, edit, delete, and — once there are two — choose which is **in use**; the top bar then grows a switcher.                                                                                                                                                                                                                                                                                                                                                         |
+| Tab          | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Today**    | The running timer, with the card's border filling clockwise as the day's target is worked and overshooting in the flag colour past it, a wrist watch's dial with time worked, breaks and kinds of work drawn on it as one ring, today's and the overall balance, and the buttons: **Start / Stop working**, one per break type, one chip per kind of work, and **Custom** for a kind you have not set up. Tap the timer to correct when you started; tap the clock, or a break's end printed on its rim, to open the day stretch by stretch and move an end. |
+| **Log**      | Any day as a list — time worked, breaks, activities — with the day's started, stopped, worked and break totals. Tap a row to edit its times or kind, or delete it; add a session, a break or an activity after the fact; page through the days with the arrows.                                                                                                                                                                                                                                                                                              |
+| **Report**   | A week or a month: worked, target, balance and the running balance since your first day; the week as hours worked against target per day and the month as a calendar of boxes, a row to the week and a box to the day; where the hours went by kind of work; break time by kind.                                                                                                                                                                                                                                                                             |
+| **Projects** | One card per project with its working days, day length, break types and kinds of work. Add, edit, delete, and — once there are two — choose which is **in use**; the top bar then grows a switcher.                                                                                                                                                                                                                                                                                                                                                          |
 
 …and one button on the top bar, for the screen you visit and leave:
 
@@ -168,13 +168,13 @@ passed in — nothing here reads the clock. See
 
 ## Troubleshooting
 
-| Symptom                                     | Fix                                                                                                                  |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `npm install` fails with `401 Unauthorized` | The framework comes from GitHub Packages — see Prerequisites.                                                        |
-| The break buttons are greyed out            | Breaks live inside time at work: press **Enter office** first.                                                       |
-| The balance looks too negative              | Every expected day since your first logged one counts; check **Employers** → working days, and the **Log** for gaps. |
-| A day's total looks wrong                   | Open it in the **Log**: the total is the sessions minus the breaks, and each is a row you can correct.               |
-| Cloud sync shows "Reconnect needed"         | The provider's session lapsed. Tap the sync glyph → Reconnect.                                                       |
+| Symptom                                     | Fix                                                                                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `npm install` fails with `401 Unauthorized` | The framework comes from GitHub Packages — see Prerequisites.                                                       |
+| The break buttons are greyed out            | Breaks live inside time worked: press **Start working** first.                                                      |
+| The balance looks too negative              | Every expected day since your first logged one counts; check **Projects** → working days, and the **Log** for gaps. |
+| A day's total looks wrong                   | Open it in the **Log**: the total is the sessions minus the breaks, and each is a row you can correct.              |
+| Cloud sync shows "Reconnect needed"         | The provider's session lapsed. Tap the sync glyph → Reconnect.                                                      |
 
 More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 

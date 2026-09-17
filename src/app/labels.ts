@@ -5,10 +5,10 @@
 import { addDays, type DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { SERIES_COLOR_TOKENS } from "@niclaslindstedt/oss-framework/charts";
 
-import { breakTypeOf, categoryOf } from "./employer.ts";
+import { breakTypeOf, categoryOf } from "./project.ts";
 import { formatDay, formatWeekday } from "./format.ts";
 import type { TFn } from "./i18n/index.ts";
-import type { Employer, Weekday } from "./types.ts";
+import type { Project, Weekday } from "./types.ts";
 
 /** A day as a heading: "Today", "Yesterday", or the date. */
 export function dayHeadline(t: TFn, day: DayKey, today: DayKey): string {
@@ -18,14 +18,14 @@ export function dayHeadline(t: TFn, day: DayKey, today: DayKey): string {
   return formatDay(day);
 }
 
-/** A break type's name, or a placeholder when the employer deleted it. */
-export function breakName(t: TFn, employer: Employer, typeId: string) {
-  return breakTypeOf(employer, typeId)?.name ?? t("log.unknownType");
+/** A break type's name, or a placeholder when the project deleted it. */
+export function breakName(t: TFn, project: Project, typeId: string) {
+  return breakTypeOf(project, typeId)?.name ?? t("log.unknownType");
 }
 
-/** A category's name, or a placeholder when the employer deleted it. */
-export function categoryName(t: TFn, employer: Employer, categoryId: string) {
-  return categoryOf(employer, categoryId)?.name ?? t("log.unknownType");
+/** A category's name, or a placeholder when the project deleted it. */
+export function categoryName(t: TFn, project: Project, categoryId: string) {
+  return categoryOf(project, categoryId)?.name ?? t("log.unknownType");
 }
 
 /** The hues a kind of work may wear: the framework's series order with the
@@ -39,12 +39,12 @@ export const CATEGORY_COLORS = SERIES_COLOR_TOKENS.filter(
 
 /** The colour a category is drawn in, everywhere it is drawn: the clock's
  *  inner ring, the chips and the report's charts read the same table, so a
- *  kind of work is one hue across the app. By position in the employer's
- *  list; a category the employer has since deleted takes the slot after the
+ *  kind of work is one hue across the app. By position in the project's
+ *  list; a category the project has since deleted takes the slot after the
  *  last. */
-export function categoryColor(employer: Employer, categoryId: string): string {
-  const index = employer.categories.findIndex((c) => c.id === categoryId);
-  const slot = index === -1 ? employer.categories.length : index;
+export function categoryColor(project: Project, categoryId: string): string {
+  const index = project.categories.findIndex((c) => c.id === categoryId);
+  const slot = index === -1 ? project.categories.length : index;
   return CATEGORY_COLORS[slot % CATEGORY_COLORS.length] ?? "var(--link)";
 }
 

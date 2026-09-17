@@ -7,7 +7,7 @@ import { AppMarkIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import type { Tab } from "./BottomNav.tsx";
 
-// The bar across the top: the app's mark and name, the employer switcher when
+// The bar across the top: the app's mark and name, the project switcher when
 // there is something to switch between, the sync glyph, and the cog.
 //
 // It is the sibling cycle bar's geometry — a bordered row at `px-4 py-3` with
@@ -22,17 +22,17 @@ type Props = {
   onOpenSettings: () => void;
   /** The cloud glyph, when there is a cloud. */
   syncSlot?: ReactNode;
-  /** The employer picker, when there is more than one employer. With a
-   *  single employer there is nothing to choose, and the slot stays empty
+  /** The project picker, when there is more than one project. With a
+   *  single project there is nothing to choose, and the slot stays empty
    *  rather than showing a control with one option. */
-  employerSlot?: ReactNode;
+  projectSlot?: ReactNode;
 };
 
 export function TopBar({
   active,
   onOpenSettings,
   syncSlot,
-  employerSlot,
+  projectSlot,
 }: Props) {
   const t = useT();
   const onSettings = active === "settings";
@@ -43,7 +43,7 @@ export function TopBar({
         <span className="truncate">{t("app.name")}</span>
       </h1>
       <div className="flex min-w-0 shrink items-center gap-2">
-        {employerSlot}
+        {projectSlot}
         {syncSlot}
         <button
           type="button"

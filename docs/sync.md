@@ -25,7 +25,7 @@ revision checks; the engine is provider-agnostic past the two `create*` calls.
 
 ## The merge
 
-Employers are keyed by id and days by `<date>:<employerId>`, and each carries
+Projects are keyed by id and days by `<date>:<projectId>`, and each carries
 an `updatedAt` timestamp. Two copies merge record by record, the later edit
 winning (`src/app/merge.ts`). Nobody is asked which side to keep: a day logged
 on the phone and a break corrected on the laptop both survive.
@@ -38,7 +38,7 @@ has already synced, or on both.
 
 ## What is sent
 
-Exactly the document: employers and days, as JSON. No device identifier, no
+Exactly the document: projects and days, as JSON. No device identifier, no
 settings, no logs. The same file is what **Settings → Download a backup**
 writes, so it can be read with any text editor.
 

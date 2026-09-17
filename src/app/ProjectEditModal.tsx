@@ -15,41 +15,41 @@ import {
   MIN_HOURS_PER_DAY,
   clampBreakMinutes,
   clampHours,
-  employerTemplate,
-} from "./employer.ts";
+  projectTemplate,
+} from "./project.ts";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
 import { weekdayLabel } from "./labels.ts";
-import type { Employer, Weekday } from "./types.ts";
+import type { Project, Weekday } from "./types.ts";
 
-// The employer editor: name, working days, the day's length, the break types
+// The project editor: name, working days, the day's length, the break types
 // and the kinds of work. One sheet, edited as a draft and saved whole, so a
 // half-finished rename never reaches the document.
 
 type Props = {
-  /** The employer to edit, or null to create one. */
-  employer: Employer | null;
-  onSave: (employer: Employer) => void;
+  /** The project to edit, or null to create one. */
+  project: Project | null;
+  onSave: (project: Project) => void;
   onClose: () => void;
 };
 
 const WEEK: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
-export function EmployerEditModal({ employer, onSave, onClose }: Props) {
+export function ProjectEditModal({ project, onSave, onClose }: Props) {
   const t = useT();
-  const [draft, setDraft] = useState<Employer>(
+  const [draft, setDraft] = useState<Project>(
     () =>
-      employer ??
-      employerTemplate(
+      project ??
+      projectTemplate(
         "",
         {
-          lunch: t("employers.defaults.lunch"),
-          coffee: t("employers.defaults.coffee"),
-          toilet: t("employers.defaults.toilet"),
-          meetings: t("employers.defaults.meetings"),
-          planning: t("employers.defaults.planning"),
-          retro: t("employers.defaults.retro"),
-          admin: t("employers.defaults.admin"),
+          lunch: t("projects.defaults.lunch"),
+          coffee: t("projects.defaults.coffee"),
+          toilet: t("projects.defaults.toilet"),
+          meetings: t("projects.defaults.meetings"),
+          planning: t("projects.defaults.planning"),
+          retro: t("projects.defaults.retro"),
+          admin: t("projects.defaults.admin"),
         },
         makeId,
         new Date().toISOString(),
@@ -73,7 +73,7 @@ export function EmployerEditModal({ employer, onSave, onClose }: Props) {
     <Modal
       open
       onClose={onClose}
-      labelledBy="employer-editor-title"
+      labelledBy="project-editor-title"
       closeLabel={t("common.close")}
       footer={
         <div className="flex justify-end gap-2 bg-surface-3 px-3 py-3">
@@ -104,23 +104,23 @@ export function EmployerEditModal({ employer, onSave, onClose }: Props) {
     >
       <div className="flex flex-col gap-5 overflow-y-auto px-3 py-4">
         <h2
-          id="employer-editor-title"
+          id="project-editor-title"
           className="text-lg leading-tight font-bold text-fg-bright"
         >
-          {employer ? t("employers.edit") : t("employers.add")}
+          {project ? t("projects.edit") : t("projects.add")}
         </h2>
 
         <LabeledInput
-          label={t("employers.name")}
+          label={t("projects.name")}
           value={draft.name}
-          placeholder={t("employers.namePlaceholder")}
+          placeholder={t("projects.namePlaceholder")}
           required
           invalid={draft.name.trim().length === 0}
           onCommit={(next) => setDraft((d) => ({ ...d, name: next }))}
         />
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted">{t("employers.workDays")}</span>
+          <span className="text-xs text-muted">{t("projects.workDays")}</span>
           <div className="grid grid-cols-7 gap-1">
             {WEEK.map((day) => {
               const on = draft.workDays.includes(day);
@@ -141,11 +141,11 @@ export function EmployerEditModal({ employer, onSave, onClose }: Props) {
               );
             })}
           </div>
-          <p className="text-xs text-muted">{t("employers.workDaysHint")}</p>
+          <p className="text-xs text-muted">{t("projects.workDaysHint")}</p>
         </div>
 
         <LabeledInput
-          label={t("employers.hoursPerDay")}
+          label={t("projects.hoursPerDay")}
           type="number"
           inputMode="decimal"
           min={MIN_HOURS_PER_DAY}
@@ -161,14 +161,12 @@ export function EmployerEditModal({ employer, onSave, onClose }: Props) {
         />
 
         <div className="flex flex-col gap-2">
-          <span className="text-xs text-muted">
-            {t("employers.breakTypes")}
-          </span>
+          <span className="text-xs text-muted">{t("projects.breakTypes")}</span>
           {draft.breakTypes.map((b) => (
             <div key={b.id} className="flex items-end gap-2">
               <div className="min-w-0 flex-1">
                 <LabeledInput
-                  label={t("employers.breakName")}
+                  label={t("projects.breakName")}
                   value={b.name}
                   required
                   invalid={b.name.trim().length === 0}
@@ -184,7 +182,7 @@ export function EmployerEditModal({ employer, onSave, onClose }: Props) {
               </div>
               <div className="w-20">
                 <LabeledInput
-                  label={t("employers.breakMinutes")}
+                  label={t("projects.breakMinutes")}
                   type="number"
                   inputMode="numeric"
                   min={MIN_BREAK_MINUTES}
@@ -234,20 +232,18 @@ export function EmployerEditModal({ employer, onSave, onClose }: Props) {
               }))
             }
           >
-            {t("employers.addBreakType")}
+            {t("projects.addBreakType")}
           </Button>
-          <p className="text-xs text-muted">{t("employers.breakTypesHint")}</p>
+          <p className="text-xs text-muted">{t("projects.breakTypesHint")}</p>
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-xs text-muted">
-            {t("employers.categories")}
-          </span>
+          <span className="text-xs text-muted">{t("projects.categories")}</span>
           {draft.categories.map((c) => (
             <div key={c.id} className="flex items-end gap-2">
               <div className="min-w-0 flex-1">
                 <LabeledInput
-                  label={t("employers.categoryName")}
+                  label={t("projects.categoryName")}
                   value={c.name}
                   required
                   invalid={c.name.trim().length === 0}
@@ -284,9 +280,9 @@ export function EmployerEditModal({ employer, onSave, onClose }: Props) {
               }))
             }
           >
-            {t("employers.addCategory")}
+            {t("projects.addCategory")}
           </Button>
-          <p className="text-xs text-muted">{t("employers.categoriesHint")}</p>
+          <p className="text-xs text-muted">{t("projects.categoriesHint")}</p>
         </div>
       </div>
     </Modal>

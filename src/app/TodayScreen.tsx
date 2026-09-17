@@ -18,7 +18,7 @@ import { ArrivalModal } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { dayTotals, progress } from "./day.ts";
-import { isWorkDay, targetSeconds } from "./employer.ts";
+import { isWorkDay, targetSeconds } from "./project.ts";
 import {
   formatBalance,
   formatDuration,
@@ -37,7 +37,7 @@ import { runningBalance } from "./report.ts";
 import {
   blankDay,
   dayFor,
-  type Employer,
+  type Project,
   type Seconds,
   type WorkDay,
 } from "./types.ts";
@@ -62,12 +62,12 @@ import { useNow } from "./useNow.ts";
 
 type Props = {
   store: DocStore;
-  employer: Employer | null;
+  project: Project | null;
   weekStartsOn: number;
   /** The dial the settings resolved to, and how big. */
   dial: DialConfig;
   clockSize: ClockSize;
-  onAddEmployer: () => void;
+  onAddProject: () => void;
   onNotice: (message: string) => void;
 };
 
@@ -75,10 +75,10 @@ type Asking = { kind: "break" | "activity" };
 
 export function TodayScreen({
   store,
-  employer,
+  project,
   dial,
   clockSize,
-  onAddEmployer,
+  onAddProject,
   onNotice,
 }: Props) {
   const t = useT();
@@ -88,12 +88,12 @@ export function TodayScreen({
   const [asking, setAsking] = useState<Asking | null>(null);
 
   const day = useMemo<WorkDay | null>(() => {
-    if (!employer) return null;
+    if (!project) return null;
     return (
-      dayFor(store.data, employer.id, now.today) ??
-      blankDay(employer.id, now.today, new Date().toISOString())
+      dayFor(store.data, project.id, now.today) ??
+      blankDay(project.id, now.today, new Date().toISOString())
     );
-  }, [store.data, employer, now.today]);
+  }, [store.data, project, now.today]);
 
   const totals = useMemo(
     () => (day ? dayTotals(day, now.seconds) : null),
@@ -101,21 +101,19 @@ export function TodayScreen({
   );
   const overall = useMemo(
     () =>
-      employer
-        ? runningBalance(store.data, employer, now.today, now.seconds)
-        : 0,
-    [store.data, employer, now.today, now.seconds],
+      project ? runningBalance(store.data, project, now.today, now.seconds) : 0,
+    [store.data, project, now.today, now.seconds],
   );
 
-  if (!employer || !day || !totals) {
+  if (!project || !day || !totals) {
     return (
       <div className="flex flex-1 flex-col justify-center gap-3 px-3 py-3">
         <div className="rounded-2xl border border-line bg-surface-3 p-6 text-center">
-          <p className="text-sm text-muted">{t("today.noEmployer")}</p>
-          <Button variant="primary" className="mt-4" onClick={onAddEmployer}>
+          <p className="text-sm text-muted">{t("today.noProject")}</p>
+          <Button variant="primary" className="mt-4" onClick={onAddProject}>
             <span className="inline-flex items-center gap-1.5">
               <PlusIcon className="h-4 w-4" />
-              {t("today.addEmployer")}
+              {t("today.addProject")}
             </span>
           </Button>
         </div>
@@ -130,19 +128,19 @@ export function TodayScreen({
   const apply = (next: WorkDay) => {
     if (next !== day) store.saveDay(next);
   };
-  const stampEmployer = (patch: Partial<Employer>) =>
-    store.saveEmployer({
-      ...employer,
+  const stampProject = (patch: Partial<Project>) =>
+    store.saveProject({
+      ...project,
       ...patch,
       updatedAt: new Date().toISOString(),
     });
 
-  const target = targetSeconds(employer);
-  const expected = isWorkDay(employer, now.today);
+  const target = targetSeconds(project);
+  const expected = isWorkDay(project, now.today);
   const state = totals.state;
   const onBreak = state === "break";
   const current = totals.currentBreak;
-  const currentName = current ? breakName(t, employer, current.typeId) : null;
+  const currentName = current ? breakName(t, project, current.typeId) : null;
   const session = latestSession(day);
 
   const stateLine =
@@ -186,7 +184,7 @@ export function TodayScreen({
           timer is a button — the arrival is the time of day that is wrong
           most often, and this is where you are looking when you notice. */}
       <ProgressFrame
-        fraction={progress(totals.worked, employer)}
+        fraction={progress(totals.worked, project)}
         tone={onBreak ? "flag" : "accent"}
       >
         <p
@@ -211,7 +209,7 @@ export function TodayScreen({
           </span>
           <span className="sr-only">
             {t("today.percentOfTarget", {
-              percent: formatPercent(progress(totals.worked, employer)),
+              percent: formatPercent(progress(totals.worked, project)),
             })}
           </span>
         </button>
@@ -230,7 +228,7 @@ export function TodayScreen({
 
       <ClockFace
         day={day}
-        employer={employer}
+        project={project}
         now={now.seconds}
         dial={dial}
         size={clockSize}
@@ -240,10 +238,10 @@ export function TodayScreen({
       <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted">
         <Swatch color="var(--color-accent)" label={t("today.legend.work")} />
         <Swatch color="var(--color-flag)" label={t("today.legend.break")} />
-        {employer.categories.map((c) => (
+        {project.categories.map((c) => (
           <Swatch
             key={c.id}
-            color={categoryColor(employer, c.id)}
+            color={categoryColor(project, c.id)}
             label={c.name}
           />
         ))}
@@ -278,7 +276,7 @@ export function TodayScreen({
           {t("today.breaks")}
         </h2>
         <div className="grid grid-cols-2 gap-2">
-          {employer.breakTypes.map((b) => {
+          {project.breakTypes.map((b) => {
             const running = current?.typeId === b.id;
             return (
               <button
@@ -337,7 +335,7 @@ export function TodayScreen({
           {t("today.categories")}
         </h2>
         <div className="flex flex-wrap gap-2">
-          {employer.categories.map((c) => {
+          {project.categories.map((c) => {
             const on = totals.currentCategoryId === c.id;
             return (
               <button
@@ -357,7 +355,7 @@ export function TodayScreen({
                     background:
                       on && onBreak
                         ? "var(--color-flag)"
-                        : categoryColor(employer, c.id),
+                        : categoryColor(project, c.id),
                   }}
                 />
                 {c.name}
@@ -417,7 +415,7 @@ export function TodayScreen({
       {timeline && (
         <DayTimelineModal
           day={day}
-          employer={employer}
+          project={project}
           now={now.seconds}
           highlight={timeline.at}
           onMove={(at, to) => {
@@ -439,16 +437,16 @@ export function TodayScreen({
           onSave={(name, minutes) => {
             const id = makeId();
             if (asking.kind === "break") {
-              stampEmployer({
+              stampProject({
                 breakTypes: [
-                  ...employer.breakTypes,
+                  ...project.breakTypes,
                   { id, name, defaultMinutes: minutes },
                 ],
               });
               apply(takeBreak(day, id, now.seconds, minutes * 60, ctx()));
             } else {
-              stampEmployer({
-                categories: [...employer.categories, { id, name }],
+              stampProject({
+                categories: [...project.categories, { id, name }],
               });
               apply(setCategory(day, id, now.seconds, ctx()));
             }

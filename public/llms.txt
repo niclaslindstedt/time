@@ -1,7 +1,7 @@
 # Time
 
 > A local-first time report PWA built on @niclaslindstedt/oss-framework.
-> Clock in when you enter the office and out when you leave; log breaks
+> Start working with one tap and stop with the same one; log breaks
 > (lunch, coffee, a walk) and kinds of work (meetings, coding) as they happen
 > or afterwards. One document, stored on-device as JSON, with an optional copy
 > synced to the user's own Dropbox or Google Drive. Totals, balances and
@@ -16,19 +16,19 @@
 
 - Today: a running timer whose card's border fills clockwise with the day's
   share of its target and overshoots past it, a twelve-hour clock with time
-  at work, breaks and kinds of work drawn on it,
-  and one-tap buttons to enter, leave, take a break or switch what you are
+  worked, breaks and kinds of work drawn on it,
+  and one-tap buttons to start, stop, take a break or switch what you are
   working on
 - Correcting a time without leaving Today: a break is booked for the length
   its kind usually takes and its end is printed on the clock's rim, tapping
   the clock opens the day stretch by stretch with each end movable, and
-  tapping the timer corrects when you got in
+  tapping the timer corrects when you started
 - Log: every day as a list of sessions, breaks and activities, each editable
-  or deletable, with breaks and time at work addable after the fact
+  or deletable, with breaks and time worked addable after the fact
 - Report: hours worked against target per day for a week or a month, where
   the hours went by kind of work, break time by kind, and the running balance
-- Employers: one or several, each with its own working days, day length,
-  break types with default lengths, and kinds of work; the employer switcher
+- Projects: one or several, each with its own working days, day length,
+  break types with default lengths, and kinds of work; the project switcher
   only appears once there are two
 - Settings: light/dark theme, the clock's look, numerals (sans, serif, mono
   or Roman) and size, week start, cloud sync, JSON backup and restore

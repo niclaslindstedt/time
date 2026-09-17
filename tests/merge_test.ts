@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import { mergeDocs } from "../src/app/merge.ts";
 import { dayKey, emptyDoc, type WorkDay } from "../src/app/types.ts";
-import { day, employer } from "./fixtures/helpers.ts";
+import { day, project } from "./fixtures/helpers.ts";
 
 function docOf(...days: WorkDay[]) {
   const doc = emptyDoc();
-  for (const d of days) doc.days[dayKey(d.employerId, d.date)] = d;
+  for (const d of days) doc.days[dayKey(d.projectId, d.date)] = d;
   return doc;
 }
 
@@ -43,17 +43,17 @@ describe("mergeDocs", () => {
     expect(mergeDocs(docOf(a), docOf(b)).days["2026-03-01:acme"]).toBe(a);
   });
 
-  it("merges employers the same way", () => {
+  it("merges projects the same way", () => {
     const local = emptyDoc();
-    local.employers.acme = employer({ updatedAt: "2026-01-01T00:00:00.000Z" });
+    local.projects.acme = project({ updatedAt: "2026-01-01T00:00:00.000Z" });
     const remote = emptyDoc();
-    remote.employers.acme = employer({
+    remote.projects.acme = project({
       name: "Acme Ltd",
       updatedAt: "2026-02-01T00:00:00.000Z",
     });
-    remote.employers.other = employer({ id: "other", name: "Other" });
+    remote.projects.other = project({ id: "other", name: "Other" });
     const merged = mergeDocs(local, remote);
-    expect(merged.employers.acme!.name).toBe("Acme Ltd");
-    expect(Object.keys(merged.employers).sort()).toEqual(["acme", "other"]);
+    expect(merged.projects.acme!.name).toBe("Acme Ltd");
+    expect(Object.keys(merged.projects).sort()).toEqual(["acme", "other"]);
   });
 });

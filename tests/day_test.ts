@@ -12,7 +12,7 @@ import {
   progress,
   workedIntervals,
 } from "../src/app/day.ts";
-import { day, employer, h } from "./fixtures/helpers.ts";
+import { day, project, h } from "./fixtures/helpers.ts";
 
 // A typical Monday: in at 08:00, lunch 12:00–12:30, coffee 15:00–15:15, out
 // at 17:00. Meetings 09:00–10:00, coding from 10:00 until leaving.
@@ -142,9 +142,9 @@ describe("two sessions in a day", () => {
 
 describe("progress", () => {
   it("is the worked share of the target, and runs past one", () => {
-    expect(progress(h(4), employer())).toBeCloseTo(0.5);
-    expect(progress(h(9), employer())).toBeCloseTo(1.125);
-    expect(progress(h(3), employer({ hoursPerDay: 6 }))).toBeCloseTo(0.5);
+    expect(progress(h(4), project())).toBeCloseTo(0.5);
+    expect(progress(h(9), project())).toBeCloseTo(1.125);
+    expect(progress(h(3), project({ hoursPerDay: 6 }))).toBeCloseTo(0.5);
   });
 });
 

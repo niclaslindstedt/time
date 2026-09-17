@@ -7,11 +7,11 @@ and `tests/report_test.ts` pin it to real times.
 
 ## Three lists
 
-A `WorkDay` holds, for one employer on one calendar day:
+A `WorkDay` holds, for one project on one calendar day:
 
-- **Sessions** — presence. Between entering the office and leaving it. This
+- **Sessions** — presence. Between starting work and stopping. This
   is the only claim of time.
-- **Breaks** — pauses inside presence, each of a type the employer defines
+- **Breaks** — pauses inside presence, each of a type the project defines
   (lunch, coffee, a walk).
 - **Activities** — what kind of work was going on (meetings, coding). A label
   over presence, never a claim of presence on its own.
@@ -50,13 +50,13 @@ So:
 The **state** of a day at `now` follows what is _open_, not what the clipped
 intervals say: a session opened this second covers zero seconds and is still
 "working"; a break `now` falls inside makes it "on a break"; no open session is
-"not at work".
+"not working".
 
 ### The break's assumed end
 
 Nobody taps "I'm back" reliably, so a break is not left running until somebody
 remembers it. `takeBreak` writes the end down with the start, the length the
-employer assumes that kind of break takes — lunch half an hour, coffee a
+project assumes that kind of break takes — lunch half an hour, coffee a
 quarter — and the day is "on a break" until that end passes, whether or not
 anything else is tapped.
 
@@ -74,8 +74,8 @@ the wrong pill corrected a second later, not a minute of lunch.
 ### The day as stretches
 
 `daySegments` reads the same intervals as one ordered list of the stretches
-the day is made of: at work (of one kind of work, or of none), then lunch,
-then at work again. Consecutive stretches meet — the end of one _is_ the start
+the day is made of: working (at one kind of work, or at none), then lunch,
+then working again. Consecutive stretches meet — the end of one _is_ the start
 of the next — which is what makes an end movable. `boundaryRange` says how far
 an edge may move: up to its neighbours, a minute clear of each, so no stretch
 is squeezed out of existence.
@@ -85,9 +85,10 @@ list they open, and it is derived from the spans like everything else: there
 is no second copy of the day to keep in step.
 
 `dayTotals` returns all of it at once — presence, worked, breaks by type, time
-by category, uncategorised, the state, the open spans, first-in and last-out —
+by category, uncategorised, the state, the open spans, the first start and the
+last stop —
 and the three screens read the same object. **Progress** is worked over the
-employer's target for the day, unclamped: 112% is overtime, not an error.
+project's target for the day, unclamped: 112% is overtime, not an error.
 
 ## The edits
 
@@ -117,9 +118,9 @@ never touches chance or the clock.
 
 ## The report
 
-`summarizeDay` measures one day against the employer:
+`summarizeDay` measures one day against the project:
 
-- **expected** — whether the employer's working days include the date;
+- **expected** — whether the project's working days include the date;
 - **target** — the day's length on an expected day, zero otherwise;
 - **balance** — worked minus target: negative on a short day, positive on a
   long one, and every second of a day off is positive.

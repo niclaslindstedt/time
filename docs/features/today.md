@@ -5,7 +5,7 @@ The main screen, and the whole app for most of a day.
 ## What it shows
 
 - **The readout.** The day's state ("Working since 08:02", "Lunch until
-  12:30", "Not at work · Left at 17:10"), the running timer of hours worked,
+  12:30", "Not working · Stopped at 17:10"), the running timer of hours worked,
   and under it the target, today's balance and the overall balance. The whole
   card turns the break colour while a break is on, because the timer has
   stopped moving and that should be visible from across the room.
@@ -16,7 +16,7 @@ The main screen, and the whole app for most of a day.
   printed beside the timer: the frame is it. (A screen reader still gets the
   figure, from the timer's own label.)
 - **The clock.** A wrist watch's dial with the hands at now, and the day
-  drawn on it as one ring. Time at work is the accent — a band with a thin
+  drawn on it as one ring. Time worked is the accent — a band with a thin
   line along its outer edge. A kind of work takes the band in its own hue
   (the same hue the chips and the report use) and leaves the thin line the
   accent; a break is the flag colour, band and line both. The legend under
@@ -25,13 +25,13 @@ The main screen, and the whole app for most of a day.
   face, its markers, its numerals, how its second hand moves, and how much of
   the screen it takes — is yours to pick under **Settings → The clock** (see
   [`themes.md`](themes.md)).
-- **The buttons.** One loud one, **Enter office** / **Leave office**. A row of
-  break buttons, one per break type the employer defines, each showing the
+- **The buttons.** One loud one, **Start working** / **Stop working**. A row of
+  break buttons, one per break type the project defines, each showing the
   length it is assumed to take; tapping one takes it now, and the button turns
   into **End lunch** for as long as you are on it. A row of chips, one per kind
   of work; tapping one says that is what you are doing from now, tapping it
   again stops labelling. Both rows end in **Custom**. Breaks and chips are
-  disabled until you have entered.
+  disabled until you have started working.
 
 Everything on the screen is derived from the day's spans up to the current
 second (see [`../day-model.md`](../day-model.md)); the screen holds no state
@@ -63,7 +63,7 @@ here:
   you are at the desk, the kettle has boiled, and it is twenty past — so the
   nudges go backwards first (−30, −15, −5) and the modal says what the change
   makes of the day before you save it.
-- **The clock** opens the day stretch by stretch: at work, lunch, at work. Each
+- **The clock** opens the day stretch by stretch: working, lunch, working. Each
   end can be moved, by typing a time or nudging it five minutes either way, and
   moving one moves both sides of it — a lunch that ended at 12:20 rather than
   12:10 is a coding session that started at 12:20. An edge cannot be pushed
@@ -75,13 +75,13 @@ of the day, not a stopwatch.
 ## Custom
 
 The last pill in each row is **Custom**. It names a kind of break (with the
-minutes one is assumed to take) or a kind of work, adds it to the employer, and
+minutes one is assumed to take) or a kind of work, adds it to the project, and
 starts it — so the walk nobody set up in advance is two taps rather than a trip
-to the employer form. It stays there afterwards as another pill; renaming or
-removing it is the employer form's job (see [`employers.md`](employers.md)).
+to the project form. It stays there afterwards as another pill; renaming or
+removing it is the project form's job (see [`projects.md`](projects.md)).
 
 ## The first run
 
-With no employer yet, the screen asks for one. **Add employer** opens the
-editor (see [`employers.md`](employers.md)); saving makes it the employer in
+With no project yet, the screen asks for one. **Add project** opens the
+editor (see [`projects.md`](projects.md)); saving makes it the project in
 use and the clock is ready.

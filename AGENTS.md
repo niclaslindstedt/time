@@ -20,7 +20,7 @@ truth for the conventions this repo follows.
 
 ## What this app is, and the one rule that follows from it
 
-A time report is a record of when a named person was at work, for whom, and
+A time report is a record of when a named person was working, on what, and
 what they were doing. The whole design premise is that the record never leaves
 the device unless its owner explicitly connects their own cloud account.
 
@@ -108,9 +108,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 
 ### The app owns the domain ("store stays in the app")
 
-- `src/app/types.ts` — the model. An `Employer` (name, working days, hours per
+- `src/app/types.ts` — the model. A `Project` (name, working days, hours per
   day, break types with default lengths, kinds of work) and a `WorkDay` per
-  employer per calendar day: three lists of spans — `sessions` (presence),
+  project per calendar day: three lists of spans — `sessions` (presence),
   `breaks` (pauses inside presence, each of a type), `activities` (a kind of
   work over presence). Times are **seconds since the day's local midnight**,
   so the document means the same on every device and a night shift is an end
@@ -128,7 +128,7 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   test, rather than in a screen. Ids and the `updatedAt` stamp come in through
   a `ctx` argument so nothing here touches chance or the clock.
 - `src/app/report.ts` — many days → the totals, the balance and the
-  breakdowns: a day is summarised against the employer's target for that
+  breakdowns: a day is summarised against the project's target for that
   date, a range is the sum. A day that has not come yet is not a shortfall.
   Pure and clock-free.
 - `src/app/monthChart.ts` — the month laid out as a calendar of boxes: a row
@@ -139,7 +139,7 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   add nothing to a row's height. Its `boxColor` is the red-green-blue ramp a
   day's box is filled from — a _scale_ rather than `labels.ts`'s table, mixed
   from the theme's own tokens. Pure and clock-free.
-- `src/app/employer.ts` — the employer template (Mon–Fri, 8 h, lunch 30 min,
+- `src/app/project.ts` — the project template (Mon–Fri, 8 h, lunch 30 min,
   coffee 15 min, toilet 5 min), whether a date is a working day, the day's
   target, the clamps.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
@@ -171,7 +171,7 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   never-persisted flag. Behind `import()`, so a production user never
   downloads it.
 - `src/app/TodayScreen.tsx`, `LogScreen.tsx`, `ReportScreen.tsx`,
-  `EmployersScreen.tsx`, `SettingsScreen.tsx` — the five screens. Four are
+  `ProjectsScreen.tsx`, `SettingsScreen.tsx` — the five screens. Four are
   bottom-nav tabs; Settings is reached from the top bar's cog, because it is a
   thing you do and leave rather than a place you are. Today is where the day
   is _filed_; Log is where it is _corrected_, because a list is where a wrong
@@ -207,13 +207,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.
 - `src/app/ArrivalModal.tsx`, `NewKindModal.tsx` — the Today screen's two
-  small forms: when you got in (opened by the timer), and a kind of break or
+  small forms: when you started (opened by the timer), and a kind of break or
   work named on the spot (the "Custom" pill).
-- `src/app/SpanEditModal.tsx`, `EmployerEditModal.tsx` — the two editors.
-  The span editor is the one form behind every row in the Log; the employer
+- `src/app/SpanEditModal.tsx`, `ProjectEditModal.tsx` — the two editors.
+  The span editor is the one form behind every row in the Log; the project
   editor edits a draft and saves whole.
 - `src/app/TopBar.tsx`, `BottomNav.tsx` — the shell's two bars. The top bar
-  grows an employer switcher only once there are two employers.
+  grows a project switcher only once there are two projects.
 - `src/app/labels.ts` — domain value → label and colour, in one place, so a
   kind of work is one hue on the clock and in the charts.
 - `src/app/i18n/en.ts` — every user-facing string.
@@ -228,7 +228,7 @@ framework's internals — only its published subpaths.
 ### Derive, don't store
 
 Nothing about a total is persisted — not the hours worked, not the balance,
-not the percentage on the Today screen. The document holds employers and the
+not the percentage on the Today screen. The document holds projects and the
 spans of each day and only those; everything else is recomputed on render
 from `day.ts` and `report.ts`. This is why correcting a break from last
 Tuesday immediately fixes every downstream number, and why there is no cache
@@ -251,13 +251,13 @@ to make impossible. If a screen needs a new figure, add it to `DayTotals` or
 focus, so a phone that slept does not show the time it dozed off at). Keep it
 that way: it is what lets the tests pin real times without fake timers.
 
-### An employer is data, not a setting
+### A project is data, not a setting
 
-Which employer the screens show is a per-device setting
-(`useAppSettings.ts`); the employers themselves are in the document, so they
-sync and back up with the days. With one employer the app never asks which;
+Which project the screens show is a per-device setting
+(`useAppSettings.ts`); the projects themselves are in the document, so they
+sync and back up with the days. With one project the app never asks which;
 the switcher on the top bar and the "In use" badge appear only once there are
-two. A change that shows an employer picker to someone with one employer is a
+two. A change that shows a project picker to someone with one project is a
 regression.
 
 ## Where new code goes
@@ -270,7 +270,7 @@ regression.
 | A change to how the clock draws         | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it)                                   |
 | A new face, marker, typeface or preset  | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
 | A change to the Report's month chart    | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
-| A change to what an employer holds      | `src/app/types.ts` + `employer.ts` + `EmployerEditModal.tsx` + `migrations.ts`                                                            |
+| A change to what a project holds        | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
 | A new control on the span editor        | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
 | A new way to correct a time on Today    | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
 | A new screen                            | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place |
@@ -286,16 +286,16 @@ regression.
 Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and run under
 Vitest in the `node` environment — they cover the pure domain modules
 (`intervals`, `day`, `actions`, `report`, `monthChart`, `clock`, `format`,
-`employer`, `merge`, `migrations`, `demoData`), which is where the app's real
+`project`, `merge`, `migrations`, `demoData`), which is where the app's real
 logic is. No
 DOM, no testing-library, no mocked clock. `tests/fixtures/helpers.ts` holds the shared
-fixtures (an employer, a day, a named-id `ctx`).
+fixtures (a project, a day, a named-id `ctx`).
 
 Run one file with `npx vitest run tests/day_test.ts`.
 
 A change to the derivation without a test that pins the new behaviour to real
 times is not finished. UI changes should keep the boot smoke path working:
-`npm run build && npm run preview`, add an employer, enter the office, and
+`npm run build && npm run preview`, add a project, start working, and
 check that the timer runs and the Log shows the session.
 
 ## Changelog and feature docs
@@ -319,24 +319,24 @@ with `[Learn more](feature:<slug>)`.
 
 ## Documentation sync points
 
-| If you change…                    | Update…                                                                                                        |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| The derivation in `day.ts`        | `docs/day-model.md`, `docs/features/today.md`, and the README's Examples block if the output shape moved       |
-| `report.ts` or `monthChart.ts`    | `docs/day-model.md` (the report section) and `docs/features/report.md`                                         |
-| `actions.ts`                      | `docs/features/today.md` and `docs/features/log.md`                                                            |
-| The `Employer` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/employers.md`, and a `migrations.ts` step                  |
-| The sync engine or the merge      | `docs/sync.md`                                                                                                 |
-| A `VITE_*` variable               | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it |
-| A screen's behaviour              | The matching `docs/features/*.md` and the README's Usage table                                                 |
-| The navigation (nav or top bar)   | `docs/architecture.md`'s tree and the README's Usage tables                                                    |
-| Module layout                     | The "Where new code goes" table above and `docs/architecture.md`                                               |
-| A make target or script           | `CONTRIBUTING.md`, the README's Quick start, and this file's command list                                      |
+| If you change…                   | Update…                                                                                                        |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| The derivation in `day.ts`       | `docs/day-model.md`, `docs/features/today.md`, and the README's Examples block if the output shape moved       |
+| `report.ts` or `monthChart.ts`   | `docs/day-model.md` (the report section) and `docs/features/report.md`                                         |
+| `actions.ts`                     | `docs/features/today.md` and `docs/features/log.md`                                                            |
+| The `Project` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/projects.md`, and a `migrations.ts` step                   |
+| The sync engine or the merge     | `docs/sync.md`                                                                                                 |
+| A `VITE_*` variable              | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it |
+| A screen's behaviour             | The matching `docs/features/*.md` and the README's Usage table                                                 |
+| The navigation (nav or top bar)  | `docs/architecture.md`'s tree and the README's Usage tables                                                    |
+| Module layout                    | The "Where new code goes" table above and `docs/architecture.md`                                               |
+| A make target or script          | `CONTRIBUTING.md`, the README's Quick start, and this file's command list                                      |
 
 ## Parity and cross-cutting rules
 
 - **Every string goes through `t()`.** English is the only catalog today; the
   runtime is in place so adding a language is one `loaders` entry. The names a
-  new employer starts with (Lunch, Coffee, Toilet, Meetings, …) are translated
+  new project starts with (Lunch, Coffee, Toilet, Meetings, …) are translated
   once at creation and then live in the document as the user's own words.
 - **Two themes only** — one light, one dark, plus "follow the device". The
   framework ships a dozen palettes; this app deliberately exposes none of them.
@@ -353,7 +353,7 @@ with `[Learn more](feature:<slug>)`.
   Things you do and then leave belong on the top bar, which is where Settings
   went. A new _action_ is a top-bar button, not a tab.
 - **A category's colour is one table.** `labels.ts` maps a kind of work to a
-  hue by its position in the employer's list; the clock's inner ring, the
+  hue by its position in the project's list; the clock's inner ring, the
   category chips and the report's donut all read it. Don't colour one of them
   another way.
 - **No dependency creep.** The framework, Preact, a font, and workbox-window.

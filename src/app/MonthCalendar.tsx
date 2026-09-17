@@ -353,7 +353,7 @@ function dayCard(t: TFn, box: DayBox): Card {
   const blank = { key: null, value: null, of: null, balance: null, note: null };
   if (box.spill) return { ...blank, title, note: t("report.notThisMonth") };
   const value = formatDuration(box.worked);
-  // A day the employer expects nothing of has no target to be measured
+  // A day the project expects nothing of has no target to be measured
   // against: every minute of it is balance.
   if (box.target === 0) {
     return {

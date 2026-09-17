@@ -71,6 +71,19 @@ describe("parseSettings", () => {
     expect(s.clock.movement).toBe(DEFAULT_SETTINGS.clock.movement);
   });
 
+  it("keeps the project on screen across the employer → project rename", () => {
+    const s = parseSettings(JSON.stringify({ activeEmployerId: "acme" }));
+    expect(s.activeProjectId).toBe("acme");
+    expect(s).not.toHaveProperty("activeEmployerId");
+  });
+
+  it("prefers the current key when both are stored", () => {
+    const s = parseSettings(
+      JSON.stringify({ activeEmployerId: "old", activeProjectId: "new" }),
+    );
+    expect(s.activeProjectId).toBe("new");
+  });
+
   it("drops the settings an older build kept for its dial", () => {
     const s = parseSettings(
       JSON.stringify({ clockLook: "bold", clockFont: "roman", theme: "dark" }),

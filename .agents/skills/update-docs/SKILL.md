@@ -36,7 +36,7 @@ git diff --name-only "${BASELINE:-$(git rev-list --max-parents=0 HEAD)}"..HEAD -
 | `src/app/day.ts`, `intervals.ts`                     | `docs/day-model.md`; `docs/features/today.md`; the README's Examples block if the returned shape moved |
 | `src/app/actions.ts`                                 | `docs/day-model.md` (the edits table); `docs/features/today.md`; `docs/features/log.md`                |
 | `src/app/report.ts`                                  | `docs/day-model.md` (the report section); `docs/features/report.md`                                    |
-| `src/app/employer.ts`                                | `docs/features/employers.md`                                                                           |
+| `src/app/project.ts`                                 | `docs/features/projects.md`                                                                            |
 | `src/app/merge.ts`, `src/app/useSyncEngine.ts`       | `docs/sync.md`; `docs/features/cloud-sync.md`                                                          |
 | `src/app/types.ts`, `src/app/migrations.ts`          | `docs/architecture.md` ("The shape of the data")                                                       |
 | `src/app/useAppSettings.ts`                          | `docs/configuration.md` (runtime settings table)                                                       |

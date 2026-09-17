@@ -519,7 +519,7 @@ export function resolveDial(
 
 // ── The size ──
 // How much of the screen the dial takes. Small is the dial as it was;
-// large fills the width, to the same margins as the Enter office button.
+// large fills the width, to the same margins as the Start working button.
 
 export type ClockSize = "small" | "medium" | "large";
 

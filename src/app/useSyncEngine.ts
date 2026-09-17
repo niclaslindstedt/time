@@ -37,7 +37,7 @@ import type { DocStore } from "./useDocStore.ts";
 // so the code below is provider-agnostic past the two `create*Adapter` calls.
 //
 // Reconciliation is a per-record merge (see `merge.ts`), not a "pick a side"
-// prompt: each day and each employer carries its own `updatedAt`, so two
+// prompt: each day and each project carries its own `updatedAt`, so two
 // devices that logged different days between syncs both keep them without
 // anyone being asked to choose. The cost is that a *deleted* day comes back
 // if the other device still holds it — see `docs/sync.md`.

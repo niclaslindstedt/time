@@ -10,7 +10,10 @@
 // existing step, which would silently rewrite documents that already migrated
 // through it.
 
-import { createMigrator } from "@niclaslindstedt/oss-framework/storage";
+import {
+  createMigrator,
+  type Versioned,
+} from "@niclaslindstedt/oss-framework/storage";
 
 import { isValidSpan } from "./actions.ts";
 import {
@@ -18,7 +21,7 @@ import {
   DEFAULT_WORK_DAYS,
   clampBreakMinutes,
   clampHours,
-} from "./employer.ts";
+} from "./project.ts";
 import {
   DOC_VERSION,
   dayKey,
@@ -26,7 +29,7 @@ import {
   type ActivitySpan,
   type AppData,
   type BreakSpan,
-  type Employer,
+  type Project,
   type Span,
   type Weekday,
   type WorkDay,
@@ -78,13 +81,13 @@ function parseSpans<S extends Span>(
 /** Coerce one stored day into a `WorkDay`, or drop it when it isn't one. */
 function parseDay(key: string, value: unknown): WorkDay | null {
   if (!isRecord(value)) return null;
-  const [keyDate = "", keyEmployer = ""] = key.split(":");
+  const [keyDate = "", keyProject = ""] = key.split(":");
   const date = str(value.date, keyDate);
-  const employerId = str(value.employerId, keyEmployer);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !employerId) return null;
+  const projectId = str(value.projectId, keyProject);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !projectId) return null;
   return {
     date,
-    employerId,
+    projectId,
     sessions: parseSpans<Span>(value.sessions, (span) => span),
     breaks: parseSpans<BreakSpan>(value.breaks, (span, raw) => {
       const typeId = str(raw.typeId);
@@ -123,8 +126,8 @@ function parseNamed(value: unknown): { id: string; name: string }[] {
   return out;
 }
 
-/** Coerce one stored employer, or drop it when it has no id or name. */
-function parseEmployer(key: string, value: unknown): Employer | null {
+/** Coerce one stored project, or drop it when it has no id or name. */
+function parseProject(key: string, value: unknown): Project | null {
   if (!isRecord(value)) return null;
   const id = str(value.id, key);
   const name = str(value.name).trim();
@@ -150,6 +153,38 @@ function parseEmployer(key: string, value: unknown): Employer | null {
   };
 }
 
+/**
+ * v1 → v2: the thing you work for became a *project* rather than an
+ * employer, so `employers` is now `projects` and a day points at its
+ * `projectId`. Ids are untouched, which is what keeps `dayKey()` — and so
+ * every day already filed under `date:id` — valid across the rename.
+ */
+function renameEmployersToProjects(doc: Versioned): Versioned {
+  const { employers, days, ...rest } = doc as Versioned & {
+    employers?: unknown;
+    days?: unknown;
+  };
+  const renamedDays: Record<string, unknown> = {};
+  if (isRecord(days)) {
+    for (const [key, raw] of Object.entries(days)) {
+      if (!isRecord(raw)) continue;
+      const { employerId, ...day } = raw as Record<string, unknown> & {
+        employerId?: unknown;
+      };
+      renamedDays[key] =
+        day.projectId === undefined && employerId !== undefined
+          ? { ...day, projectId: employerId }
+          : day;
+    }
+  }
+  return {
+    ...rest,
+    version: 2,
+    projects: rest.projects ?? (isRecord(employers) ? employers : {}),
+    days: renamedDays,
+  };
+}
+
 // Step `n` migrates a document from version `n` to `n + 1`. v0 is a document
 // that predates versioning (the framework's runner reads a missing `version`
 // as 0); v1 is the first published shape. Existing steps are never edited.
@@ -157,6 +192,7 @@ const migrator = createMigrator({
   latestVersion: DOC_VERSION,
   migrations: {
     0: (doc) => ({ ...doc, version: 1 }),
+    1: renameEmployersToProjects,
   },
 });
 
@@ -166,21 +202,21 @@ export function normalizeDoc(value: unknown): AppData {
   const { data } = migrator.migrate(value);
   const migrated = data as unknown as Record<string, unknown>;
 
-  const employers: AppData["employers"] = {};
-  const employersRaw = isRecord(migrated.employers) ? migrated.employers : {};
-  for (const [key, raw] of Object.entries(employersRaw)) {
-    const employer = parseEmployer(key, raw);
-    if (employer) employers[employer.id] = employer;
+  const projects: AppData["projects"] = {};
+  const projectsRaw = isRecord(migrated.projects) ? migrated.projects : {};
+  for (const [key, raw] of Object.entries(projectsRaw)) {
+    const project = parseProject(key, raw);
+    if (project) projects[project.id] = project;
   }
 
   const days: AppData["days"] = {};
   const daysRaw = isRecord(migrated.days) ? migrated.days : {};
   for (const [key, raw] of Object.entries(daysRaw)) {
     const day = parseDay(key, raw);
-    if (day) days[dayKey(day.employerId, day.date)] = day;
+    if (day) days[dayKey(day.projectId, day.date)] = day;
   }
 
-  return { version: DOC_VERSION, employers, days };
+  return { version: DOC_VERSION, projects, days };
 }
 
 /** Parse serialized document bytes. Throws on malformed JSON so the caller
@@ -194,13 +230,13 @@ export function parseDoc(raw: string): AppData {
  *  bytes are stable — two devices holding the same days produce the same
  *  string, which keeps cloud revisions from churning on no-op saves. */
 export function serializeDoc(data: AppData): string {
-  const employers: AppData["employers"] = {};
-  for (const id of Object.keys(data.employers).sort()) {
-    employers[id] = data.employers[id]!;
+  const projects: AppData["projects"] = {};
+  for (const id of Object.keys(data.projects).sort()) {
+    projects[id] = data.projects[id]!;
   }
   const days: AppData["days"] = {};
   for (const key of Object.keys(data.days).sort()) {
     days[key] = data.days[key]!;
   }
-  return JSON.stringify({ version: DOC_VERSION, employers, days });
+  return JSON.stringify({ version: DOC_VERSION, projects, days });
 }

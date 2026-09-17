@@ -25,12 +25,12 @@ requires authentication even for public packages.
 
 ## Your first day
 
-1. The app opens on **Today** and asks for an employer. Give it a name; the
+1. The app opens on **Today** and asks for a project. Give it a name; the
    defaults are Monday to Friday, eight hours a day, with a 30-minute lunch, a
    15-minute coffee break and a 5-minute toilet break as break types, and four
    kinds of work. Change any of it, or come back to it later under
-   **Employers**.
-2. Press **Enter office**. The timer starts, and the clock begins drawing the
+   **Projects**.
+2. Press **Start working**. The timer starts, and the clock begins drawing the
    day.
 3. Tap a break — **Lunch**, say — when you go. It is written down there and
    then, ending after the half hour a lunch is assumed to take, so you do not
@@ -39,11 +39,11 @@ requires authentication even for public packages.
 4. Tap a kind of work when it changes. This only labels the time; it does not
    start or stop anything. While a break is on it says **paused**, because a
    break stops the counting.
-5. Press **Leave office** when you go home.
+5. Press **Stop working** when you are done for the day.
 
 The lunch ran long? Its end is printed on the rim of the clock — tap it, or
 the clock itself, and the day opens stretch by stretch, where moving one end
-starts the next stretch there. Tap the timer to correct when you got in. A
+starts the next stretch there. Tap the timer to correct when you started. A
 kind of break or work nobody set up in advance is **Custom**, at the end of
 either row. The **Log** tab shows the day as a list where every row can be
 corrected one span at a time.

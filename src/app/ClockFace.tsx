@@ -8,7 +8,7 @@ import { formatTimeOfDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor } from "./labels.ts";
 import { CLOCK_SIZE, type ClockSize, type DialConfig } from "./look.ts";
-import type { Employer, Seconds, WorkDay } from "./types.ts";
+import type { Project, Seconds, WorkDay } from "./types.ts";
 
 // The Today screen's clock: a wrist watch's dial with the day drawn on it.
 //
@@ -42,7 +42,7 @@ const LABEL_R = 118;
 
 type Props = {
   day: WorkDay;
-  employer: Employer;
+  project: Project;
   now: Seconds;
   dial: DialConfig;
   size: ClockSize;
@@ -50,7 +50,7 @@ type Props = {
   onOpen: (at?: Seconds) => void;
 };
 
-export function ClockFace({ day, employer, now, dial, size, onOpen }: Props) {
+export function ClockFace({ day, project, now, dial, size, onOpen }: Props) {
   const t = useT();
   const sizing = CLOCK_SIZE[size];
   const segments = useMemo(() => daySegments(day, now), [day, now]);
@@ -82,7 +82,7 @@ export function ClockFace({ day, employer, now, dial, size, onOpen }: Props) {
       out.push({
         start: a.start,
         end: a.end,
-        fill: categoryColor(employer, a.categoryId),
+        fill: categoryColor(project, a.categoryId),
       });
     }
     for (const s of segments) {
@@ -99,7 +99,7 @@ export function ClockFace({ day, employer, now, dial, size, onOpen }: Props) {
       }
     }
     return out;
-  }, [segments, activities, employer, now]);
+  }, [segments, activities, project, now]);
 
   // One chip per break end, in the order of the dial, dropping any that would
   // land on top of the one before it.
@@ -148,7 +148,7 @@ export function ClockFace({ day, employer, now, dial, size, onOpen }: Props) {
           onClick={() => onOpen(l.at)}
           style={{ left: `${l.left}%`, top: `${l.top}%` }}
           aria-label={t("today.breakEndLabel", {
-            name: l.typeId ? breakName(t, employer, l.typeId) : "",
+            name: l.typeId ? breakName(t, project, l.typeId) : "",
             time: formatTimeOfDay(l.at),
           })}
           className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-flag/50 bg-surface-2 px-1.5 py-0.5 text-[0.625rem] leading-none font-bold text-flag tabular-nums shadow-sm"

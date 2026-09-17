@@ -7,9 +7,9 @@ time is corrected.
 
 The header names the day (Today, Yesterday, or the date) with arrows to page
 through the days; tapping the name jumps back to today. Under it, four
-figures: first in, last out, worked, and break time. Then three sections:
+figures: started, stopped, worked, and break time. Then three sections:
 
-- **At work** — the sessions, with their times.
+- **Working** — the sessions, with their times.
 - **Breaks** — each break with its kind and times.
 - **Working on** — each activity with its kind and times.
 

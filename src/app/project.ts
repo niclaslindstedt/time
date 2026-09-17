@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// What an employer is by default, and the two facts the report reads off one:
+// What a project is by default, and the two facts the report reads off one:
 // whether a date is a working day, and how long a working day is meant to be.
 //
 // The default break types and categories are *names* the user can change, so
 // they are stored in the document rather than looked up from the catalog at
 // read time — which is why the template takes its labels as an argument: the
-// screen that creates an employer passes the translated words, and this
+// screen that creates a project passes the translated words, and this
 // module stays free of the i18n runtime.
 
 import {
@@ -15,7 +15,7 @@ import {
 
 import type {
   BreakType,
-  Employer,
+  Project,
   Seconds,
   Weekday,
   WorkCategory,
@@ -42,8 +42,8 @@ export const MAX_HOURS_PER_DAY = 16;
 export const MIN_BREAK_MINUTES = 1;
 export const MAX_BREAK_MINUTES = 240;
 
-/** The translated names the template stamps into a new employer. */
-export type EmployerTemplateLabels = {
+/** The translated names the template stamps into a new project. */
+export type ProjectTemplateLabels = {
   lunch: string;
   coffee: string;
   toilet: string;
@@ -53,14 +53,14 @@ export type EmployerTemplateLabels = {
   admin: string;
 };
 
-/** A new employer with the standard week and the default breaks. `id`
+/** A new project with the standard week and the default breaks. `id`
  *  is called once per thing that needs one, so a test can hand out names. */
-export function employerTemplate(
+export function projectTemplate(
   name: string,
-  labels: EmployerTemplateLabels,
+  labels: ProjectTemplateLabels,
   id: () => string,
   now: string,
-): Employer {
+): Project {
   const breakTypes: BreakType[] = [
     { id: id(), name: labels.lunch, defaultMinutes: DEFAULT_LUNCH_MINUTES },
     { id: id(), name: labels.coffee, defaultMinutes: DEFAULT_COFFEE_MINUTES },
@@ -89,30 +89,30 @@ export function weekdayOf(date: DayKey): Weekday {
 }
 
 /** Whether a full day of work is expected on a date. */
-export function isWorkDay(employer: Employer, date: DayKey): boolean {
-  return employer.workDays.includes(weekdayOf(date));
+export function isWorkDay(project: Project, date: DayKey): boolean {
+  return project.workDays.includes(weekdayOf(date));
 }
 
 /** The target length of a working day, in seconds. */
-export function targetSeconds(employer: Employer): Seconds {
-  return Math.round(employer.hoursPerDay * 3600);
+export function targetSeconds(project: Project): Seconds {
+  return Math.round(project.hoursPerDay * 3600);
 }
 
-/** A break type by id, or null when the employer no longer has it — which
+/** A break type by id, or null when the project no longer has it — which
  *  happens when a type is deleted after breaks of it were logged. The break
  *  keeps its time; only its name is gone. */
 export function breakTypeOf(
-  employer: Employer,
+  project: Project,
   typeId: string,
 ): BreakType | null {
-  return employer.breakTypes.find((b) => b.id === typeId) ?? null;
+  return project.breakTypes.find((b) => b.id === typeId) ?? null;
 }
 
 export function categoryOf(
-  employer: Employer,
+  project: Project,
   categoryId: string,
 ): WorkCategory | null {
-  return employer.categories.find((c) => c.id === categoryId) ?? null;
+  return project.categories.find((c) => c.id === categoryId) ?? null;
 }
 
 /** Clamp a working-day length into range, falling back when it isn't a

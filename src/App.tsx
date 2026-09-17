@@ -26,7 +26,7 @@ import {
   type Tab,
 } from "./app/BottomNav.tsx";
 import { demoBackendModule, useDemoData } from "./app/dev/useDemoData.ts";
-import { EmployersScreen } from "./app/EmployersScreen.tsx";
+import { ProjectsScreen } from "./app/ProjectsScreen.tsx";
 import { useT } from "./app/i18n/index.ts";
 import { LogScreen } from "./app/LogScreen.tsx";
 import { appearanceFor, resolveDial } from "./app/look.ts";
@@ -36,7 +36,7 @@ import { ReportScreen } from "./app/ReportScreen.tsx";
 import { SettingsScreen } from "./app/SettingsScreen.tsx";
 import { TodayScreen } from "./app/TodayScreen.tsx";
 import { TopBar } from "./app/TopBar.tsx";
-import { employerList } from "./app/types.ts";
+import { projectList } from "./app/types.ts";
 import { useAppSettings } from "./app/useAppSettings.ts";
 import { localDocBackend, useDocStore } from "./app/useDocStore.ts";
 import { useSyncEngine } from "./app/useSyncEngine.ts";
@@ -72,25 +72,25 @@ export function App() {
   const store = useDocStore(backend);
   const sync = useSyncEngine(store, demo.on);
 
-  // The employer on screen: the chosen one if it still exists, else the
+  // The project on screen: the chosen one if it still exists, else the
   // first by name, else none. Never persisted as a fallback — a deleted
-  // employer's id stays in settings until another is chosen, which is
+  // project's id stays in settings until another is chosen, which is
   // harmless and keeps the choice if the deletion is undone by a restore.
-  const employers = useMemo(() => employerList(store.data), [store.data]);
-  const employer =
-    (settings.activeEmployerId
-      ? store.data.employers[settings.activeEmployerId]
+  const projects = useMemo(() => projectList(store.data), [store.data]);
+  const project =
+    (settings.activeProjectId
+      ? store.data.projects[settings.activeProjectId]
       : undefined) ??
-    employers[0] ??
+    projects[0] ??
     null;
 
   const [tab, setTab] = useState<Tab>("today");
   // Where the bottom nav was left, so closing Settings comes back to it.
   const [home, setHome] = useState<NavTab>("today");
   const [enter, setEnter] = useState<ScreenEnter>("none");
-  // The Today screen's onboarding button lands on Employers with the editor
+  // The Today screen's onboarding button lands on Projects with the editor
   // already open.
-  const [openNewEmployer, setOpenNewEmployer] = useState(false);
+  const [openNewProject, setOpenNewProject] = useState(false);
 
   const show = useCallback(
     (next: Tab) => {
@@ -161,13 +161,13 @@ export function App() {
       <TopBar
         active={tab}
         onOpenSettings={toggleSettings}
-        employerSlot={
-          employers.length > 1 && employer ? (
+        projectSlot={
+          projects.length > 1 && project ? (
             <SelectPicker<string>
-              value={employer.id}
-              options={employers.map((e) => ({ value: e.id, label: e.name }))}
-              onChange={(id) => update("activeEmployerId", id)}
-              ariaLabel={t("common.employer")}
+              value={project.id}
+              options={projects.map((e) => ({ value: e.id, label: e.name }))}
+              onChange={(id) => update("activeProjectId", id)}
+              ariaLabel={t("common.project")}
               triggerClassName="max-w-[9rem] truncate"
             />
           ) : undefined
@@ -201,34 +201,34 @@ export function App() {
           {tab === "today" && (
             <TodayScreen
               store={store}
-              employer={employer}
+              project={project}
               weekStartsOn={settings.weekStartsOn}
               dial={resolveDial(settings.clockPreset, settings.clock)}
               clockSize={settings.clockSize}
-              onAddEmployer={() => {
-                setOpenNewEmployer(true);
-                show("employers");
+              onAddProject={() => {
+                setOpenNewProject(true);
+                show("projects");
               }}
               onNotice={notice}
             />
           )}
           {tab === "log" && (
-            <LogScreen store={store} employer={employer} onNotice={notice} />
+            <LogScreen store={store} project={project} onNotice={notice} />
           )}
           {tab === "report" && (
             <ReportScreen
               data={store.data}
-              employer={employer}
+              project={project}
               weekStartsOn={settings.weekStartsOn}
             />
           )}
-          {tab === "employers" && (
-            <EmployersScreen
+          {tab === "projects" && (
+            <ProjectsScreen
               store={store}
-              activeId={employer?.id ?? null}
-              onActivate={(id) => update("activeEmployerId", id)}
-              openNew={openNewEmployer}
-              onOpenedNew={() => setOpenNewEmployer(false)}
+              activeId={project?.id ?? null}
+              onActivate={(id) => update("activeProjectId", id)}
+              openNew={openNewProject}
+              onOpenedNew={() => setOpenNewProject(false)}
               onNotice={notice}
             />
           )}

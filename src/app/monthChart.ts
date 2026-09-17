@@ -33,9 +33,9 @@ import {
   type WeekStart,
 } from "@niclaslindstedt/oss-framework/calendar";
 
-import { isWorkDay, targetSeconds } from "./employer.ts";
+import { isWorkDay, targetSeconds } from "./project.ts";
 import type { RangeSummary } from "./report.ts";
-import type { Employer, Seconds } from "./types.ts";
+import type { Project, Seconds } from "./types.ts";
 
 /** One day, as a box in its week's row. Every measure is seconds. */
 export type DayBox = {
@@ -48,7 +48,7 @@ export type DayBox = {
   /** Seconds worked. Zero on a spill day, which is not this month's to
    *  count. */
   worked: Seconds;
-  /** What the day was meant to take; zero on a day the employer expects
+  /** What the day was meant to take; zero on a day the project expects
    *  nothing of. */
   target: Seconds;
   /** `worked / target`, or null when there is no target to fall short of —
@@ -90,7 +90,7 @@ export type MonthChart = {
   /** The month's target, through the days that have come — the one dotted
    *  line down the side. */
   target: Seconds;
-  /** A full week of work, the employer's working days at its day length — the
+  /** A full week of work, the project's working days at its day length — the
    *  one dotted line across. */
   weekTarget: Seconds;
   /** A working day's length: the step the hour labels walk in. */
@@ -101,11 +101,11 @@ export type MonthChart = {
  *  a whole calendar month; days outside it are the spill. */
 export function monthChart(
   summary: RangeSummary,
-  employer: Employer,
+  project: Project,
   weekStartsOn: WeekStart,
   today: DayKey,
 ): MonthChart {
-  const dayTarget = targetSeconds(employer);
+  const dayTarget = targetSeconds(project);
   const inMonth = new Map(summary.days.map((d) => [d.date, d]));
   const weeks: WeekRow[] = [];
   let y = 0;
@@ -130,7 +130,7 @@ export function monthChart(
       // width it was meant to take, a weekend takes none.
       const dayTargetHere = day
         ? day.target
-        : isWorkDay(employer, date)
+        : isWorkDay(project, date)
           ? dayTarget
           : 0;
       const worked = day?.worked ?? 0;
@@ -171,7 +171,7 @@ export function monthChart(
     if (addDays(start, 7) === start) break; // a malformed key would loop
   }
 
-  const weekTarget = dayTarget * employer.workDays.length;
+  const weekTarget = dayTarget * project.workDays.length;
   return {
     weeks,
     width: Math.max(widest, weekTarget),
@@ -234,7 +234,7 @@ export const OVER_RATIO = 1.2;
  *  mixes the theme's own three tokens rather than naming colours of its own,
  *  so it follows the light and the dark theme the way everything else does.
  *
- *  A day the employer expects nothing of is green whatever was worked: there
+ *  A day the project expects nothing of is green whatever was worked: there
  *  was no target to fall short of, and every second of it is balance. */
 export function boxColor(ratio: number | null): string {
   if (ratio === null || ratio >= OVER_RATIO) {

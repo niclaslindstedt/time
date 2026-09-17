@@ -38,7 +38,7 @@ import {
 
 // One scrolling page rather than the tabbed dialog the sibling apps use: this
 // app has a handful of groups of settings, and paging between tabs to find one
-// toggle costs more than scrolling past it. The employers — the settings that
+// toggle costs more than scrolling past it. The projects — the settings that
 // are really *data* — have a screen of their own on the bottom bar.
 //
 // The screen owns no state of its own beyond the confirm dialog — every knob

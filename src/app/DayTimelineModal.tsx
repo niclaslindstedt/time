@@ -10,7 +10,7 @@ import {
 } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor, categoryName } from "./labels.ts";
-import type { Employer, Seconds, WorkDay } from "./types.ts";
+import type { Project, Seconds, WorkDay } from "./types.ts";
 
 // What the clock face opens: the day as the stretches it is made of, in
 // order, with the moment each one ended up for correction.
@@ -30,7 +30,7 @@ const STEP: Seconds = 5 * 60;
 
 type Props = {
   day: WorkDay;
-  employer: Employer;
+  project: Project;
   now: Seconds;
   /** The edge the clock face was tapped on, drawn as the one in question. */
   highlight?: Seconds | null;
@@ -41,7 +41,7 @@ type Props = {
 
 export function DayTimelineModal({
   day,
-  employer,
+  project,
   now,
   highlight,
   onMove,
@@ -85,7 +85,7 @@ export function DayTimelineModal({
               <Row
                 key={`${s.kind}:${s.start}`}
                 segment={s}
-                employer={employer}
+                project={project}
                 label={label(s)}
                 highlighted={highlight != null && s.end === highlight}
                 onMove={move}
@@ -99,21 +99,21 @@ export function DayTimelineModal({
 
   function label(s: DaySegment): string {
     if (s.kind === "break") {
-      return s.typeId ? breakName(t, employer, s.typeId) : t("log.breaks");
+      return s.typeId ? breakName(t, project, s.typeId) : t("log.breaks");
     }
-    return s.typeId ? categoryName(t, employer, s.typeId) : t("timeline.work");
+    return s.typeId ? categoryName(t, project, s.typeId) : t("timeline.work");
   }
 }
 
 function Row({
   segment,
-  employer,
+  project,
   label,
   highlighted,
   onMove,
 }: {
   segment: DaySegment;
-  employer: Employer;
+  project: Project;
   label: string;
   highlighted: boolean;
   onMove: (at: Seconds, to: Seconds) => void;
@@ -123,7 +123,7 @@ function Row({
     segment.kind === "break"
       ? "var(--color-flag)"
       : segment.typeId
-        ? categoryColor(employer, segment.typeId)
+        ? categoryColor(project, segment.typeId)
         : "var(--color-accent)";
 
   return (

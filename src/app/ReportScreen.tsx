@@ -30,7 +30,7 @@ import { breakName, categoryColor, categoryName } from "./labels.ts";
 import { MonthCalendar } from "./MonthCalendar.tsx";
 import { monthChart } from "./monthChart.ts";
 import { monthOf, runningBalance, summarizeRange, weekOf } from "./report.ts";
-import type { AppData, Employer } from "./types.ts";
+import type { AppData, Project } from "./types.ts";
 import { useNow } from "./useNow.ts";
 
 // What the days add up to: worked against target per day, where the hours
@@ -42,11 +42,11 @@ type Range = "week" | "month";
 
 type Props = {
   data: AppData;
-  employer: Employer | null;
+  project: Project | null;
   weekStartsOn: WeekStart;
 };
 
-export function ReportScreen({ data, employer, weekStartsOn }: Props) {
+export function ReportScreen({ data, project, weekStartsOn }: Props) {
   const t = useT();
   const now = useNow(60_000);
   const [range, setRange] = useState<Range>("week");
@@ -61,39 +61,38 @@ export function ReportScreen({ data, employer, weekStartsOn }: Props) {
 
   const summary = useMemo(
     () =>
-      employer
+      project
         ? summarizeRange(
             data,
-            employer,
+            project,
             span.from,
             span.to,
             now.today,
             now.seconds,
           )
         : null,
-    [data, employer, span, now.today, now.seconds],
+    [data, project, span, now.today, now.seconds],
   );
   const overall = useMemo(
-    () =>
-      employer ? runningBalance(data, employer, now.today, now.seconds) : 0,
-    [data, employer, now.today, now.seconds],
+    () => (project ? runningBalance(data, project, now.today, now.seconds) : 0),
+    [data, project, now.today, now.seconds],
   );
   // A month is twenty-odd working days, and a column per day leaves the axis
   // a smear of numbers: the month is laid out as a calendar of boxes instead,
   // a row per week. A week is seven columns and reads fine as bars.
   const calendar = useMemo(
     () =>
-      employer && summary && range === "month"
-        ? monthChart(summary, employer, weekStartsOn, now.today)
+      project && summary && range === "month"
+        ? monthChart(summary, project, weekStartsOn, now.today)
         : null,
-    [employer, summary, range, weekStartsOn, now.today],
+    [project, summary, range, weekStartsOn, now.today],
   );
 
-  if (!employer || !summary) {
+  if (!project || !summary) {
     return (
       <div className="px-3 py-3">
         <div className="rounded-2xl border border-line bg-surface-3 p-6 text-center">
-          <p className="text-sm text-muted">{t("report.noEmployer")}</p>
+          <p className="text-sm text-muted">{t("report.noProject")}</p>
         </div>
       </div>
     );
@@ -115,13 +114,13 @@ export function ReportScreen({ data, employer, weekStartsOn }: Props) {
       ? weekOf(now.today, weekStartsOn).from === span.from
       : monthOf(now.today).from === span.from;
 
-  const categoryEntries = employer.categories
+  const categoryEntries = project.categories
     .map((c) => ({ id: c.id, value: summary.categories[c.id] ?? 0 }))
     .filter((c) => c.value > 0);
-  // Categories the employer has since deleted still hold time; they are
+  // Categories the project has since deleted still hold time; they are
   // shown under their placeholder name rather than dropped.
   for (const [id, value] of Object.entries(summary.categories)) {
-    if (!employer.categories.some((c) => c.id === id) && value > 0) {
+    if (!project.categories.some((c) => c.id === id) && value > 0) {
       categoryEntries.push({ id, value });
     }
   }
@@ -244,8 +243,8 @@ export function ReportScreen({ data, employer, weekStartsOn }: Props) {
               segments={[
                 ...categoryEntries.map((c) => ({
                   value: c.value,
-                  label: categoryName(t, employer, c.id),
-                  color: categoryColor(employer, c.id),
+                  label: categoryName(t, project, c.id),
+                  color: categoryColor(project, c.id),
                 })),
                 ...(summary.uncategorised > 0
                   ? [
@@ -273,10 +272,10 @@ export function ReportScreen({ data, employer, weekStartsOn }: Props) {
                   <span
                     aria-hidden="true"
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ background: categoryColor(employer, c.id) }}
+                    style={{ background: categoryColor(project, c.id) }}
                   />
                   <span className="min-w-0 flex-1 truncate text-fg">
-                    {categoryName(t, employer, c.id)}
+                    {categoryName(t, project, c.id)}
                   </span>
                   <span className="text-muted tabular-nums">
                     {formatDuration(c.value)}
@@ -314,7 +313,7 @@ export function ReportScreen({ data, employer, weekStartsOn }: Props) {
                 color: "var(--color-flag)",
               },
             ]}
-            labels={breakEntries.map(([id]) => breakName(t, employer, id))}
+            labels={breakEntries.map(([id]) => breakName(t, project, id))}
             horizontal
             formatValue={(v) => formatHours(v * 3600)}
             ariaLabel={t("report.breaks")}

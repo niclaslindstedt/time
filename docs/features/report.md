@@ -1,6 +1,6 @@
 # Report
 
-What the days add up to, for the employer in use.
+What the days add up to, for the project in use.
 
 ## The range
 
@@ -10,7 +10,7 @@ jump to the current one. The week follows the **Week starts on** setting.
 ## The tiles
 
 - **Worked** — hours worked in the range.
-- **Target** — the hours expected: the employer's day length for every working
+- **Target** — the hours expected: the project's day length for every working
   day in the range that has come. A day still ahead counts nothing yet.
 - **Balance** — worked minus target for the range.
 - **Overall balance** — the same, from the first day ever logged to today.
@@ -43,12 +43,12 @@ clear of the week above — and both axes are hours:
 
 A box's **colour** is how the day went against its target: red at nothing
 worked, green on the target, blue a fifth past it, and the mixes between. A day
-the employer expects nothing of — a Saturday — is green whatever was worked,
+the project expects nothing of — a Saturday — is green whatever was worked,
 because there was no target to fall short of, and a day that has not come yet is
 not coloured at all.
 
 Two dotted lines, and only two: **across** at a full week of work (the
-employer's working days at its day length), so a row that reaches it did the
+project's working days at its day length), so a row that reaches it did the
 week; **down** at the month's target, so the gap between it and the last row's
 foot is what the month is behind.
 

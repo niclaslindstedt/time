@@ -88,7 +88,7 @@ export function buildManifest(base: string): string {
     name,
     short_name,
     description:
-      "A privacy-first time report PWA: clock in and out, log breaks and work categories as they happen or afterwards, and read your working hours back as charts. Local-only or cloud-synced (Dropbox, Google Drive).",
+      "A privacy-first time report PWA: start and stop working, log breaks and work categories as they happen or afterwards, and read your hours back per project as charts. Local-only or cloud-synced (Dropbox, Google Drive).",
     id: base,
     start_url: base,
     scope: base,

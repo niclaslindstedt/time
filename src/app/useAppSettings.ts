@@ -20,8 +20,8 @@ import {
 } from "./look.ts";
 
 // The app's own (non-document) settings: which of the two themes is active,
-// which day the week starts on, which employer the screens are showing, and
-// the developer knobs. Per device on purpose — the employer you have on
+// which day the week starts on, which project the screens are showing, and
+// the developer knobs. Per device on purpose — the project you have on
 // screen is not a fact about your working hours, so it does not sync — and
 // persisted to localStorage so a reload keeps your choices.
 
@@ -43,9 +43,9 @@ export type AppSettings = {
   /** How much of the screen the dial takes. Per device rather than part of
    *  a preset: a size suits a screen, not a dial. */
   clockSize: ClockSize;
-  /** The employer the Today, Log and Report screens show. Null until one is
-   *  chosen; `App` falls back to the first employer by name. */
-  activeEmployerId: string | null;
+  /** The project the Today, Log and Report screens show. Null until one is
+   *  chosen; `App` falls back to the first project by name. */
+  activeProjectId: string | null;
   /** Surface the developer affordances in Settings. */
   devMode: boolean;
   /** Mirror console output into the in-app log buffer. */
@@ -58,7 +58,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   clockPreset: DEFAULT_DIAL_PRESET,
   clock: DIAL_PRESET[DEFAULT_DIAL_PRESET],
   clockSize: "large",
-  activeEmployerId: null,
+  activeProjectId: null,
   devMode: false,
   captureLogs: false,
 };
@@ -106,6 +106,17 @@ export function parseSettings(raw: string): AppSettings {
   }
   const merged = { ...DEFAULT_SETTINGS, ...(parsed as object) } as AppSettings;
   const week = Math.round(Number(merged.weekStartsOn));
+  // Settings written before the rename called this key `activeEmployerId`.
+  // Read it once so an existing device keeps the project it had on screen
+  // rather than falling back to the first one by name.
+  const legacyActiveId = (parsed as { activeEmployerId?: unknown })
+    .activeEmployerId;
+  const activeProjectId =
+    typeof merged.activeProjectId === "string"
+      ? merged.activeProjectId
+      : typeof legacyActiveId === "string"
+        ? legacyActiveId
+        : null;
   return {
     theme:
       merged.theme === "light" || merged.theme === "dark"
@@ -118,10 +129,7 @@ export function parseSettings(raw: string): AppSettings {
         : oneOf(DIAL_PRESET, merged.clockPreset, DEFAULT_DIAL_PRESET),
     clock: parseDial(merged.clock),
     clockSize: oneOf(CLOCK_SIZE, merged.clockSize, DEFAULT_SETTINGS.clockSize),
-    activeEmployerId:
-      typeof merged.activeEmployerId === "string"
-        ? merged.activeEmployerId
-        : null,
+    activeProjectId,
     devMode: merged.devMode === true,
     captureLogs: merged.captureLogs === true,
   };

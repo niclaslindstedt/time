@@ -34,7 +34,7 @@ import { SpanEditModal, type SpanDraft } from "./SpanEditModal.tsx";
 import {
   blankDay,
   dayFor,
-  type Employer,
+  type Project,
   type Span,
   type WorkDay,
 } from "./types.ts";
@@ -47,26 +47,26 @@ import { useNow } from "./useNow.ts";
 
 type Props = {
   store: DocStore;
-  employer: Employer | null;
+  project: Project | null;
   onNotice: (message: string) => void;
 };
 
 type Editing = { kind: SpanKind; draft: SpanDraft | null };
 
-export function LogScreen({ store, employer, onNotice }: Props) {
+export function LogScreen({ store, project, onNotice }: Props) {
   const t = useT();
   const now = useNow(60_000);
   const [date, setDate] = useState<DayKey>(now.today);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const stored = employer ? dayFor(store.data, employer.id, date) : null;
+  const stored = project ? dayFor(store.data, project.id, date) : null;
   const day = useMemo<WorkDay | null>(
     () =>
-      employer
-        ? (stored ?? blankDay(employer.id, date, new Date().toISOString()))
+      project
+        ? (stored ?? blankDay(project.id, date, new Date().toISOString()))
         : null,
-    [employer, stored, date],
+    [project, stored, date],
   );
   const upTo = date === now.today ? now.seconds : END_OF_DAY;
   const totals = useMemo(
@@ -74,11 +74,11 @@ export function LogScreen({ store, employer, onNotice }: Props) {
     [day, upTo],
   );
 
-  if (!employer || !day || !totals) {
+  if (!project || !day || !totals) {
     return (
       <div className="px-3 py-3">
         <div className="rounded-2xl border border-line bg-surface-3 p-6 text-center">
-          <p className="text-sm text-muted">{t("log.noEmployer")}</p>
+          <p className="text-sm text-muted">{t("log.noProject")}</p>
         </div>
       </div>
     );
@@ -255,14 +255,14 @@ export function LogScreen({ store, employer, onNotice }: Props) {
               spanRow(
                 "break",
                 b,
-                breakName(t, employer, b.typeId),
+                breakName(t, project, b.typeId),
                 "var(--color-flag)",
                 b.typeId,
               ),
             )}
         </ul>
         <Button
-          disabled={employer.breakTypes.length === 0}
+          disabled={project.breakTypes.length === 0}
           onClick={() => setEditing({ kind: "break", draft: null })}
         >
           {t("log.addBreak")}
@@ -280,14 +280,14 @@ export function LogScreen({ store, employer, onNotice }: Props) {
               spanRow(
                 "activity",
                 a,
-                categoryName(t, employer, a.categoryId),
-                categoryColor(employer, a.categoryId),
+                categoryName(t, project, a.categoryId),
+                categoryColor(project, a.categoryId),
                 a.categoryId,
               ),
             )}
         </ul>
         <Button
-          disabled={employer.categories.length === 0}
+          disabled={project.categories.length === 0}
           onClick={() => setEditing({ kind: "activity", draft: null })}
         >
           {t("log.addActivity")}
@@ -303,7 +303,7 @@ export function LogScreen({ store, employer, onNotice }: Props) {
       {editing && (
         <SpanEditModal
           kind={editing.kind}
-          employer={employer}
+          project={project}
           initial={editing.draft}
           now={upTo === END_OF_DAY ? 17 * 3600 : now.seconds}
           onSave={save}
@@ -320,7 +320,7 @@ export function LogScreen({ store, employer, onNotice }: Props) {
         tone="danger"
         labels={{ cancel: t("common.cancel"), close: t("common.close") }}
         onConfirm={() => {
-          store.deleteDay(employer.id, date);
+          store.deleteDay(project.id, date);
           setConfirmDelete(false);
           onNotice(t("log.deleted"));
         }}
