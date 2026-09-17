@@ -75,7 +75,22 @@ were looking at, so changing one thing about a preset is two taps.
 
 Small, medium or large, separately from the dial, because a size suits a
 screen rather than a watch. Small is the dial as it used to be; large fills
-the width, to the same margins as the **Start working** button, and is the
-default. The face is square, so this is its height as much as its width — a
-large dial pushes the break buttons down, a small one keeps the whole screen
-in one view.
+the width on a phone and the height of the window on a desk, and is the
+default. The face is square, so on a phone this is its height as much as its
+width — a large dial pushes the break buttons down, a small one keeps the
+whole screen in one view.
+
+### Backlight
+
+The light behind the case, the way a television lights the wall behind it.
+It is how the app says you are working without a word: it comes up when you
+press the face to start, beats while the day is being counted, holds low and
+steady in the break colour on a break, and goes out when you stop. Like the
+face, it is the watch's own light rather than the theme's, which is why it
+may have a colour of its own.
+
+- **Colour.** The theme's accent — the colour the ring already uses — or
+  white, amber, green, teal, blue, violet or rose.
+- **Beat.** How often it breathes, from steady to twice a second. With
+  reduced motion on it never beats.
+- **Brightness.** From off to full. Off is a way to turn the whole thing off.

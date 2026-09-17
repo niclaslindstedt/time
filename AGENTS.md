@@ -176,20 +176,32 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   thing you do and leave rather than a place you are. Today is where the day
   is _filed_; Log is where it is _corrected_, because a list is where a wrong
   time is visible.
-- `src/app/ProgressFrame.tsx` — the timer card's border, stroked as the
-  day's progress round the card: clockwise from the top edge's middle,
-  closing at the target and going round again in the flag colour past it.
-  The one number the Today screen draws rather than prints.
 - `src/app/Dial.tsx` — the watch face, drawn: bezel, face, minute track,
-  markers, hands, and the day as coloured bands it is handed. Paint only, no
-  vocabulary, so the same drawing serves Today and the preset cards in
-  Settings. The hands move by CSS transition (`styles.css`), keyed on the
-  movement.
-- `src/app/ClockFace.tsx` — the day on the dial. One ring: presence as the
-  accent band and its thin outer line, a kind of work in its hue on the band
-  with the line left the accent, a break the flag colour on both. Reads
-  `day.ts` only. It is also a control: the break ends printed on the rim, and
-  the dial itself, open the day's stretches.
+  markers, hands, and the day as coloured bands it is handed. The bezel is
+  also the day's progress: clockwise from twelve, closing at the target and
+  going round again in the flag colour past it — the one number the Today
+  screen draws rather than prints. Paint only, no vocabulary, so the same
+  drawing serves Today and the preset cards in Settings. The hands move by
+  CSS transition (`styles.css`), keyed on the movement.
+- `src/app/ClockFace.tsx` — the day on the dial, and the switch. One ring:
+  presence as the accent band and its thin outer line, a kind of work in its
+  hue on the band with the line left the accent, a break the flag colour on
+  both. Reads `day.ts` only. The face is the button that starts and stops
+  the day; a stretch on the ring, and the break ends printed on the rim,
+  open the day's stretches instead. Behind the case is the backlight — the
+  glow that says the day is being counted, in the colour, beat and strength
+  the settings chose. Under a mouse the ring reads on hover and the right
+  button opens the day's menu.
+- `src/app/shortcuts.ts` — key → command, pure and tested: `S` for the face,
+  the digits for the kinds of work, `,` and `P` for the two panels.
+  `useShortcuts.ts` binds it to the window and stands down while a field or
+  a dialog has the keyboard.
+- `src/app/useDesk.ts` — whether the window is a desk (64rem and wider) or a
+  phone. The one number, shared with every `lg:` and `@media (min-width:
+64rem)` in the app.
+- `src/app/SidePanel.tsx` — Settings on the desk: a panel over the
+  right-hand edge of the content area, so the dial changes live as a face is
+  picked. A dialog to assistive tech and to the shortcuts.
 - `src/app/DialPicker.tsx` — Settings' dial picker: the eight preset cards,
   each a `Dial` of its own, and the six pickers under Custom.
 - `src/app/MonthCalendar.tsx` — the Report's month chart: the rows and boxes
@@ -213,7 +225,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   The span editor is the one form behind every row in the Log; the project
   editor edits a draft and saves whole.
 - `src/app/TopBar.tsx`, `BottomNav.tsx` — the shell's two bars. The top bar
-  grows a project switcher only once there are two projects.
+  grows a project switcher only once there are two projects, and on the desk
+  carries the four destinations as tabs; the bottom bar is the phone's.
 - `src/app/labels.ts` — domain value → label and colour, in one place, so a
   kind of work is one hue on the clock and in the charts.
 - `src/app/i18n/en.ts` — every user-facing string.
@@ -228,7 +241,7 @@ framework's internals — only its published subpaths.
 ### Derive, don't store
 
 Nothing about a total is persisted — not the hours worked, not the balance,
-not the percentage on the Today screen. The document holds projects and the
+not the percentage on the Today screen's bezel. The document holds projects and the
 spans of each day and only those; everything else is recomputed on render
 from `day.ts` and `report.ts`. This is why correcting a break from last
 Tuesday immediately fixes every downstream number, and why there is no cache
@@ -267,7 +280,9 @@ regression.
 | A new thing to log about a day          | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds     |
 | A new derived number                    | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                         |
 | A change to what a button on Today does | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                               |
-| A change to how the clock draws         | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it)                                   |
+| A change to how the clock draws         | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)      |
+| A new keyboard shortcut                 | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command               |
+| Something only the desk does            | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                     |
 | A new face, marker, typeface or preset  | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
 | A change to the Report's month chart    | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
 | A change to what a project holds        | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
@@ -286,7 +301,7 @@ regression.
 Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and run under
 Vitest in the `node` environment — they cover the pure domain modules
 (`intervals`, `day`, `actions`, `report`, `monthChart`, `clock`, `format`,
-`project`, `merge`, `migrations`, `demoData`), which is where the app's real
+`project`, `merge`, `migrations`, `demoData`, `shortcuts`), which is where the app's real
 logic is. No
 DOM, no testing-library, no mocked clock. `tests/fixtures/helpers.ts` holds the shared
 fixtures (a project, a day, a named-id `ctx`).
@@ -296,7 +311,7 @@ Run one file with `npx vitest run tests/day_test.ts`.
 A change to the derivation without a test that pins the new behaviour to real
 times is not finished. UI changes should keep the boot smoke path working:
 `npm run build && npm run preview`, add a project, start working, and
-check that the timer runs and the Log shows the session.
+check that the light comes up and the Log shows the session.
 
 ## Changelog and feature docs
 
@@ -348,10 +363,19 @@ with `[Learn more](feature:<slug>)`.
   flag and category hues. Everything else about the dial — markers, typeface,
   size, placement, movement — is shape, not colour. A dial option that tinted
   a button or a card would be the palette gallery this rule exists to refuse.
-- **The bottom nav is the navigation.** Four tabs, no sidebar, no drawer, and
-  they are _destinations_ — a fixed left-to-right order a swipe moves along.
-  Things you do and then leave belong on the top bar, which is where Settings
-  went. A new _action_ is a top-bar button, not a tab.
+- **Four destinations, no sidebar, no drawer.** On the phone they are the
+  bottom bar, in a fixed left-to-right order a swipe moves along; on the desk
+  the same four, in the same order, are tabs on the top bar, and the bottom
+  bar is not drawn. Things you do and then leave belong on the top bar, which
+  is where Settings went — a screen on the phone, a side panel on the desk.
+  A new _action_ is a top-bar button, not a tab.
+- **The face is the switch.** Starting and stopping the day is a press on
+  the dial, and nothing else on Today starts or stops it. A stretch of the
+  ring opens the stretches; the line under the dial opens the arrival. Do
+  not add a start button back.
+- **No timer.** The day's progress is the bezel and the state is the light
+  and the one line under the dial. A figure ticking up is the thing this
+  screen was rid of.
 - **A category's colour is one table.** `labels.ts` maps a kind of work to a
   hue by its position in the project's list; the clock's inner ring, the
   category chips and the report's donut all read it. Don't colour one of them

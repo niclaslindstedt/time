@@ -34,11 +34,14 @@ import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { ReportScreen } from "./app/ReportScreen.tsx";
 import { SettingsScreen } from "./app/SettingsScreen.tsx";
+import { SidePanel } from "./app/SidePanel.tsx";
 import { TodayScreen } from "./app/TodayScreen.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import { projectList } from "./app/types.ts";
 import { useAppSettings } from "./app/useAppSettings.ts";
+import { useDesk } from "./app/useDesk.ts";
 import { localDocBackend, useDocStore } from "./app/useDocStore.ts";
+import { useShortcuts } from "./app/useShortcuts.ts";
 import { useSyncEngine } from "./app/useSyncEngine.ts";
 import { status } from "./output.ts";
 
@@ -50,6 +53,12 @@ import { status } from "./output.ts";
 // Everything hangs off one document in localStorage. There is no server:
 // cloud sync, when connected, is a copy of that same document in the user's
 // own Dropbox or Drive.
+//
+// Two shells over the same screens. On a phone the four destinations sit on
+// the bottom bar; on a desk (`useDesk`) they sit on the top bar, Settings
+// slides in over the right-hand edge (`SidePanel.tsx`) so the dial is still
+// in view while a watch face is picked, and the keyboard reaches the lot
+// (`shortcuts.ts`). The screens themselves know nothing of either shell.
 
 // Module-scoped so the identity stays stable across renders (the framework's
 // `useToasts` keys its subscription on the store object).
@@ -84,10 +93,16 @@ export function App() {
     projects[0] ??
     null;
 
+  const desk = useDesk();
   const [tab, setTab] = useState<Tab>("today");
   // Where the bottom nav was left, so closing Settings comes back to it.
   const [home, setHome] = useState<NavTab>("today");
   const [enter, setEnter] = useState<ScreenEnter>("none");
+  // The desk's Settings panel. Kept apart from `tab` on purpose: on the
+  // desk Settings is over the screen rather than in place of it, and a
+  // window that narrows to the phone shell with the panel open simply drops
+  // it and shows whatever tab was left.
+  const [settingsOpen, setSettingsOpen] = useState(false);
   // The Today screen's onboarding button lands on Projects with the editor
   // already open.
   const [openNewProject, setOpenNewProject] = useState(false);
@@ -101,10 +116,38 @@ export function App() {
     [tab],
   );
   const toggleSettings = useCallback(() => {
+    if (desk) {
+      setSettingsOpen((open) => !open);
+      return;
+    }
     const target: Tab = tab === "settings" ? home : "settings";
     setEnter(screenEnter(tab, target));
     setTab(target);
-  }, [tab, home]);
+  }, [desk, tab, home]);
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  // A window widened into the desk while on the Settings tab: the desk has
+  // no such tab, so the screen goes back to where the bar was and Settings
+  // carries on as the panel.
+  useEffect(() => {
+    if (!desk || tab !== "settings") return;
+    setTab(home);
+    setSettingsOpen(true);
+  }, [desk, tab, home]);
+
+  // The desk's keys for the shell; the day's own keys are the Today
+  // screen's (see `shortcuts.ts`).
+  useShortcuts(
+    useCallback(
+      (command) => {
+        if (!desk) return false;
+        if (command.kind === "settings") toggleSettings();
+        else if (command.kind === "projects") show("projects");
+        else return false;
+        return true;
+      },
+      [desk, toggleSettings, show],
+    ),
+  );
 
   // A swipe moves one tab along the bar and stops at its ends; from Settings
   // it goes back to the tab it was opened from.
@@ -121,7 +164,8 @@ export function App() {
     },
     [tab, home, show],
   );
-  useSwipeNav(main, swipe);
+  // A mouse drag across the desk is a selection, not a page turn.
+  useSwipeNav(main, swipe, { enabled: !desk });
 
   const [syncDetailsOpen, setSyncDetailsOpen] = useState(false);
   const [reloading, setReloading] = useState(false);
@@ -156,11 +200,59 @@ export function App() {
     if (pwa.needRefresh) status(`Update ready: ${pwa.incomingVersion ?? "?"}`);
   }, [pwa.needRefresh, pwa.incomingVersion]);
 
+  const todayScreen = (
+    <TodayScreen
+      store={store}
+      project={project}
+      weekStartsOn={settings.weekStartsOn}
+      dial={resolveDial(settings.clockPreset, settings.clock)}
+      clockSize={settings.clockSize}
+      backlight={settings.backlight}
+      onAddProject={() => {
+        setOpenNewProject(true);
+        show("projects");
+      }}
+      onNotice={notice}
+    />
+  );
+  const logScreen = (
+    <LogScreen store={store} project={project} onNotice={notice} />
+  );
+  const reportScreen = (
+    <ReportScreen
+      data={store.data}
+      project={project}
+      weekStartsOn={settings.weekStartsOn}
+    />
+  );
+  const projectsScreen = (
+    <ProjectsScreen
+      store={store}
+      activeId={project?.id ?? null}
+      onActivate={(id) => update("activeProjectId", id)}
+      openNew={openNewProject}
+      onOpenedNew={() => setOpenNewProject(false)}
+      onNotice={notice}
+    />
+  );
+  const settingsScreen = (
+    <SettingsScreen
+      settings={settings}
+      update={update}
+      store={store}
+      sync={sync}
+      demoData={demo}
+      onNotice={notice}
+    />
+  );
+
   return (
     <div className="flex h-full flex-col bg-page text-fg">
       <TopBar
         active={tab}
         onOpenSettings={toggleSettings}
+        onSelect={desk ? show : undefined}
+        settingsOpen={desk && settingsOpen}
         projectSlot={
           projects.length > 1 && project ? (
             <SelectPicker<string>
@@ -168,7 +260,7 @@ export function App() {
               options={projects.map((e) => ({ value: e.id, label: e.name }))}
               onChange={(id) => update("activeProjectId", id)}
               ariaLabel={t("common.project")}
-              triggerClassName="max-w-[9rem] truncate"
+              triggerClassName="max-w-[9rem] truncate lg:max-w-[16rem]"
             />
           ) : undefined
         }
@@ -196,53 +288,22 @@ export function App() {
         <div
           key={tab}
           data-enter={enter}
-          className="app-screen mx-auto flex min-h-full max-w-2xl flex-col"
+          className={`app-screen mx-auto flex min-h-full max-w-2xl flex-col ${
+            desk ? "lg:max-w-3xl" : ""
+          } ${desk && tab === "today" ? "lg:h-full lg:max-w-none" : ""}`}
         >
-          {tab === "today" && (
-            <TodayScreen
-              store={store}
-              project={project}
-              weekStartsOn={settings.weekStartsOn}
-              dial={resolveDial(settings.clockPreset, settings.clock)}
-              clockSize={settings.clockSize}
-              onAddProject={() => {
-                setOpenNewProject(true);
-                show("projects");
-              }}
-              onNotice={notice}
-            />
-          )}
-          {tab === "log" && (
-            <LogScreen store={store} project={project} onNotice={notice} />
-          )}
-          {tab === "report" && (
-            <ReportScreen
-              data={store.data}
-              project={project}
-              weekStartsOn={settings.weekStartsOn}
-            />
-          )}
-          {tab === "projects" && (
-            <ProjectsScreen
-              store={store}
-              activeId={project?.id ?? null}
-              onActivate={(id) => update("activeProjectId", id)}
-              openNew={openNewProject}
-              onOpenedNew={() => setOpenNewProject(false)}
-              onNotice={notice}
-            />
-          )}
-          {tab === "settings" && (
-            <SettingsScreen
-              settings={settings}
-              update={update}
-              store={store}
-              sync={sync}
-              demoData={demo}
-              onNotice={notice}
-            />
-          )}
+          {tab === "today" && todayScreen}
+          {tab === "log" && logScreen}
+          {tab === "report" && reportScreen}
+          {tab === "projects" && projectsScreen}
+          {tab === "settings" && settingsScreen}
         </div>
+
+        {desk && settingsOpen && (
+          <SidePanel title={t("nav.settings")} onClose={closeSettings}>
+            {settingsScreen}
+          </SidePanel>
+        )}
       </main>
 
       {/* The update prompt, anchored above the bar rather than over it — the
@@ -275,7 +336,7 @@ export function App() {
         )}
       </div>
 
-      <BottomNav active={tab} onSelect={show} />
+      {!desk && <BottomNav active={tab} onSelect={show} />}
 
       <SyncDetailsModal
         open={syncDetailsOpen}

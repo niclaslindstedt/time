@@ -34,8 +34,8 @@ logged.
 **Today's target shows a day off.** The project's working days do not include
 today's weekday. Edit the project under **Projects**.
 
-**The percentage is over 100%.** That is overtime; the timer does not stop at
-the target.
+**The bezel has gone round twice.** That is overtime; the second lap, in the
+flag colour, is the time past the target.
 
 ## Cloud sync
 

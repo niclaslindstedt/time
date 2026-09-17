@@ -6,6 +6,7 @@ import {
   BEZEL_WIDTH,
   DIAL_HOURS,
   DIAL_R,
+  DIAL_SECONDS,
   HANDS,
   RING_BAND,
   RING_EDGE,
@@ -42,6 +43,12 @@ import type { Seconds } from "./types.ts";
 // drawing read as a watch rather than a chart. The markers are drawn once at
 // twelve o'clock and rotated into place, which is how they are made too.
 //
+// The bezel is also the day's progress. From twelve, clockwise, it fills in
+// the accent as the target is worked and closes the loop when the day is
+// done; past that a second lap goes round over it in the flag colour, so
+// overtime is the bezel overshooting rather than a number. A dial handed no
+// `progress` — the previews in Settings — keeps a plain bezel.
+//
 // The hands do not move here. Each is a group with a CSS rotation, and the
 // *transition* on that rotation — a step, eight steps, or a glide — is the
 // movement, set in `styles.css` against the `data-movement` attribute. A
@@ -75,6 +82,9 @@ type Props = {
   /** Distinct per dial on the page, because the gradient is referenced by
    *  id and two dials with one id would share one face. */
   id: string;
+  /** Worked over target, drawn on the bezel: 1 is the day done, above 1
+   *  overtime. Left out, the bezel is only a bezel. */
+  progress?: number;
   className?: string;
   /** The accessible name and description, as `<title>` / `<desc>` children,
    *  or nothing for a dial that is decoration. */
@@ -89,6 +99,7 @@ export function Dial({
   live = false,
   jump = false,
   id,
+  progress,
   className,
   children,
   ariaHidden,
@@ -115,6 +126,12 @@ export function Dial({
         return { x1, y1, x2, y2, hour };
       })
     : [];
+
+  const done = progress === undefined ? 0 : Math.max(0, Math.min(1, progress));
+  const over =
+    progress === undefined ? 0 : Math.max(0, Math.min(1, progress - 1));
+  const doneArc = arcPath(C, C, BEZEL_R, 0, done * DIAL_SECONDS);
+  const overArc = arcPath(C, C, BEZEL_R, 0, over * DIAL_SECONDS);
 
   const markers = DIAL_HOURS.map((hour) => ({
     hour,
@@ -162,6 +179,24 @@ export function Dial({
         stroke={face.bezel}
         strokeWidth={BEZEL_WIDTH}
       />
+      {doneArc && (
+        <path
+          d={doneArc}
+          fill="none"
+          stroke="var(--color-accent)"
+          strokeWidth={BEZEL_WIDTH}
+          strokeLinecap="round"
+        />
+      )}
+      {overArc && (
+        <path
+          d={overArc}
+          fill="none"
+          stroke="var(--color-flag)"
+          strokeWidth={BEZEL_WIDTH}
+          strokeLinecap="round"
+        />
+      )}
       <circle cx={C} cy={C} r={DIAL_R} fill={`url(#${faceId})`} />
       <circle cx={C} cy={C} r={DIAL_R} fill={`url(#${sheenId})`} />
       <circle

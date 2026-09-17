@@ -66,7 +66,8 @@ pure domain modules — the interval arithmetic, the day derivation, the edits,
 the report, the clock geometry, the document merge, and the storage
 migrations. Run one file with `npx vitest run tests/day_test.ts`. UI changes
 should keep the boot smoke path working: `npm run build && npm run preview`,
-add a project, start working, and check that the timer runs.
+add a project, press the clock, and check that the light comes up and the
+Log shows the session.
 
 The derivation is deliberately clock-free — `now` and `today` are parameters,
 never `new Date()` inside `day.ts` or `report.ts` — so a test never needs fake

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Button, PlusIcon } from "@niclaslindstedt/oss-framework/components";
+import {
+  Button,
+  ContextMenu,
+  PlusIcon,
+  type RowAction,
+} from "@niclaslindstedt/oss-framework/components";
 
 import {
   clockIn,
@@ -18,22 +23,15 @@ import { ArrivalModal } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { dayTotals, progress } from "./day.ts";
-import { isWorkDay, targetSeconds } from "./project.ts";
-import {
-  formatBalance,
-  formatDuration,
-  formatPercent,
-  formatTimeOfDay,
-  formatTimer,
-} from "./format.ts";
-import type { ClockSize, DialConfig } from "./look.ts";
+import { isWorkDay } from "./project.ts";
+import { formatDuration, formatPercent, formatTimeOfDay } from "./format.ts";
+import type { Backlight, ClockSize, DialConfig } from "./look.ts";
 import { CupIcon, EnterIcon, LeaveIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
 import { breakName, categoryColor } from "./labels.ts";
 import { NewKindModal } from "./NewKindModal.tsx";
-import { ProgressFrame } from "./ProgressFrame.tsx";
-import { runningBalance } from "./report.ts";
+import { KEY_HINT, type Command } from "./shortcuts.ts";
 import {
   blankDay,
   dayFor,
@@ -43,30 +41,44 @@ import {
 } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
 import { useNow } from "./useNow.ts";
+import { useShortcuts } from "./useShortcuts.ts";
 
-// The first screen: the timer, the clock, and the buttons that move the day
-// along. It is the whole app for most of a day — enter, a break or two, a
-// category when it changes, leave — so everything is one tap from here and
-// nothing needs a second screen.
+// The first screen: the clock, and the buttons that move the day along. It
+// is the whole app for most of a day — press the face to start, a break or
+// two, a kind of work when it changes, press the face to stop — so
+// everything is one press from here and nothing needs a second screen.
 //
-// Three of those taps are corrections rather than records, because a time
-// report is written by someone who was busy doing the work: the timer opens
-// the arrival, the clock face opens the day's stretches, and "Custom" invents
-// the kind of break or work that nobody thought to set up in advance. None of
-// them leave this screen.
+// There is no timer. The day's progress is the bezel of the watch, and
+// whether the day is being counted is the light behind it (see
+// `ClockFace.tsx`); the one line of words under the dial says the state and
+// since when. A number ticking up was a second way of saying what the ring
+// already draws, and it was the loudest thing on the screen.
 //
-// The screen owns no state beyond the modals it opens. Every number is
-// derived from the day's spans up to `now`, once a second, through `day.ts`;
-// every button is one of the pure edits in `actions.ts` applied to the day
-// and handed back to the store.
+// Three corrections live here rather than on the Log, because they are the
+// three noticed here: the line under the dial opens the arrival, a stretch
+// on the ring opens the day stretch by stretch, and "Custom" invents the kind
+// of break or work that nobody thought to set up in advance. None of them
+// leave this screen.
+//
+// On a desk the same controls stand round the dial — breaks to its left,
+// kinds of work to its right — and the dial takes the height of the window
+// (`styles.css`, `.app-today`). The keyboard reaches them too: S for the
+// face, the digits for the kinds of work (`shortcuts.ts`), and the right
+// button on the dial opens the lot as a menu where the pointer is.
+//
+// The screen owns no state beyond the modals it opens. Every band is derived
+// from the day's spans up to `now`, once a second, through `day.ts`; every
+// button is one of the pure edits in `actions.ts` applied to the day and
+// handed back to the store.
 
 type Props = {
   store: DocStore;
   project: Project | null;
   weekStartsOn: number;
-  /** The dial the settings resolved to, and how big. */
+  /** The dial the settings resolved to, how big, and the light behind it. */
   dial: DialConfig;
   clockSize: ClockSize;
+  backlight: Backlight;
   onAddProject: () => void;
   onNotice: (message: string) => void;
 };
@@ -78,6 +90,7 @@ export function TodayScreen({
   project,
   dial,
   clockSize,
+  backlight,
   onAddProject,
   onNotice,
 }: Props) {
@@ -86,6 +99,7 @@ export function TodayScreen({
   const [arriving, setArriving] = useState(false);
   const [timeline, setTimeline] = useState<{ at: Seconds | null } | null>(null);
   const [asking, setAsking] = useState<Asking | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
   const day = useMemo<WorkDay | null>(() => {
     if (!project) return null;
@@ -99,16 +113,93 @@ export function TodayScreen({
     () => (day ? dayTotals(day, now.seconds) : null),
     [day, now.seconds],
   );
-  const overall = useMemo(
-    () =>
-      project ? runningBalance(store.data, project, now.today, now.seconds) : 0,
-    [store.data, project, now.today, now.seconds],
-  );
+
+  const ctx = (): EditContext => ({
+    id: makeId,
+    updatedAt: new Date().toISOString(),
+  });
+  const apply = (next: WorkDay) => {
+    if (day && next !== day) store.saveDay(next);
+  };
+
+  // The edits, as the buttons and the keys and the menu all reach them.
+  const state = totals?.state ?? "out";
+  const toggleWork = () => {
+    if (!day) return;
+    apply(
+      state === "out"
+        ? clockIn(day, now.seconds, ctx())
+        : clockOut(day, now.seconds, ctx()),
+    );
+  };
+  const pickCategory = (id: string) => {
+    if (!day || !totals || state === "out") return;
+    const on = totals.currentCategoryId === id;
+    apply(setCategory(day, on ? null : id, now.seconds, ctx()));
+  };
+  const pickBreak = (id: string, minutes: number) => {
+    if (!day || !totals || state === "out") return;
+    const running = totals.currentBreak?.typeId === id;
+    apply(
+      running
+        ? endBreak(day, now.seconds, ctx())
+        : takeBreak(day, id, now.seconds, minutes * 60, ctx()),
+    );
+  };
+
+  // The keys read the latest edits through a ref, so the window's listener
+  // is bound once rather than once a second.
+  const keys = useRef<(command: Command) => boolean>(() => false);
+  keys.current = (command) => {
+    if (!project) return false;
+    if (command.kind === "toggleWork") {
+      toggleWork();
+      return true;
+    }
+    if (command.kind === "category") {
+      const c = project.categories[command.index];
+      if (!c || state === "out") return false;
+      pickCategory(c.id);
+      return true;
+    }
+    return false;
+  };
+  useShortcuts(useCallback((command: Command) => keys.current(command), []));
+
+  // The browser tab, while the app is open in one: the time worked and the
+  // state where the page's name would be, so the tab strip is a glance at
+  // the day. Once a minute rather than once a second, because a tab title
+  // that flickers is a tab you close.
+  const current = totals?.currentBreak;
+  const currentName =
+    project && current ? breakName(t, project, current.typeId) : null;
+  const tabState =
+    state === "working"
+      ? t("today.state.working")
+      : state === "break" && current && current.end !== null
+        ? t("today.tabBreak", {
+            name: currentName ?? "",
+            time: formatTimeOfDay(current.end),
+          })
+        : state === "break"
+          ? t("today.state.break")
+          : null;
+  const tabWorked = totals ? formatDuration(totals.worked) : "";
+  useEffect(() => {
+    if (!tabState) return;
+    return setWindowTitle(
+      t("today.tabTitle", {
+        timer: tabWorked,
+        state: tabState,
+        app: t("app.name"),
+      }),
+    );
+  }, [tabState, tabWorked, t]);
 
   if (!project || !day || !totals) {
     return (
       <div className="flex flex-1 flex-col justify-center gap-3 px-3 py-3">
-        <div className="rounded-2xl border border-line bg-surface-3 p-6 text-center">
+        <div className="mx-auto w-full max-w-md rounded-2xl border border-line bg-surface-3 p-6 text-center">
           <p className="text-sm text-muted">{t("today.noProject")}</p>
           <Button variant="primary" className="mt-4" onClick={onAddProject}>
             <span className="inline-flex items-center gap-1.5">
@@ -121,13 +212,6 @@ export function TodayScreen({
     );
   }
 
-  const ctx = (): EditContext => ({
-    id: makeId,
-    updatedAt: new Date().toISOString(),
-  });
-  const apply = (next: WorkDay) => {
-    if (next !== day) store.saveDay(next);
-  };
   const stampProject = (patch: Partial<Project>) =>
     store.saveProject({
       ...project,
@@ -135,13 +219,10 @@ export function TodayScreen({
       updatedAt: new Date().toISOString(),
     });
 
-  const target = targetSeconds(project);
   const expected = isWorkDay(project, now.today);
-  const state = totals.state;
   const onBreak = state === "break";
-  const current = totals.currentBreak;
-  const currentName = current ? breakName(t, project, current.typeId) : null;
   const session = latestSession(day);
+  const fraction = progress(totals.worked, project);
 
   const stateLine =
     state === "working" && totals.openSession
@@ -160,7 +241,9 @@ export function TodayScreen({
           }`
         : totals.lastOut !== null
           ? `${t("today.state.out")} · ${t("today.doneAt", { time: formatTimeOfDay(totals.lastOut) })}`
-          : t("today.state.out");
+          : expected
+            ? t("today.state.out")
+            : `${t("today.state.out")} · ${t("today.dayOff")}`;
 
   /** The kinds of work are labels over worked time, so a break stops every
    *  one of them counting (see `day.ts`). The chip says so in the break's own
@@ -172,70 +255,112 @@ export function TodayScreen({
         ? "border-accent bg-accent/15 text-fg-bright"
         : "border-line bg-surface-3 text-fg hover:bg-surface-2";
 
+  // The right button's menu: everything the screen can do, where the
+  // pointer is.
+  const menuActions: RowAction[] = [
+    {
+      label: state === "out" ? t("today.clockIn") : t("today.clockOut"),
+      icon:
+        state === "out" ? (
+          <EnterIcon className="h-4 w-4" />
+        ) : (
+          <LeaveIcon className="h-4 w-4" />
+        ),
+      onSelect: toggleWork,
+    },
+    ...(state !== "out"
+      ? project.breakTypes.map<RowAction>((b) => ({
+          label:
+            current?.typeId === b.id
+              ? t("today.endBreak", { name: b.name })
+              : t("today.menuBreak", {
+                  name: b.name,
+                  minutes: String(b.defaultMinutes),
+                }),
+          icon: <CupIcon className="h-4 w-4 text-flag" />,
+          onSelect: () => pickBreak(b.id, b.defaultMinutes),
+        }))
+      : []),
+    ...(state !== "out"
+      ? project.categories.map<RowAction>((c) => {
+          const on = totals.currentCategoryId === c.id;
+          return {
+            label: on ? t("today.stopLabelling", { name: c.name }) : c.name,
+            icon: (
+              <span
+                aria-hidden="true"
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ background: categoryColor(project, c.id) }}
+              />
+            ),
+            onSelect: () => pickCategory(c.id),
+          };
+        })
+      : []),
+    ...(session
+      ? [
+          {
+            label: t("today.arrival"),
+            onSelect: () => setArriving(true),
+          } satisfies RowAction,
+        ]
+      : []),
+    {
+      label: t("today.openTimeline"),
+      onSelect: () => setTimeline({ at: null }),
+    },
+  ];
+
   return (
-    <div className="flex flex-1 flex-col gap-3 px-3 py-3">
-      {/* The readout: the timer, the state the day is in, and — as the card's
-          own border — how much of the day's target that is. The border starts
-          at the top edge's middle and runs clockwise, closing the loop at
-          100% and going round again in the flag colour past it, which is why
-          there is no percentage printed beside the figure any more: the frame
-          is the percentage, and a number saying the same thing twice is one
-          of them too many. Tabular digits so the timer does not jitter. The
-          timer is a button — the arrival is the time of day that is wrong
-          most often, and this is where you are looking when you notice. */}
-      <ProgressFrame
-        fraction={progress(totals.worked, project)}
-        tone={onBreak ? "flag" : "accent"}
-      >
-        <p
-          className={`text-xs font-bold tracking-wide uppercase ${
-            onBreak ? "text-flag" : "text-accent"
-          }`}
-        >
-          {stateLine}
-        </p>
+    <div className="app-today flex flex-1 flex-col gap-3 px-3 py-3">
+      {/* The dial, and under it the one line of words: what the day is doing
+          and since when. The line is a button — the arrival is the time of
+          day that is wrong most often, and this is where you see it. */}
+      <div data-area="dial" className="flex flex-col items-center gap-2">
+        <div className="app-dial-slot w-full">
+          <ClockFace
+            day={day}
+            project={project}
+            now={now.seconds}
+            state={state}
+            dial={dial}
+            size={clockSize}
+            backlight={backlight}
+            progress={fraction}
+            onToggle={toggleWork}
+            onOpen={(at) => setTimeline({ at: at ?? null })}
+            onMenu={(x, y) => setMenu({ x, y })}
+          />
+        </div>
         <button
           type="button"
           disabled={!session}
           onClick={() => setArriving(true)}
-          aria-label={t("today.arrival")}
-          className="mt-1 flex w-full items-baseline justify-center rounded-xl px-2 py-0.5 disabled:cursor-default"
+          title={session ? t("today.arrival") : undefined}
+          className={`rounded-md px-2 py-1 text-xs font-bold tracking-wide uppercase transition-colors enabled:hover:bg-surface-2 disabled:cursor-default ${
+            onBreak
+              ? "text-flag"
+              : state === "working"
+                ? "text-accent"
+                : "text-muted"
+          }`}
         >
-          <span
-            className="text-4xl font-bold text-fg-bright tabular-nums"
-            aria-live="off"
-          >
-            {formatTimer(totals.worked)}
-          </span>
+          {stateLine}
           <span className="sr-only">
-            {t("today.percentOfTarget", {
-              percent: formatPercent(progress(totals.worked, project)),
-            })}
+            {" · "}
+            {t("today.percentOfTarget", { percent: formatPercent(fraction) })}
           </span>
         </button>
-        <p className="mt-0.5 text-xs text-muted">
-          {expected
-            ? t("today.ofTarget", { target: formatDuration(target) })
-            : t("today.dayOff")}
-          {" · "}
-          {t("today.balanceToday", {
-            balance: formatBalance(totals.worked - (expected ? target : 0)),
-          })}
-          {" · "}
-          {t("today.balanceOverall", { balance: formatBalance(overall) })}
-        </p>
-      </ProgressFrame>
+        {/* The first press of the day is the one nobody has been told about. */}
+        {state === "out" && totals.lastOut === null && (
+          <p className="text-xs text-muted">{t("today.outHint")}</p>
+        )}
+      </div>
 
-      <ClockFace
-        day={day}
-        project={project}
-        now={now.seconds}
-        dial={dial}
-        size={clockSize}
-        onOpen={(at) => setTimeline({ at: at ?? null })}
-      />
-
-      <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted">
+      <ul
+        data-area="legend"
+        className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted"
+      >
         <Swatch color="var(--color-accent)" label={t("today.legend.work")} />
         <Swatch color="var(--color-flag)" label={t("today.legend.break")} />
         {project.categories.map((c) => (
@@ -247,35 +372,11 @@ export function TodayScreen({
         ))}
       </ul>
 
-      {/* The one loud button: in or out. */}
-      <button
-        type="button"
-        onClick={() =>
-          apply(
-            state === "out"
-              ? clockIn(day, now.seconds, ctx())
-              : clockOut(day, now.seconds, ctx()),
-          )
-        }
-        className={`flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl border text-lg font-bold transition-colors ${
-          state === "out"
-            ? "border-accent bg-accent text-page-bg hover:bg-accent/90"
-            : "border-accent bg-transparent text-accent hover:bg-accent/10"
-        }`}
-      >
-        {state === "out" ? (
-          <EnterIcon className="h-6 w-6" />
-        ) : (
-          <LeaveIcon className="h-6 w-6" />
-        )}
-        {state === "out" ? t("today.clockIn") : t("today.clockOut")}
-      </button>
-
-      <section className="flex flex-col gap-1.5">
+      <section data-area="breaks" className="flex flex-col gap-1.5">
         <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
           {t("today.breaks")}
         </h2>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
           {project.breakTypes.map((b) => {
             const running = current?.typeId === b.id;
             return (
@@ -284,31 +385,29 @@ export function TodayScreen({
                 type="button"
                 disabled={state === "out"}
                 aria-pressed={running}
-                onClick={() =>
-                  apply(
-                    running
-                      ? endBreak(day, now.seconds, ctx())
-                      : takeBreak(
-                          day,
-                          b.id,
-                          now.seconds,
-                          b.defaultMinutes * 60,
-                          ctx(),
-                        ),
-                  )
+                onClick={() => pickBreak(b.id, b.defaultMinutes)}
+                title={
+                  state === "out"
+                    ? undefined
+                    : running
+                      ? t("today.endBreak", { name: b.name })
+                      : t("today.menuBreak", {
+                          name: b.name,
+                          minutes: String(b.defaultMinutes),
+                        })
                 }
-                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-2 text-sm font-semibold transition-colors disabled:opacity-40 ${
+                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 lg:justify-start ${
                   running
                     ? "border-flag bg-flag/20 text-fg-bright"
                     : "border-line bg-surface-3 text-fg hover:bg-surface-2"
                 }`}
               >
-                <CupIcon className="h-4 w-4 shrink-0 text-muted" />
+                <CupIcon className="h-4 w-4 shrink-0 text-flag" />
                 <span className="truncate">
                   {running ? t("today.endBreak", { name: b.name }) : b.name}
                 </span>
                 {!running && (
-                  <span className="text-xs font-normal text-muted">
+                  <span className="text-xs font-normal text-muted lg:ml-auto">
                     {b.defaultMinutes}m
                   </span>
                 )}
@@ -319,38 +418,40 @@ export function TodayScreen({
             type="button"
             disabled={state === "out"}
             onClick={() => setAsking({ kind: "break" })}
-            className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent px-2 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40"
+            className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent px-3 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 lg:justify-start"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
             <span className="truncate">{t("today.custom")}</span>
           </button>
         </div>
         {state !== "out" && (
-          <p className="text-xs text-muted">{t("today.breaksHint")}</p>
+          <p className="app-hint text-xs text-muted">{t("today.breaksHint")}</p>
         )}
       </section>
 
-      <section className="flex flex-col gap-1.5">
+      <section data-area="kinds" className="flex flex-col gap-1.5">
         <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
           {t("today.categories")}
         </h2>
-        <div className="flex flex-wrap gap-2">
-          {project.categories.map((c) => {
+        <div className="flex flex-wrap gap-2 lg:flex-col">
+          {project.categories.map((c, i) => {
             const on = totals.currentCategoryId === c.id;
+            const key = KEY_HINT.category(i);
             return (
               <button
                 key={c.id}
                 type="button"
                 disabled={state === "out"}
                 aria-pressed={on}
-                onClick={() =>
-                  apply(setCategory(day, on ? null : c.id, now.seconds, ctx()))
+                onClick={() => pickCategory(c.id)}
+                title={
+                  key && state !== "out" ? `${c.name} (${key})` : undefined
                 }
-                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors disabled:opacity-40 ${categoryTone(on)}`}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors disabled:opacity-40 lg:min-h-12 lg:rounded-xl lg:font-semibold ${categoryTone(on)}`}
               >
                 <span
                   aria-hidden="true"
-                  className="h-2.5 w-2.5 rounded-full"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
                   style={{
                     background:
                       on && onBreak
@@ -358,14 +459,14 @@ export function TodayScreen({
                         : categoryColor(project, c.id),
                   }}
                 />
-                {c.name}
+                <span className="truncate">{c.name}</span>
                 {on && onBreak && (
                   <span className="text-xs font-normal text-flag">
                     {t("today.paused")}
                   </span>
                 )}
                 {totals.categories[c.id] ? (
-                  <span className="text-xs text-muted tabular-nums">
+                  <span className="text-xs font-normal text-muted tabular-nums lg:ml-auto">
                     {formatDuration(totals.categories[c.id]!)}
                   </span>
                 ) : null}
@@ -376,16 +477,23 @@ export function TodayScreen({
             type="button"
             disabled={state === "out"}
             onClick={() => setAsking({ kind: "activity" })}
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-line px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-line px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 lg:min-h-12 lg:rounded-xl lg:font-semibold"
           >
-            <PlusIcon className="h-4 w-4" />
+            <PlusIcon className="h-4 w-4 shrink-0" />
             {t("today.custom")}
           </button>
         </div>
         {onBreak && (
-          <p className="text-xs text-muted">{t("today.pausedHint")}</p>
+          <p className="app-hint text-xs text-muted">{t("today.pausedHint")}</p>
         )}
       </section>
+
+      <ContextMenu
+        position={menu}
+        actions={menuActions}
+        onClose={() => setMenu(null)}
+        ariaLabel={t("today.menuLabel")}
+      />
 
       {arriving && session && (
         <ArrivalModal
@@ -458,6 +566,15 @@ export function TodayScreen({
       )}
     </div>
   );
+}
+
+/** The window's title, and the way to put it back. */
+function setWindowTitle(title: string): () => void {
+  const original = document.title;
+  document.title = title;
+  return () => {
+    document.title = original;
+  };
 }
 
 /** The earliest a session may have started: the end of the one before it, or

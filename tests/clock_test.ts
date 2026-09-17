@@ -10,10 +10,11 @@ import {
   angleOf,
   arcPath,
   dialLayout,
-  framePath,
   handAngles,
   handTurns,
   polar,
+  ringHit,
+  timesAt,
 } from "../src/app/clock.ts";
 import {
   DIAL_FONT,
@@ -76,29 +77,6 @@ describe("arcPath", () => {
   it("draws a whole ring for a span of a full turn or more", () => {
     const d = arcPath(50, 50, 40, 0, DIAL_SECONDS)!;
     expect(d.split("A")).toHaveLength(3);
-  });
-});
-
-describe("framePath", () => {
-  it("starts at the top edge's middle and closes back there", () => {
-    const d = framePath(200, 100, 20)!;
-    expect(d.startsWith("M 100 0 ")).toBe(true);
-    expect(d.endsWith("L 100 0")).toBe(true);
-    // Clockwise: the first move is along the top, to the right.
-    expect(d).toContain("L 180 0");
-  });
-
-  it("insets the box so a stroke of that width sits inside it", () => {
-    const d = framePath(200, 100, 20, 2)!;
-    expect(d.startsWith("M 100 2 ")).toBe(true);
-    expect(d).toContain("L 198 78");
-  });
-
-  it("clamps the radius to the box and refuses an empty one", () => {
-    // A radius larger than half the short side is a stadium, not a bad path.
-    expect(framePath(200, 100, 999)).toContain("A 50 50");
-    expect(framePath(0, 100, 20)).toBeNull();
-    expect(framePath(200, 4, 20, 2)).toBeNull();
   });
 });
 
@@ -289,5 +267,55 @@ describe("dialLayout", () => {
     });
     expect(large.markerLength).toBeGreaterThan(small.markerLength);
     expect(large.markerWidth).toBeGreaterThan(small.markerWidth);
+  });
+});
+
+describe("timesAt", () => {
+  it("is the inverse of angleOf, for the morning, the afternoon and the night", () => {
+    const at = h(9) + 30 * 60;
+    const times = timesAt(angleOf(at));
+    expect(times).toEqual([at, at + DIAL_SECONDS, at + 2 * DIAL_SECONDS]);
+    for (const t of times) expect(angleOf(t)).toBeCloseTo(angleOf(at), 6);
+  });
+
+  it("reads twelve o'clock as midnight, noon and the midnight after", () => {
+    expect(timesAt(0)).toEqual([0, DIAL_SECONDS, 2 * DIAL_SECONDS]);
+    expect(timesAt(360)).toEqual([0, DIAL_SECONDS, 2 * DIAL_SECONDS]);
+  });
+
+  it("wraps an angle from either side round the dial", () => {
+    expect(timesAt(-90)).toEqual(timesAt(270));
+    expect(timesAt(450)).toEqual(timesAt(90));
+  });
+});
+
+describe("ringHit", () => {
+  const layout = { ringInner: 90, ringOuter: 110 };
+
+  it("finds the angle of a point on the band", () => {
+    // Three o'clock: due right of the centre, on the band's centre line.
+    expect(ringHit(DIAL_R + 100, DIAL_R, layout)).toBeCloseTo(90, 6);
+    // Six o'clock, and nine.
+    expect(ringHit(DIAL_R, DIAL_R + 100, layout)).toBeCloseTo(180, 6);
+    expect(ringHit(DIAL_R - 100, DIAL_R, layout)).toBeCloseTo(270, 6);
+    // Twelve is zero, not 360.
+    expect(ringHit(DIAL_R, DIAL_R - 100, layout)).toBeCloseTo(0, 6);
+  });
+
+  it("agrees with polar about where a moment is drawn", () => {
+    const at = h(14) + 20 * 60;
+    const [x, y] = polar(DIAL_R, DIAL_R, 100, angleOf(at));
+    expect(ringHit(x, y, layout)).toBeCloseTo(angleOf(at), 6);
+  });
+
+  it("is null at the centre, inside the ring and out on the bezel", () => {
+    expect(ringHit(DIAL_R, DIAL_R, layout)).toBeNull();
+    expect(ringHit(DIAL_R + 80, DIAL_R, layout)).toBeNull();
+    expect(ringHit(DIAL_R + 116, DIAL_R, layout)).toBeNull();
+  });
+
+  it("gives a stroke's edge the slack it is asked for", () => {
+    expect(ringHit(DIAL_R + 112, DIAL_R, layout)).toBeNull();
+    expect(ringHit(DIAL_R + 112, DIAL_R, layout, 4)).toBeCloseTo(90, 6);
   });
 });

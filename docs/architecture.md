@@ -7,13 +7,14 @@ below runs in the browser tab.
 index.html
   └── src/main.tsx            mounts <App> inside the i18n LanguageRoot
        └── src/App.tsx        theme, store, sync, tab switch, chrome
-            ├── TopBar            mark + wordmark, project switcher, sync glyph, cog
+            ├── TopBar            mark + wordmark, the desk's tabs, project switcher, sync glyph, cog
             ├── TodayScreen       the timer, the clock, the buttons — writes the day
             ├── LogScreen         the day as a list — corrects it
             ├── ReportScreen      a week or a month, as tiles and charts
             ├── ProjectsScreen   the projects, and the editor behind each
             ├── SettingsScreen    settings, sync controls, backup, about
-            └── BottomNav         the four destinations
+            ├── SidePanel         Settings on the desk, over the right-hand edge
+            └── BottomNav         the four destinations, on the phone
 
 src/app/
   types.ts          the model: Project, WorkDay (sessions, breaks, activities)
@@ -33,10 +34,12 @@ src/app/
   useSyncEngine.ts  the cloud copy: pull on open, debounced push on edit
   useAppSettings.ts the settings blob
   useNow.ts         the one place the clock is read
+  useDesk.ts        whether the window is a desk (≥ 64rem) or a phone
+  shortcuts.ts      key → command                                   (pure)
+  useShortcuts.ts   the window's keydown, turned into those commands
   backup.ts         export / restore a JSON file
-  ProgressFrame.tsx the timer card's border, drawn as the day's progress
-  Dial.tsx          the watch face, drawn — shared by Today and Settings
-  ClockFace.tsx     the day on the dial, and the way into its stretches
+  Dial.tsx          the watch face, drawn, with the day's progress on the bezel — shared by Today and Settings
+  ClockFace.tsx     the day on the dial, the switch, the light, and the way into the stretches
   DialPicker.tsx    the presets and the custom pickers in Settings
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time

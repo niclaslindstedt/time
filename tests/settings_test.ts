@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, expect, it } from "vitest";
 
-import { DIAL_PRESET } from "../src/app/look.ts";
+import { DEFAULT_BACKLIGHT, DIAL_PRESET } from "../src/app/look.ts";
 import { DEFAULT_SETTINGS, parseSettings } from "../src/app/useAppSettings.ts";
 
 // The settings store's parser: what comes back from localStorage is clamped
@@ -92,5 +92,38 @@ describe("parseSettings", () => {
     expect(s).not.toHaveProperty("clockFont");
     expect(s.theme).toBe("dark");
     expect(s.clockPreset).toBe(DEFAULT_SETTINGS.clockPreset);
+  });
+});
+
+describe("parseSettings – the backlight", () => {
+  it("boots on the theme's accent, a slow beat, and a mid light", () => {
+    expect(DEFAULT_SETTINGS.backlight).toEqual(DEFAULT_BACKLIGHT);
+    expect(parseSettings("{}").backlight).toEqual(DEFAULT_BACKLIGHT);
+  });
+
+  it("keeps a choice within range", () => {
+    const s = parseSettings(
+      JSON.stringify({ backlight: { color: "violet", hz: 1, intensity: 35 } }),
+    );
+    expect(s.backlight).toEqual({ color: "violet", hz: 1, intensity: 35 });
+  });
+
+  it("clamps a beat and a brightness that are out of range", () => {
+    const s = parseSettings(
+      JSON.stringify({ backlight: { color: "amber", hz: 9, intensity: -4 } }),
+    );
+    expect(s.backlight).toEqual({ color: "amber", hz: 2, intensity: 0 });
+  });
+
+  it("falls back field by field on a colour or a number that is not one", () => {
+    const s = parseSettings(
+      JSON.stringify({
+        backlight: { color: "plaid", hz: "fast", intensity: "bright" },
+      }),
+    );
+    expect(s.backlight).toEqual(DEFAULT_BACKLIGHT);
+    expect(parseSettings('{"backlight":7}').backlight).toEqual(
+      DEFAULT_BACKLIGHT,
+    );
   });
 });

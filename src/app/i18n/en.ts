@@ -58,17 +58,15 @@ export const en = {
     clockIn: "Start working",
     clockOut: "Stop working",
     endBreak: "End {name}",
-    ofTarget: "of {target} today",
     percentOfTarget: "{percent} of today's target",
     dayOff: "A day off — every minute counts extra",
-    balanceToday: "Today {balance}",
-    balanceOverall: "Overall {balance}",
     breaks: "Breaks",
     breaksHint:
       "Tap one as you step away — it is written down as the length it usually takes, and the clock is where you correct it.",
     categories: "Working on",
     paused: "paused",
     pausedHint: "A break is on, so nothing is being counted towards this.",
+    outHint: "Press the clock to start the day.",
     custom: "Custom",
     // Tapping the timer: the moment the work started is the one time of day
     // that is wrong most often, because the app is opened after the fact.
@@ -93,13 +91,24 @@ export const en = {
     kindRequired: "Give it a name.",
     clockLabel: "Today on a twelve-hour clock",
     clockDesc:
-      "Time worked is drawn as a ring around the dial, with breaks marked on it and the kind of work on an inner ring.",
+      "Time worked is drawn as a ring around the dial, with breaks marked on it and the kind of work in its colour; the bezel fills as the day's target is worked. Press the face to start or stop working, or a stretch of the ring to correct it.",
     legend: {
       work: "Working",
       break: "Break",
     },
     openTimeline: "Open today's stretches",
     breakEndLabel: "{name} ended {time} — tap to change",
+    // The desk. The dial answers a mouse: hovering a stretch of the ring
+    // says what it was and when, and the right button opens the day's
+    // actions where the pointer is.
+    menuLabel: "The day",
+    menuBreak: "{name} · {minutes} min",
+    stopLabelling: "Stop labelling {name}",
+    // The browser tab, while the app is open in one: the timer where the
+    // page's name would be, so a glance at the tab strip is a glance at the
+    // day.
+    tabTitle: "{timer} {state} · {app}",
+    tabBreak: "{name} until {time}",
   },
 
   // The clock face's popup: the day as the stretches it is made of, with the
@@ -332,10 +341,31 @@ export const en = {
     },
     clockSize: "Size",
     clockSizeHint:
-      "How much of the screen the dial takes. Large fills the width, to the same margins as the Start working button.",
+      "How much of the screen the dial takes. Large fills the width on a phone and the height on a desk.",
     clockSizeSmall: "Small",
     clockSizeMedium: "Medium",
     clockSizeLarge: "Large",
+    // The light behind the dial.
+    backlight: "Backlight",
+    backlightHint:
+      "A light behind the case while you are working, the way a television lights the wall behind it. It beats while the day is being counted, holds low on a break, and is off when you are not working.",
+    backlightColor: "Colour",
+    backlightColorName: {
+      accent: "Theme",
+      white: "White",
+      amber: "Amber",
+      green: "Green",
+      teal: "Teal",
+      blue: "Blue",
+      violet: "Violet",
+      rose: "Rose",
+    },
+    backlightBeat: "Beat",
+    backlightSteady: "Steady",
+    backlightHz: "{hz} Hz",
+    backlightIntensity: "Brightness",
+    backlightOff: "Off",
+    backlightPercent: "{percent}%",
     calendar: "Week",
     weekStart: "Week starts on",
     weekStartHint: "Decides which seven days the weekly report covers.",

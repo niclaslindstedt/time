@@ -13,7 +13,8 @@ import { useT } from "./i18n/index.ts";
 // The app's navigation: four tabs pinned to the bottom of the screen, the
 // same shell the sibling cycle app uses. This app is used one-handed, on the
 // way into a room or out of one, for a few seconds — thumb-reachable targets
-// beat a drawer that has to be opened first.
+// beat a drawer that has to be opened first. On a desk the same four move to
+// the top bar (`TopBar.tsx`), in this order, and the bottom bar is not drawn.
 //
 // The order is the order of the questions: what is happening *now* (Today),
 // what happened today and on other days (Log), what it adds up to (Report),
@@ -41,7 +42,12 @@ export function screenEnter(from: Tab, to: Tab): ScreenEnter {
   return stepDirection(TABS, from as NavTab, to as NavTab);
 }
 
-const ICONS: Record<NavTab, (props: { className?: string }) => ReactNode> = {
+/** The glyph for each destination — the bottom bar's, and the desk's top
+ *  tabs', so a place is one shape on both shells. */
+export const NAV_ICONS: Record<
+  NavTab,
+  (props: { className?: string }) => ReactNode
+> = {
   today: ClockIcon,
   log: LogIcon,
   report: ChartIcon,
@@ -61,7 +67,7 @@ export function BottomNav({
       TABS.map((tab) => ({
         id: tab,
         label: t(`nav.${tab}` as const),
-        icon: ICONS[tab],
+        icon: NAV_ICONS[tab],
       })),
     [t],
   );
