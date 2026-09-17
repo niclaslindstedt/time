@@ -288,3 +288,202 @@ export function arcPath(
   const large = sweep > 180 ? 1 : 0;
   return `M ${round(x0)} ${round(y0)} A ${r} ${r} 0 ${large} 1 ${round(x1)} ${round(y1)}`;
 }
+
+// ── How the hands move ──
+//
+// Two things happen to a live dial, and both are arithmetic over a moment
+// and a beat rate. `useHands.ts` runs the frames; this is the shape of them.
+//
+// The first is ordinary time-keeping. The hour and minute hands are simply
+// where the moment says, to the millisecond. The second hand is where its
+// *movement* says: a quartz steps once a second, a mechanical calibre beats
+// eight times (28 800 vph), a glide wheel does not step at all. That is one
+// idea — round the moment down to the beat — and `beatTurns` is it. Rounding
+// the clock rather than counting from a start is what keeps a beat on rate:
+// there is nothing to accumulate drift in.
+//
+// A step is not instant, either. A stepper drives the hand at the mark, a
+// little past it, and back — which is most of what tells a quartz apart from
+// a dial that simply redraws once a second. So a beat is landed rather than
+// arrived at, over a fraction of the beat's own length, and `easeOutBack` is
+// the overshoot. A calibre's eighth of a second is too short and too small a
+// step for anyone to see the landing in; a quartz's whole one is not.
+//
+// The second is setting the watch. A tab that has been in the background for
+// an hour comes back with its hands an hour behind, and they are not
+// teleported to the right time — the watch is *set*, the way a watch is set.
+// The crown is wound forward: the minute hand goes round once for every hour
+// there is to make up and the hour hand creeps after it at a twelfth of the
+// rate, both of them moving on rather than jumping across. The second hand
+// does not move at all while that happens, because a crown does not move it.
+// Only once the hour and the minute are right is it let go, forward to the
+// second the clock is actually on.
+//
+// Winding forward always, never back: a dial left at eleven at night and read
+// again at ten past midnight goes the long way round, which is the only way a
+// crown turns.
+
+/** Past this many seconds behind, the hands are wound rather than ticked.
+ *  Two, so a frame the browser skipped is still a tick. */
+export const WIND_AFTER: Seconds = 2;
+
+/** Getting the crown going, and what one turn of the minute hand costs on
+ *  top — a longer sleep is a longer wind, but only up to a point, because
+ *  nobody watches a dial spin for twelve seconds. */
+const WIND_BASE_MS = 520;
+const WIND_TURN_MS = 420;
+const WIND_MIN_MS = 900;
+const WIND_MAX_MS = 3000;
+
+/** Letting the second hand go, for a full turn of catching up; a shorter gap
+ *  takes proportionally less, down to a floor that is still a movement rather
+ *  than a jump. There is always a sync, even when the second hand started out
+ *  on the right second: the winding itself takes a second or three, and those
+ *  are seconds the hacked hand did not tick. */
+const WIND_SECOND_MS = 640;
+const WIND_SECOND_MIN_MS = 240;
+
+export type Turns = { hour: number; minute: number; second: number };
+
+export type WindPlan = {
+  /** How far the dial travels, in seconds of the day. */
+  distance: Seconds;
+  /** Turns of the minute hand — one an hour, which is what makes a long
+   *  sleep look like a long wind. */
+  turns: number;
+  /** Winding the hour and minute hands, then letting the second hand go. */
+  hands: number;
+  second: number;
+  total: number;
+};
+
+/** How long a stepper takes to land a beat, and how much of the beat's own
+ *  length it may take — a calibre beating eight times a second cannot spend
+ *  a seventh of a second doing it. */
+const LANDING_MS = 140;
+const LANDING_SHARE = 0.45;
+
+/**
+ * The moment, rounded down to the movement's beat: a quartz to the second, a
+ * mechanical to an eighth of one, a glide wheel not at all (`null`).
+ */
+export function onBeat(at: Seconds, beats: number | null): Seconds {
+  return beats === null ? at : Math.floor(at * beats) / beats;
+}
+
+/**
+ * Ease out with a little past the mark: what a stepper does to a hand, and
+ * what the eye reads as a hand being driven rather than redrawn. Zero at the
+ * start, one at the end, about a tenth of a step beyond it in between.
+ */
+export function easeOutBack(t: number): number {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const back = 1.70158;
+  const rest = t - 1;
+  return 1 + (back + 1) * rest ** 3 + back * rest ** 2;
+}
+
+/**
+ * The hands at a moment, for a movement that beats `beats` times a second.
+ * The hour and minute hands are exact; only the second hand steps, and it is
+ * still landing its step for the first few milliseconds after one.
+ */
+export function beatTurns(at: Seconds, beats: number | null): Turns {
+  const exact = handTurns(at);
+  if (beats === null) return exact;
+  const beat = onBeat(at, beats);
+  const landing = Math.min(LANDING_MS, (LANDING_SHARE / beats) * 1000);
+  const landed = easeOutBack(((at - beat) * 1000) / landing);
+  return {
+    ...exact,
+    second: handTurns(beat).second - (6 / beats) * (1 - landed),
+  };
+}
+
+/** How far forward the dial has to travel between two moments of the day. */
+export function windDistance(from: Seconds, to: Seconds): Seconds {
+  return (((to - from) % 86_400) + 86_400) % 86_400;
+}
+
+/** How far forward the second hand has to travel, in degrees: at most one
+ *  turn, because a second hand is synced rather than wound. */
+export function secondGap(
+  from: Seconds,
+  to: Seconds,
+  beats: number | null = null,
+): number {
+  const travel = onBeat(to, beats) - onBeat(from, beats);
+  return ((((travel % 60) + 60) % 60) * 6) % 360;
+}
+
+/**
+ * The wind from one moment to another, or null when the difference is a tick
+ * and the hands should simply carry on.
+ */
+export function windPlan(from: Seconds, to: Seconds): WindPlan | null {
+  const distance = windDistance(from, to);
+  if (distance <= WIND_AFTER) return null;
+  const turns = distance / 3600;
+  const hands = clampMs(
+    WIND_BASE_MS + turns * WIND_TURN_MS,
+    WIND_MIN_MS,
+    WIND_MAX_MS,
+  );
+  const second = clampMs(
+    (secondGap(from, to) / 360) * WIND_SECOND_MS,
+    WIND_SECOND_MIN_MS,
+    WIND_SECOND_MS,
+  );
+  return { distance, turns, hands, second, total: hands + second };
+}
+
+/**
+ * Sinusoidal ease in and out over `[0, 1]`: the speed is half a sine wave,
+ * nothing at either end and fastest in the middle. A crown does not start at
+ * full tilt and does not stop dead, and the eye reads a hand that accelerates
+ * as a hand being turned rather than a number being replaced.
+ */
+export function easeInOutSine(t: number): number {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  return (1 - Math.cos(Math.PI * t)) / 2;
+}
+
+/**
+ * The hands, part way through a wind: `elapsed` milliseconds into `plan`, on
+ * the way from `from` to the live moment `to`.
+ *
+ * The clock goes on turning while the crown does, so each phase aims at where
+ * its hands *will be* when it arrives rather than where they are now —
+ * `to` plus whatever is left to run. That target does not move (the moment
+ * advances exactly as fast as the time left shrinks), which is what holds the
+ * second hand dead still through the winding, and it is the live moment by
+ * the last frame, so the wind ends on the true time and the ordinary frame
+ * after it does not move.
+ */
+export function windTurns(
+  from: Seconds,
+  to: Seconds,
+  elapsed: number,
+  plan: WindPlan,
+  beats: number | null = null,
+): Turns {
+  const windingAt = to + Math.max(0, plan.hands - elapsed) / 1000;
+  const syncAt = to + Math.max(0, plan.total - elapsed) / 1000;
+  const wound = 1 - easeInOutSine(elapsed / plan.hands);
+  const synced = easeInOutSine((elapsed - plan.hands) / plan.second);
+  const set = handTurns(windingAt);
+  const distance = windDistance(from, windingAt);
+  return {
+    hour: set.hour - (distance / 120) * wound,
+    minute: set.minute - (distance / 10) * wound,
+    second:
+      beatTurns(syncAt, beats).second -
+      secondGap(from, syncAt, beats) * (1 - synced),
+  };
+}
+
+function clampMs(ms: number, min: number, max: number): number {
+  return Math.round(Math.max(min, Math.min(max, ms)));
+}

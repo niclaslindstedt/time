@@ -490,45 +490,37 @@ body {
    toward its new end every second would read as the day *moving*, and the
    day is not — it is one second longer.
 
-   The hands are the exception, and how they move is the movement (see
-   `look.ts`). Each hand is a group with a CSS rotation set once a second,
-   and the transition between one rotation and the next is what the eye
-   sees: the hour and minute hands sweep, and the second hand steps once (a
-   quartz), steps eight times (a mechanical calibre at 28 800 vph), or glides
-   (a spring-driven glide wheel). A dial without `data-movement` — the
-   previews in Settings — has no transition and simply shows the time. */
+   The hands are not on that clock at all. `useHands.ts` drives them from a
+   frame loop, because a movement is a rate — a quartz steps once a second, a
+   mechanical calibre eight times (28 800 vph), a glide wheel not at all — and
+   a rate chased by a transition off a drifting interval is a rate that
+   hesitates. So there is nothing here for the hour, minute or gliding hand:
+   the loop puts them where they belong, every frame.
+
+   The landing is the loop's too — a quartz stepper does not stop dead on the
+   second, it overshoots a hair and settles, and `beatTurns` draws that. There
+   was a transition here for it once. It had to go: a browser keeps six
+   significant figures of a CSS number, and a rotation counted on from
+   midnight has spent them by mid-morning, so the beats it was easing between
+   were already rounded to the whole degree. The loop writes a hand's angle on
+   its own dial instead, which is small enough to be exact — and a rotation
+   that is not continuous from one frame to the next is one nothing may
+   interpolate between. */
 .app-clock {
   user-select: none;
   -webkit-user-select: none;
 }
 
-.app-clock[data-movement] [data-hand="hour"],
-.app-clock[data-movement] [data-hand="minute"] {
-  transition: transform 1s linear;
+/* The watch is being set — the tab came back from an hour in the background
+   and `useHands` is winding the hands on (see `clock.ts`). `will-change` asks
+   for the hands to be their own layer, and the shadow comes off them for the
+   duration, because an SVG filter over a moving group is re-rastered every
+   frame and that is the one thing here fast enough to cost frames. It is back
+   the moment the hands stop, on hands that are standing still. */
+.app-clock [data-winding] {
+  filter: none;
 }
 
-/* A quartz tick: the hand snaps to the next second with the small
-   overshoot a stepper motor gives it. */
-.app-clock[data-movement="quartz"] [data-hand="second"] {
-  transition: transform 140ms cubic-bezier(0.3, 1.6, 0.5, 1);
-}
-
-.app-clock[data-movement="mechanical"] [data-hand="second"] {
-  transition: transform 1s steps(8, end);
-}
-
-.app-clock[data-movement="sweep"] [data-hand="second"] {
-  transition: transform 1s linear;
-}
-
-/* The tab came back from the background, or it is midnight: the hands go
-   straight to the time rather than spinning to it. */
-.app-clock [data-jump] [data-hand] {
-  transition: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app-clock [data-hand] {
-    transition: none;
-  }
+.app-clock [data-winding] [data-hand] {
+  will-change: transform;
 }

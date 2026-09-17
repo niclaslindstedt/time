@@ -14,17 +14,18 @@ import {
   TRACK_R,
   arcPath,
   dialLayout,
-  handTurns,
   polar,
 } from "./clock.ts";
 import {
   DIAL_FACE,
   DIAL_FONT,
   DIAL_MARKERS,
+  DIAL_MOVEMENT,
   isNumeral,
   type DialConfig,
 } from "./look.ts";
 import type { Seconds } from "./types.ts";
+import { useHands } from "./useHands.ts";
 
 // The dial, drawn: a wrist watch's face with the day laid over it.
 //
@@ -49,10 +50,12 @@ import type { Seconds } from "./types.ts";
 // overtime is the bezel overshooting rather than a number. A dial handed no
 // `progress` — the previews in Settings — keeps a plain bezel.
 //
-// The hands do not move here. Each is a group with a CSS rotation, and the
-// *transition* on that rotation — a step, eight steps, or a glide — is the
-// movement, set in `styles.css` against the `data-movement` attribute. A
-// dial that is not `live` sets none and its hands simply are where they are.
+// The hands do not move here. Each is a group whose rotation `useHands` owns
+// — a frame loop rather than a CSS transition, because a movement is a rate
+// (one beat a second, or eight, or none at all) and a rate wants a clock, not
+// a render. This component only gives the loop somewhere to write, and draws
+// the moment it was handed for the first paint. A dial that is not `live` —
+// the previews in Settings — has no loop and simply is where it is.
 
 export const DIAL_BOX = 240;
 const C = DIAL_BOX / 2;
@@ -76,9 +79,6 @@ type Props = {
   /** The hands move between renders — the Today screen's clock. A preview
    *  leaves it off and gets a still. */
   live?: boolean;
-  /** True when the time jumped rather than ticked — the tab woke up, or
-   *  midnight — so the hands go straight there instead of spinning round. */
-  jump?: boolean;
   /** Distinct per dial on the page, because the gradient is referenced by
    *  id and two dials with one id would share one face. */
   id: string;
@@ -97,7 +97,6 @@ export function Dial({
   now,
   bands,
   live = false,
-  jump = false,
   id,
   progress,
   className,
@@ -108,7 +107,8 @@ export function Dial({
   const font = DIAL_FONT[dial.font];
   const style = DIAL_MARKERS[dial.markers];
   const layout = dialLayout(dial);
-  const turns = handTurns(now);
+  const hands = useHands(now, live, DIAL_MOVEMENT[dial.movement].beats);
+  const turns = hands.turns;
   // The facet along an applied marker and a hand: a lighter line down a dark
   // one, a darker line down a light one, so they read as metal with an edge
   // rather than as print.
@@ -145,7 +145,6 @@ export function Dial({
       className={className}
       role={ariaHidden ? undefined : "img"}
       aria-hidden={ariaHidden ? "true" : undefined}
-      data-movement={live ? dial.movement : undefined}
     >
       {children}
       <defs>
@@ -306,8 +305,11 @@ export function Dial({
         );
       })}
 
-      <g filter={`url(#${shadowId})`} data-jump={jump ? "" : undefined}>
-        <g data-hand="hour" style={hand(turns.hour)}>
+      <g
+        filter={`url(#${shadowId})`}
+        data-winding={hands.winding ? "" : undefined}
+      >
+        <g data-hand="hour" ref={hands.hour} style={hand(turns.hour)}>
           <line
             x1={C}
             y1={C + 5}
@@ -327,7 +329,7 @@ export function Dial({
             strokeLinecap="round"
           />
         </g>
-        <g data-hand="minute" style={hand(turns.minute)}>
+        <g data-hand="minute" ref={hands.minute} style={hand(turns.minute)}>
           <line
             x1={C}
             y1={C + 5}
@@ -347,7 +349,7 @@ export function Dial({
             strokeLinecap="round"
           />
         </g>
-        <g data-hand="second" style={hand(turns.second)}>
+        <g data-hand="second" ref={hands.second} style={hand(turns.second)}>
           <line
             x1={C}
             y1={C + HANDS.tail}

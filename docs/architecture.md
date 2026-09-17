@@ -24,7 +24,7 @@ src/app/
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   monthChart.ts     a month → week rows of day boxes, and their colour (pure, clock-free)
   project.ts       the template, working days, the day's target   (pure)
-  clock.ts          the dial's layout, hands, arcs, the frame's path  (pure)
+  clock.ts          the dial's layout, hands, arcs, the frame's path, the wind  (pure)
   look.ts           the theme, and the dial's faces, fonts, markers, presets
   format.ts         durations, timers, times of day
   labels.ts         domain value → label and colour
@@ -34,6 +34,7 @@ src/app/
   useSyncEngine.ts  the cloud copy: pull on open, debounced push on edit
   useAppSettings.ts the settings blob
   useNow.ts         the one place the clock is read
+  useHands.ts       the hands: the movement's beat, and setting the watch
   useDesk.ts        whether the window is a desk (≥ 64rem) or a phone
   shortcuts.ts      key → command                                   (pure)
   useShortcuts.ts   the window's keydown, turned into those commands

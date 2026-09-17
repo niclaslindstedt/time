@@ -113,16 +113,6 @@ export function ClockFace({
   const box = useRef<HTMLDivElement>(null);
   const [reading, setReading] = useState<Reading | null>(null);
 
-  // A second hand that is told the time an hour after it last heard it
-  // would spend a second spinning to catch up. Remember what it was last
-  // told, and when the difference is not a tick, let the hands jump. Read
-  // and written during render on purpose: the answer is needed for this
-  // paint, not the next one.
-  const last = useRef<Seconds | null>(null);
-  const jump =
-    last.current === null || now - last.current > 2 || now < last.current;
-  last.current = now;
-
   const bands = useMemo<Band[]>(() => {
     const out: Band[] = [];
     for (const s of segments) {
@@ -266,7 +256,6 @@ export function ClockFace({
         bands={bands}
         progress={progress}
         live
-        jump={jump}
         className="app-clock relative block h-auto w-full"
       >
         <title>{t("today.clockLabel")}</title>

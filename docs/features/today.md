@@ -14,6 +14,16 @@ The main screen, and the whole app for most of a day.
   — its face, its markers, its numerals, how its second hand moves, and how
   much of the screen it takes — is yours to pick under **Settings → The
   clock** (see [`themes.md`](themes.md)).
+- **Coming back to it.** Leave the tab for an hour and the hands are an hour
+  behind. They are not swapped for the right time — the watch is _set_. The
+  crown winds forward: the minute hand goes round once for every hour there
+  is to make up and the hour hand creeps after it at a twelfth of the rate,
+  easing in and easing out, and the second hand is held still throughout,
+  because a crown does not move it. Only once the hour and the minute are
+  right is it let go, forward to the second it is actually on. A longer sleep
+  is a longer wind, up to about three seconds; a gap of a couple of seconds
+  is not one at all, and simply ticks. With reduced motion asked for there is
+  no wind: the hands are at the time.
 - **The bezel is the percentage.** It fills clockwise from twelve as the day
   is worked, closing the loop at 100% of the target — and past it, goes round
   again in the flag colour, so overtime is the bezel overshooting rather than
