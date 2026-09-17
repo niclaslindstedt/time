@@ -108,7 +108,7 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 
 ### The app owns the domain ("store stays in the app")
 
-- `src/app/types.ts` — the model. An `Project` (name, working days, hours per
+- `src/app/types.ts` — the model. A `Project` (name, working days, hours per
   day, break types with default lengths, kinds of work) and a `WorkDay` per
   project per calendar day: three lists of spans — `sessions` (presence),
   `breaks` (pauses inside presence, each of a type), `activities` (a kind of
