@@ -154,3 +154,28 @@ export function HourglassIcon({ className }: IconProps) {
     </Glyph>
   );
 }
+
+/**
+ * More — the horizontal ellipsis a menu hangs off.
+ *
+ * Not domain vocabulary, and it would live in the framework's set if the
+ * framework had one; it does not, and a menu button drawn out of `MenuIcon`'s
+ * hamburger would say "navigation" where this says "and what else can I do
+ * with this". Three filled dots rather than three stroked circles, so it
+ * holds its weight beside the stroked glyphs at 20px.
+ */
+export function MoreIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="5" cy="12" r="1.75" />
+      <circle cx="12" cy="12" r="1.75" />
+      <circle cx="19" cy="12" r="1.75" />
+    </svg>
+  );
+}

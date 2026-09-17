@@ -139,12 +139,19 @@ export const en = {
     addActivity: "Add an activity",
     span: "{start} – {end}",
     running: "still running",
+    // The two rings above the lists. The dial is the day's shape — where it
+    // started and where it stopped, on the twelve-hour clock — and the ring
+    // beside it is how the stretch between them split.
+    dialLabel: "The day on the clock",
+    dialDesc: "Started at {start}, stopped at {end}.",
+    splitLabel: "Worked and breaks",
+    splitDesc: "{worked} worked and {breaks} of breaks.",
+    dayMenu: "This day",
     unknownType: "Deleted type",
     worked: "Worked",
     breakTotal: "Breaks",
     firstIn: "Started",
     lastOut: "Stopped",
-    deleteDay: "Delete this day",
     deleteDayConfirm: "Delete this day?",
     deleteDayHint:
       "Everything logged for {day} is removed, and every total derived from it moves. This can't be undone.",
