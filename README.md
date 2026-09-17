@@ -91,9 +91,9 @@ npm run dev
 
 Open the printed URL. The app opens on **Today** and asks for an employer:
 give it a name, keep or change the Monday-to-Friday, eight-hour default and the
-two default breaks, and save. Press **Enter office** and the timer starts. Tap
+default breaks, and save. Press **Enter office** and the timer starts. Tap
 **Lunch** when you go (it books the half hour; tap it again if you are back
-early), tap **Coding** when you sit down to it, and **Leave office** when you
+early), tap **Planning** when you sit down to it, and **Leave office** when you
 go home. The **Log** has the day
 as a list; the **Report** has the week.
 

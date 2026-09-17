@@ -140,8 +140,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   day's box is filled from — a _scale_ rather than `labels.ts`'s table, mixed
   from the theme's own tokens. Pure and clock-free.
 - `src/app/employer.ts` — the employer template (Mon–Fri, 8 h, lunch 30 min,
-  coffee 15 min), whether a date is a working day, the day's target, the
-  clamps.
+  coffee 15 min, toilet 5 min), whether a date is a working day, the day's
+  target, the clamps.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
   rotations, arc paths, and `dialLayout` — where the day's ring, the hour
   markers and the hands sit for a given placement and marker size — and the
@@ -336,8 +336,8 @@ with `[Learn more](feature:<slug>)`.
 
 - **Every string goes through `t()`.** English is the only catalog today; the
   runtime is in place so adding a language is one `loaders` entry. The names a
-  new employer starts with (Lunch, Coffee, Meetings, …) are translated once at
-  creation and then live in the document as the user's own words.
+  new employer starts with (Lunch, Coffee, Toilet, Meetings, …) are translated
+  once at creation and then live in the document as the user's own words.
 - **Two themes only** — one light, one dark, plus "follow the device". The
   framework ships a dozen palettes; this app deliberately exposes none of them.
   The one deliberate exception is the watch **face** (`DIAL_FACE` in

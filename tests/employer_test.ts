@@ -14,13 +14,15 @@ import { employer } from "./fixtures/helpers.ts";
 const labels = {
   lunch: "Lunch",
   coffee: "Coffee",
+  toilet: "Toilet",
   meetings: "Meetings",
-  coding: "Coding",
+  planning: "Planning",
+  retro: "Retro",
   admin: "Admin",
 };
 
 describe("employerTemplate", () => {
-  it("builds a Monday-to-Friday, eight-hour employer with the two breaks", () => {
+  it("builds a Monday-to-Friday, eight-hour employer with the default breaks", () => {
     let n = 0;
     const e = employerTemplate("Acme", labels, () => `id${++n}`, "now");
     expect(e.name).toBe("Acme");
@@ -29,10 +31,12 @@ describe("employerTemplate", () => {
     expect(e.breakTypes.map((b) => [b.name, b.defaultMinutes])).toEqual([
       ["Lunch", 30],
       ["Coffee", 15],
+      ["Toilet", 5],
     ]);
     expect(e.categories.map((c) => c.name)).toEqual([
       "Meetings",
-      "Coding",
+      "Planning",
+      "Retro",
       "Admin",
     ]);
     // Every id is distinct.

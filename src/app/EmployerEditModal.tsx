@@ -45,8 +45,10 @@ export function EmployerEditModal({ employer, onSave, onClose }: Props) {
         {
           lunch: t("employers.defaults.lunch"),
           coffee: t("employers.defaults.coffee"),
+          toilet: t("employers.defaults.toilet"),
           meetings: t("employers.defaults.meetings"),
-          coding: t("employers.defaults.coding"),
+          planning: t("employers.defaults.planning"),
+          retro: t("employers.defaults.retro"),
           admin: t("employers.defaults.admin"),
         },
         makeId,
