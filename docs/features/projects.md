@@ -11,12 +11,12 @@ or several; most people have one.
 - **Hours per working day** — the target, and what the Today screen's
   percentage measures against. Fractions allowed (7.5).
 - **Break types** — one button each on the Today screen, with the minutes a
-  break added afterwards is assumed to have taken. A new project starts with
-  Lunch (30 min), Coffee (15 min) and Toilet (5 min); rename them, change the
-  minutes, remove them, add a walk.
+  break added afterwards is assumed to have taken, and a mark. A new project
+  starts with Lunch (30 min), Coffee (15 min) and Toilet (5 min); rename them,
+  change the minutes, remove them, add a walk.
 - **Kinds of work** — optional labels for what you are doing, so the report
-  can say where the hours went. A new project starts with Meetings, Planning,
-  Retro and Admin.
+  can say where the hours went, each with a mark and a colour. A new project
+  starts with Meetings, Planning, Retro and Admin.
 
 Projects are data, not settings: they live in the document, so they sync and
 back up with the days.
@@ -31,6 +31,41 @@ beyond that is the editor's business: a card counts nothing.
 
 Editing and deleting are two glyphs in the card's top right — a pen and a
 bin. Deleting still asks first.
+
+## Marks and colours
+
+Every break type and kind of work wears a **mark**. The square at the head of
+its row in the project form shows the one it has; tap it and the picker
+unfolds under the row.
+
+There are fifty-two to choose from, in three groups. **Work** is the largest
+and leans towards work done at a computer — code, a terminal, a bug, a
+design, a document, a spreadsheet, a deck, mail, chat, a call, a video call, a
+meeting, planning, tasks, a review, research, learning, a database, servers,
+the cloud, a release, tests, support, security, analytics, a branch, admin,
+finance, ideas, focus, maintenance — and it stretches far enough that a
+workshop, a bookkeeping afternoon or an on-call shift has something better
+than a dot. **Breaks** is the day's pauses: coffee, a meal, the toilet, a
+walk, outdoors, exercise, rest, an errand, travel, health, music, or just a
+pause. **Marks** is the neutral handful — a label, a star, a flag, a place, an
+urgent bolt, a plain ring — for anything the other two miss. A break type and
+a kind of work may pick from any group.
+
+A kind of work also has a **colour**, picked in the same place: blue, ocean,
+violet, amber, red, mint, rose or slate, or **Automatic**, which is the hue
+its position in the list gives it. The colour is one colour everywhere — the
+band on the clock's ring, its chip on Today, its row in the Log, its slice of
+the report's donut, and its own mark, which is drawn in it. The palette is
+made of the theme's own colours, so a colour picked on the light theme is
+still legible on the dark one; the accent and the flag are not in it, because
+those two already mean "at work" and "break" on the clock.
+
+Breaks have no colour to pick: a break is the flag colour wherever it is
+drawn, and its mark with it.
+
+A kind invented from the Today screen's **Custom** pill is given its mark, and
+a kind of work its colour, in the same sheet that names it — it joins the
+project as a kind like any other.
 
 ## One or many
 

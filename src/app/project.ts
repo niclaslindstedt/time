@@ -13,6 +13,7 @@ import {
   type DayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
 
+import type { GlyphId } from "./kinds.ts";
 import type {
   BreakType,
   Project,
@@ -53,6 +54,19 @@ export type ProjectTemplateLabels = {
   admin: string;
 };
 
+/** The marks the default breaks and kinds of work start out wearing. The
+ *  names beside them are the user's to change; the marks are too, in the
+ *  project form — these are only what a new project opens with. */
+const TEMPLATE_GLYPHS = {
+  lunch: "meal",
+  coffee: "coffee",
+  toilet: "toilet",
+  meetings: "meeting",
+  planning: "planning",
+  retro: "review",
+  admin: "admin",
+} satisfies Record<keyof ProjectTemplateLabels, GlyphId>;
+
 /** A new project with the standard week and the default breaks. `id`
  *  is called once per thing that needs one, so a test can hand out names. */
 export function projectTemplate(
@@ -62,15 +76,33 @@ export function projectTemplate(
   now: string,
 ): Project {
   const breakTypes: BreakType[] = [
-    { id: id(), name: labels.lunch, defaultMinutes: DEFAULT_LUNCH_MINUTES },
-    { id: id(), name: labels.coffee, defaultMinutes: DEFAULT_COFFEE_MINUTES },
-    { id: id(), name: labels.toilet, defaultMinutes: DEFAULT_TOILET_MINUTES },
+    {
+      id: id(),
+      name: labels.lunch,
+      defaultMinutes: DEFAULT_LUNCH_MINUTES,
+      glyph: TEMPLATE_GLYPHS.lunch,
+    },
+    {
+      id: id(),
+      name: labels.coffee,
+      defaultMinutes: DEFAULT_COFFEE_MINUTES,
+      glyph: TEMPLATE_GLYPHS.coffee,
+    },
+    {
+      id: id(),
+      name: labels.toilet,
+      defaultMinutes: DEFAULT_TOILET_MINUTES,
+      glyph: TEMPLATE_GLYPHS.toilet,
+    },
   ];
+  // No colour on the kinds of work: a new project's four take the hues their
+  // positions give them, the same four they have always been drawn in. A
+  // colour is set only when someone picks one.
   const categories: WorkCategory[] = [
-    { id: id(), name: labels.meetings },
-    { id: id(), name: labels.planning },
-    { id: id(), name: labels.retro },
-    { id: id(), name: labels.admin },
+    { id: id(), name: labels.meetings, glyph: TEMPLATE_GLYPHS.meetings },
+    { id: id(), name: labels.planning, glyph: TEMPLATE_GLYPHS.planning },
+    { id: id(), name: labels.retro, glyph: TEMPLATE_GLYPHS.retro },
+    { id: id(), name: labels.admin, glyph: TEMPLATE_GLYPHS.admin },
   ];
   return {
     id: id(),

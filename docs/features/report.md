@@ -22,7 +22,7 @@ jump to the current one. The week follows the **Week starts on** setting.
 - **Hours per week** (a month) — the month as a calendar of boxes. See below.
 - **Where the hours went** — a donut of worked time by kind of work, with the
   uncategorised remainder, in the same colours as the Today screen's chips and
-  clock.
+  clock. The list beside it names each kind with its own mark.
 - **Breaks** — break time by kind.
 
 ## The month, as a calendar of boxes

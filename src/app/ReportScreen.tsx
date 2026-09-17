@@ -24,9 +24,20 @@ import {
   formatMonth,
   formatWeekday,
 } from "./format.ts";
-import { ChartIcon, CupIcon, HourglassIcon, TagIcon } from "./icons.tsx";
+import {
+  ChartIcon,
+  CupIcon,
+  HourglassIcon,
+  KindGlyph,
+  TagIcon,
+} from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
-import { breakName, categoryColor, categoryName } from "./labels.ts";
+import {
+  breakName,
+  categoryColor,
+  categoryGlyph,
+  categoryName,
+} from "./labels.ts";
 import { MonthCalendar } from "./MonthCalendar.tsx";
 import { monthChart } from "./monthChart.ts";
 import { monthOf, runningBalance, summarizeRange, weekOf } from "./report.ts";
@@ -269,10 +280,10 @@ export function ReportScreen({ data, project, weekStartsOn }: Props) {
             <ul className="flex w-full flex-col gap-1 text-sm">
               {categoryEntries.map((c) => (
                 <li key={c.id} className="flex items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ background: categoryColor(project, c.id) }}
+                  <KindGlyph
+                    id={categoryGlyph(project, c.id)}
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: categoryColor(project, c.id) }}
                   />
                   <span className="min-w-0 flex-1 truncate text-fg">
                     {categoryName(t, project, c.id)}

@@ -37,6 +37,11 @@ This is the place for a wrong _span_ — one end of one row at a time. The
 Today screen's clock face edits the day's _edges_ instead, moving both sides
 of a moment at once; see [`today.md`](today.md).
 
+Each break and activity row is headed by its kind's mark — a break in the
+flag colour, a kind of work in its own — so the list is scanned the same way
+the Today screen's buttons are. Sessions have no mark: they are presence, not
+a kind of anything.
+
 ## Editing
 
 Tap a row to open the editor: the kind (for a break or an activity), the

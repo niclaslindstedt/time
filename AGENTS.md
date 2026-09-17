@@ -261,8 +261,20 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/TopBar.tsx`, `BottomNav.tsx` — the shell's two bars. The top bar
   grows a project switcher only once there are two projects, and on the desk
   carries the four destinations as tabs; the bottom bar is the phone's.
-- `src/app/labels.ts` — domain value → label and colour, in one place, so a
-  kind of work is one hue on the clock and in the charts.
+- `src/app/kinds.ts` — what a kind of break or work _looks_ like: the
+  fifty-two glyphs one may wear (work, breaks, and the neutral marks), and the
+  eight hues a kind of work may be drawn in. Id and spec, the way `look.ts`
+  holds the dial's, so the form offers the ids, the document stores one, the
+  reader validates it and a test walks the table. Imports nothing — it sits
+  under the model. Pure.
+- `src/app/labels.ts` — domain value → label, glyph and colour, in one place,
+  so a kind of work is one hue and one mark on the clock, in the lists and in
+  the charts. A kind of work's own colour first, then the hue its position in
+  the project's list gives it.
+- `src/app/KindPicker.tsx` — the mark a kind wears and, for a kind of work,
+  its colour: the grid unfolds under the row that opened it — in the project
+  form and in `NewKindModal` — rather than over it, and the marks in it are
+  drawn in the hue being chosen, so the grid is the preview.
 - `src/app/i18n/en.ts` — every user-facing string.
 - `src/output.ts` — the §19.4 central output module (semantic log helpers
   over the in-app log store).
@@ -309,36 +321,37 @@ regression.
 
 ## Where new code goes
 
-| Change                                  | Goes in                                                                                                                                   |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| A new thing to log about a day          | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds     |
-| A new derived number                    | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                         |
-| A change to what a button on Today does | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                               |
-| A change to how the clock draws         | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)      |
-| A change to how the hands move          | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there             |
-| A new keyboard shortcut                 | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command               |
-| Something only the desk does            | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                     |
-| A new face, marker, typeface or preset  | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
-| A change to the Report's month chart    | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
-| A change to the Log's two rings         | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day   |
-| A change to what a project holds        | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
-| A new control on the span editor        | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
-| A modal's save / cancel                 | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's   |
-| A new way to correct a time on Today    | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
-| A new screen                            | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place |
-| A new setting                           | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                      |
-| A new developer-only affordance         | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                |
-| A change to what the demo shows         | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demoData_test.ts`                               |
-| A new storage backend                   | The framework, not here — this app only wires adapters up in `useSyncEngine.ts`                                                           |
-| Any user-facing string                  | `src/app/i18n/en.ts`, never inline in a component                                                                                         |
-| A shared UI primitive                   | The framework, if it is domain-free; `src/app/` only if it is time-report-specific                                                        |
+| Change                                   | Goes in                                                                                                                                   |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| A new thing to log about a day           | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds     |
+| A new derived number                     | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                         |
+| A change to what a button on Today does  | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                               |
+| A change to how the clock draws          | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)      |
+| A change to how the hands move           | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there             |
+| A new keyboard shortcut                  | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command               |
+| Something only the desk does             | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                     |
+| A new face, marker, typeface or preset   | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
+| A change to the Report's month chart     | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
+| A change to the Log's two rings          | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day   |
+| A change to what a project holds         | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
+| A new glyph, or a colour a kind can wear | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                  |
+| A new control on the span editor         | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
+| A modal's save / cancel                  | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's   |
+| A new way to correct a time on Today     | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
+| A new screen                             | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place |
+| A new setting                            | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                      |
+| A new developer-only affordance          | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                |
+| A change to what the demo shows          | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demoData_test.ts`                               |
+| A new storage backend                    | The framework, not here — this app only wires adapters up in `useSyncEngine.ts`                                                           |
+| Any user-facing string                   | `src/app/i18n/en.ts`, never inline in a component                                                                                         |
+| A shared UI primitive                    | The framework, if it is domain-free; `src/app/` only if it is time-report-specific                                                        |
 
 ## Test conventions
 
 Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and run under
 Vitest in the `node` environment — they cover the pure domain modules
 (`intervals`, `day`, `actions`, `report`, `monthChart`, `clock`, `format`,
-`project`, `merge`, `migrations`, `demoData`, `shortcuts`), which is where the app's real
+`project`, `kinds`, `merge`, `migrations`, `demoData`, `shortcuts`), which is where the app's real
 logic is. No
 DOM, no testing-library, no mocked clock. `tests/fixtures/helpers.ts` holds the shared
 fixtures (a project, a day, a named-id `ctx`).
@@ -371,18 +384,18 @@ with `[Learn more](feature:<slug>)`.
 
 ## Documentation sync points
 
-| If you change…                   | Update…                                                                                                        |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| The derivation in `day.ts`       | `docs/day-model.md`, `docs/features/today.md`, and the README's Examples block if the output shape moved       |
-| `report.ts` or `monthChart.ts`   | `docs/day-model.md` (the report section) and `docs/features/report.md`                                         |
-| `actions.ts`                     | `docs/features/today.md` and `docs/features/log.md`                                                            |
-| The `Project` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/projects.md`, and a `migrations.ts` step                   |
-| The sync engine or the merge     | `docs/sync.md`                                                                                                 |
-| A `VITE_*` variable              | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it |
-| A screen's behaviour             | The matching `docs/features/*.md` and the README's Usage table                                                 |
-| The navigation (nav or top bar)  | `docs/architecture.md`'s tree and the README's Usage tables                                                    |
-| Module layout                    | The "Where new code goes" table above and `docs/architecture.md`                                               |
-| A make target or script          | `CONTRIBUTING.md`, the README's Quick start, and this file's command list                                      |
+| If you change…                   | Update…                                                                                                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The derivation in `day.ts`       | `docs/day-model.md`, `docs/features/today.md`, and the README's Examples block if the output shape moved                                                                |
+| `report.ts` or `monthChart.ts`   | `docs/day-model.md` (the report section) and `docs/features/report.md`                                                                                                  |
+| `actions.ts`                     | `docs/features/today.md` and `docs/features/log.md`                                                                                                                     |
+| The `Project` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/projects.md`, and a `migrations.ts` step — a purely additive optional field needs the validation rather than a step |
+| The sync engine or the merge     | `docs/sync.md`                                                                                                                                                          |
+| A `VITE_*` variable              | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it                                                          |
+| A screen's behaviour             | The matching `docs/features/*.md` and the README's Usage table                                                                                                          |
+| The navigation (nav or top bar)  | `docs/architecture.md`'s tree and the README's Usage tables                                                                                                             |
+| Module layout                    | The "Where new code goes" table above and `docs/architecture.md`                                                                                                        |
+| A make target or script          | `CONTRIBUTING.md`, the README's Quick start, and this file's command list                                                                                               |
 
 ## Parity and cross-cutting rules
 
@@ -414,9 +427,17 @@ with `[Learn more](feature:<slug>)`.
   and the one line under the dial. A figure ticking up is the thing this
   screen was rid of.
 - **A category's colour is one table.** `labels.ts` maps a kind of work to a
-  hue by its position in the project's list; the clock's inner ring, the
-  category chips and the report's donut all read it. Don't colour one of them
-  another way.
+  hue — the one the project picked, or the one its position in the list gives
+  it — and the clock's inner ring, the category chips, the Log's rows, the
+  report's donut and the kind's own glyph all read it. Don't colour one of
+  them another way. The palette in `kinds.ts` is the theme's own tokens, never
+  fixed hex, and never the accent or the flag: those two already mean "at
+  work" and "break" on the ring.
+- **A kind's mark is one table too.** `kinds.ts` holds every glyph as paths on
+  the same 24×24 grid as `icons.tsx`, drawn in `currentColor` by `KindGlyph`,
+  so the element around it decides the colour. A new mark is an entry there
+  and a name in `en.ts` — never an inline `<svg>` in a screen, and never an
+  emoji or an icon font.
 - **No dependency creep.** The framework, Preact, a font, and workbox-window.
   A new runtime dependency needs a reason that the framework can't serve. The
   faces the app ships — Inter, JetBrains Mono (the wordmark), and the dial's

@@ -14,6 +14,8 @@
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 
+import type { CategoryColor, GlyphId } from "./kinds.ts";
+
 /**
  * A moment in a day, as seconds since the local midnight the day started
  * on. A span that runs past midnight simply has an end past `DAY_SECONDS`;
@@ -37,6 +39,10 @@ export type BreakType = {
   id: string;
   name: string;
   defaultMinutes: number;
+  /** The mark it wears on the buttons and in the lists (see `kinds.ts`).
+   *  Absent on a type from before there were glyphs, and on one nobody has
+   *  chosen a mark for — the cup stands in. */
+  glyph?: GlyphId;
 };
 
 /** A kind of work — meetings, coding, support — used to label an activity
@@ -44,6 +50,13 @@ export type BreakType = {
 export type WorkCategory = {
   id: string;
   name: string;
+  /** The mark it wears (see `kinds.ts`); the label stands in when absent. */
+  glyph?: GlyphId;
+  /** The hue it is drawn in — on the clock's ring, on its chip, in the
+   *  report, and on its own glyph. Absent means the colour its position in
+   *  the project's list gives it, which is what every kind of work had
+   *  before one could be picked. */
+  color?: CategoryColor;
 };
 
 export type Project = {

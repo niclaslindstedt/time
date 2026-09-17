@@ -9,6 +9,13 @@
 // `DOC_VERSION` in `types.ts` and appending one step here — never editing an
 // existing step, which would silently rewrite documents that already migrated
 // through it.
+//
+// A *purely additive optional* field is the one change that needs no step: a
+// kind of work's glyph and colour are absent on every document written before
+// them, and absent is exactly what "the mark and hue this kind always had"
+// means, so there is nothing for a step to rewrite. What such a field does
+// need is the validation below — the value is an id into `kinds.ts`, and an
+// id this build has no entry for is dropped like any other unknown field.
 
 import {
   createMigrator,
@@ -16,6 +23,7 @@ import {
 } from "@niclaslindstedt/oss-framework/storage";
 
 import { isValidSpan } from "./actions.ts";
+import { isCategoryColor, isGlyphId } from "./kinds.ts";
 import {
   DEFAULT_HOURS_PER_DAY,
   DEFAULT_WORK_DAYS,
@@ -29,9 +37,11 @@ import {
   type ActivitySpan,
   type AppData,
   type BreakSpan,
+  type BreakType,
   type Project,
   type Span,
   type Weekday,
+  type WorkCategory,
   type WorkDay,
 } from "./types.ts";
 
@@ -111,9 +121,23 @@ function parseWeekdays(value: unknown): Weekday[] {
   return [...out].sort();
 }
 
-function parseNamed(value: unknown): { id: string; name: string }[] {
+/** The named things a project holds — its break types and its kinds of work —
+ *  read one at a time, with the optional bits each may carry.
+ *
+ *  A glyph or a colour the running version has no entry for is dropped rather
+ *  than kept: these are ids into `kinds.ts`, and a document written by a newer
+ *  version can name one this build cannot draw. Dropping it leaves the kind
+ *  with the default mark and its positional hue, which is what a kind that
+ *  never had either looks like. */
+function parseNamed<T extends { id: string; name: string }>(
+  value: unknown,
+  extend: (
+    base: { id: string; name: string },
+    raw: Record<string, unknown>,
+  ) => T,
+): T[] {
   if (!Array.isArray(value)) return [];
-  const out: { id: string; name: string }[] = [];
+  const out: T[] = [];
   const seen = new Set<string>();
   for (const raw of value) {
     if (!isRecord(raw)) continue;
@@ -121,9 +145,14 @@ function parseNamed(value: unknown): { id: string; name: string }[] {
     const name = str(raw.name).trim();
     if (!id || !name || seen.has(id)) continue;
     seen.add(id);
-    out.push({ id, name });
+    out.push(extend({ id, name }, raw));
   }
   return out;
+}
+
+/** The mark a kind carries, when it carries one this build knows. */
+function parseGlyph(raw: Record<string, unknown>) {
+  return isGlyphId(raw.glyph) ? { glyph: raw.glyph } : {};
 }
 
 /** Coerce one stored project, or drop it when it has no id or name. */
@@ -132,23 +161,26 @@ function parseProject(key: string, value: unknown): Project | null {
   const id = str(value.id, key);
   const name = str(value.name).trim();
   if (!id || !name) return null;
-  const breakTypes = Array.isArray(value.breakTypes)
-    ? value.breakTypes
-        .filter(isRecord)
-        .map((raw) => ({
-          id: str(raw.id),
-          name: str(raw.name).trim(),
-          defaultMinutes: clampBreakMinutes(raw.defaultMinutes, 15),
-        }))
-        .filter((b) => b.id && b.name)
-    : [];
+  const breakTypes = parseNamed<BreakType>(value.breakTypes, (base, raw) => ({
+    ...base,
+    defaultMinutes: clampBreakMinutes(raw.defaultMinutes, 15),
+    ...parseGlyph(raw),
+  }));
+  const categories = parseNamed<WorkCategory>(
+    value.categories,
+    (base, raw) => ({
+      ...base,
+      ...parseGlyph(raw),
+      ...(isCategoryColor(raw.color) ? { color: raw.color } : {}),
+    }),
+  );
   return {
     id,
     name,
     workDays: parseWeekdays(value.workDays),
     hoursPerDay: clampHours(value.hoursPerDay, DEFAULT_HOURS_PER_DAY),
     breakTypes,
-    categories: parseNamed(value.categories),
+    categories,
     updatedAt: stampOf(value.updatedAt),
   };
 }
