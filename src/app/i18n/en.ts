@@ -341,7 +341,7 @@ export const en = {
     },
     clockSize: "Size",
     clockSizeHint:
-      "How much of the screen the dial takes. Large fills the width on a phone and the height on a desk.",
+      "How much of the screen the dial takes: on a phone a share of the width, on a desk a share of the window's height — about half of it, most of it, or nearly all of it.",
     clockSizeSmall: "Small",
     clockSizeMedium: "Medium",
     clockSizeLarge: "Large",
@@ -364,6 +364,9 @@ export const en = {
     backlightSteady: "Steady",
     backlightHz: "{hz} Hz",
     backlightIntensity: "Brightness",
+    backlightSpread: "Spread",
+    backlightSpreadHint:
+      "How far the light reaches past the case. Turn it down if the glow runs into the bars around a large dial.",
     backlightOff: "Off",
     backlightPercent: "{percent}%",
     calendar: "Week",

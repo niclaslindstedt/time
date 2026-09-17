@@ -78,11 +78,20 @@ were looking at, so changing one thing about a preset is two taps.
 ### Size
 
 Small, medium or large, separately from the dial, because a size suits a
-screen rather than a watch. Small is the dial as it used to be; large fills
-the width on a phone and the height of the window on a desk, and is the
-default. The face is square, so on a phone this is its height as much as its
-width — a large dial pushes the break buttons down, a small one keeps the
-whole screen in one view.
+screen rather than a watch. Large is the default.
+
+Which way round the size is measured depends on the screen it is on, because
+that is what runs out first. A phone is a column, so a size is a share of the
+width: small is the dial as it used to be, and large fills the column. The
+face is square, so that is its height as much as its width — a large dial
+pushes the break buttons down, a small one keeps the whole screen in one
+view.
+
+A desk gives the dial a row of its own with room either side, so a size is a
+share of the window's **height** instead: about half of it for small, most of
+it for medium, and nearly all of it for large. A window with less than that
+to spare gives the dial the height there is, so a short window gets a smaller
+watch rather than a screen that scrolls.
 
 ### Backlight
 
@@ -98,3 +107,8 @@ may have a colour of its own.
 - **Beat.** How often it breathes, from steady to twice a second. With
   reduced motion on it never beats.
 - **Brightness.** From off to full. Off is a way to turn the whole thing off.
+- **Spread.** How far the light reaches past the case — a rim on the bezel at
+  one end, a halo half the dial again at the other. It is not the same knob as
+  brightness: a wide dim glow and a tight bright one are quiet in different
+  ways. Turn it down when the dial is large and the glow runs into the bars
+  around it, since the space around the watch is the only room the light has.

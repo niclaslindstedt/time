@@ -25,7 +25,12 @@ import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { dayTotals, progress } from "./day.ts";
 import { isWorkDay } from "./project.ts";
 import { formatDuration, formatPercent, formatTimeOfDay } from "./format.ts";
-import type { Backlight, ClockSize, DialConfig } from "./look.ts";
+import {
+  CLOCK_SIZE,
+  type Backlight,
+  type ClockSize,
+  type DialConfig,
+} from "./look.ts";
 import { CupIcon, EnterIcon, LeaveIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
@@ -61,10 +66,11 @@ import { useShortcuts } from "./useShortcuts.ts";
 // leave this screen.
 //
 // On a desk the same controls stand round the dial — breaks to its left,
-// kinds of work to its right — and the dial takes the height of the window
-// (`styles.css`, `.app-today`). The keyboard reaches them too: S for the
-// face, the digits for the kinds of work (`shortcuts.ts`), and the right
-// button on the dial opens the lot as a menu where the pointer is.
+// kinds of work to its right — and the dial takes the share of the window's
+// height its size asks for (`styles.css`, `.app-today`). The keyboard reaches
+// them too: S for the face, the digits for the kinds of work
+// (`shortcuts.ts`), and the right button on the dial opens the lot as a menu
+// where the pointer is.
 //
 // The screen owns no state beyond the modals it opens. Every band is derived
 // from the day's spans up to `now`, once a second, through `day.ts`; every
@@ -317,7 +323,17 @@ export function TodayScreen({
           and since when. The line is a button — the arrival is the time of
           day that is wrong most often, and this is where you see it. */}
       <div data-area="dial" className="flex flex-col items-center gap-2">
-        <div className="app-dial-slot w-full">
+        {/* On a desk the slot is sized by height rather than width, and the
+            size is the share of the window it may take (`styles.css`). */}
+        <div
+          className="app-dial-slot w-full"
+          style={
+            { "--dial-share": CLOCK_SIZE[clockSize].share } as Record<
+              string,
+              number
+            >
+          }
+        >
           <ClockFace
             day={day}
             project={project}

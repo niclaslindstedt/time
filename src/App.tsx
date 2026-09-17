@@ -278,25 +278,42 @@ export function App() {
         }
       />
 
-      {/* `relative` keeps absolutely-positioned descendants (the `sr-only`
-          inputs) inside the scroller; `overflow-x-hidden` clips the arriving
-          screen's slide. See the sibling cycle app for the long version. */}
-      <main
-        ref={main}
-        className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
-      >
+      {/* The content area. It is the frame rather than the scroller: the
+          screen inside it scrolls, and so does the desk's settings panel,
+          but the area itself never does. `relative` is what the panel and
+          the `sr-only` inputs are positioned against, and `overflow-clip`
+          rather than `hidden` on purpose — `clip` is not a scroll container,
+          so this box has a height of its own for the panel to be measured
+          against. Positioned inside a *scrolling* box the panel took the
+          height of the settings page instead, and the page behind it grew by
+          the whole of it. It also clips the arriving screen's slide and the
+          backlight's spill. See the sibling cycle app for the long
+          version. */}
+      <main ref={main} className="relative min-h-0 flex-1 overflow-clip">
+        {/* The one scrolling region — except on the desk's Today screen,
+            which is laid out to the height of the window on purpose (see
+            `.app-today` in `styles.css`). There the glow behind the dial
+            reaches past the bottom of the screen, and a decoration is not
+            something to scroll to: the screen holds still and the light is
+            clipped at the edge of the content area. */}
         <div
-          key={tab}
-          data-enter={enter}
-          className={`app-screen mx-auto flex min-h-full max-w-2xl flex-col ${
-            desk ? "lg:max-w-3xl" : ""
-          } ${desk && tab === "today" ? "lg:h-full lg:max-w-none" : ""}`}
+          className={`h-full overflow-y-auto overflow-x-hidden ${
+            desk && tab === "today" ? "lg:overflow-hidden" : ""
+          }`}
         >
-          {tab === "today" && todayScreen}
-          {tab === "log" && logScreen}
-          {tab === "report" && reportScreen}
-          {tab === "projects" && projectsScreen}
-          {tab === "settings" && settingsScreen}
+          <div
+            key={tab}
+            data-enter={enter}
+            className={`app-screen mx-auto flex min-h-full max-w-2xl flex-col ${
+              desk ? "lg:max-w-3xl" : ""
+            } ${desk && tab === "today" ? "lg:h-full lg:max-w-none" : ""}`}
+          >
+            {tab === "today" && todayScreen}
+            {tab === "log" && logScreen}
+            {tab === "report" && reportScreen}
+            {tab === "projects" && projectsScreen}
+            {tab === "settings" && settingsScreen}
+          </div>
         </div>
 
         {desk && settingsOpen && (
