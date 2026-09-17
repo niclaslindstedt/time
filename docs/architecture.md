@@ -39,6 +39,7 @@ src/app/
   ClockFace.tsx     the day on the dial, and the way into its stretches
   DialPicker.tsx    the presets and the custom pickers in Settings
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
+  ModalHeader.tsx   a dialog's top bar: cancel, the title, save
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you started, corrected from the timer
   NewKindModal.tsx  a kind of break or work, named on the spot
