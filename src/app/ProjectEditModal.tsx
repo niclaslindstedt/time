@@ -20,7 +20,7 @@ import {
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
-import { weekdayLabel } from "./labels.ts";
+import { WEEK, weekdayLabel } from "./labels.ts";
 import type { Project, Weekday } from "./types.ts";
 
 // The project editor: name, working days, the day's length, the break types
@@ -33,8 +33,6 @@ type Props = {
   onSave: (project: Project) => void;
   onClose: () => void;
 };
-
-const WEEK: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
 export function ProjectEditModal({ project, onSave, onClose }: Props) {
   const t = useT();

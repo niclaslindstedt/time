@@ -21,6 +21,17 @@ or several; most people have one.
 Projects are data, not settings: they live in the document, so they sync and
 back up with the days.
 
+## The card
+
+A card is the week at a glance: a pill for each working day, Monday first,
+with a day that falls on a weekend drawn in the flag colour rather than the
+accent — a Saturday worked is the exception, and it should look like one.
+Beside them sits the day's length, "8 hour workday". What the project holds
+beyond that is the editor's business: a card counts nothing.
+
+Editing and deleting are two glyphs in the card's top right — a pen and a
+bin. Deleting still asks first.
+
 ## One or many
 
 With one project the app never asks which. Add a second and the top bar
