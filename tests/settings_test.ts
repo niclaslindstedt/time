@@ -103,27 +103,53 @@ describe("parseSettings – the backlight", () => {
 
   it("keeps a choice within range", () => {
     const s = parseSettings(
-      JSON.stringify({ backlight: { color: "violet", hz: 1, intensity: 35 } }),
+      JSON.stringify({
+        backlight: { color: "violet", hz: 1, intensity: 35, spread: 20 },
+      }),
     );
-    expect(s.backlight).toEqual({ color: "violet", hz: 1, intensity: 35 });
+    expect(s.backlight).toEqual({
+      color: "violet",
+      hz: 1,
+      intensity: 35,
+      spread: 20,
+    });
   });
 
-  it("clamps a beat and a brightness that are out of range", () => {
+  it("clamps a beat, a brightness and a spread that are out of range", () => {
     const s = parseSettings(
-      JSON.stringify({ backlight: { color: "amber", hz: 9, intensity: -4 } }),
+      JSON.stringify({
+        backlight: { color: "amber", hz: 9, intensity: -4, spread: 300 },
+      }),
     );
-    expect(s.backlight).toEqual({ color: "amber", hz: 2, intensity: 0 });
+    expect(s.backlight).toEqual({
+      color: "amber",
+      hz: 2,
+      intensity: 0,
+      spread: 100,
+    });
   });
 
   it("falls back field by field on a colour or a number that is not one", () => {
     const s = parseSettings(
       JSON.stringify({
-        backlight: { color: "plaid", hz: "fast", intensity: "bright" },
+        backlight: {
+          color: "plaid",
+          hz: "fast",
+          intensity: "bright",
+          spread: "wide",
+        },
       }),
     );
     expect(s.backlight).toEqual(DEFAULT_BACKLIGHT);
     expect(parseSettings('{"backlight":7}').backlight).toEqual(
       DEFAULT_BACKLIGHT,
     );
+  });
+
+  it("gives a device that stored a backlight before the spread the default", () => {
+    const s = parseSettings(
+      JSON.stringify({ backlight: { color: "teal", hz: 0, intensity: 80 } }),
+    );
+    expect(s.backlight.spread).toBe(DEFAULT_BACKLIGHT.spread);
   });
 });

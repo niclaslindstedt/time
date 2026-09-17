@@ -2,7 +2,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  BACKLIGHT_SPREAD,
+  CLOCK_SIZE,
   CLOCK_SIZES,
+  DEFAULT_BACKLIGHT,
   DEFAULT_DIAL_PRESET,
   DIAL_FACE,
   DIAL_FACES,
@@ -17,6 +20,7 @@ import {
   DIAL_PRESETS,
   DIAL_SCALE,
   DIAL_SCALES,
+  glowGeometry,
   isNumeral,
   resolveDial,
   type DialConfig,
@@ -212,3 +216,75 @@ function luminance(hex: string): number {
   };
   return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
 }
+
+describe("the sizes", () => {
+  it("has a spec behind every size, and no size without one", () => {
+    expect(Object.keys(CLOCK_SIZE).sort()).toEqual([...CLOCK_SIZES].sort());
+  });
+
+  it("ramps up the desk's share of the window, small to large", () => {
+    const shares = CLOCK_SIZES.map((size) => CLOCK_SIZE[size].share);
+    expect(shares).toEqual([0.5, 0.7, 0.85]);
+    for (let i = 1; i < shares.length; i++) {
+      expect(shares[i]!).toBeGreaterThan(shares[i - 1]!);
+    }
+  });
+
+  it("never asks for more of the window than there is", () => {
+    for (const size of CLOCK_SIZES) {
+      expect(CLOCK_SIZE[size].share).toBeGreaterThan(0);
+      expect(CLOCK_SIZE[size].share).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("wants a wider gap between the chips on a smaller dial", () => {
+    expect(CLOCK_SIZE.small.labelGap).toBeGreaterThan(
+      CLOCK_SIZE.medium.labelGap,
+    );
+    expect(CLOCK_SIZE.medium.labelGap).toBeGreaterThan(
+      CLOCK_SIZE.large.labelGap,
+    );
+  });
+});
+
+describe("glowGeometry", () => {
+  const spreads = [
+    BACKLIGHT_SPREAD.min,
+    25,
+    DEFAULT_BACKLIGHT.spread,
+    75,
+    BACKLIGHT_SPREAD.max,
+  ];
+
+  it("reaches further the wider the spread, and softens with it", () => {
+    const halos = spreads.map(glowGeometry);
+    for (let i = 1; i < halos.length; i++) {
+      expect(halos[i]!.inset).toBeGreaterThan(halos[i - 1]!.inset);
+      expect(halos[i]!.blur).toBeGreaterThan(halos[i - 1]!.blur);
+    }
+  });
+
+  it("holds the light out to the dial's own edge, whatever the reach", () => {
+    // The disc is the dial inflated by `inset` on each side and the gradient
+    // is sized to its nearer side, so the dial's edge sits at half the dial's
+    // width over half the disc's — which is what `hold` has to be, or the
+    // halo stops short of the case or washes over it.
+    for (const spread of spreads) {
+      const { inset, hold, fade } = glowGeometry(spread);
+      expect(hold).toBeCloseTo((50 / (50 + inset)) * 100, 1);
+      // And the trace is halfway from there to the edge of the disc.
+      expect(fade).toBeCloseTo(hold + (100 - hold) / 2, 1);
+      expect(fade).toBeLessThan(100);
+    }
+  });
+
+  it("is a rim of light at nothing and a halo at everything", () => {
+    expect(glowGeometry(BACKLIGHT_SPREAD.min).inset).toBe(5);
+    expect(glowGeometry(BACKLIGHT_SPREAD.max).inset).toBe(30);
+  });
+
+  it("clamps a spread from outside the range rather than inverting the disc", () => {
+    expect(glowGeometry(-40)).toEqual(glowGeometry(BACKLIGHT_SPREAD.min));
+    expect(glowGeometry(400)).toEqual(glowGeometry(BACKLIGHT_SPREAD.max));
+  });
+});

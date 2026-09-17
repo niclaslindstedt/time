@@ -20,6 +20,11 @@ import { useT } from "./i18n/index.ts";
 // button again, the scrim, Escape or the cross closes it. It is a dialog to
 // assistive tech and to the framework's own checks (`keyboardIsClaimed`), so
 // the desk's single-key shortcuts stand down while it is open.
+//
+// It is the height of the content area it is positioned against (`App.tsx`'s
+// <main>, which is deliberately not the scrolling box), and a settings page
+// longer than that scrolls inside the panel. The desk behind it holds still:
+// the panel is the only thing on screen that moves.
 
 type Props = {
   title: string;

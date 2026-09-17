@@ -518,25 +518,40 @@ export function resolveDial(
 }
 
 // ── The size ──
-// How much of the screen the dial takes. Small is the dial as it was;
-// large fills the width, to the same margins as the Start working button.
+// How much of the screen the dial takes. Which way round that is measured
+// depends on the screen: a phone is a column, so the width runs out first
+// and a size is a cap on it; a desk gives the dial a whole row of the Today
+// grid, so the *height* runs out first and a size is a share of the window's
+// height (`share`, read by `.app-dial-slot` in `styles.css` as
+// `--dial-share`).
+//
+// Both are needed. A width cap alone made small and medium near enough the
+// same watch on a desk — 15rem against 19rem, both lost in a tall window —
+// while large, capped by nothing, came out two or three times either. A
+// share of the height ramps properly: half the window, most of it, nearly
+// all of it.
 
 export type ClockSize = "small" | "medium" | "large";
 
 export const CLOCK_SIZES: ClockSize[] = ["small", "medium", "large"];
 
 export type ClockSizeSpec = {
-  /** The dial's width cap. The face is square, so this is its height too. */
+  /** The dial's width cap on a phone. The face is square, so this is its
+   *  height too. Lifted on a desk, where `share` sizes it instead. */
   maxWidth: string;
+  /** The share of the window's height the dial takes on a desk, 0 – 1. The
+   *  row it stands in may have less to spare than that in a short window, in
+   *  which case it gets what there is. */
+  share: number;
   /** Two break-end chips closer together than this on the dial would overlap.
    *  A smaller dial needs a wider gap: the chips do not shrink with it. */
   labelGap: number;
 };
 
 export const CLOCK_SIZE: Record<ClockSize, ClockSizeSpec> = {
-  small: { maxWidth: "max-w-[15rem]", labelGap: 22 },
-  medium: { maxWidth: "max-w-[19rem]", labelGap: 16 },
-  large: { maxWidth: "max-w-none", labelGap: 14 },
+  small: { maxWidth: "max-w-[15rem]", share: 0.5, labelGap: 22 },
+  medium: { maxWidth: "max-w-[19rem]", share: 0.7, labelGap: 16 },
+  large: { maxWidth: "max-w-none", share: 0.85, labelGap: 14 },
 };
 
 // ── The backlight ───────────────────────────────────────────────────────────
@@ -547,6 +562,12 @@ export const CLOCK_SIZE: Record<ClockSize, ClockSizeSpec> = {
 // light rather than the theme's — a colour an object has — so it may be any
 // of these without being a palette. The default is the theme's accent, so a
 // fresh install glows in the colour the ring already uses.
+//
+// Four knobs: the colour, the beat, how strong the light is, and how far it
+// reaches. The last two are not the same thing — a dim wide halo and a
+// bright tight one are both quiet in their own way — and the reach matters
+// because the space around the dial is not the app's to spend: a halo wider
+// than it runs into the bars and is cut off at them.
 
 export type BacklightColor =
   "accent" | "white" | "amber" | "green" | "teal" | "blue" | "violet" | "rose";
@@ -580,18 +601,71 @@ export type Backlight = {
   hz: number;
   /** How bright, 0 – 100. Zero is no light at all. */
   intensity: number;
+  /** How far it reaches past the case, 0 – 100. Zero is a rim of light on
+   *  the bezel; a hundred is a halo half the dial again. Brightness says how
+   *  strong the light is, this says how much of the screen it lands on —
+   *  which is the knob a dial that fills a desk window needs, because a halo
+   *  wider than the space around the watch runs into the bars and is cut
+   *  off there. */
+  spread: number;
 };
 
 /** The beat's range: from steady to twice a second, which is as fast as a
  *  glow can go before it is a strobe. */
 export const BACKLIGHT_HZ = { min: 0, max: 2, step: 0.05 };
 export const BACKLIGHT_INTENSITY = { min: 0, max: 100, step: 5 };
+export const BACKLIGHT_SPREAD = { min: 0, max: 100, step: 5 };
 
 export const DEFAULT_BACKLIGHT: Backlight = {
   color: "accent",
   hz: 0.25,
   intensity: 60,
+  spread: 50,
 };
+
+/** The glow's geometry, in the numbers `.app-glow` is drawn from: how far
+ *  the disc is inflated past the dial, where along its radius the light
+ *  holds and where it has faded, and how soft its edge is. All of it in one
+ *  place because the stops are not independent of the reach — the disc is a
+ *  `closest-side` circle, so a wider reach moves the dial's own edge inward
+ *  along the gradient, and the light has to hold out to *there* whatever the
+ *  reach is or the halo either stops short of the case or washes over it. */
+export type GlowGeometry = {
+  /** How far past the dial the disc is inflated, as a percentage of the
+   *  dial's width on each side. */
+  inset: number;
+  /** Where the light is still at full strength: the dial's own edge, as a
+   *  percentage of the disc's radius. Everything inside it is behind the
+   *  watch and never seen. */
+  hold: number;
+  /** Where it has fallen to a trace, as a percentage of the radius. */
+  fade: number;
+  /** How soft the edge is, in pixels. A wider halo is a softer one. */
+  blur: number;
+};
+
+/** The spread, 0 – 100, to the glow's geometry. Pure, and the one place the
+ *  arithmetic lives: `ClockFace.tsx` hands the result to CSS as custom
+ *  properties. */
+export function glowGeometry(spread: number): GlowGeometry {
+  const t = Math.min(1, Math.max(0, spread / 100));
+  // The reach, as a fraction of the dial's width on each side: a rim at
+  // nothing, a halo half the dial again at everything.
+  const reach = 0.05 + 0.25 * t;
+  const hold = 0.5 / (0.5 + reach);
+  return {
+    inset: twoPlaces(reach * 100),
+    hold: twoPlaces(hold * 100),
+    fade: twoPlaces((hold + (1 - hold) / 2) * 100),
+    blur: twoPlaces(8 + 16 * t),
+  };
+}
+
+/** Two decimals: enough for a gradient stop, and short enough that the
+ *  inline style the dial carries stays readable. */
+function twoPlaces(n: number): number {
+  return Math.round(n * 100) / 100;
+}
 
 /** A stored backlight, field by field, clamped into range. */
 export function clampBacklight(value: unknown): Backlight {
@@ -600,6 +674,7 @@ export function clampBacklight(value: unknown): Backlight {
   ) as Partial<Record<keyof Backlight, unknown>>;
   const hz = Number(raw.hz);
   const intensity = Number(raw.intensity);
+  const spread = Number(raw.spread);
   return {
     color:
       typeof raw.color === "string" && raw.color in BACKLIGHT_COLOR
@@ -616,5 +691,15 @@ export function clampBacklight(value: unknown): Backlight {
           ),
         )
       : DEFAULT_BACKLIGHT.intensity,
+    // A device that stored a backlight before the spread was a setting gets
+    // the default, which is the reach the glow always had.
+    spread: Number.isFinite(spread)
+      ? Math.round(
+          Math.min(
+            BACKLIGHT_SPREAD.max,
+            Math.max(BACKLIGHT_SPREAD.min, spread),
+          ),
+        )
+      : DEFAULT_BACKLIGHT.spread,
   };
 }

@@ -16,6 +16,7 @@ import { breakName, categoryColor, categoryName } from "./labels.ts";
 import {
   BACKLIGHT_COLOR,
   CLOCK_SIZE,
+  glowGeometry,
   type Backlight,
   type ClockSize,
   type DialConfig,
@@ -35,8 +36,8 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 // you are in. The bezel is the day's progress against its target (see
 // `Dial.tsx`), and the light behind the case says whether the day is being
 // counted: it beats while you work, holds low on a break, and is off when
-// you are not working. Its colour, its beat and how bright are the
-// backlight settings (`look.ts`).
+// you are not working. Its colour, its beat, how bright it is and how far it
+// reaches are the backlight settings (`look.ts`).
 //
 // The face is the button. Pressing it starts the day, and pressing it again
 // stops it — there is no other switch, the way a watch has no other crown.
@@ -228,6 +229,7 @@ export function ClockFace({
 
   const glow =
     state === "break" ? "var(--color-flag)" : BACKLIGHT_COLOR[backlight.color];
+  const halo = glowGeometry(backlight.spread);
   const switchLabel =
     state === "out" ? t("today.clockIn") : t("today.clockOut");
 
@@ -241,10 +243,13 @@ export function ClockFace({
         e.preventDefault();
         onMenu(e.clientX, e.clientY);
       }}
-      className={`relative mx-auto w-full ${sizing.maxWidth}`}
+      className={`relative mx-auto w-full ${sizing.maxWidth} lg:max-w-none`}
     >
       {/* The light behind the case. Drawn first so everything else sits
-          over it; its colour, beat and strength are the settings'. */}
+          over it; its colour, beat, strength and reach are the settings' —
+          the reach as the four numbers `glowGeometry` makes of the spread,
+          because where the gradient holds and fades depends on how far it
+          is inflated (see `look.ts`). */}
       <div
         aria-hidden="true"
         data-state={state}
@@ -255,6 +260,10 @@ export function ClockFace({
             "--glow-color": glow,
             "--glow-alpha": backlight.intensity / 100,
             "--glow-period": backlight.hz > 0 ? `${1 / backlight.hz}s` : "1s",
+            "--glow-inset": `${halo.inset}%`,
+            "--glow-hold": `${halo.hold}%`,
+            "--glow-fade": `${halo.fade}%`,
+            "--glow-blur": `${halo.blur}px`,
           } as Record<string, string | number>
         }
       />

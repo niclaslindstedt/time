@@ -22,8 +22,8 @@ The main screen, and the whole app for most of a day.
   still gets the percentage, from the line under the dial.)
 - **The light behind the case** says whether the day is being counted. It
   beats while you are working, holds low and steady in the break colour on a
-  break, and is off when you are not working. Its colour, its beat and how
-  bright are under **Settings → The clock → Backlight**.
+  break, and is off when you are not working. Its colour, its beat, how bright
+  it is and how far it reaches are under **Settings → The clock → Backlight**.
 - **The line under the dial.** The day's state in words — "Working · since
   08:02", "On a break · Lunch until 12:30", "Not working · Stopped at 17:10".
 - **The buttons.** A row of break buttons, one per break type the project
@@ -91,9 +91,15 @@ removing it is the project form's job (see [`projects.md`](projects.md)).
 
 From 1024px wide the app is a desk rather than a phone: the four places move
 to the top bar as tabs, the bottom bar goes, and Settings slides in over the
-right-hand edge so the dial is still in view while a watch face is picked.
-The dial takes the height of the window, with the breaks to its left and the
-kinds of work to its right.
+right-hand edge so the dial is still in view while a watch face is picked. A
+settings page longer than the window scrolls inside that panel; the desk
+behind it holds still.
+
+The dial takes the share of the window's height its size asks for (see
+[`themes.md`](themes.md)), with the breaks to its left and the kinds of work
+to its right. The screen is laid out to the window and does not scroll — the
+light behind the dial reaches past the edge of it on purpose, and a
+decoration is not something to scroll to.
 
 Under a mouse the ring answers the pointer. Rest on a stretch and it says
 what the stretch was and when; press the right button anywhere on the dial
