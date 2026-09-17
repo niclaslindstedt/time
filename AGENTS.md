@@ -143,10 +143,14 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   coffee 15 min, toilet 5 min), whether a date is a working day, the day's
   target, the clamps.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
-  rotations, arc paths, and `dialLayout` — where the day's ring, the hour
-  markers and the hands sit for a given placement and marker size — and the
-  timer card's frame path, which is the same arithmetic for a rounded
-  rectangle. Pure.
+  rotations, arc paths, `dialLayout` — where the day's ring, the hour markers
+  and the hands sit for a given placement and marker size — and `ringHit` /
+  `timesAt`, which read a point on the ring back as a moment. Also how the
+  hands _move_: `beatTurns`, the movement's beat and the little overshoot a
+  stepper lands it with; and the **wind**, `windPlan` / `windTurns`, the
+  motion that sets the watch after the tab has been asleep — the minute hand
+  a turn an hour, the hour hand a twelfth of it, the second hand hacked until
+  the two are right, all on a sine's ease. Pure.
 - `src/app/look.ts` — the app's two themes, and the dial's vocabulary: the
   eight faces, eight typefaces, eight marker styles, eight hour sizes, the
   three placements against the ring, the three movements, and the eight
@@ -165,6 +169,20 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   wholesale while demo data has taken over storage.
 - `src/app/useNow.ts` — the one place the clock is read: `today` and
   `seconds`, ticking at the rate a screen asks for and re-read on focus.
+- `src/app/useHands.ts` — the frames behind `clock.ts`'s hands. A
+  `requestAnimationFrame` loop reads the clock (`nowExact`), works out where
+  each hand belongs, and writes the three rotations straight onto the
+  elements. The hands are off the render loop entirely: a movement is a rate —
+  eight beats a second for a calibre, none at all for a glide wheel — and a
+  rate chased by a CSS transition off a drifting interval is a rate that
+  hesitates. The dial keeps rendering the rotations it had at mount, so React
+  never writes a transform again; a hand that has not moved is not written, so
+  a quartz touches the DOM once a second. Rotations go out wrapped into one
+  turn and rounded: a browser keeps six significant figures of a CSS number,
+  and an angle counted on from midnight spends them by mid-morning. The loop
+  also notices the gaps — `requestAnimationFrame` does not run in a background
+  tab, so the first frame after one comes back is an hour after the last, and
+  that is when the watch gets wound.
 - `src/app/dev/` — the developer "Demo data" switch: two months of invented
   days (`demoData.ts`, pure and clock-free, every date an offset from
   `today`), the in-memory `DocBackend` that serves them, and the
@@ -285,6 +303,7 @@ regression.
 | A new derived number                    | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                         |
 | A change to what a button on Today does | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                               |
 | A change to how the clock draws         | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)      |
+| A change to how the hands move          | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there             |
 | A new keyboard shortcut                 | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command               |
 | Something only the desk does            | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                     |
 | A new face, marker, typeface or preset  | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |

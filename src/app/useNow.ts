@@ -19,6 +19,18 @@ function read(): Now {
   return { today: dayKeyOf(date), seconds: secondsOfDay(date) };
 }
 
+/**
+ * The moment to the millisecond, for the one thing that needs it: the loop
+ * that moves the clock's hands (see `useHands.ts`). A derivation must never
+ * take this — it is not a parameter, it is a reading — but a second hand
+ * beating eight times a second cannot be told the time in whole seconds.
+ * Here rather than in the loop so the clock is still read in one file.
+ */
+export function nowExact(): Seconds {
+  const date = new Date();
+  return secondsOfDay(date) + date.getMilliseconds() / 1000;
+}
+
 export function useNow(intervalMs: number): Now {
   const [now, setNow] = useState<Now>(read);
   useEffect(() => {

@@ -69,7 +69,11 @@ were looking at, so changing one thing about a preset is two taps.
   with the small overshoot a stepper motor gives it. **Mechanical** walks in
   eight small steps a second, the way a calibre at 28 800 vph beats. **Glide**
   runs the hand round continuously, with no step at all. The hour and minute
-  hands sweep either way. With reduced motion on, every hand simply jumps.
+  hands sweep either way. Whichever you pick, the rate is the rate: the hands
+  are drawn from the clock every frame rather than nudged once a second, so a
+  beat does not hesitate when the app is busy. With reduced motion on the
+  hands still keep time; what they skip is the wind after the tab has been
+  asleep (see [`today.md`](today.md)).
 
 ### Size
 
