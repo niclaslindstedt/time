@@ -26,9 +26,10 @@ requires authentication even for public packages.
 ## Your first day
 
 1. The app opens on **Today** and asks for an employer. Give it a name; the
-   defaults are Monday to Friday, eight hours a day, with a 30-minute lunch
-   and a 15-minute coffee break as break types and three kinds of work. Change
-   any of it, or come back to it later under **Employers**.
+   defaults are Monday to Friday, eight hours a day, with a 30-minute lunch, a
+   15-minute coffee break and a 5-minute toilet break as break types, and four
+   kinds of work. Change any of it, or come back to it later under
+   **Employers**.
 2. Press **Enter office**. The timer starts, and the clock begins drawing the
    day.
 3. Tap a break — **Lunch**, say — when you go. It is written down there and
