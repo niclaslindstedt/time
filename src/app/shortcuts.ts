@@ -57,3 +57,33 @@ export function commandFor(key: string, mods: Modifiers): Command | null {
   }
   return null;
 }
+
+// The two keys a modal answers.
+//
+// Escape is the framework's — every `Modal` closes on it already, and so does
+// the desk's side panel. Enter is this app's half of the pair: the same press
+// as the Save button in `ModalHeader`, so a name typed into the "Custom" pill
+// is filed without reaching for the pointer.
+//
+// Enter is not free, though. It presses a focused button, types a newline
+// into a textarea, and opens a select — in those it belongs to the control
+// and the modal keeps out of it. Which control the keyboard is in is the
+// caller's reading of the DOM; this module only says what the press means,
+// which is what keeps it testable.
+
+/** The kind of control a modal's key press landed on. */
+export type Focused =
+  /** A one-line field: a name, a number, a time. */
+  | "field"
+  /** Something Enter already does a job in: a button, a link, a textarea, a
+   *  select, a contenteditable. */
+  | "control"
+  /** Nothing in particular — the modal's own card. */
+  | "card";
+
+/** Whether a key press inside a modal is asking for it to be saved. */
+export function savesModal(key: string, mods: Modifiers, on: Focused): boolean {
+  if (key !== "Enter") return false;
+  if (mods.alt || mods.ctrl || mods.meta || mods.shift) return false;
+  return on !== "control";
+}

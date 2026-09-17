@@ -2,7 +2,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { CloseIcon } from "@niclaslindstedt/oss-framework/components";
-import { useEscapeKey } from "@niclaslindstedt/oss-framework/hooks";
 
 import { useT } from "./i18n/index.ts";
 
@@ -35,8 +34,26 @@ type Props = {
 export function SidePanel({ title, onClose, children }: Props) {
   const t = useT();
   const panel = useRef<HTMLElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
-  useEscapeKey(true, onClose);
+  // Escape closes the panel — but only while the panel is the top thing on
+  // screen. Settings can open a dialog of its own ("Delete all data"), and
+  // that dialog is what Escape belongs to while it is up. The framework's
+  // `useEscapeKey` listens in the capture phase and stops the press dead, so
+  // it would close the panel out from under the dialog instead; the panel
+  // listens for itself and stands down while anything modal is stacked on
+  // top of it.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (modalAbove(panel.current)) return;
+      e.stopImmediatePropagation();
+      closeRef.current();
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, []);
 
   // Focus lands on the panel when it opens and goes back to the button that
   // opened it when it closes, so a keyboard never loses its place.
@@ -80,4 +97,15 @@ export function SidePanel({ title, onClose, children }: Props) {
       </section>
     </>
   );
+}
+
+/** Whether anything modal is drawn over the panel. A modal is portalled to
+ *  the body, so one opened from inside the panel is still not *within* it —
+ *  which is exactly what makes it the thing on top. */
+function modalAbove(panel: HTMLElement | null): boolean {
+  const modals = document.querySelectorAll('[aria-modal="true"]');
+  for (const el of modals) {
+    if (el !== panel && !panel?.contains(el)) return true;
+  }
+  return false;
 }

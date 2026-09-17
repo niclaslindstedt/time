@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { useRef } from "react";
+
 import { Button } from "@niclaslindstedt/oss-framework/components";
 
 import { useT } from "./i18n/index.ts";
+import { useModalSave } from "./useModalSave.ts";
 
 // The top of every modal that is saved or abandoned: cancel on the left,
 // the title between them, save on the right.
@@ -14,6 +17,11 @@ import { useT } from "./i18n/index.ts";
 //
 // It is a sibling of the modal's scrolling body rather than part of it, so
 // it stays put while a long form scrolls underneath.
+//
+// It is also the modal's keyboard: Enter anywhere in the card is this row's
+// Save, the way Escape is its Cancel (the framework's `Modal` owns that
+// half). Both live here rather than in the five forms, so a modal that has
+// this bar has the keys.
 
 type Props = {
   /** The id the modal's `labelledBy` points at. */
@@ -33,9 +41,15 @@ export function ModalHeader({
   saveDisabled = false,
 }: Props) {
   const t = useT();
+  const row = useRef<HTMLDivElement>(null);
+
+  useModalSave({ anchor: row, onSave, saveDisabled });
 
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-line bg-surface-3 px-2 py-2">
+    <div
+      ref={row}
+      className="flex shrink-0 items-center gap-2 border-b border-line bg-surface-3 px-2 py-2"
+    >
       <Button className="min-h-10 shrink-0" onClick={onCancel}>
         {t("common.cancel")}
       </Button>

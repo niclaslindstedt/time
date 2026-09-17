@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   LABELED_FIELD_CLASS,
@@ -55,6 +55,7 @@ type Props = {
 
 export function NewKindModal({ kind, autoColor, onSave, onClose }: Props) {
   const t = useT();
+  const field = useRef<HTMLInputElement>(null);
   const isBreak = kind === "break";
   const [name, setName] = useState("");
   const [minutes, setMinutes] = useState(DEFAULT_MINUTES);
@@ -76,6 +77,7 @@ export function NewKindModal({ kind, autoColor, onSave, onClose }: Props) {
       onClose={onClose}
       labelledBy="new-kind-title"
       closeLabel={t("common.close")}
+      initialFocusRef={field}
       centered
       size="max-w-sm"
     >
@@ -106,11 +108,17 @@ export function NewKindModal({ kind, autoColor, onSave, onClose }: Props) {
           />
           <label className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="text-xs text-muted">{t("today.kindName")}</span>
+            {/* The keyboard is handed to the field rather than left on the
+                card: the name is what the dialog is for, so it should be
+                typed into straight away — and then Enter is Save.
+                `autoFocus` will not do it, because the modal claims focus
+                for its card after the field has mounted; the ref is what it
+                honours. */}
             <input
+              ref={field}
               type="text"
               value={name}
               placeholder={t("today.kindNamePlaceholder")}
-              autoFocus
               onInput={(e) => setName(e.currentTarget.value)}
               className={LABELED_FIELD_CLASS}
             />

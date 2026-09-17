@@ -5,6 +5,7 @@ import {
   CATEGORY_KEYS,
   commandFor,
   KEY_HINT,
+  savesModal,
   type Modifiers,
 } from "../src/app/shortcuts.ts";
 
@@ -59,5 +60,33 @@ describe("KEY_HINT", () => {
 
   it("has no key for a tenth kind of work", () => {
     expect(KEY_HINT.category(CATEGORY_KEYS)).toBeNull();
+  });
+});
+
+describe("savesModal", () => {
+  it("saves on a bare Enter from a field", () => {
+    expect(savesModal("Enter", bare, "field")).toBe(true);
+  });
+
+  it("saves on a bare Enter from the card itself", () => {
+    expect(savesModal("Enter", bare, "card")).toBe(true);
+  });
+
+  it("leaves Enter to a control that already answers it", () => {
+    expect(savesModal("Enter", bare, "control")).toBe(false);
+  });
+
+  it("stands down under any modifier", () => {
+    expect(savesModal("Enter", { ...bare, meta: true }, "field")).toBe(false);
+    expect(savesModal("Enter", { ...bare, ctrl: true }, "field")).toBe(false);
+    expect(savesModal("Enter", { ...bare, alt: true }, "field")).toBe(false);
+    expect(savesModal("Enter", { ...bare, shift: true }, "field")).toBe(false);
+  });
+
+  it("is Enter and nothing else — Escape is the modal's own", () => {
+    expect(savesModal("Escape", bare, "field")).toBe(false);
+    expect(savesModal(" ", bare, "field")).toBe(false);
+    expect(savesModal("Return", bare, "field")).toBe(false);
+    expect(savesModal("s", bare, "field")).toBe(false);
   });
 });
