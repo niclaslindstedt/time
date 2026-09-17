@@ -21,7 +21,7 @@ of its eight faces without a second palette leaking into the app around it.
 
 ### The presets
 
-Eight, each a combination a real dial is often seen in, named for what it
+Nine, each a combination a real dial is often seen in, named for what it
 looks like. Every card in Settings is a drawing of the dial it picks, with an
 invented morning on it, so the choice previews itself.
 
@@ -35,29 +35,32 @@ invented morning on it, so the choice previews itself.
 | **Studio**    | Small geometric numerals at the rim, and nothing else.                           |
 | **Tidewater** | A blue sunburst with tapered wedges.                                             |
 | **Harvest**   | Champagne, numerals at the quarters in a serif.                                  |
+| **Uptown**    | The sixties dress watch: silver, lumed batons, the day on a blue minute ring.    |
 
 ### Custom
 
-The ninth card opens the dial up piece by piece. It starts from the dial you
+The tenth card opens the dial up piece by piece. It starts from the dial you
 were looking at, so changing one thing about a preset is two taps.
 
 - **Face.** Eight colours, in about the order dials sell in: white, silver,
   slate, black, blue, green, burgundy, champagne. The markers and hands are
   printed in dark ink on a light face and white on a dark one, so a hand
   always reads against the face under it.
-- **Hour markers.** Eight styles: applied **batons** (a double at twelve);
-  the **dots** of a diver (a triangle at twelve, batons at the quarters);
+- **Hour markers.** Nine styles: applied **batons** (a double at twelve);
+  **lumed batons**, a plot of lume at the outer end of each and one wide
+  block at twelve; the **dots** of a diver (a triangle at twelve, batons at the quarters);
   Arabic **numerals** at every hour; **Roman** numerals; numerals at the
   **quarters** with batons between; the **3 · 6 · 9** layout with a triangle
   at twelve; tapered **wedges**; and bare **ticks** on a minute track.
 - **Numerals.** The typeface the hours are set in, one for each family of
   dial typography a watch is likely to carry: **Grotesque** (the app's own,
-  Inter), **Geometric** (Jost, the Bauhaus school), **Condensed** (Oswald,
+  Inter), **Light** (the same face at its light weight, the print on a minute
+  ring), **Geometric** (Jost, the Bauhaus school), **Condensed** (Oswald,
   the field and pilot's watch), **Engineered** (Barlow, the instrument),
   **Serif** (Source Serif), **Didone** (Playfair Display, the dress watch),
   **Inscribed** (Cinzel, the capitals a Roman dial is cut in) and **Mono**
   (JetBrains Mono). Each option in Settings is written in the face it picks.
-  All eight are bundled with the app and served from its own origin — no
+  All nine are bundled with the app and served from its own origin — no
   font host is called, here or anywhere else.
 - **Hour size.** Eight steps. A numeral that would not fit where it is placed
   is set as large as does fit, so no step ever runs a numeral off the face or
@@ -65,6 +68,14 @@ were looking at, so changing one thing about a preset is two taps.
 - **Markers sit.** Outside the ring, between it and the bezel; over it, the
   way a chapter ring lies on a dial; or inside it, with the ring round them.
   The ring moves in to make room when it has to.
+- **The day's ring.** What the day is drawn on. **A groove** is the faint
+  track the bands lie in, so an empty morning shows where they will go. The
+  **minute ring** is the chapter ring a sixties dress dial wears at its rim —
+  a deep blue, printed in white with a tick a minute and a numeral every
+  five, 05 round to 60 — and the day _fills_ it: a stretch at work paints it
+  the accent, a kind of work its hue, a break the flag colour, and the
+  minutes stay printed over whatever the day put under them. The numerals
+  are set in the Numerals face, whatever the hours wear.
 - **Movement.** How the second hand moves. **Quartz** steps once a second,
   with the small overshoot a stepper motor gives it. **Mechanical** walks in
   eight small steps a second, the way a calibre at 28 800 vph beats. **Glide**
@@ -73,7 +84,8 @@ were looking at, so changing one thing about a preset is two taps.
   are drawn from the clock every frame rather than nudged once a second, so a
   beat does not hesitate when the app is busy. With reduced motion on the
   hands still keep time; what they skip is the wind after the tab has been
-  asleep (see [`today.md`](today.md)).
+  asleep (see [`today.md`](today.md)). The dial says which it is, under the
+  name: AUTOMATIC, QUARTZ or GLIDE.
 
 ### Size
 

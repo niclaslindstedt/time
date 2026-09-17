@@ -5,6 +5,7 @@ import { render } from "preact";
 // and precaches for offline first paint. The framework's other font families
 // load on demand only if something asks for them, which this app never does —
 // there is no font picker to ask.
+import "@fontsource/inter/latin-300.css";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-ext-400.css";
 import "@fontsource/inter/latin-700.css";
@@ -24,16 +25,18 @@ import "@fontsource/inter/latin-ext-700.css";
 import "@fontsource/jetbrains-mono/latin-700.css";
 import "@fontsource/jetbrains-mono/latin-ext-700.css";
 
-// The dial's typefaces, for the eight faces the hours can be set in (see
+// The dial's typefaces, for the nine faces the hours can be set in (see
 // `DIAL_FONT` in `app/look.ts`): a geometric sans, a condensed one, an
 // engineered one, a serif, a didone, the inscriptional capitals a Roman dial
-// is cut in — and Inter and JetBrains Mono, already above.
+// is cut in — and Inter (the light weight above is the ninth: the print on
+// a chapter ring) and JetBrains Mono, already above.
 //
 // One weight each, and Latin only, because the entire text set in any of
-// them is twelve numerals: digits and I, V, X are all ASCII, so a second
-// subset would be bytes precached for glyphs a dial cannot use. Same
-// reasoning as the wordmark's mono above — bundled from `@fontsource`,
-// served from our own origin, a request to nobody.
+// them is twelve numerals and the dial's printing — the app's name and the
+// movement's word, all ASCII — so a second subset would be bytes precached
+// for glyphs a dial cannot use. Same reasoning as the wordmark's mono above
+// — bundled from `@fontsource`, served from our own origin, a request to
+// nobody.
 import "@fontsource/source-serif-4/latin-700.css";
 import "@fontsource/jost/latin-500.css";
 import "@fontsource/oswald/latin-500.css";

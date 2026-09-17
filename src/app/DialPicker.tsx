@@ -14,6 +14,7 @@ import {
   DIAL_PLACEMENTS,
   DIAL_PRESET,
   DIAL_PRESETS,
+  DIAL_RINGS,
   DIAL_SCALE,
   DIAL_SCALES,
   resolveDial,
@@ -24,18 +25,19 @@ import {
   type DialMovement,
   type DialPlacement,
   type DialPreset,
+  type DialRing,
   type DialScale,
 } from "./look.ts";
 import type { Seconds } from "./types.ts";
 
-// The settings' dial picker: eight presets and a ninth card, Custom, that
+// The settings' dial picker: nine presets and a tenth card, Custom, that
 // opens the dial up piece by piece.
 //
 // Every preset card is a drawing of the dial it picks, with an invented
 // morning on it and the hands at ten past ten — the choice previews itself,
 // because the dial is on another screen and a name says nothing about what
 // it looks like. Under Custom the same drawing is the live preview of what
-// the six pickers below it add up to.
+// the seven pickers below it add up to.
 //
 // The pickers read and write the caller's settings; nothing here is state.
 
@@ -196,6 +198,22 @@ export function DialPicker({ preset, custom, onPreset, onCustom }: Props) {
               ariaLabel={t("settings.clockPlacement")}
               fullWidth
             />
+          </Labelled>
+
+          <Labelled label={t("settings.clockRing")}>
+            <SegmentedControl<DialRing>
+              value={current.ring}
+              options={DIAL_RINGS.map((r) => ({
+                value: r,
+                label: t(`settings.ring.${r}`),
+              }))}
+              onChange={(r) => set("ring", r)}
+              ariaLabel={t("settings.clockRing")}
+              fullWidth
+            />
+            <p className="text-xs text-muted">
+              {t(`settings.ringHint.${current.ring}`)}
+            </p>
           </Labelled>
 
           <Labelled label={t("settings.clockMovement")}>

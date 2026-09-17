@@ -50,7 +50,7 @@ export const APP_LOOK: ThemeAppearance = appearanceFor("system");
 // ── The clock ───────────────────────────────────────────────────────────────
 // The Today screen's clock is drawn as a wrist watch: a face in a colour of
 // its own, applied hour markers, thin hands, and the day laid over it as one
-// ring. What it looks like is chosen in Settings, either as one of eight
+// ring. What it looks like is chosen in Settings, either as one of nine
 // presets — each a combination a real dial is often seen in — or piece by
 // piece under "Custom".
 //
@@ -168,17 +168,19 @@ export const DIAL_FACE: Record<DialFace, DialFaceSpec> = {
 };
 
 // ── The numerals' typeface ──
-// Eight faces, one for each family of dial typography a watch is likely to
-// carry: the plain grotesque of a modern sports dial, the geometric sans of
-// the Bauhaus school, the tall condensed sans of a field or pilot's watch,
-// the engineered sans of an instrument, a text serif, the high-contrast
-// didone of a dress watch, the inscriptional capitals a Roman dial is cut
-// in, and a mono. Every one is bundled from `@fontsource` and served from
-// this origin (see `main.tsx`) — a webfont host is the one request this app
-// does not make.
+// Nine faces, one for each family of dial typography a watch is likely to
+// carry: the plain grotesque of a modern sports dial, the same grotesque at
+// the light weight a sixties dress dial prints its minute ring in, the
+// geometric sans of the Bauhaus school, the tall condensed sans of a field or
+// pilot's watch, the engineered sans of an instrument, a text serif, the
+// high-contrast didone of a dress watch, the inscriptional capitals a Roman
+// dial is cut in, and a mono. Every one is bundled from `@fontsource` and
+// served from this origin (see `main.tsx`) — a webfont host is the one
+// request this app does not make.
 
 export type DialFont =
   | "grotesque"
+  | "light"
   | "geometric"
   | "condensed"
   | "engineered"
@@ -202,6 +204,7 @@ export type DialFontSpec = {
 
 export const DIAL_FONTS: DialFont[] = [
   "grotesque",
+  "light",
   "geometric",
   "condensed",
   "engineered",
@@ -216,6 +219,15 @@ export const DIAL_FONT: Record<DialFont, DialFontSpec> = {
     family: '"Inter", system-ui, sans-serif',
     weight: 700,
     widthFactor: 0.58,
+    scale: 1,
+  },
+  // The light weight of the same family: the thin, even digits a chapter
+  // ring is printed in, and the one weight that reads as print rather than
+  // as an applied numeral.
+  light: {
+    family: '"Inter", system-ui, sans-serif',
+    weight: 300,
+    widthFactor: 0.56,
     scale: 1,
   },
   geometric: {
@@ -268,15 +280,17 @@ export const DIAL_FONT: Record<DialFont, DialFontSpec> = {
 export const ROMAN_WIDTH = 2;
 
 // ── The hour markers ──
-// The eight ways a dial marks its hours: applied batons (the commonest, with
-// a double at twelve), the dots of a diver (a triangle at twelve, batons at
-// the quarters), numerals at every hour, Roman numerals, numerals at the
-// quarters only, the 3-6-9 layout of an expedition watch, the tapered wedges
-// of a mid-century dress dial, and a bare minute track with the hours as
-// longer ticks.
+// The nine ways a dial marks its hours: applied batons (the commonest, with
+// a double at twelve), the same batons with a plot of lume at the outer end
+// of each and one wide block at twelve (the sixties dress dial), the dots of
+// a diver (a triangle at twelve, batons at the quarters), numerals at every
+// hour, Roman numerals, numerals at the quarters only, the 3-6-9 layout of
+// an expedition watch, the tapered wedges of a mid-century dress dial, and a
+// bare minute track with the hours as longer ticks.
 
 export type DialMarkers =
   | "batons"
+  | "plots"
   | "dots"
   | "numerals"
   | "roman"
@@ -289,6 +303,8 @@ export type DialMarkers =
 export type Marker =
   | "baton"
   | "doubleBaton"
+  | "lumeBaton"
+  | "wideLumeBaton"
   | "dot"
   | "triangle"
   | "wedge"
@@ -305,6 +321,7 @@ export type DialMarkersSpec = {
 
 export const DIAL_MARKER_STYLES: DialMarkers[] = [
   "batons",
+  "plots",
   "dots",
   "numerals",
   "roman",
@@ -320,6 +337,12 @@ export const DIAL_MARKERS: Record<DialMarkers, DialMarkersSpec> = {
   batons: {
     at: (h) => (h % 12 === 0 ? "doubleBaton" : "baton"),
     minuteTrack: true,
+  },
+  // No track on the rim: the dial this is drawn for prints its minutes on
+  // the ring (see `DIAL_RING.chapter`).
+  plots: {
+    at: (h) => (h % 12 === 0 ? "wideLumeBaton" : "lumeBaton"),
+    minuteTrack: false,
   },
   dots: {
     at: (h) => (h % 12 === 0 ? "triangle" : quarter(h) ? "baton" : "dot"),
@@ -375,6 +398,35 @@ export type DialPlacement = "outside" | "over" | "inside";
 
 export const DIAL_PLACEMENTS: DialPlacement[] = ["outside", "over", "inside"];
 
+// ── The day's ring ──
+// What the day is drawn on. A groove is the faint track the day's bands lie
+// in, and an empty morning shows where they will go. A chapter ring is the
+// printed minute ring a sixties dress dial wears at its rim — sixty ticks
+// and a numeral every five, 05 round to 60 — and the day *fills* it: a
+// stretch at work paints the ring in the accent, a kind of work in its hue,
+// a break in the flag colour, and the minutes stay printed over whatever the
+// day put under them. Like the face, the ring's own colours are the object's
+// rather than the theme's: a deep blue, printed in white, whatever the face
+// under it.
+
+export type DialRing = "groove" | "chapter";
+
+export type DialRingSpec = {
+  /** Whether the minutes are printed on the ring. */
+  printed: boolean;
+  /** The ring's own colour, and what the minutes are printed in — the
+   *  chapter ring's. A groove has neither: it is the face's ink, faintly. */
+  fill: string | null;
+  ink: string | null;
+};
+
+export const DIAL_RINGS: DialRing[] = ["groove", "chapter"];
+
+export const DIAL_RING: Record<DialRing, DialRingSpec> = {
+  groove: { printed: false, fill: null, ink: null },
+  chapter: { printed: true, fill: "#1d2a4b", ink: "#eef1f6" },
+};
+
 // ── The movement ──
 // How the second hand moves. A quartz movement steps once a second. A
 // mechanical one beats several times a second — eight, at the 28 800 vph most
@@ -402,10 +454,11 @@ export type DialConfig = {
   markers: DialMarkers;
   scale: DialScale;
   placement: DialPlacement;
+  ring: DialRing;
   movement: DialMovement;
 };
 
-/** The eight presets: combinations a real dial is often seen in, named for
+/** The nine presets: combinations a real dial is often seen in, named for
  *  what they look like rather than for anyone who makes one. */
 export type DialPreset =
   | "snowfield"
@@ -415,7 +468,8 @@ export type DialPreset =
   | "boulevard"
   | "studio"
   | "tidewater"
-  | "harvest";
+  | "harvest"
+  | "uptown";
 
 export const DIAL_PRESETS: DialPreset[] = [
   "snowfield",
@@ -426,6 +480,7 @@ export const DIAL_PRESETS: DialPreset[] = [
   "studio",
   "tidewater",
   "harvest",
+  "uptown",
 ];
 
 export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
@@ -437,6 +492,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     markers: "batons",
     scale: 4,
     placement: "inside",
+    ring: "groove",
     movement: "sweep",
   },
   // The diver: black, dots with a triangle at twelve, a mechanical beat.
@@ -446,6 +502,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     markers: "dots",
     scale: 5,
     placement: "inside",
+    ring: "groove",
     movement: "mechanical",
   },
   // The field watch: numerals at every hour in a tall condensed sans.
@@ -455,6 +512,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     markers: "numerals",
     scale: 6,
     placement: "outside",
+    ring: "groove",
     movement: "mechanical",
   },
   // The expedition dial: 3, 6 and 9, and batons between.
@@ -464,6 +522,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     markers: "threeSixNine",
     scale: 6,
     placement: "inside",
+    ring: "groove",
     movement: "mechanical",
   },
   // The dress watch: white, Roman numerals in a high-contrast serif, quartz.
@@ -473,6 +532,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     markers: "roman",
     scale: 4,
     placement: "over",
+    ring: "groove",
     movement: "quartz",
   },
   // The Bauhaus dial: small geometric numerals at the rim, nothing else.
@@ -482,6 +542,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     markers: "numerals",
     scale: 3,
     placement: "outside",
+    ring: "groove",
     movement: "mechanical",
   },
   // A blue sunburst with wedges.
@@ -491,6 +552,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     markers: "wedges",
     scale: 4,
     placement: "inside",
+    ring: "groove",
     movement: "mechanical",
   },
   // Champagne, numerals at the quarters in a serif, quartz.
@@ -500,7 +562,20 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     markers: "quarters",
     scale: 4,
     placement: "inside",
+    ring: "groove",
     movement: "quartz",
+  },
+  // The sixties dress watch: a silver dial, long lumed batons, and the day
+  // drawn on a deep blue minute ring printed in a light grotesque. An
+  // automatic, so the dial says so under the name.
+  uptown: {
+    face: "silver",
+    font: "light",
+    markers: "plots",
+    scale: 7,
+    placement: "inside",
+    ring: "chapter",
+    movement: "mechanical",
   },
 };
 

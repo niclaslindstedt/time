@@ -66,14 +66,43 @@ const RIM = 5;
 export const TRACK_R = 116;
 /** Air between the ring and a marker beside it. */
 const MARKER_GAP = 4;
+/** The dial's printing, as radii from the centre: the name under twelve,
+ *  the movement's word under the name, and the window above six — the
+ *  Settings cog, where a date would be. Fixed rather than laid out per
+ *  dial, because a signature sits where it sits on a watch and the markers
+ *  are what move; what has to hold is that none of it reaches the ring on
+ *  any dial, and `tests/clock_test.ts` walks every one to say so. */
+export const SIGNATURE = {
+  /** The lockup's centre line, and the letters' height. */
+  name: 54,
+  nameSize: 9,
+  /** The movement's word, in small capitals under the name. */
+  line: 43,
+  lineSize: 4.2,
+  /** The window's centre, and its width and height. */
+  window: 52,
+  windowWidth: 21,
+  windowHeight: 14,
+} as const;
+
+/** How far the printing reaches from the centre: the top of the name, and
+ *  the foot of the window. What a ring has to stay outside of. */
+export const SIGNATURE_REACH = Math.max(
+  SIGNATURE.name + SIGNATURE.nameSize / 2,
+  SIGNATURE.window + SIGNATURE.windowHeight / 2,
+);
+
 /** How far a marker may extend either side of its own radius, per placement
  *  — outside, it has to fit between the ring and the rim; over the ring, it
- *  has to stay off the bezel; inside, it has to leave a dial for the hands.
- *  A numeral that would reach further is set smaller. */
+ *  has to stay off the bezel; inside, it has to stop short of the printing,
+ *  which is what leaves a dial for the hands. A numeral that would reach
+ *  further is set smaller. */
 const MAX_REACH: Record<DialPlacement, number> = {
   outside: 14,
   over: 20,
-  inside: 24,
+  inside:
+    (DIAL_R - RIM - RING_EDGE - RING_BAND - MARKER_GAP - SIGNATURE_REACH - 1) /
+    2,
 };
 
 /** An applied marker's length as a share of the numeral size it stands in
@@ -167,6 +196,41 @@ export function dialLayout(
     markerWidth: size * 0.22,
     hands: { hour: bandR * 0.62, minute: bandR, second: ringOuter },
   };
+}
+
+/** One mark of a chapter ring: a minute tick, or a numeral every five. The
+ *  numeral is turned to lie along the ring — and in the lower half turned
+ *  the other way, so a 30 at six o'clock is not read upside down. */
+export type ChapterMark =
+  | { minute: number; angle: number; kind: "tick" }
+  | {
+      minute: number;
+      angle: number;
+      kind: "numeral";
+      label: string;
+      turn: number;
+    };
+
+/**
+ * The sixty marks a printed minute ring carries: a numeral at every five
+ * minutes, 05 round to 60 at the top, and a tick at each minute between.
+ * `angle` is clockwise from twelve; `turn` is what the numeral is rotated
+ * by to sit along the ring.
+ */
+export function chapterMarks(): ChapterMark[] {
+  return Array.from({ length: 60 }, (_, i) => {
+    const angle = i * 6;
+    if (i % 5 !== 0) return { minute: i, angle, kind: "tick" as const };
+    const minute = i === 0 ? 60 : i;
+    const lower = angle > 90 && angle < 270;
+    return {
+      minute,
+      angle,
+      kind: "numeral" as const,
+      label: String(minute).padStart(2, "0"),
+      turn: lower ? (angle + 180) % 360 : angle,
+    };
+  });
 }
 
 /** The dial angle of a moment, in degrees clockwise from twelve o'clock. */

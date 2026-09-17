@@ -159,9 +159,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   a turn an hour, the hour hand a twelfth of it, the second hand hacked until
   the two are right, all on a sine's ease. Pure.
 - `src/app/look.ts` — the app's two themes, and the dial's vocabulary: the
-  eight faces, eight typefaces, eight marker styles, eight hour sizes, the
-  three placements against the ring, the three movements, and the eight
-  presets they combine into. Every option is an id and a spec, so the
+  eight faces, nine typefaces, nine marker styles, eight hour sizes, the
+  three placements against the ring, the two rings the day is drawn on (a
+  groove, or the printed chapter ring the day fills), the three movements,
+  and the nine presets they combine into. Every option is an id and a spec, so the
   settings can validate and the tests can walk them.
 - `src/app/format.ts` — durations, timers, times of day, and the parse of a
   typed time.
@@ -197,23 +198,32 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   downloads it.
 - `src/app/TodayScreen.tsx`, `LogScreen.tsx`, `ReportScreen.tsx`,
   `ProjectsScreen.tsx`, `SettingsScreen.tsx` — the five screens. Four are
-  bottom-nav tabs; Settings is reached from the top bar's cog, because it is a
-  thing you do and leave rather than a place you are. Today is where the day
+  bottom-nav tabs; Settings is reached from the cog — on the dial over Today,
+  where a watch keeps its date, and on the top bar everywhere else — because
+  it is a thing you do and leave rather than a place you are. Today is where the day
   is _filed_; Log is where it is _corrected_, because a list is where a wrong
   time is visible.
 - `src/app/Dial.tsx` — the watch face, drawn: bezel, face, minute track,
-  markers, hands, and the day as coloured bands it is handed. The bezel is
+  the ring the day is drawn on (a groove, or a chapter ring printed with the
+  minutes, which the day fills and the print lies back over), markers, the
+  printing, hands, and the day as coloured bands it is handed. The bezel is
   also the day's progress: clockwise from twelve, closing at the target and
   going round again in the flag colour past it — the one number the Today
-  screen draws rather than prints. Paint only, no vocabulary, so the same
-  drawing serves Today and the preset cards in Settings. The hands move by
-  CSS transition (`styles.css`), keyed on the movement.
+  screen draws rather than prints. The printing is what a dial carries
+  besides its hours: the app's mark and name under twelve, the movement's
+  word under them (AUTOMATIC, QUARTZ, GLIDE), and a window above six with
+  the Settings cog where a date would be — geometry in `clock.ts`
+  (`SIGNATURE`), which the markers are clamped to clear. Paint only, no
+  vocabulary, so the same drawing serves Today and the preset cards in
+  Settings. The hands are `useHands.ts`'s, off the render loop.
 - `src/app/ClockFace.tsx` — the day on the dial, and the switch. One ring:
   presence as the accent band and its thin outer line, a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
   both. Reads `day.ts` only. The face is the button that starts and stops
   the day; a stretch on the ring, and the break ends printed on the rim,
-  open the day's stretches instead. Behind the case is the backlight — the
+  open the day's stretches instead; the window above six is the cog. On a
+  phone it keeps the light's own reach clear above the case, so the halo is
+  whole rather than cut flat where the screen begins. Behind the case is the backlight — the
   glow that says the day is being counted, in the colour, beat and strength
   the settings chose. Under a mouse the ring reads on hover and the right
   button opens the day's menu.
@@ -232,8 +242,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/SidePanel.tsx` — Settings on the desk: a panel over the
   right-hand edge of the content area, so the dial changes live as a face is
   picked. A dialog to assistive tech and to the shortcuts.
-- `src/app/DialPicker.tsx` — Settings' dial picker: the eight preset cards,
-  each a `Dial` of its own, and the six pickers under Custom.
+- `src/app/DialPicker.tsx` — Settings' dial picker: the nine preset cards,
+  each a `Dial` of its own, and the seven pickers under Custom.
 - `src/app/MonthCalendar.tsx` — the Report's month chart: the rows and boxes
   `monthChart.ts` lays out in seconds, scaled into the plot the screen has.
   Decides how many pixels an hour is worth, the pixels held between one week
@@ -277,7 +287,11 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   editor edits a draft and saves whole.
 - `src/app/TopBar.tsx`, `BottomNav.tsx` — the shell's two bars. The top bar
   grows a project switcher only once there are two projects, and on the desk
-  carries the four destinations as tabs; the bottom bar is the phone's.
+  carries the four destinations as tabs; the bottom bar is the phone's. Over
+  Today the dial carries the wordmark and the cog, so the bar draws neither,
+  and on the phone — where that leaves it empty unless there is a project to
+  switch or a cloud to show — `App.tsx` leaves it out (`topBarNeeded`) and
+  the screen pads down from the status bar itself (`.app-bare`).
 - `src/app/kinds.ts` — what a kind of break or work _looks_ like: the
   fifty-two glyphs one may wear (work, breaks, and the neutral marks), and the
   eight hues a kind of work may be drawn in. Id and spec, the way `look.ts`
@@ -437,7 +451,10 @@ with `[Learn more](feature:<slug>)`.
   the same four, in the same order, are tabs on the top bar, and the bottom
   bar is not drawn. Things you do and then leave belong on the top bar, which
   is where Settings went — a screen on the phone, a side panel on the desk.
-  A new _action_ is a top-bar button, not a tab.
+  Over Today the watch carries the name and the cog itself, the way a dial
+  carries its maker and its date, and the bar goes without them; on the
+  phone it goes altogether when nothing else is on it. A new _action_ is a
+  top-bar button, not a tab.
 - **The face is the switch.** Starting and stopping the day is a press on
   the dial, and nothing else on Today starts or stops it. A stretch of the
   ring opens the stretches; the line under the dial opens the arrival. Do
@@ -460,9 +477,10 @@ with `[Learn more](feature:<slug>)`.
 - **No dependency creep.** The framework, Preact, a font, and workbox-window.
   A new runtime dependency needs a reason that the framework can't serve. The
   faces the app ships — Inter, JetBrains Mono (the wordmark), and the dial's
-  eight (Source Serif, Jost, Oswald, Barlow, Playfair Display, Cinzel, plus
-  the two above) — are `@fontsource` packages, imported in `main.tsx` a
-  weight and a subset at a time, and bundled from this origin. A font is
+  nine (Source Serif, Jost, Oswald, Barlow, Playfair Display, Cinzel, plus
+  the two above and Inter's light weight) — are `@fontsource` packages,
+  imported in `main.tsx` a weight and a subset at a time, and bundled from
+  this origin. A font is
   never reached for over the network.
 
 ## Website staleness
