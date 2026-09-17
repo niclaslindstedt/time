@@ -51,7 +51,7 @@ break ends now instead.
 
 While a break is on, the kind of work you are doing turns the break's colour
 and says **paused**: a break carves time out of the day, so nothing is being
-counted towards coding while the coffee is on. It is still the kind of work
+counted towards planning while the coffee is on. It is still the kind of work
 you go back to when the break ends.
 
 ## Correcting the day

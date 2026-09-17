@@ -12,11 +12,11 @@ or several; most people have one.
   percentage measures against. Fractions allowed (7.5).
 - **Break types** — one button each on the Today screen, with the minutes a
   break added afterwards is assumed to have taken. A new project starts with
-  Lunch (30 min) and Coffee (15 min); rename them, change the minutes, remove
-  them, add a walk.
+  Lunch (30 min), Coffee (15 min) and Toilet (5 min); rename them, change the
+  minutes, remove them, add a walk.
 - **Kinds of work** — optional labels for what you are doing, so the report
-  can say where the hours went. A new project starts with Meetings, Coding and
-  Admin.
+  can say where the hours went. A new project starts with Meetings, Planning,
+  Retro and Admin.
 
 Projects are data, not settings: they live in the document, so they sync and
 back up with the days.

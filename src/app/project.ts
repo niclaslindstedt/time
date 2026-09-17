@@ -27,10 +27,12 @@ export const DEFAULT_WORK_DAYS: Weekday[] = [1, 2, 3, 4, 5];
 /** An eight-hour day. */
 export const DEFAULT_HOURS_PER_DAY = 8;
 
-/** The lengths the two default break types are assumed to take when one is
- *  added after the fact: lunch half an hour, coffee a quarter. */
+/** The lengths the default break types are assumed to take when one is
+ *  added after the fact: lunch half an hour, coffee a quarter, a toilet trip
+ *  five minutes. */
 export const DEFAULT_LUNCH_MINUTES = 30;
 export const DEFAULT_COFFEE_MINUTES = 15;
+export const DEFAULT_TOILET_MINUTES = 5;
 
 /** The bounds a working day may be set to, in hours. */
 export const MIN_HOURS_PER_DAY = 0.5;
@@ -44,12 +46,14 @@ export const MAX_BREAK_MINUTES = 240;
 export type ProjectTemplateLabels = {
   lunch: string;
   coffee: string;
+  toilet: string;
   meetings: string;
-  coding: string;
+  planning: string;
+  retro: string;
   admin: string;
 };
 
-/** A new project with the standard week and the two default breaks. `id`
+/** A new project with the standard week and the default breaks. `id`
  *  is called once per thing that needs one, so a test can hand out names. */
 export function projectTemplate(
   name: string,
@@ -60,10 +64,12 @@ export function projectTemplate(
   const breakTypes: BreakType[] = [
     { id: id(), name: labels.lunch, defaultMinutes: DEFAULT_LUNCH_MINUTES },
     { id: id(), name: labels.coffee, defaultMinutes: DEFAULT_COFFEE_MINUTES },
+    { id: id(), name: labels.toilet, defaultMinutes: DEFAULT_TOILET_MINUTES },
   ];
   const categories: WorkCategory[] = [
     { id: id(), name: labels.meetings },
-    { id: id(), name: labels.coding },
+    { id: id(), name: labels.planning },
+    { id: id(), name: labels.retro },
     { id: id(), name: labels.admin },
   ];
   return {

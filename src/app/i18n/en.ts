@@ -66,9 +66,7 @@ export const en = {
     breaks: "Breaks",
     breaksHint:
       "Tap one as you step away — it is written down as the length it usually takes, and the clock is where you correct it.",
-    breaksOutHint: "Start working first.",
     categories: "Working on",
-    categoriesHint: "Tap what you are doing; tap again to stop labelling.",
     paused: "paused",
     pausedHint: "A break is on, so nothing is being counted towards this.",
     custom: "Custom",
@@ -238,8 +236,10 @@ export const en = {
     defaults: {
       lunch: "Lunch",
       coffee: "Coffee",
+      toilet: "Toilet",
       meetings: "Meetings",
-      coding: "Coding",
+      planning: "Planning",
+      retro: "Retro",
       admin: "Admin",
     },
   },

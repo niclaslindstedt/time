@@ -325,9 +325,9 @@ export function TodayScreen({
             <span className="truncate">{t("today.custom")}</span>
           </button>
         </div>
-        <p className="text-xs text-muted">
-          {state === "out" ? t("today.breaksOutHint") : t("today.breaksHint")}
-        </p>
+        {state !== "out" && (
+          <p className="text-xs text-muted">{t("today.breaksHint")}</p>
+        )}
       </section>
 
       <section className="flex flex-col gap-1.5">
@@ -382,9 +382,9 @@ export function TodayScreen({
             {t("today.custom")}
           </button>
         </div>
-        <p className="text-xs text-muted">
-          {onBreak ? t("today.pausedHint") : t("today.categoriesHint")}
-        </p>
+        {onBreak && (
+          <p className="text-xs text-muted">{t("today.pausedHint")}</p>
+        )}
       </section>
 
       {arriving && session && (
