@@ -9,10 +9,10 @@ import {
 import { useT } from "./i18n/index.ts";
 import {
   CATEGORY_COLOR,
-  DEFAULT_BREAK_GLYPH,
-  DEFAULT_CATEGORY_GLYPH,
+  glyphFor,
   type CategoryColor,
   type GlyphId,
+  type KindSort,
 } from "./kinds.ts";
 import { KindPicker, MarkButton } from "./KindPicker.tsx";
 import { clampBreakMinutes } from "./project.ts";
@@ -75,9 +75,10 @@ export function KindModal({
   const isBreak = kind === "break";
   const [name, setName] = useState(existing?.name ?? "");
   const [minutes, setMinutes] = useState(existing?.minutes ?? DEFAULT_MINUTES);
-  const [glyph, setGlyph] = useState<GlyphId>(
-    existing?.glyph ?? (isBreak ? DEFAULT_BREAK_GLYPH : DEFAULT_CATEGORY_GLYPH),
-  );
+  /** Which vocabulary this kind picks from — and, held open on one whose
+   *  mark came from the other, what puts it back on its own. */
+  const sort: KindSort = isBreak ? "break" : "category";
+  const [glyph, setGlyph] = useState<GlyphId>(glyphFor(existing?.glyph, sort));
   const [color, setColor] = useState<CategoryColor | null>(
     existing?.color ?? null,
   );
@@ -161,7 +162,7 @@ export function KindModal({
         </div>
         {picking && (
           <KindPicker
-            kind={isBreak ? "break" : "category"}
+            kind={sort}
             glyph={glyph}
             onGlyph={setGlyph}
             tint={tint}

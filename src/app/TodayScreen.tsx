@@ -34,12 +34,7 @@ import {
 import { EnterIcon, KindGlyph, LeaveIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
-import {
-  DEFAULT_BREAK_GLYPH,
-  DEFAULT_CATEGORY_GLYPH,
-  glyphOr,
-  type GlyphId,
-} from "./kinds.ts";
+import { glyphFor, type GlyphId } from "./kinds.ts";
 import { autoCategoryColor, breakName, categoryColor } from "./labels.ts";
 import { KindModal, type NewKind } from "./KindModal.tsx";
 import { KEY_HINT, type Command } from "./shortcuts.ts";
@@ -321,7 +316,7 @@ export function TodayScreen({
                 }),
           icon: (
             <KindGlyph
-              id={glyphOr(b.glyph, DEFAULT_BREAK_GLYPH)}
+              id={glyphFor(b.glyph, "break")}
               className="h-4 w-4 text-flag"
             />
           ),
@@ -335,7 +330,7 @@ export function TodayScreen({
             label: on ? t("today.stopLabelling", { name: c.name }) : c.name,
             icon: (
               <KindGlyph
-                id={glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH)}
+                id={glyphFor(c.glyph, "category")}
                 className="h-4 w-4"
                 style={{ color: categoryColor(project, c.id) }}
               />
@@ -427,7 +422,7 @@ export function TodayScreen({
           <Swatch
             key={c.id}
             color={categoryColor(project, c.id)}
-            glyph={glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH)}
+            glyph={glyphFor(c.glyph, "category")}
             label={c.name}
           />
         ))}
@@ -467,7 +462,7 @@ export function TodayScreen({
                 }`}
               >
                 <KindGlyph
-                  id={glyphOr(b.glyph, DEFAULT_BREAK_GLYPH)}
+                  id={glyphFor(b.glyph, "break")}
                   className="h-4 w-4 shrink-0 text-flag"
                 />
                 <span className="truncate">
@@ -517,7 +512,7 @@ export function TodayScreen({
                 } ${categoryTone(on)}`}
               >
                 <KindGlyph
-                  id={glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH)}
+                  id={glyphFor(c.glyph, "category")}
                   className="h-4 w-4 shrink-0"
                   style={{
                     color:
@@ -683,7 +678,7 @@ function kindAsked(project: Project, asking: Asking): NewKind | null {
       ? {
           name: b.name,
           minutes: b.defaultMinutes,
-          glyph: glyphOr(b.glyph, DEFAULT_BREAK_GLYPH),
+          glyph: glyphFor(b.glyph, "break"),
           color: null,
         }
       : null;
@@ -694,7 +689,7 @@ function kindAsked(project: Project, asking: Asking): NewKind | null {
         // A kind of work has no assumed length; the form does not ask for one.
         name: c.name,
         minutes: 0,
-        glyph: glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH),
+        glyph: glyphFor(c.glyph, "category"),
         color: c.color ?? null,
       }
     : null;

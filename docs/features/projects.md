@@ -38,7 +38,7 @@ Every break type and kind of work wears a **mark**. The square at the head of
 its row in the project form shows the one it has; tap it and the picker
 unfolds under the row.
 
-There are fifty-two to choose from, in three groups. **Work** is the largest
+The picker offers the groups that kind may wear. **Work** is the largest
 and leans towards work done at a computer — code, a terminal, a bug, a
 design, a document, a spreadsheet, a deck, mail, chat, a call, a video call, a
 meeting, planning, tasks, a review, research, learning, a database, servers,
@@ -48,8 +48,17 @@ workshop, a bookkeeping afternoon or an on-call shift has something better
 than a dot. **Breaks** is the day's pauses: coffee, a meal, the toilet, a
 walk, outdoors, exercise, rest, an errand, travel, health, music, or just a
 pause. **Marks** is the neutral handful — a label, a star, a flag, a place, an
-urgent bolt, a plain ring — for anything the other two miss. A break type and
-a kind of work may pick from any group.
+urgent bolt, a plain ring — for anything the other two miss.
+
+A kind wears its own vocabulary: a break type is offered the breaks, a kind of
+work is offered work's, and both are offered the neutral marks — eighteen marks
+for a break type, forty for a kind of work. The other group is not offered at
+all, so a break cannot end up carrying a pair of angle brackets and a kind of
+work cannot end up carrying a cup; the two lists sit next to each other on the
+Today screen, where the mark is what tells them apart at a glance. A mark
+stored the other way round by an older version is dropped when the document is
+read, leaving that kind with the one its sort starts out with — the cup for a
+break, the label for a kind of work.
 
 A kind of work also has a **colour**, picked in the same place: blue, ocean,
 violet, amber, red, mint, rose or slate, or **Automatic**, which is the hue

@@ -177,6 +177,45 @@ describe("shape validation", () => {
     expect(doc.projects.e!.categories[0]).toEqual({ id: "c", name: "Coding" });
   });
 
+  it("drops a mark from the other vocabulary", () => {
+    // A break wearing a pair of angle brackets and a kind of work wearing a
+    // cup: both storable before the two lists were kept apart, and both left
+    // with the mark their sort starts out with instead.
+    const doc = normalizeDoc({
+      version: 2,
+      projects: {
+        e: {
+          id: "e",
+          name: "E",
+          breakTypes: [
+            { id: "l", name: "Lunch", defaultMinutes: 30, glyph: "coding" },
+          ],
+          categories: [{ id: "c", name: "Coding", glyph: "coffee" }],
+        },
+      },
+      days: {},
+    });
+    expect(doc.projects.e!.breakTypes[0]!.glyph).toBeUndefined();
+    expect(doc.projects.e!.categories[0]!.glyph).toBeUndefined();
+    // The neutral marks pass either way.
+    const marks = normalizeDoc({
+      version: 2,
+      projects: {
+        e: {
+          id: "e",
+          name: "E",
+          breakTypes: [
+            { id: "l", name: "Lunch", defaultMinutes: 30, glyph: "dot" },
+          ],
+          categories: [{ id: "c", name: "Coding", glyph: "tag" }],
+        },
+      },
+      days: {},
+    });
+    expect(marks.projects.e!.breakTypes[0]!.glyph).toBe("dot");
+    expect(marks.projects.e!.categories[0]!.glyph).toBe("tag");
+  });
+
   it("leaves a document from before there were marks alone", () => {
     const doc = normalizeDoc({
       version: 2,

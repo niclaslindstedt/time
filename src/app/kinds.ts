@@ -21,10 +21,10 @@
 
 // ── The glyphs ──────────────────────────────────────────────────────────────
 
-/** Which vocabulary a glyph belongs to. A break type and a kind of work may
- *  wear any of them — the grouping only decides what the picker offers first,
- *  because someone naming a break is usually after a cup and someone naming a
- *  kind of work is usually after a pair of brackets. */
+/** Which vocabulary a glyph belongs to, and so which kind may wear it: a
+ *  break type takes the breaks, a kind of work takes work's, and the neutral
+ *  marks are open to both. The grouping is the rule the picker offers and the
+ *  reader enforces — see `GLYPH_GROUPS_FOR`. */
 export type GlyphGroup = "work" | "break" | "mark";
 
 export const GLYPH_GROUPS: GlyphGroup[] = ["work", "break", "mark"];
@@ -445,15 +445,54 @@ export function isGlyphId(value: unknown): value is GlyphId {
   return typeof value === "string" && value in GLYPH;
 }
 
+/** The two things a project names, and so the two things a mark is picked
+ *  for: a break type, or a kind of work. */
+export type KindSort = "break" | "category";
+
 /** The mark a break type wears when it has none of its own. */
 export const DEFAULT_BREAK_GLYPH: GlyphId = "coffee";
 
 /** The mark a kind of work wears when it has none of its own. */
 export const DEFAULT_CATEGORY_GLYPH: GlyphId = "tag";
 
-/** The glyph a stored value names, or the fallback. */
-export function glyphOr(value: unknown, fallback: GlyphId): GlyphId {
-  return isGlyphId(value) ? value : fallback;
+/** The mark either sort starts out with. */
+export const DEFAULT_GLYPH: Record<KindSort, GlyphId> = {
+  break: DEFAULT_BREAK_GLYPH,
+  category: DEFAULT_CATEGORY_GLYPH,
+};
+
+/**
+ * The vocabularies a sort of kind may wear, its own first.
+ *
+ * A break wears the day's pauses and a kind of work wears work's: a break
+ * called "Lunch" carrying a pair of angle brackets is not shorthand, it is a
+ * misfiling — and the two lists sit next to each other on the Today screen,
+ * where a mark is what tells them apart at a glance. The neutral marks belong
+ * to both: they are what the other two vocabularies miss, and the label every
+ * kind of work starts out with is one of them.
+ */
+export const GLYPH_GROUPS_FOR: Record<KindSort, GlyphGroup[]> = {
+  break: ["break", "mark"],
+  category: ["work", "mark"],
+};
+
+/** The ids a sort of kind may wear, in the order the picker offers them. */
+export function glyphsFor(kind: KindSort): GlyphId[] {
+  return GLYPH_GROUPS_FOR[kind].flatMap((group) => glyphsIn(group));
+}
+
+/** Whether a stored value names a glyph this sort of kind may wear. A glyph
+ *  from the other vocabulary is as wrong as one this build cannot draw. */
+export function allowsGlyph(kind: KindSort, value: unknown): value is GlyphId {
+  return (
+    isGlyphId(value) && GLYPH_GROUPS_FOR[kind].includes(GLYPH[value].group)
+  );
+}
+
+/** The glyph a stored value names, when this sort of kind may wear it —
+ *  otherwise the mark that sort starts out with. */
+export function glyphFor(value: unknown, kind: KindSort): GlyphId {
+  return allowsGlyph(kind, value) ? value : DEFAULT_GLYPH[kind];
 }
 
 // ── The colours ─────────────────────────────────────────────────────────────

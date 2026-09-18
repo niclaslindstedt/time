@@ -7,9 +7,7 @@ import { addDays, type DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {
   AUTO_CATEGORY_COLORS,
   CATEGORY_COLOR,
-  DEFAULT_BREAK_GLYPH,
-  DEFAULT_CATEGORY_GLYPH,
-  glyphOr,
+  glyphFor,
   type GlyphId,
 } from "./kinds.ts";
 import { breakTypeOf, categoryOf } from "./project.ts";
@@ -72,16 +70,13 @@ export function categoryColor(project: Project, categoryId: string): string {
 /** The mark a break type wears — its own, or the cup every break started
  *  out with. */
 export function breakGlyph(project: Project, typeId: string): GlyphId {
-  return glyphOr(breakTypeOf(project, typeId)?.glyph, DEFAULT_BREAK_GLYPH);
+  return glyphFor(breakTypeOf(project, typeId)?.glyph, "break");
 }
 
 /** The mark a kind of work wears — its own, or the label every kind of work
  *  started out with. */
 export function categoryGlyph(project: Project, categoryId: string): GlyphId {
-  return glyphOr(
-    categoryOf(project, categoryId)?.glyph,
-    DEFAULT_CATEGORY_GLYPH,
-  );
+  return glyphFor(categoryOf(project, categoryId)?.glyph, "category");
 }
 
 /** The week's day names, from the locale rather than the catalog: 1 March

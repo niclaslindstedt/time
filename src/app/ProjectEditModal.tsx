@@ -23,7 +23,7 @@ import {
   CATEGORY_COLOR,
   DEFAULT_BREAK_GLYPH,
   DEFAULT_CATEGORY_GLYPH,
-  glyphOr,
+  glyphFor,
   type CategoryColor,
   type GlyphId,
 } from "./kinds.ts";
@@ -201,7 +201,7 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
         <div className="flex flex-col gap-2">
           <span className="text-xs text-muted">{t("projects.breakTypes")}</span>
           {draft.breakTypes.map((b) => {
-            const glyph = glyphOr(b.glyph, DEFAULT_BREAK_GLYPH);
+            const glyph = glyphFor(b.glyph, "break");
             return (
               <div key={b.id} className="flex flex-col gap-2">
                 <div className="flex items-end gap-2">
@@ -308,7 +308,7 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
         <div className="flex flex-col gap-2">
           <span className="text-xs text-muted">{t("projects.categories")}</span>
           {draft.categories.map((c, i) => {
-            const glyph = glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH);
+            const glyph = glyphFor(c.glyph, "category");
             const auto = autoColor(i);
             const tint = c.color ? CATEGORY_COLOR[c.color] : auto;
             return (
