@@ -289,7 +289,10 @@ export function App() {
           the whole of it. It also clips the arriving screen's slide and the
           backlight's spill. See the sibling cycle app for the long
           version. */}
-      <main ref={main} className="relative min-h-0 flex-1 overflow-clip">
+      <main
+        ref={main}
+        className="app-main relative min-h-0 flex-1 overflow-clip"
+      >
         {/* The one scrolling region — except on the desk's Today screen,
             which is laid out to the height of the window on purpose (see
             `.app-today` in `styles.css`). There the glow behind the dial

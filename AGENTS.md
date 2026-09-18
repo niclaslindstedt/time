@@ -265,9 +265,19 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/DayTimelineModal.tsx` — the day as the stretches `daySegments`
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.
-- `src/app/ArrivalModal.tsx`, `NewKindModal.tsx` — the Today screen's two
+- `src/app/ArrivalModal.tsx`, `KindModal.tsx` — the Today screen's two
   small forms: when you started (opened by the timer), and a kind of break or
-  work named on the spot (the "Custom" pill).
+  work — named on the spot from the "Custom" pill, or held open on one the
+  project already has to change what it is called and what it wears. One form
+  for both, because they are the same four questions; held open it starts on
+  the grid rather than the name. Removing a kind is still the project form's.
+- `src/app/useLongPress.ts` — a control held rather than tapped: the handlers
+  a button spreads, one factory for a screen because the pills are a list and
+  a hook may not be called in a loop. It swallows the click the hold ends
+  with, calls a wandering pointer a scroll, and takes the right button as the
+  same gesture. What makes it possible is that the screens are not selectable
+  (`.app-main` in `styles.css`) — a press held on a label is otherwise the
+  start of a selection.
 - `src/app/ModalHeader.tsx` — the top bar of every modal that is saved or
   abandoned: cancel on the left, the title between, save on the right. It is
   a sibling of the modal's scrolling body, so it stays put over a long form —
@@ -290,7 +300,7 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the project's list gives it.
 - `src/app/KindPicker.tsx` — the mark a kind wears and, for a kind of work,
   its colour: the grid unfolds under the row that opened it — in the project
-  form and in `NewKindModal` — rather than over it, and the marks in it are
+  form and in `KindModal` — rather than over it, and the marks in it are
   drawn in the hue being chosen, so the grid is the preview.
 - `src/app/i18n/en.ts` — every user-facing string.
 - `src/output.ts` — the §19.4 central output module (semantic log helpers
@@ -338,32 +348,34 @@ regression.
 
 ## Where new code goes
 
-| Change                                   | Goes in                                                                                                                                   |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| A new thing to log about a day           | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds     |
-| A new derived number                     | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                         |
-| A change to what a button on Today does  | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                               |
-| A change to how the clock draws          | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)      |
-| A change to how the hands move           | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there             |
-| A new keyboard shortcut                  | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command               |
-| Something only the desk does             | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                     |
-| A new face, marker, typeface or preset   | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
-| A change to the Report's month chart     | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
-| A change to the Report's week chart      | `src/app/dayBars.ts` (how a day splits at its target, tested in `tests/dayBars_test.ts`) or `DayBars.tsx` (paint)                         |
-| A change to the Report's two rings       | `src/app/RangeGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `report.ts`, never a second fold of the days     |
-| A change to the Log's two rings          | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day   |
-| A change to what a project holds         | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
-| A new glyph, or a colour a kind can wear | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                  |
-| A new control on the span editor         | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
-| A modal's save / cancel                  | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's   |
-| A new way to correct a time on Today     | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
-| A new screen                             | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place |
-| A new setting                            | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                      |
-| A new developer-only affordance          | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                |
-| A change to what the demo shows          | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demoData_test.ts`                               |
-| A new storage backend                    | The framework, not here — this app only wires adapters up in `useSyncEngine.ts`                                                           |
-| Any user-facing string                   | `src/app/i18n/en.ts`, never inline in a component                                                                                         |
-| A shared UI primitive                    | The framework, if it is domain-free; `src/app/` only if it is time-report-specific                                                        |
+| Change                                         | Goes in                                                                                                                                   |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| A new thing to log about a day                 | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds     |
+| A new derived number                           | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                         |
+| A change to what a button on Today does        | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                               |
+| A change to how the clock draws                | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)      |
+| A change to how the hands move                 | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there             |
+| A new keyboard shortcut                        | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command               |
+| Something only the desk does                   | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                     |
+| A new face, marker, typeface or preset         | `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, and `main.tsx` for a bundled `@fontsource` family     |
+| A change to the Report's month chart           | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                          |
+| A change to the Report's week chart            | `src/app/dayBars.ts` (how a day splits at its target, tested in `tests/dayBars_test.ts`) or `DayBars.tsx` (paint)                         |
+| A change to the Report's two rings             | `src/app/RangeGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `report.ts`, never a second fold of the days     |
+| A change to the Log's two rings                | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day   |
+| A change to what a project holds               | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                              |
+| A new glyph, or a colour a kind can wear       | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                  |
+| A new control on the span editor               | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                    |
+| A change to what a kind of break or work wears | `src/app/KindModal.tsx` (the form, opened by "Custom" or by holding a pill) — the mark and the hue tables stay in `kinds.ts`              |
+| A control that answers being held              | `src/app/useLongPress.ts` — spread its handlers on the button; never a second timer in a screen                                           |
+| A modal's save / cancel                        | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's   |
+| A new way to correct a time on Today           | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`            |
+| A new screen                                   | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place |
+| A new setting                                  | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                      |
+| A new developer-only affordance                | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                |
+| A change to what the demo shows                | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demoData_test.ts`                               |
+| A new storage backend                          | The framework, not here — this app only wires adapters up in `useSyncEngine.ts`                                                           |
+| Any user-facing string                         | `src/app/i18n/en.ts`, never inline in a component                                                                                         |
+| A shared UI primitive                          | The framework, if it is domain-free; `src/app/` only if it is time-report-specific                                                        |
 
 ## Test conventions
 

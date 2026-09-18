@@ -84,6 +84,13 @@ export const en = {
     newCategory: "A kind of work",
     newCategoryHint:
       "It joins this project's kinds of work, and you are doing it from now.",
+    // Holding a pill opens the kind it stands for, in the same form.
+    holdToEdit: "Hold to edit",
+    editKind: "Edit {name}",
+    editBreakHint:
+      "Its mark, its name, and how long one is assumed to take. Breaks already written down keep the times they have.",
+    editCategoryHint:
+      "Its mark, its colour and its name. Everything already logged under it follows the change.",
     kindName: "Name",
     kindNamePlaceholder: "What to call it",
     kindMinutes: "Minutes",

@@ -41,7 +41,10 @@ The main screen, and the whole app for most of a day.
   one takes it now, and the button turns into **End lunch** for as long as you
   are on it. A row of chips, one per kind of work, each wearing its own mark in
   its own colour; tapping one says that is what you are doing from now, tapping
-  it again stops labelling. Both rows end in **Custom**. Breaks and chips are disabled until you have started working.
+  it again stops labelling. Both rows end in **Custom**. Breaks and chips take
+  no tap until you have started working, and say so by going pale — but they
+  still answer a hold, because what a kind looks like has nothing to do with
+  being clocked in.
   On a desk the two rows stand either side of the dial, breaks to its left
   and kinds of work to its right.
 
@@ -94,8 +97,29 @@ of the day, not a stopwatch.
 The last pill in each row is **Custom**. It names a kind of break (with the
 minutes one is assumed to take) or a kind of work, gives it a mark — and a
 kind of work a colour — adds it to the project, and starts it — so the walk nobody set up in advance is two taps rather than a trip
-to the project form. It stays there afterwards as another pill; renaming or
-removing it is the project form's job (see [`projects.md`](projects.md)).
+to the project form. It stays there afterwards as another pill.
+
+## Holding a pill
+
+A pill held rather than tapped opens the kind it stands for, in the same form
+**Custom** fills in: its mark, its name, the minutes a break is assumed to
+take, and the colour a kind of work is drawn in. It opens on the grid rather
+than the name, because the mark and the hue are what you are looking at when
+you hold a pill — and the tap that ends the hold is swallowed, so holding
+**Lunch** opens it rather than also taking one. Under a mouse the right
+button does the same thing.
+
+The change is to the project, so it is kept: the kind keeps its id and
+everything already logged under it follows the new name, mark and colour,
+on the clock, in the Log and in the report. Breaks already written down keep
+the times they have — the minutes are only what the _next_ one is assumed to
+take. Removing a kind is still the project form's job (see
+[`projects.md`](projects.md)).
+
+Nothing on the screens is selectable, which is what makes a hold a hold: a
+press held on a label used to be read as the start of a selection, and a drag
+to page between tabs as a drag across a paragraph. Fields and the log viewer's
+text stay selectable.
 
 ## On a desk
 

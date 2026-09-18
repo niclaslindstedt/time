@@ -233,6 +233,31 @@ body {
   min-height: 3rem;
 }
 
+/* ── Selection ───────────────────────────────────────────────────────────────
+   The screens are an instrument rather than a document: nothing between the
+   bars is there to be read out and quoted, and a phone treats a press held on
+   a label as the start of a selection — so the pill you meant to hold comes
+   back with a blue wash and two handles over it, and a drag to page between
+   tabs selects a paragraph of the Log instead. Both go, along with iOS's own
+   callout, which is the other thing a held control summons.
+
+   Off for the screens, not for the shell around them, and put back wherever
+   there is text somebody would actually want: a field's own value, and the
+   monospaced blocks the framework's log viewer prints. A dialog is the
+   framework's to render outside <main>, so a modal's text is untouched by
+   this. */
+.app-main {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.app-main :is(input, textarea, [contenteditable="true"], pre, code) {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+}
+
 /* ── The update prompt ───────────────────────────────────────────────────────
    The framework's `UpdateToast` fixes itself to the bottom of the viewport,
    which in this shell is precisely where the bottom nav is: a new build
