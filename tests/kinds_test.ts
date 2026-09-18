@@ -41,6 +41,15 @@ describe("the glyph catalogue", () => {
     }
   });
 
+  it("draws the toilet as a toilet, and keeps the drop as a drop", () => {
+    // The break vocabulary has a mark for the trip itself — a cistern, a bowl
+    // and a pedestal — rather than a drop standing in for one.
+    expect(GLYPH.toilet.group).toBe("break");
+    expect(GLYPH.toilet.d.length).toBeGreaterThan(1);
+    expect(GLYPH.drop.group).toBe("break");
+    expect(GLYPH.drop.d).not.toEqual(GLYPH.toilet.d);
+  });
+
   it("leans on work, because that is what the app is used for", () => {
     expect(glyphsIn("work").length).toBeGreaterThan(glyphsIn("break").length);
   });

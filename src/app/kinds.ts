@@ -309,8 +309,19 @@ export const GLYPH = {
       "M17 13v9",
     ],
   },
-  /** A drop — the shortest trip of the day. */
-  toilet: { group: "break", d: ["M12 2.7 6.6 8.1a7.6 7.6 0 1 0 10.8 0Z"] },
+  /** A cistern, a bowl and a pedestal — the shortest trip of the day. */
+  toilet: {
+    group: "break",
+    d: [
+      "M5 2h5v5H5z",
+      "M4 7h14",
+      "M5 7v3a6 6 0 0 0 12 0V7",
+      "M11 16v3",
+      "M7 19h8",
+    ],
+  },
+  /** A drop — a glass of water, a wash, the pause that is neither. */
+  drop: { group: "break", d: ["M12 2.7 6.6 8.1a7.6 7.6 0 1 0 10.8 0Z"] },
   /** A figure on its feet — the loop round the block. */
   walk: {
     group: "break",

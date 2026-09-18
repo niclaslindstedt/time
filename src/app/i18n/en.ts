@@ -327,6 +327,7 @@ export const en = {
       coffee: "Coffee",
       meal: "Meal",
       toilet: "Toilet",
+      drop: "Drop",
       walk: "Walk",
       outside: "Outdoors",
       exercise: "Exercise",
