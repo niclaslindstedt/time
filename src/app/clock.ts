@@ -198,6 +198,34 @@ export function dialLayout(
   };
 }
 
+/**
+ * The two minute tracks a printed ring is read against, as radii from the
+ * centre, for a ring whose inner edge is at `ringInner`.
+ *
+ * A chapter ring's own ticks stand on its *inner* edge and grow outward
+ * across it, with the numerals in the room that leaves above them — which is
+ * the way round a dial of this kind is printed, and the opposite of where a
+ * rim track goes. Under the ring, on the face itself, the dial wears a second
+ * finer track: the one the minute hand is actually read against, hanging just
+ * below the ring and growing inward.
+ *
+ * The face's track has to fit in the air the markers are clamped to leave
+ * (`MARKER_GAP`), because a tick that reached past it would run into the
+ * marker at twelve on the largest hour size. `tests/clock_test.ts` says so.
+ */
+export type ChapterTracks = {
+  /** Where each track begins and ends: `inner` nearer the centre. */
+  ring: { inner: number; outer: number };
+  face: { inner: number; outer: number };
+};
+
+export function chapterTracks(ringInner: number): ChapterTracks {
+  return {
+    ring: { inner: ringInner + 0.5, outer: ringInner + 4 },
+    face: { inner: ringInner - MARKER_GAP + 0.8, outer: ringInner - 0.6 },
+  };
+}
+
 /** One mark of a chapter ring: a minute tick, or a numeral every five. The
  *  numeral is turned to lie along the ring — and in the lower half turned
  *  the other way, so a 30 at six o'clock is not read upside down. */

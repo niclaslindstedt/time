@@ -208,6 +208,7 @@ export function App() {
       dial={resolveDial(settings.clockPreset, settings.clock)}
       clockSize={settings.clockSize}
       backlight={settings.backlight}
+      reflect={settings.reflect}
       onAddProject={() => {
         setOpenNewProject(true);
         show("projects");

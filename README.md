@@ -124,9 +124,9 @@ Settings, `P` the projects; in a dialog, `Enter` saves and `Escape` cancels):
 
 …and one button for the screen you visit and leave — on the dial over Today, and on the top bar everywhere else:
 
-| Button | What it does                                                                                                                                                                                                                                                   |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, size and movement), the backlight behind it (colour, beat, brightness and spread), week start, cloud sync, backup / restore / delete, developer tools, and the build. |
+| Button | What it does                                                                                                                                                                                                                                                                                                           |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement), reflections on its metal as you tilt the device, the backlight behind it (colour, beat, brightness and spread), week start, cloud sync, backup / restore / delete, developer tools, and the build. |
 
 ## Configuration
 

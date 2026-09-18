@@ -106,6 +106,8 @@ type Props = {
   dial: DialConfig;
   clockSize: ClockSize;
   backlight: Backlight;
+  /** Whether the light on the dial's metal follows the device. */
+  reflect: boolean;
   onAddProject: () => void;
   onNotice: (message: string) => void;
   /** The cog on the dial. Settings is a screen on the phone and a panel on
@@ -124,6 +126,7 @@ export function TodayScreen({
   dial,
   clockSize,
   backlight,
+  reflect,
   onAddProject,
   onNotice,
   onOpenSettings,
@@ -380,6 +383,7 @@ export function TodayScreen({
             dial={dial}
             size={clockSize}
             backlight={backlight}
+            reflect={reflect}
             progress={fraction}
             onToggle={toggleWork}
             onOpen={(at) => setTimeline({ at: at ?? null })}

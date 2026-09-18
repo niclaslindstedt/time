@@ -11,6 +11,8 @@ import {
   DIAL_FACES,
   DIAL_FONT,
   DIAL_FONTS,
+  DIAL_HANDS,
+  DIAL_HAND_SETS,
   DIAL_MARKERS,
   DIAL_MARKER_STYLES,
   DIAL_MOVEMENT,
@@ -22,7 +24,9 @@ import {
   DIAL_RINGS,
   DIAL_SCALE,
   DIAL_SCALES,
+  STEEL,
   glowGeometry,
+  isApplied,
   isNumeral,
   resolveDial,
   type DialConfig,
@@ -31,13 +35,14 @@ import {
 const HOURS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
 describe("the dial's vocabulary", () => {
-  it("offers eight faces and sizes, nine fonts, markers and presets, two rings", () => {
+  it("offers eight faces and sizes, nine fonts, markers and presets, two rings and two sets of hands", () => {
     expect(DIAL_FACES).toHaveLength(8);
     expect(DIAL_FONTS).toHaveLength(9);
     expect(DIAL_MARKER_STYLES).toHaveLength(9);
     expect(DIAL_SCALES).toHaveLength(8);
     expect(DIAL_PRESETS).toHaveLength(9);
     expect(DIAL_RINGS).toHaveLength(2);
+    expect(DIAL_HAND_SETS).toHaveLength(2);
     expect(DIAL_PLACEMENTS).toHaveLength(3);
     expect(DIAL_MOVEMENTS).toHaveLength(3);
     expect(CLOCK_SIZES).toHaveLength(3);
@@ -54,6 +59,7 @@ describe("the dial's vocabulary", () => {
     );
     expect(Object.keys(DIAL_PRESET).sort()).toEqual([...DIAL_PRESETS].sort());
     expect(Object.keys(DIAL_RING).sort()).toEqual([...DIAL_RINGS].sort());
+    expect(Object.keys(DIAL_HANDS).sort()).toEqual([...DIAL_HAND_SETS].sort());
   });
 
   it("names the six faces asked for, and two more", () => {
@@ -82,6 +88,44 @@ describe("the dial's vocabulary", () => {
     }
   });
 
+  it("makes every applied part of one metal, which reads on every face", () => {
+    // Two tones of steel, one lit and one in shade, and they are tones of
+    // one metal rather than two colours: a cool cast is what steel has, a
+    // hue is what it does not.
+    expect(luminance(STEEL.light)).toBeGreaterThan(luminance(STEEL.shade));
+    expect(saturation(STEEL.light)).toBeLessThan(0.15);
+    expect(saturation(STEEL.shade)).toBeLessThan(0.15);
+    for (const face of DIAL_FACES) {
+      const dial = luminance(DIAL_FACE[face].dial);
+      const best = Math.max(
+        Math.abs(luminance(STEEL.light) - dial),
+        Math.abs(luminance(STEEL.shade) - dial),
+      );
+      expect(best, `steel does not read on the ${face} face`).toBeGreaterThan(
+        0.1,
+      );
+    }
+  });
+
+  it("applies every marker but the printed ones", () => {
+    // A block, a dot, a wedge, a triangle: parts screwed to the dial, and so
+    // drawn from the light on them.
+    for (const kind of [
+      "baton",
+      "doubleBaton",
+      "wideBaton",
+      "dot",
+      "triangle",
+      "wedge",
+    ] as const) {
+      expect(isApplied(kind), kind).toBe(true);
+    }
+    // The print is the ink's: a numeral, and a tick on a minute track.
+    for (const kind of ["arabic", "roman", "tick"] as const) {
+      expect(isApplied(kind), kind).toBe(false);
+    }
+  });
+
   it("prints the minutes on the chapter ring, in white on blue, and nothing on the groove", () => {
     expect(DIAL_RING.groove.printed).toBe(false);
     expect(DIAL_RING.groove.fill).toBeNull();
@@ -103,6 +147,30 @@ describe("the dial's vocabulary", () => {
     }
   });
 
+  it("shapes a bar as a bar and a tapered hand narrowing to its tip", () => {
+    const bar = DIAL_HANDS.bar;
+    expect(bar.taper).toBe(false);
+    expect(bar.base).toBe(1);
+    expect(bar.tip).toBe(1);
+    expect(bar.counterweight).toBe("disc");
+    // A stub past the axle, which the cap covers.
+    expect(bar.boss).toBeGreaterThan(0);
+
+    const tapered = DIAL_HANDS.tapered;
+    expect(tapered.taper).toBe(true);
+    // Broader at the boss than the width it is given, and finer at the tip:
+    // a taper gives back at one end what it takes at the other.
+    expect(tapered.base).toBeGreaterThan(1);
+    expect(tapered.tip).toBeLessThan(1);
+    expect(tapered.tip).toBeLessThan(tapered.base);
+    // Nothing past the axle: the widest point is the hub, and a tail past it
+    // would flare out from under the cap.
+    expect(tapered.boss).toBe(0);
+    // And nothing past the axle to balance it: a dress watch's second hand
+    // is one hair the whole way.
+    expect(tapered.counterweight).toBe("none");
+  });
+
   it("beats once, eight times, or not at all", () => {
     expect(DIAL_MOVEMENT.quartz.beats).toBe(1);
     expect(DIAL_MOVEMENT.mechanical.beats).toBe(8);
@@ -117,11 +185,11 @@ describe("the hour markers", () => {
       expect(DIAL_MARKERS.batons.at(h)).toBe("baton");
   });
 
-  it("lume the batons, with one wide block at twelve, and print no track on the rim", () => {
-    expect(DIAL_MARKERS.plots.at(0)).toBe("wideLumeBaton");
+  it("are solid blocks, one wide at twelve, and print no track on the rim", () => {
+    expect(DIAL_MARKERS.blocks.at(0)).toBe("wideBaton");
     for (const h of HOURS.slice(1))
-      expect(DIAL_MARKERS.plots.at(h)).toBe("lumeBaton");
-    expect(DIAL_MARKERS.plots.minuteTrack).toBe(false);
+      expect(DIAL_MARKERS.blocks.at(h)).toBe("baton");
+    expect(DIAL_MARKERS.blocks.minuteTrack).toBe(false);
   });
 
   it("are a diver's: a triangle at twelve, batons at the quarters, dots between", () => {
@@ -192,6 +260,7 @@ describe("the presets", () => {
       expect(DIAL_PLACEMENTS).toContain(dial.placement);
       expect(DIAL_RINGS).toContain(dial.ring);
       expect(DIAL_MOVEMENTS).toContain(dial.movement);
+      expect(DIAL_HAND_SETS).toContain(dial.hands);
     }
   });
 
@@ -205,14 +274,20 @@ describe("the presets", () => {
   it("draw the sixties dress watch on a printed ring, and say it is an automatic", () => {
     const dial = DIAL_PRESET.uptown;
     expect(dial.ring).toBe("chapter");
-    expect(dial.markers).toBe("plots");
+    expect(dial.markers).toBe("blocks");
     expect(dial.font).toBe("light");
     expect(dial.movement).toBe("mechanical");
     // The ring is at the rim, where a chapter ring is.
     expect(dial.placement).toBe("inside");
-    // And it is the only preset on one: the rest keep the groove.
+    // Tapered steel hands, which is what a dial of this kind wears.
+    expect(dial.hands).toBe("tapered");
+    // And it is the only preset on either: the rest keep the groove and the
+    // bar hands every dial had.
     for (const id of DIAL_PRESETS) {
-      if (id !== "uptown") expect(DIAL_PRESET[id].ring).toBe("groove");
+      if (id !== "uptown") {
+        expect(DIAL_PRESET[id].ring).toBe("groove");
+        expect(DIAL_PRESET[id].hands).toBe("bar");
+      }
     }
   });
 
@@ -237,6 +312,7 @@ describe("resolveDial", () => {
     placement: "over",
     ring: "groove",
     movement: "quartz",
+    hands: "bar",
   };
 
   it("is the preset's own dial, looked up rather than copied", () => {
@@ -258,6 +334,15 @@ function rgb(hex: string): [number, number, number] {
 }
 
 /** Relative luminance of a `#rrggbb` colour, 0 black to 1 white. */
+/** How far a colour is from grey, 0 – 1: what says steel is a metal rather
+ *  than a tint. */
+function saturation(hex: string): number {
+  const [r, g, b] = rgb(hex).map((c) => c / 255);
+  const max = Math.max(r!, g!, b!);
+  const min = Math.min(r!, g!, b!);
+  return max === 0 ? 0 : (max - min) / max;
+}
+
 function luminance(hex: string): number {
   const channel = (i: number) => {
     const c = parseInt(hex.slice(i, i + 2), 16) / 255;

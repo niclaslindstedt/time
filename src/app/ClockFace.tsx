@@ -28,6 +28,7 @@ import {
   type ClockSize,
   type DialConfig,
 } from "./look.ts";
+import { useTilt } from "./useTilt.ts";
 import type { DayState } from "./day.ts";
 import type { Project, Seconds, WorkDay } from "./types.ts";
 
@@ -99,6 +100,9 @@ type Props = {
   dial: DialConfig;
   size: ClockSize;
   backlight: Backlight;
+  /** Whether the light on the metal follows the device: the dial the app is
+   *  actually held in front of, rather than the still one in Settings. */
+  reflect: boolean;
   /** Worked over target, for the bezel. */
   progress: number;
   /** The face pressed: start the day, or stop it. */
@@ -125,6 +129,7 @@ export function ClockFace({
   dial,
   size,
   backlight,
+  reflect,
   progress,
   onToggle,
   onOpen,
@@ -245,6 +250,9 @@ export function ClockFace({
   const glow =
     state === "break" ? "var(--color-flag)" : BACKLIGHT_COLOR[backlight.color];
   const halo = glowGeometry(backlight.spread);
+  // The light the metal is drawn under: the room's, read off the device, or
+  // the still one a drawn watch is lit by when that is switched off.
+  const light = useTilt(reflect);
   const switchLabel =
     state === "out" ? t("today.clockIn") : t("today.clockOut");
 
@@ -300,6 +308,7 @@ export function ClockFace({
           now={now}
           bands={bands}
           progress={progress}
+          light={light}
           live
           className="app-clock relative block h-auto w-full"
         >

@@ -18,6 +18,7 @@
 //   node scripts/dial-shots.mjs --dial '{"face":"black","ring":"chapter"}'
 //   node scripts/dial-shots.mjs --shell phone,desk --theme dark,light
 //   node scripts/dial-shots.mjs --preset abyss --settings
+//   node scripts/dial-shots.mjs --preset uptown --tilt '0,0/25,0/0,-25/20,20'
 //
 // Options (each list is comma-separated):
 //   --preset  <ids|all>   a preset id from look.ts (default: the default preset)
@@ -27,6 +28,8 @@
 //   --theme   <list>      dark | light                          (default: dark)
 //   --size    <id>        small | medium | large                (default: large)
 //   --backlight <json>    backlight fields over the default (colour, hz, intensity, spread)
+//   --tilt    <leans>     lean the device and let the light move: "beta,gamma",
+//                         "/" between leans — one picture each, named by the pair
 //   --at      <HH:MM[:SS]> where the hands stand                (default: 10:09:36)
 //                         the day is laid out back from it, so an "over" day
 //                         at ten past ten started in the night — pass 18:30
@@ -78,6 +81,14 @@ const shells = list(args.shell, ["phone"], Object.keys(SHELLS));
 const themes = list(args.theme, ["dark"], THEMES);
 const size = args.size ?? "large";
 const backlight = { ...DEFAULT_BACKLIGHT, ...json(args.backlight) };
+/** Leans to photograph the dial at, as the two angles a device reports:
+ *  `beta,gamma` a pair, `/` between pairs. Each one is held on the page long
+ *  enough for the light to settle there. */
+const leans = args.tilt
+  ? String(args.tilt)
+      .split("/")
+      .map((pair) => pair.split(",").map(Number))
+  : [];
 
 /** The dials to draw: presets by id, or one custom dial. */
 const dials = args.dial
@@ -127,6 +138,7 @@ try {
               clock: dial.clock,
               clockSize: size,
               backlight,
+              reflect: leans.length > 0,
             },
           });
           await page.goto(url);
@@ -134,18 +146,24 @@ try {
           // eslint-disable-next-line no-undef
           await page.evaluate(() => document.fonts.ready);
           await page.waitForTimeout(900);
-          await page.screenshot({
-            path: `${out}/${name}.png`,
-            clip: args.full ? undefined : await dialClip(page, SHELLS[shell]),
-          });
-          console.log(`${name}.png`);
-          taken.push({
-            file: `${out}/${name}.png`,
-            dial: dial.name,
-            state,
-            shell,
-            theme,
-          });
+          for (const [beta, gamma] of leans.length ? leans : [[null, null]]) {
+            // The light is eased towards rather than taken, so a lean is
+            // held for a few dozen readings before the picture.
+            if (beta !== null) await lean(page, beta, gamma);
+            const lit = beta === null ? name : `${name}-tilt${beta}_${gamma}`;
+            await page.screenshot({
+              path: `${out}/${lit}.png`,
+              clip: args.full ? undefined : await dialClip(page, SHELLS[shell]),
+            });
+            console.log(`${lit}.png`);
+            taken.push({
+              file: `${out}/${lit}.png`,
+              dial: dial.name,
+              state: beta === null ? state : `${beta}° / ${gamma}°`,
+              shell,
+              theme,
+            });
+          }
 
           if (args.settings) {
             await page
@@ -311,6 +329,25 @@ function seed({ at, today, state, settings }) {
     }),
   );
   localStorage.setItem("time:settings", JSON.stringify(settings));
+}
+
+/** Lean the device: fifty readings of the same angles, which is enough for
+ *  the eased light to arrive at them, and a moment for the paint. */
+async function lean(page, beta, gamma) {
+  await page.evaluate(
+    ([b, g]) => {
+      for (let i = 0; i < 50; i += 1) {
+        const event = new Event("deviceorientation");
+        Object.defineProperty(event, "beta", { value: b });
+        Object.defineProperty(event, "gamma", { value: g });
+        Object.defineProperty(event, "alpha", { value: 0 });
+        // eslint-disable-next-line no-undef
+        window.dispatchEvent(event);
+      }
+    },
+    [beta, gamma],
+  );
+  await page.waitForTimeout(150);
 }
 
 /** The dial and the light round it, as a clip inside the viewport. */

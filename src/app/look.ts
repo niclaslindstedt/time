@@ -70,8 +70,10 @@ export const APP_LOOK: ThemeAppearance = appearanceFor("system");
 // The eight colours a dial is most often seen in, by how often they sell:
 // black first, then silver, blue, white, green, and the warmer ones a dress
 // watch wears. The ink is what the markers and hands are printed in — dark on
-// a light face, white on a dark one — because a hand has to read against the
-// face under it, and one ink for all eight would vanish on half of them.
+// a light face, white on a dark one — because the print has to read against
+// the face under it, and one ink for all eight would vanish on half of them.
+// The applied markers and the hands are not printed at all: they are steel,
+// and what they look like is the light on them (`STEEL`, and `sheen.ts`).
 
 export type DialFace =
   | "white"
@@ -88,7 +90,9 @@ export type DialFaceSpec = {
    *  finish is a gradient, and a flat one is the same colour twice. */
   dial: string;
   edge: string;
-  /** What the markers, numerals and hands are printed in. */
+  /** What the *printing* on the face is in: the numerals, the minute track,
+   *  the name and the movement's word, and the second hand. The applied
+   *  markers and the hands are steel instead (see `STEEL`). */
   ink: string;
   /** The bezel round the face. */
   bezel: string;
@@ -279,18 +283,34 @@ export const DIAL_FONT: Record<DialFont, DialFontSpec> = {
  *  where 12 is two digits. */
 export const ROMAN_WIDTH = 2;
 
+// ── The metal ──
+// What every applied part of the dial is made of: the markers screwed to the
+// face, and the hands over them. Those are objects rather than colours — a
+// block of steel has no shade of its own to print, only the light that is on
+// it — so they are not drawn in the face's ink at all. The ink is for what is
+// genuinely *printed*: the numerals, the minute track, the name and the
+// movement's word, and the second hand, which is a hair too fine to be a
+// polished thing.
+//
+// Steel is steel whatever the face under it, so one pair serves all eight —
+// the tone a surface turned into the light has, and the one turned away from
+// it. Which of the two any given surface wears is not a colour but a
+// reckoning, and `sheen.ts` does it from where the light is.
+
+export const STEEL = { light: "#f4f6f8", shade: "#7c838c" } as const;
+
 // ── The hour markers ──
 // The nine ways a dial marks its hours: applied batons (the commonest, with
-// a double at twelve), the same batons with a plot of lume at the outer end
-// of each and one wide block at twelve (the sixties dress dial), the dots of
-// a diver (a triangle at twelve, batons at the quarters), numerals at every
-// hour, Roman numerals, numerals at the quarters only, the 3-6-9 layout of
-// an expedition watch, the tapered wedges of a mid-century dress dial, and a
-// bare minute track with the hours as longer ticks.
+// a double at twelve), the long solid blocks of a sixties dress dial — the
+// same baton the whole way out, one wide one at twelve, and no track on the
+// rim — the dots of a diver (a triangle at twelve, batons at the quarters),
+// numerals at every hour, Roman numerals, numerals at the quarters only, the
+// 3-6-9 layout of an expedition watch, the tapered wedges of a mid-century
+// dress dial, and a bare minute track with the hours as longer ticks.
 
 export type DialMarkers =
   | "batons"
-  | "plots"
+  | "blocks"
   | "dots"
   | "numerals"
   | "roman"
@@ -303,8 +323,7 @@ export type DialMarkers =
 export type Marker =
   | "baton"
   | "doubleBaton"
-  | "lumeBaton"
-  | "wideLumeBaton"
+  | "wideBaton"
   | "dot"
   | "triangle"
   | "wedge"
@@ -321,7 +340,7 @@ export type DialMarkersSpec = {
 
 export const DIAL_MARKER_STYLES: DialMarkers[] = [
   "batons",
-  "plots",
+  "blocks",
   "dots",
   "numerals",
   "roman",
@@ -340,8 +359,8 @@ export const DIAL_MARKERS: Record<DialMarkers, DialMarkersSpec> = {
   },
   // No track on the rim: the dial this is drawn for prints its minutes on
   // the ring (see `DIAL_RING.chapter`).
-  plots: {
-    at: (h) => (h % 12 === 0 ? "wideLumeBaton" : "lumeBaton"),
+  blocks: {
+    at: (h) => (h % 12 === 0 ? "wideBaton" : "baton"),
     minuteTrack: false,
   },
   dots: {
@@ -365,6 +384,32 @@ export const DIAL_MARKERS: Record<DialMarkers, DialMarkersSpec> = {
 /** Whether a marker is set in the numerals' typeface. */
 export function isNumeral(marker: Marker): marker is "arabic" | "roman" {
   return marker === "arabic" || marker === "roman";
+}
+/** How a marker's top is shaped, which is what decides how it is drawn.
+ *
+ *  A **roof** is a flat plate with a ridge down the middle — two faces put
+ *  together at an angle, tipping up where they meet — which is what an
+ *  applied block, wedge or triangle is: each face is flat, so each is one
+ *  tone, and which of the two is the bright one is where the light is. A
+ *  **dome** is turned rather than folded, the round plot of a diver's dial,
+ *  so the light comes back off it as a band that slides across as the light
+ *  moves. **Print** is not a part at all: a numeral or a tick, in the face's
+ *  ink, the same from every angle.
+ *
+ *  This is the whole difference between a dial you read the metal of and one
+ *  you read the print of, and it is the marker's own — a block is a block on
+ *  whichever dial it is screwed to. */
+export type MarkerProfile = "roof" | "dome" | "print";
+
+export function markerProfile(marker: Marker): MarkerProfile {
+  if (marker === "tick" || isNumeral(marker)) return "print";
+  return marker === "dot" ? "dome" : "roof";
+}
+
+/** Whether a marker is a part *applied* to the dial — polished metal, drawn
+ *  from the light on it (`sheen.ts`) — rather than something printed on it. */
+export function isApplied(marker: Marker): boolean {
+  return markerProfile(marker) !== "print";
 }
 
 // ── The hours' size ──
@@ -446,6 +491,60 @@ export const DIAL_MOVEMENT: Record<DialMovement, { beats: number | null }> = {
   sweep: { beats: null },
 };
 
+// ── The hands ──
+// What the hands are *shaped* like; what they are made of is not a choice,
+// because a hand is steel on every wrist watch there is (see `STEEL`). Two
+// sets: the plain bar, the same width from the cap to its tip and domed
+// across it, and the tapered hand of a sixties dress watch, broad where it
+// leaves the cap and narrowing to a point, with a ridge down it that takes
+// the light on one side and lies in shade on the other.
+//
+// The second hand is the exception either way: a hair that fine has no
+// surface to catch anything, so it stays the face's ink, which is also what
+// a dial with polished hands wears against the polish.
+
+export type DialHands = "bar" | "tapered";
+
+export type DialHandsSpec = {
+  /** The width the hour and minute hands leave the cap at, and the width
+   *  they end at, as shares of the width `HANDS` in `clock.ts` gives them.
+   *  A bar is one and one; a tapered hand is broader at the boss because it
+   *  gives all of it back at the tip. */
+  base: number;
+  tip: number;
+  /** How far the hand's tail reaches past the axle, in the dial's units. A
+   *  bar gets a stub, which reads as a hand pivoted rather than hinged at the
+   *  centre; a tapered hand gets none, because its widest point *is* the hub
+   *  and a tail past it would flare out from under the cap. */
+  boss: number;
+  /** Whether the hand narrows along its length: a taper is drawn as two
+   *  facets either side of its ridge, a bar as one domed bar. */
+  taper: boolean;
+  /** What balances the second hand past the axle: the disc of a sports hand,
+   *  or nothing at all — a dress watch's second hand is one hair from its tip
+   *  to the end of its tail. */
+  counterweight: "disc" | "none";
+};
+
+export const DIAL_HAND_SETS: DialHands[] = ["bar", "tapered"];
+
+export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
+  bar: {
+    base: 1,
+    tip: 1,
+    boss: 5,
+    taper: false,
+    counterweight: "disc",
+  },
+  tapered: {
+    base: 2,
+    tip: 0.25,
+    boss: 0,
+    taper: true,
+    counterweight: "none",
+  },
+};
+
 // ── The dial, put together ──
 
 export type DialConfig = {
@@ -456,6 +555,7 @@ export type DialConfig = {
   placement: DialPlacement;
   ring: DialRing;
   movement: DialMovement;
+  hands: DialHands;
 };
 
 /** The nine presets: combinations a real dial is often seen in, named for
@@ -494,6 +594,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     placement: "inside",
     ring: "groove",
     movement: "sweep",
+    hands: "bar",
   },
   // The diver: black, dots with a triangle at twelve, a mechanical beat.
   abyss: {
@@ -504,6 +605,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     placement: "inside",
     ring: "groove",
     movement: "mechanical",
+    hands: "bar",
   },
   // The field watch: numerals at every hour in a tall condensed sans.
   trailhead: {
@@ -514,6 +616,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     placement: "outside",
     ring: "groove",
     movement: "mechanical",
+    hands: "bar",
   },
   // The expedition dial: 3, 6 and 9, and batons between.
   summit: {
@@ -524,6 +627,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     placement: "inside",
     ring: "groove",
     movement: "mechanical",
+    hands: "bar",
   },
   // The dress watch: white, Roman numerals in a high-contrast serif, quartz.
   boulevard: {
@@ -534,6 +638,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     placement: "over",
     ring: "groove",
     movement: "quartz",
+    hands: "bar",
   },
   // The Bauhaus dial: small geometric numerals at the rim, nothing else.
   studio: {
@@ -544,6 +649,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     placement: "outside",
     ring: "groove",
     movement: "mechanical",
+    hands: "bar",
   },
   // A blue sunburst with wedges.
   tidewater: {
@@ -554,6 +660,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     placement: "inside",
     ring: "groove",
     movement: "mechanical",
+    hands: "bar",
   },
   // Champagne, numerals at the quarters in a serif, quartz.
   harvest: {
@@ -564,18 +671,20 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
     placement: "inside",
     ring: "groove",
     movement: "quartz",
+    hands: "bar",
   },
-  // The sixties dress watch: a silver dial, long lumed batons, and the day
-  // drawn on a deep blue minute ring printed in a light grotesque. An
-  // automatic, so the dial says so under the name.
+  // The sixties dress watch: a silver dial, long applied blocks, tapered
+  // steel hands, and the day drawn on a deep blue minute ring printed in a
+  // light grotesque. An automatic, so the dial says so under the name.
   uptown: {
     face: "silver",
     font: "light",
-    markers: "plots",
+    markers: "blocks",
     scale: 7,
     placement: "inside",
     ring: "chapter",
     movement: "mechanical",
+    hands: "tapered",
   },
 };
 
