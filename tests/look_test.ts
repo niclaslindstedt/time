@@ -198,6 +198,14 @@ describe("the hour markers", () => {
     expect(DIAL_MARKERS.blocks.minuteTrack).toBe(false);
   });
 
+  it("run the dress dial's blocks out to the ring, and no other style's", () => {
+    expect(DIAL_MARKERS.blocks.reachesRing).toBe(true);
+    for (const style of DIAL_MARKER_STYLES) {
+      if (style === "blocks") continue;
+      expect(DIAL_MARKERS[style].reachesRing, style).toBe(false);
+    }
+  });
+
   it("are a diver's: a triangle at twelve, batons at the quarters, dots between", () => {
     expect(DIAL_MARKERS.dots.at(0)).toBe("triangle");
     for (const h of [3, 6, 9]) expect(DIAL_MARKERS.dots.at(h)).toBe("baton");

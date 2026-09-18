@@ -133,6 +133,11 @@ export type DialLayout = {
   /** An applied marker's length along the radius, and its width across it. */
   markerLength: number;
   markerWidth: number;
+  /** The lumed plot at the end of an hour that runs out to the ring: where
+   *  its centre sits and how big it is. Null on every other dial, which is
+   *  most of them — an hour that stops short of the ring has nothing on the
+   *  ring to finish it with. */
+  pip: { r: number; radius: number } | null;
   /** The hands' tips from the centre. */
   hands: { hour: number; minute: number; second: number };
 };
@@ -149,6 +154,16 @@ export type DialLayout = {
  * of the marker's own radius, and clamped to what the placement leaves room
  * for. The hands stop at the ring: the minute hand on the band, the second
  * hand at its outer edge, the hour hand well short of both.
+ *
+ * A style that `reachesRing` is the exception, and only inside the ring,
+ * where there is a gap to close: the block keeps the inner end the size gave
+ * it and its outer end is taken out to the ring's inner edge, so the hour is
+ * one part running from the middle of the dial to the day's track rather
+ * than a baton with air and a stray tick after it. What finishes it is a
+ * lumed plot on the ring, as wide as the ring's own ticks are long and
+ * centred on them — the hours are the twelve places a chapter ring prints a
+ * numeral rather than a tick, so the plot lands in room the minutes are not
+ * using.
  */
 export function dialLayout(
   dial: Pick<DialConfig, "placement" | "markers" | "font" | "scale">,
@@ -185,6 +200,20 @@ export function dialLayout(
   const edgeR = ringOuter - RING_EDGE / 2;
   const bandR = ringOuter - RING_EDGE - RING_BAND / 2;
   const ringInner = ringOuter - RING_EDGE - RING_BAND;
+
+  let markerLength = size * MARKER_SHARE;
+  let pip: { r: number; radius: number } | null = null;
+  if (style.reachesRing && dial.placement === "inside") {
+    const innerEnd = markerR - markerLength / 2;
+    markerLength = ringInner - innerEnd;
+    markerR = innerEnd + markerLength / 2;
+    const track = chapterTracks(ringInner).ring;
+    pip = {
+      r: (track.inner + track.outer) / 2,
+      radius: (track.outer - track.inner) / 2,
+    };
+  }
+
   return {
     bandR,
     ringInner,
@@ -192,8 +221,9 @@ export function dialLayout(
     edgeR,
     markerR,
     numeralSize: size,
-    markerLength: size * MARKER_SHARE,
+    markerLength,
     markerWidth: size * 0.22,
+    pip,
     hands: { hour: bandR * 0.62, minute: bandR, second: ringOuter },
   };
 }
@@ -212,6 +242,9 @@ export function dialLayout(
  * The face's track has to fit in the air the markers are clamped to leave
  * (`MARKER_GAP`), because a tick that reached past it would run into the
  * marker at twelve on the largest hour size. `tests/clock_test.ts` says so.
+ * The one dial that crosses it does so on purpose: a style that `reachesRing`
+ * takes its blocks out over the track, and the twelve ticks under them are
+ * the twelve the hours stand on anyway.
  */
 export type ChapterTracks = {
   /** Where each track begins and ends: `inner` nearer the centre. */

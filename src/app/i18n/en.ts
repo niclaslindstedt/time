@@ -391,7 +391,7 @@ export const en = {
       tidewater: "Blue sunburst, tapered wedges.",
       harvest: "Champagne, numerals at the quarters in a serif.",
       uptown:
-        "The sixties dress watch: silver blocks, tapered steel hands, the day on a blue minute ring.",
+        "The sixties dress watch: silver blocks out to the ring, tapered steel hands, the day on a blue minute ring.",
     },
     clockFace: "Face",
     face: {

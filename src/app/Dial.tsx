@@ -57,7 +57,9 @@ import { useHands } from "./useHands.ts";
 // From the back forward: the bezel, the face (a radial gradient, because a
 // sunburst finish is one), the minute track on the rim, the ring the day is
 // drawn on — a faint groove, or the printed chapter ring the day fills, with
-// its minutes printed back over the day — the day itself, the hour markers,
+// its minutes printed back over the day — the day itself, the lume the hours
+// of a dial whose blocks run out to the ring are finished with, the hour
+// markers,
 // the printing, and the hands over everything with a shadow under them — the
 // one thing that makes a flat drawing read as a watch rather than a chart.
 // The markers are drawn once at twelve o'clock and rotated into place, which
@@ -286,6 +288,9 @@ export function Dial({
     angle: (hour % 12) * 30,
     kind: style.at(hour % 12),
   }));
+  // The lume at the end of an hour that runs out to the ring, if this dial
+  // has one. Out of the layout, so the dial does not decide it twice.
+  const pip = layout.pip;
 
   return (
     <svg
@@ -504,6 +509,26 @@ export function Dial({
             >
               {m.label}
             </text>
+          );
+        })}
+
+      {/* And the lume at the end of the hours, where a dial's blocks run out
+          to the ring: a filled plot printed on the ring at each hour, in the
+          ring's own ink, standing in the room the minutes leave — every hour
+          is a place the chapter ring prints a numeral rather than a tick.
+          Printed over the day, the way the minutes are: the plot says where
+          the hour is, whatever colour the day has put under it. */}
+      {pip &&
+        markers.map(({ hour, angle }) => {
+          const [x, y] = polar(C, C, pip.r, angle);
+          return (
+            <circle
+              key={`p${hour}`}
+              cx={x}
+              cy={y}
+              r={pip.radius}
+              fill={ring.ink ?? face.ink}
+            />
           );
         })}
 
