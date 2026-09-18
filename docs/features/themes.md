@@ -83,7 +83,8 @@ were looking at, so changing one thing about a preset is two taps.
   leave the cap and narrowing to a point, in polished steel rather than ink —
   drawn as a shape split down its ridge, one half catching the light and the
   other in shade, so the hand carries its own light round the dial as it
-  sweeps — with a needle second hand on a slim lozenge counterweight. The
+  sweeps — with a plain hairline second hand, its tail a stub of the same hair
+  rather than a counterweight, which is what a dress watch carries. The
   second hand stays the face's ink either way: at a hair's width there is no
   room for a facet, and a dial with polished hands wears a dark one against
   the polish.

@@ -114,6 +114,8 @@ describe("the dial's vocabulary", () => {
     expect(bar.tip).toBe(1);
     expect(bar.steel).toBeNull();
     expect(bar.counterweight).toBe("disc");
+    // A stub past the axle, which the cap covers.
+    expect(bar.boss).toBeGreaterThan(0);
 
     const tapered = DIAL_HANDS.tapered;
     expect(tapered.taper).toBe(true);
@@ -140,7 +142,12 @@ describe("the dial's vocabulary", () => {
         0.1,
       );
     }
-    expect(tapered.counterweight).toBe("lozenge");
+    // Nothing past the axle: the widest point is the hub, and a tail past it
+    // would flare out from under the cap.
+    expect(tapered.boss).toBe(0);
+    // And nothing past the axle to balance it: a dress watch's second hand
+    // is one hair the whole way.
+    expect(tapered.counterweight).toBe("none");
   });
 
   it("beats once, eight times, or not at all", () => {

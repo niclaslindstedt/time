@@ -468,6 +468,11 @@ export type DialHandsSpec = {
    *  gives all of it back at the tip. */
   base: number;
   tip: number;
+  /** How far the hand's tail reaches past the axle, in the dial's units. A
+   *  bar gets a stub, which reads as a hand pivoted rather than hinged at the
+   *  centre; a tapered hand gets none, because its widest point *is* the hub
+   *  and a tail past it would flare out from under the cap. */
+  boss: number;
   /** Whether the hand narrows along its length — a taper is drawn as a
    *  shape, a bar as a stroke with a facet down it. */
   taper: boolean;
@@ -475,8 +480,9 @@ export type DialHandsSpec = {
    *  Null is a hand printed in the face's ink. */
   steel: { light: string; shade: string } | null;
   /** What balances the second hand past the axle: the disc of a sports hand,
-   *  or the slim lozenge of a dress one. */
-  counterweight: "disc" | "lozenge";
+   *  or nothing at all — a dress watch's second hand is one hair from its tip
+   *  to the end of its tail. */
+  counterweight: "disc" | "none";
 };
 
 export const DIAL_HAND_SETS: DialHands[] = ["bar", "tapered"];
@@ -485,6 +491,7 @@ export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
   bar: {
     base: 1,
     tip: 1,
+    boss: 5,
     taper: false,
     steel: null,
     counterweight: "disc",
@@ -492,9 +499,10 @@ export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
   tapered: {
     base: 2,
     tip: 0.25,
+    boss: 0,
     taper: true,
     steel: { light: "#eceef2", shade: "#8b929b" },
-    counterweight: "lozenge",
+    counterweight: "none",
   },
 };
 

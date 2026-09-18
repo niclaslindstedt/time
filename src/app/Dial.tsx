@@ -82,10 +82,6 @@ import { useHands } from "./useHands.ts";
 export const DIAL_BOX = 240;
 const C = DIAL_BOX / 2;
 
-/** How far a hand's tail reaches past the axle, under the cap: enough that
- *  the hand is pivoted rather than hinged at the centre. */
-const HAND_BOSS = 5;
-
 /** A stretch of the day on the ring, in the colours it is drawn in. `edge`
  *  is the thin line along the outside; a band without one leaves the line
  *  under it alone, which is how a kind of work colours the band and leaves
@@ -698,7 +694,7 @@ function Hand({
   facet: string;
 }) {
   const top = C - length;
-  const bottom = C + HAND_BOSS;
+  const bottom = C + set.boss;
   if (!set.taper) {
     return (
       <>
@@ -749,11 +745,12 @@ function Hand({
   );
 }
 
-/** The second hand: a hair from its tip to its tail, and whatever balances it
- *  past the axle — the disc of a sports hand, or the slim lozenge of a dress
- *  one. Printed in the face's ink whatever the rest of the set is made of: at
- *  a unit wide there is no room for a facet, and a dial with polished hands
- *  wears a dark second hand against the polish. */
+/** The second hand: one hair from its tip to the end of its tail, and
+ *  whatever balances it past the axle — the disc of a sports hand, or nothing
+ *  at all, which is what a dress watch's carries. Printed in the face's ink
+ *  whatever the rest of the set is made of: at a unit wide there is no room
+ *  for a facet, and a dial with polished hands wears a dark second hand
+ *  against the polish. */
 function SecondHand({
   set,
   length,
@@ -766,42 +763,20 @@ function SecondHand({
   ink: string;
 }) {
   const tail = C + HANDS.tail;
-  if (set.counterweight === "disc") {
-    return (
-      <>
-        <line
-          x1={C}
-          y1={tail}
-          x2={C}
-          y2={C - length}
-          stroke={ink}
-          strokeWidth={width}
-          strokeLinecap="round"
-        />
-        <circle cx={C} cy={C + HANDS.tail * 0.7} r={2.2} fill={ink} />
-      </>
-    );
-  }
-  // The needle, a touch finer at the tip than at the axle, and the lozenge:
-  // a long thin diamond down the tail, ending where the tail does.
-  const hair = width * 0.45;
-  const spread = width * 1.6;
   return (
     <>
-      <polygon
-        points={
-          `${C - hair},${tail} ${C - hair * 0.6},${C - length} ` +
-          `${C + hair * 0.6},${C - length} ${C + hair},${tail}`
-        }
-        fill={ink}
+      <line
+        x1={C}
+        y1={tail}
+        x2={C}
+        y2={C - length}
+        stroke={ink}
+        strokeWidth={width}
+        strokeLinecap="round"
       />
-      <polygon
-        points={
-          `${C},${C + HANDS.tail * 0.3} ${C + spread},${C + HANDS.tail * 0.68} ` +
-          `${C},${tail} ${C - spread},${C + HANDS.tail * 0.68}`
-        }
-        fill={ink}
-      />
+      {set.counterweight === "disc" && (
+        <circle cx={C} cy={C + HANDS.tail * 0.7} r={2.2} fill={ink} />
+      )}
     </>
   );
 }

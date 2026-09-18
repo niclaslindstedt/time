@@ -163,7 +163,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   eight faces, nine typefaces, nine marker styles, eight hour sizes, the
   three placements against the ring, the two rings the day is drawn on (a
   groove, or the printed chapter ring the day fills), the two sets of hands
-  (a bar printed in the face's ink, or the tapered steel of a dress watch),
+  (a bar printed in the face's ink, or the tapered steel of a dress watch
+  with a hairline second hand),
   the three movements, and the nine presets they combine into. Every option is an id and a spec, so the
   settings can validate and the tests can walk them.
 - `src/app/format.ts` — durations, timers, times of day, and the parse of a
