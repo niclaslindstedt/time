@@ -152,7 +152,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   target, the clamps.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
   rotations, arc paths, `dialLayout` — where the day's ring, the hour markers
-  and the hands sit for a given placement and marker size — and `ringHit` /
+  and the hands sit for a given placement and marker size — `chapterTracks`,
+  the two minute tracks a printed ring is read against (its own ticks on its
+  inner edge, and the finer one on the face under it) — and `ringHit` /
   `timesAt`, which read a point on the ring back as a moment. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
   stepper lands it with; and the **wind**, `windPlan` / `windTurns`, the
@@ -188,6 +190,14 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/useSyncEngine.ts` — the sync engine over the framework's storage
   adapters (debounced push, conflict / auth / throttle handling). Suspended
   wholesale while demo data has taken over storage.
+- `src/app/useTilt.ts` — the one place the device's orientation is read: the
+  `deviceorientation` readings, eased so a hand's shake is not a flicker,
+  turned into `sheen.ts`'s light and handed to the dial, so the reflection on
+  the metal slides as the phone is turned. Behind a setting, because on iOS
+  the sensor needs permission and the tap that switches it on is what asks.
+  Still when reduced motion is asked for. **The readings never leave the
+  frame they are drawn in** — nothing is stored, nothing is sent; the light
+  is the only thing that survives a reading.
 - `src/app/useNow.ts` — the one place the clock is read: `today` and
   `seconds`, ticking at the rate a screen asks for and re-read on focus.
 - `src/app/useHands.ts` — the frames behind `clock.ts`'s hands. A
@@ -391,6 +401,7 @@ regression.
 | A modal's save / cancel                            | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's                                                                                                                                                |
 | A new way to correct a time on Today               | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`                                                                                                                                                         |
 | A new screen                                       | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                                                                                                                              |
+| A change to the light on the dial's metal          | `src/app/sheen.ts` (the light, and what it does to a facet or a dome — tested in `tests/sheen_test.ts`), `useTilt.ts` (the device's own readings) or `Dial.tsx` (paint)                                                                                                                |
 | A new setting                                      | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                                                                                                                                                                   |
 | A new developer-only affordance                    | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                                                                                                                                                             |
 | A change to what the demo shows                    | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demoData_test.ts`                                                                                                                                                                            |

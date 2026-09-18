@@ -16,6 +16,7 @@ import {
   TRACK_R,
   arcPath,
   chapterMarks,
+  chapterTracks,
   dialLayout,
   polar,
 } from "./clock.ts";
@@ -173,6 +174,20 @@ export function Dial({
       })
     : [];
 
+  // The printed ring's two tracks, and where its numerals sit in what the
+  // ticks leave of the ring.
+  const tracks = chapterTracks(layout.ringInner);
+  const numeralR = (tracks.ring.outer + layout.ringOuter) / 2;
+  const faceTrack = ring.printed
+    ? Array.from({ length: 60 }, (_, i) => {
+        const hour = i % 5 === 0;
+        const inner = hour ? tracks.face.inner : tracks.face.inner + 1.1;
+        const [x1, y1] = polar(C, C, inner, i * 6);
+        const [x2, y2] = polar(C, C, tracks.face.outer, i * 6);
+        return { x1, y1, x2, y2, hour };
+      })
+    : [];
+
   const done = progress === undefined ? 0 : Math.max(0, Math.min(1, progress));
   const over =
     progress === undefined ? 0 : Math.max(0, Math.min(1, progress - 1));
@@ -315,6 +330,24 @@ export function Dial({
         </>
       )}
 
+      {/* And the track under it, on the face: the finer one the minute hand
+          is read against, hanging below the ring and growing inward. Drawn
+          before the day, because it is on the dial rather than on the ring —
+          nothing the day paints reaches it. */}
+      {ring.printed &&
+        faceTrack.map((tick, i) => (
+          <line
+            key={`f${i}`}
+            x1={tick.x1}
+            y1={tick.y1}
+            x2={tick.x2}
+            y2={tick.y2}
+            stroke={face.ink}
+            strokeWidth={tick.hour ? 1 : 0.6}
+            opacity={tick.hour ? 0.6 : 0.4}
+          />
+        ))}
+
       {bands.map((b, i) => {
         const band = arcPath(C, C, layout.bandR, b.start, b.end);
         const edge = b.edge
@@ -343,14 +376,15 @@ export function Dial({
       })}
 
       {/* The minutes, printed over the day: a chapter ring keeps its
-          numerals whatever the day has painted under them. Turned to lie
-          along the ring, and the lower half turned the other way so a 30
-          at six is not read upside down. */}
+          numerals whatever the day has painted under them. Its ticks stand on
+          the ring's inner edge and grow outward across it, with the numerals
+          in the room that leaves — turned to lie along the ring, and the lower
+          half turned the other way so a 30 at six is not read upside down. */}
       {ring.printed &&
         chapterMarks().map((m) => {
           if (m.kind === "tick") {
-            const [x1, y1] = polar(C, C, layout.ringOuter - 3.5, m.angle);
-            const [x2, y2] = polar(C, C, layout.ringOuter - 0.5, m.angle);
+            const [x1, y1] = polar(C, C, tracks.ring.inner, m.angle);
+            const [x2, y2] = polar(C, C, tracks.ring.outer, m.angle);
             return (
               <line
                 key={`m${m.minute}`}
@@ -364,7 +398,7 @@ export function Dial({
               />
             );
           }
-          const [x, y] = polar(C, C, layout.bandR - 0.6, m.angle);
+          const [x, y] = polar(C, C, numeralR, m.angle);
           return (
             <text
               key={`m${m.minute}`}

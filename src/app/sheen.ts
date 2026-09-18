@@ -2,18 +2,18 @@
 // Where the light is, and what it does to the polished parts of the dial.
 //
 // A printed marker is a colour: ink on a face, the same from every angle. An
-// *applied* one is an object — a little block of steel screwed to the dial,
-// its top curved so it rises to a ridge down the middle — and an object has
-// no colour of its own to draw, only the light it is under. So the applied
-// parts are drawn from a light: where it comes from, as a bearing on the
-// dial, and how far off the crystal it stands.
+// *applied* one is an object — a little block of steel screwed to the dial —
+// and an object has no colour of its own to draw, only the light it is under.
+// So the applied parts are drawn from a light: where it comes from, as a
+// bearing on the dial, and how far off the crystal it stands.
 //
-// Two shapes take it. A **facet** is flat: it faces one way, and its
-// brightness is how squarely it faces the light — which is what makes one
-// side of a hand's ridge bright and the other side dark. A **dome** is
-// curved: every angle across its width is somewhere on it, so the light
-// lands as a band that slides across the block as the light moves, and its
-// shoulders shade like the facets they nearly are.
+// Two shapes take it. A **facet** is flat: it faces one way, so it is one
+// tone, and that tone is how squarely it faces the light — which is what
+// makes one face of a roof bright and the other dark, whether the roof is a
+// block screwed to the dial or the ridge down a hand. A **dome** is turned:
+// every angle across its width is somewhere on it, so the light comes back
+// as a band that slides across as the light moves, with shoulders that shade
+// like the facets they nearly are.
 //
 // All of it is arithmetic over two angles, so the tests can pin what a
 // marker at four o'clock looks like under a light over the left shoulder
@@ -42,6 +42,56 @@ export const AMBIENT: Light = { angle: 315, throw: 0.55 };
  *  the throw: the polish always catches something, and catches more of a
  *  light that is off to one side than one straight above. */
 const CREST = { min: 0.78, max: 1 };
+
+// ── The light, and the device under it ──
+// A watch in your hand is under a real light in a real room, and the light
+// does not move when you turn your wrist: the metal does. So the reflection
+// slides, and that is the whole of what tilting the phone has to do to the
+// dial — swing the light the other way round it.
+//
+// The tilt comes in as the two angles a device reports: `beta`, its
+// front-to-back lean, and `gamma`, its side-to-side roll. Which way the
+// light then lies is the *opposite* of where the device has leaned — a
+// screen tipped towards you shows you what is above it, so the light comes
+// up towards twelve — and how far off the crystal it stands is how far the
+// device has gone from flat. `useTilt.ts` supplies the readings; this says
+// what they mean.
+
+/** The tilt that puts the light right at the rim: about the angle a phone
+ *  sits at when you are reading it, so a normal grip is the full sweep
+ *  rather than the first tenth of one. */
+export const TILT_FULL = 40;
+
+/** How far off the crystal the light stands with the device dead flat.
+ *  Not nothing: a dial under a light straight overhead has both faces of
+ *  every ridge the same grey, which reads as a drawing rather than as
+ *  metal. */
+const TILT_FLOOR = 0.3;
+
+/** Under this much of a lean there is no direction to speak of, and the
+ *  bearing an `atan2` of two jittering readings returns is noise. */
+const TILT_DEAD = 0.02;
+
+/**
+ * The light a device at this lean is under. Both angles in degrees, as
+ * `DeviceOrientationEvent` gives them.
+ *
+ * Flat, the light is where the drawing assumes it and barely off the
+ * crystal. Leaned, it swings opposite the lean and stands further off the
+ * further the device has gone — so turning the phone sweeps the band across
+ * the markers and flips which face of each is the bright one, which is what
+ * the metal does when you turn it.
+ */
+export function tiltLight(beta: number, gamma: number): Light {
+  const lean = Math.hypot(clamp(beta, 90), clamp(gamma, 90));
+  const off = Math.min(1, lean / TILT_FULL);
+  const light = { throw: TILT_FLOOR + (1 - TILT_FLOOR) * off };
+  if (off < TILT_DEAD) return { ...light, angle: AMBIENT.angle };
+  // The bearing of the light in the dial's own frame: against the lean, and
+  // clockwise from twelve the way every other angle here is.
+  const angle = Math.atan2(-clamp(gamma, 90), clamp(beta, 90));
+  return { ...light, angle: wrap((angle * 180) / Math.PI) };
+}
 
 /**
  * A flat facet's tone, 0 – 1, from the mid grey of steel seen edge-on:
@@ -139,6 +189,12 @@ function rgb(hex: string): [number, number, number] {
 
 function radians(degrees: number): number {
   return (degrees * Math.PI) / 180;
+}
+
+/** An angle held within `limit` either side of nothing, and never NaN: a
+ *  sensor that has not read yet is a zero rather than a hole. */
+function clamp(n: number, limit: number): number {
+  return Number.isFinite(n) ? Math.min(limit, Math.max(-limit, n)) : 0;
 }
 
 function clamp01(n: number): number {

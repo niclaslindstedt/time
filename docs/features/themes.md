@@ -85,8 +85,11 @@ were looking at, so changing one thing about a preset is two taps.
 - **The day's ring.** What the day is drawn on. **A groove** is the faint
   track the bands lie in, so an empty morning shows where they will go. The
   **minute ring** is the chapter ring a sixties dress dial wears at its rim —
-  a deep blue, printed in white with a tick a minute and a numeral every
-  five, 05 round to 60 — and the day _fills_ it: a stretch at work paints it
+  a deep blue, printed in white with a numeral every five, 05 round to 60,
+  and a tick a minute standing on the ring's _inner_ edge with the numerals
+  in the room that leaves, the way a dial of this kind is printed. Under it,
+  on the face itself, is the finer track the minute hand is actually read
+  against. The day _fills_ the ring: a stretch at work paints it
   the accent, a kind of work its hue, a break the flag colour, and the
   minutes stay printed over whatever the day put under them. The numerals
   are set in the Numerals face, whatever the hours wear.
@@ -112,6 +115,26 @@ were looking at, so changing one thing about a preset is two taps.
   hands still keep time; what they skip is the wind after the tab has been
   asleep (see [`today.md`](today.md)). The dial says which it is, under the
   name: AUTOMATIC, QUARTZ or GLIDE.
+
+### Reflections
+
+The dial's metal is drawn from a light standing somewhere over the crystal,
+and **Settings → The clock → Reflections** hands that light to the device: turn
+the phone and the reflection slides across the markers and the hands, because
+the metal has turned and the light has not. Each marker answers for itself —
+the block at eight brightens as the one at two goes into shade — and both
+faces of every ridge swap as the light crosses it.
+
+It is off until you ask for it, for two reasons: on iOS the motion sensors
+need your permission, and the tap that turns this on is what asks for it, so
+the answer can decide whether the switch stays on. The row is not shown at all
+on a device with nothing to read. With reduced motion asked for, the light
+stays where it is.
+
+The readings are used for the next frame and for nothing else. They are not
+stored, not put in the document, and not sent anywhere — there is nowhere for
+them to go: the app makes no request it was not asked to make, the tilt
+included.
 
 ### Size
 

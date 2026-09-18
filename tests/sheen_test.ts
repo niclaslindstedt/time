@@ -9,6 +9,8 @@ import {
   mix,
   sheenTurn,
   steelTone,
+  tiltLight,
+  TILT_FULL,
   wrap,
   type Light,
 } from "../src/app/sheen.ts";
@@ -23,6 +25,78 @@ describe("the light a dial is drawn under", () => {
     expect(AMBIENT.angle).toBe(315);
     expect(AMBIENT.throw).toBeGreaterThan(0);
     expect(AMBIENT.throw).toBeLessThan(1);
+  });
+});
+
+describe("the light a tilted device is under", () => {
+  it("is where the drawing assumes it when the device is flat", () => {
+    const flat = tiltLight(0, 0);
+    expect(flat.angle).toBe(AMBIENT.angle);
+    // Some of the way off the crystal even so: a light straight overhead
+    // greys every face of every ridge the same, which reads as a drawing.
+    expect(flat.throw).toBeGreaterThan(0);
+    expect(flat.throw).toBeLessThan(AMBIENT.throw + 0.3);
+  });
+
+  it("swings the light against the lean, because the metal turned and it did not", () => {
+    // Tipped towards you: the light comes up to twelve.
+    expect(tiltLight(TILT_FULL, 0).angle).toBeCloseTo(0, 6);
+    // Tipped away: down to six.
+    expect(Math.abs(tiltLight(-TILT_FULL, 0).angle)).toBeCloseTo(180, 6);
+    // Rolled right: round to nine, and rolled left, round to three.
+    expect(tiltLight(0, TILT_FULL).angle).toBeCloseTo(-90, 6);
+    expect(tiltLight(0, -TILT_FULL).angle).toBeCloseTo(90, 6);
+  });
+
+  it("stands the light further off the crystal the further the device leans", () => {
+    const little = tiltLight(6, 0).throw;
+    const some = tiltLight(20, 0).throw;
+    const full = tiltLight(TILT_FULL, 0).throw;
+    expect(some).toBeGreaterThan(little);
+    expect(full).toBeGreaterThan(some);
+    // And no further: past the full lean it is at the rim and stays there.
+    expect(tiltLight(TILT_FULL * 3, 0).throw).toBeCloseTo(full, 6);
+    expect(full).toBe(1);
+  });
+
+  it("leans on both at once", () => {
+    // Tipped towards you and rolled left in equal measure: the light is
+    // between twelve and three.
+    expect(tiltLight(30, -30).angle).toBeCloseTo(45, 6);
+  });
+
+  it("holds still rather than spinning on a device lying flat", () => {
+    // A phone on a table still jitters a degree; a bearing taken from that
+    // is noise, so under a dead band there is no bearing at all.
+    for (const [beta, gamma] of [
+      [0, 0],
+      [0.2, -0.3],
+      [-0.4, 0.1],
+    ]) {
+      expect(tiltLight(beta!, gamma!).angle).toBe(AMBIENT.angle);
+    }
+  });
+
+  it("is a light whatever the sensor says, including nothing", () => {
+    for (const [beta, gamma] of [
+      [NaN, NaN],
+      [Infinity, -Infinity],
+      [720, 720],
+      [-900, 45],
+    ]) {
+      const light = tiltLight(beta!, gamma!);
+      expect(Number.isFinite(light.angle)).toBe(true);
+      expect(light.throw).toBeGreaterThanOrEqual(0);
+      expect(light.throw).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("moves what the metal looks like: a marker's two faces swap as it turns", () => {
+    // The block at twelve, under a device rolled one way and then the other.
+    const left = tiltLight(20, -30);
+    const right = tiltLight(20, 30);
+    expect(facetTone(0, -1, left)).toBeLessThan(facetTone(0, -1, right));
+    expect(facetTone(0, 1, left)).toBeGreaterThan(facetTone(0, 1, right));
   });
 });
 

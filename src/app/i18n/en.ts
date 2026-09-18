@@ -465,6 +465,11 @@ export const en = {
     clockSizeSmall: "Small",
     clockSizeMedium: "Medium",
     clockSizeLarge: "Large",
+    reflect: "Reflections",
+    reflectHint:
+      "Move the light on the dial's metal as you turn the device, the way a watch on your wrist catches it. Needs the motion sensors; the readings are used for the next frame and nothing else — they are never stored or sent.",
+    reflectDenied:
+      "The device did not allow access to its motion sensors, so the light stays where it is. You can allow it in the browser's settings for this site and try again.",
     // The light behind the dial.
     backlight: "Backlight",
     backlightHint:

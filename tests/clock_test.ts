@@ -12,6 +12,7 @@ import {
   angleOf,
   arcPath,
   chapterMarks,
+  chapterTracks,
   dialLayout,
   handAngles,
   handTurns,
@@ -238,6 +239,37 @@ describe("dialLayout", () => {
       SIGNATURE.name - SIGNATURE.nameSize / 2,
     );
     expect(SIGNATURE.window - SIGNATURE.windowHeight / 2).toBeGreaterThan(20);
+  });
+
+  it("prints a chapter ring's ticks inside it, and the face's under it", () => {
+    for (const dial of every) {
+      const l = dialLayout(dial);
+      const tracks = chapterTracks(l.ringInner);
+      const where = JSON.stringify(dial);
+      // The ring's own ticks stand on its inner edge and stay on the ring.
+      expect(
+        tracks.ring.inner,
+        `${where}: the ring's ticks start inside the ring`,
+      ).toBeGreaterThanOrEqual(l.ringInner);
+      expect(
+        tracks.ring.outer,
+        `${where}: the ring's ticks run off the ring`,
+      ).toBeLessThan(l.ringOuter);
+      // The face's hang under it, on the face, and never touch it.
+      expect(
+        tracks.face.outer,
+        `${where}: the face's track is on the ring`,
+      ).toBeLessThan(l.ringInner);
+      expect(tracks.face.inner).toBeLessThan(tracks.face.outer);
+      // And where the markers are inside the ring, the track stops short of
+      // them: a tick that reached a marker would foul the largest hour size.
+      if (dial.placement === "inside") {
+        expect(
+          tracks.face.inner,
+          `${where}: the face's track runs into the markers`,
+        ).toBeGreaterThan(l.markerR + reachOf(dial, l.numeralSize));
+      }
+    }
   });
 
   it("stops the hands at the ring: minute on the band, second at its edge", () => {
