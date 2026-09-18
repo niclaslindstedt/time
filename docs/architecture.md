@@ -7,7 +7,7 @@ below runs in the browser tab.
 index.html
   └── src/main.tsx            mounts <App> inside the i18n LanguageRoot
        └── src/App.tsx        theme, store, sync, tab switch, chrome
-            ├── TopBar            mark + wordmark, the desk's tabs, project switcher, sync glyph, cog
+            ├── TopBar            mark + wordmark, the desk's tabs, project switcher, sync glyph, cog — the dial carries the first and last over Today
             ├── TodayScreen       the timer, the clock, the buttons — writes the day
             ├── LogScreen         the day as a list — corrects it
             ├── ReportScreen      a week or a month, as two rings and charts
@@ -27,7 +27,7 @@ src/app/
   project.ts       the template, working days, the day's target   (pure)
   kinds.ts          the marks a kind wears, and a kind of work's hues (pure)
   clock.ts          the dial's layout, hands, arcs, the frame's path, the wind  (pure)
-  look.ts           the theme, and the dial's faces, fonts, markers, presets
+  look.ts           the theme, and the dial's faces, fonts, markers, rings, presets
   format.ts         durations, timers, times of day
   labels.ts         domain value → label and colour
   merge.ts          two documents → one                            (pure)
@@ -42,8 +42,8 @@ src/app/
   useShortcuts.ts   the window's keydown, turned into those commands
   useModalSave.ts   Enter inside a modal's card, turned into its Save
   backup.ts         export / restore a JSON file
-  Dial.tsx          the watch face, drawn, with the day's progress on the bezel — shared by Today and Settings
-  ClockFace.tsx     the day on the dial, the switch, the light, and the way into the stretches
+  Dial.tsx          the watch face, drawn, with the day's progress on the bezel and the printing — shared by Today and Settings
+  ClockFace.tsx     the day on the dial, the switch, the cog, the light, and the way into the stretches
   DialPicker.tsx    the presets and the custom pickers in Settings
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
   DayBars.tsx       the range's day bars, scaled into the plot

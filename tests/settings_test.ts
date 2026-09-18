@@ -51,6 +51,7 @@ describe("parseSettings", () => {
           markers: "diamonds",
           scale: 12,
           placement: "under",
+          ring: "halo",
           movement: "steam",
         },
       }),
@@ -58,6 +59,19 @@ describe("parseSettings", () => {
     expect(s.clockPreset).toBe(DEFAULT_SETTINGS.clockPreset);
     expect(s.clockSize).toBe(DEFAULT_SETTINGS.clockSize);
     expect(s.clock).toEqual(DEFAULT_SETTINGS.clock);
+  });
+
+  it("gives a dial stored before the ring was a choice the groove", () => {
+    const s = parseSettings(
+      JSON.stringify({
+        clockPreset: "custom",
+        clock: { ...DIAL_PRESET.abyss, ring: undefined },
+      }),
+    );
+    expect(s.clock.ring).toBe("groove");
+    expect(parseSettings('{"clock":{"ring":"chapter"}}').clock.ring).toBe(
+      "chapter",
+    );
   });
 
   it("clamps each dial field on its own, not all of them together", () => {

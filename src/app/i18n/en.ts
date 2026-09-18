@@ -60,8 +60,6 @@ export const en = {
     percentOfTarget: "{percent} of today's target",
     dayOff: "A day off — every minute counts extra",
     breaks: "Breaks",
-    breaksHint:
-      "Tap one as you step away — it is written down as the length it usually takes, and the clock is where you correct it.",
     categories: "Working on",
     paused: "paused",
     pausedHint: "A break is on, so nothing is being counted towards this.",
@@ -88,6 +86,13 @@ export const en = {
     kindNamePlaceholder: "What to call it",
     kindMinutes: "Minutes",
     kindRequired: "Give it a name.",
+    // The movement's word on the dial, under the name: what a watch prints
+    // on its face about what drives it.
+    calibre: {
+      quartz: "Quartz",
+      mechanical: "Automatic",
+      sweep: "Glide",
+    },
     clockLabel: "Today on a twelve-hour clock",
     clockDesc:
       "Time worked is drawn as a ring around the dial, with breaks marked on it and the kind of work in its colour; the bezel fills as the day's target is worked. Press the face to start or stop working, or a stretch of the ring to correct it.",
@@ -352,11 +357,11 @@ export const en = {
     themeSystem: "Device",
     clock: "The clock",
     clockHint:
-      "The dial on Today, as a wrist watch. Pick one of the presets, or Custom and put one together: the face, the markers, the numerals and their size, where they sit against the day's ring, and how the second hand moves.",
+      "The dial on Today, as a wrist watch. Pick one of the presets, or Custom and put one together: the face, the markers, the numerals and their size, where they sit against the day's ring, what the ring is, and how the second hand moves.",
     clockPreset: "Dial",
     clockCustom: "Custom",
     clockCustomHint: "Your own dial, piece by piece.",
-    // The eight presets, named for what they look like.
+    // The nine presets, named for what they look like.
     preset: {
       snowfield: "Snowfield",
       abyss: "Abyss",
@@ -366,6 +371,7 @@ export const en = {
       studio: "Studio",
       tidewater: "Tidewater",
       harvest: "Harvest",
+      uptown: "Uptown",
     },
     presetHint: {
       snowfield: "Textured silver, applied batons, a hand that glides.",
@@ -376,6 +382,8 @@ export const en = {
       studio: "Small geometric numerals at the rim, and nothing else.",
       tidewater: "Blue sunburst, tapered wedges.",
       harvest: "Champagne, numerals at the quarters in a serif.",
+      uptown:
+        "The sixties dress watch: silver, lumed batons, the day on a blue minute ring.",
     },
     clockFace: "Face",
     face: {
@@ -391,6 +399,7 @@ export const en = {
     clockMarkers: "Hour markers",
     markers: {
       batons: "Batons",
+      plots: "Lumed batons",
       dots: "Dots",
       numerals: "Numerals",
       roman: "Roman",
@@ -402,6 +411,7 @@ export const en = {
     clockFont: "Numerals",
     font: {
       grotesque: "Grotesque",
+      light: "Light",
       geometric: "Geometric",
       condensed: "Condensed",
       engineered: "Engineered",
@@ -416,6 +426,16 @@ export const en = {
       outside: "Outside the ring",
       over: "Over the ring",
       inside: "Inside the ring",
+    },
+    clockRing: "The day's ring",
+    ring: {
+      groove: "A groove",
+      chapter: "Minute ring",
+    },
+    ringHint: {
+      groove: "A faint track the day is drawn into.",
+      chapter:
+        "A blue ring printed with the minutes, which the day fills — work, breaks and kinds of work — with the minutes printed over them.",
     },
     clockMovement: "Movement",
     movement: {

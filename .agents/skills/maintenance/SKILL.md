@@ -23,11 +23,12 @@ Each skill records the commit it last ran against in `.agents/skills/<skill>/.la
 
 The registry is the single source of truth for which sync skills exist in this repo. Every skill directory under `.agents/skills/` must appear here exactly once.
 
-| Skill             | Fixes                                                            | Spec sections | Run order                                                                       |
-| ----------------- | ---------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------- |
-| `write-changeset` | A user-visible change with no fragment in `.changes/unreleased/` | §8.4          | 1 — run first; the fragment describes the change the other skills then document |
-| `update-docs`     | `docs/*.md` vs. source of truth                                  | §11.1         | 2                                                                               |
-| `update-readme`   | `README.md` vs. the current public surface                       | §3            | 3                                                                               |
+| Skill             | Fixes                                                                                                                                               | Spec sections | Run order                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------- |
+| `write-changeset` | A user-visible change with no fragment in `.changes/unreleased/`                                                                                    | §8.4          | 1 — run first; the fragment describes the change the other skills then document |
+| `update-docs`     | `docs/*.md` vs. source of truth                                                                                                                     | §11.1         | 2                                                                               |
+| `update-readme`   | `README.md` vs. the current public surface                                                                                                          | §3            | 3                                                                               |
+| `add-watch-face`  | Not a sync skill: the playbook for a new dial, preset, marker style, typeface or ring on the Today screen's clock, and the trademark rules it keeps | §21           | — (on request; never scheduled by a sweep)                                      |
 
 Run order matters: `update-readme` reads the docs that `update-docs` rewrites, so it must run after it. A new skill that reads files another skill rewrites goes after that skill.
 

@@ -14,6 +14,7 @@ import {
   DIAL_MOVEMENT,
   DIAL_PLACEMENTS,
   DIAL_PRESET,
+  DIAL_RING,
   DIAL_SCALE,
   clampBacklight,
   type Backlight,
@@ -100,6 +101,9 @@ function parseDial(value: unknown): DialConfig {
     )
       ? (raw.placement as DialConfig["placement"])
       : base.placement,
+    // A dial stored before the ring was a choice gets the groove, which is
+    // the ring every dial had.
+    ring: oneOf(DIAL_RING, raw.ring, base.ring),
     movement: oneOf(DIAL_MOVEMENT, raw.movement, base.movement),
   };
 }

@@ -11,16 +11,20 @@ import {
   RING_BAND,
   RING_EDGE,
   ROMAN_HOURS,
+  SIGNATURE,
   TRACK_R,
   arcPath,
+  chapterMarks,
   dialLayout,
   polar,
 } from "./clock.ts";
+import { useT } from "./i18n/index.ts";
 import {
   DIAL_FACE,
   DIAL_FONT,
   DIAL_MARKERS,
   DIAL_MOVEMENT,
+  DIAL_RING,
   isNumeral,
   type DialConfig,
 } from "./look.ts";
@@ -38,11 +42,21 @@ import { useHands } from "./useHands.ts";
 // `clock.ts`, where it is tested.
 //
 // From the back forward: the bezel, the face (a radial gradient, because a
-// sunburst finish is one), the minute track on the rim, the groove the day's
-// ring sits in, the day itself, the hour markers, and the hands over
-// everything with a shadow under them — the one thing that makes a flat
-// drawing read as a watch rather than a chart. The markers are drawn once at
-// twelve o'clock and rotated into place, which is how they are made too.
+// sunburst finish is one), the minute track on the rim, the ring the day is
+// drawn on — a faint groove, or the printed chapter ring the day fills, with
+// its minutes printed back over the day — the day itself, the hour markers,
+// the printing, and the hands over everything with a shadow under them — the
+// one thing that makes a flat drawing read as a watch rather than a chart.
+// The markers are drawn once at twelve o'clock and rotated into place, which
+// is how they are made too.
+//
+// The printing is what a dial carries besides its hours: the maker's name
+// under twelve, with the mark beside it, the movement's word in small
+// capitals under that, and a window above six. Here the name is the app's,
+// the word is the movement the settings chose — a watch that beats says
+// AUTOMATIC on its face, one that steps says QUARTZ — and the window holds
+// the Settings cog where a date would be. It is paint: `ClockFace` lays the
+// button over the window, the way it lays the switch over the face.
 //
 // The bezel is also the day's progress. From twelve, clockwise, it fills in
 // the accent as the target is worked and closes the loop when the day is
@@ -103,9 +117,11 @@ export function Dial({
   children,
   ariaHidden,
 }: Props) {
+  const t = useT();
   const face = DIAL_FACE[dial.face];
   const font = DIAL_FONT[dial.font];
   const style = DIAL_MARKERS[dial.markers];
+  const ring = DIAL_RING[dial.ring];
   const layout = dialLayout(dial);
   const hands = useHands(now, live, DIAL_MOVEMENT[dial.movement].beats);
   const turns = hands.turns;
@@ -113,6 +129,9 @@ export function Dial({
   // one, a darker line down a light one, so they read as metal with an edge
   // rather than as print.
   const facet = face.dark ? "rgba(0,0,0,0.28)" : "rgba(255,255,255,0.4)";
+  // The window's recess: a shade off the face, the way a date disc sits a
+  // step below the dial.
+  const recess = face.dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)";
   const faceId = `${id}-face`;
   const sheenId = `${id}-sheen`;
   const shadowId = `${id}-shadow`;
@@ -221,26 +240,40 @@ export function Dial({
         />
       ))}
 
-      {/* The groove the day is drawn into, so an empty morning still shows
-          where it will go. */}
-      <circle
-        cx={C}
-        cy={C}
-        r={layout.bandR}
-        fill="none"
-        stroke={face.ink}
-        strokeWidth={RING_BAND}
-        opacity={0.07}
-      />
-      <circle
-        cx={C}
-        cy={C}
-        r={layout.edgeR}
-        fill="none"
-        stroke={face.ink}
-        strokeWidth={RING_EDGE}
-        opacity={0.14}
-      />
+      {/* The ring the day is drawn on: the printed chapter ring in its own
+          colour, or the groove the bands lie in, so an empty morning still
+          shows where they will go. */}
+      {ring.printed ? (
+        <circle
+          cx={C}
+          cy={C}
+          r={(layout.ringInner + layout.ringOuter) / 2}
+          fill="none"
+          stroke={ring.fill ?? face.ink}
+          strokeWidth={layout.ringOuter - layout.ringInner + 1}
+        />
+      ) : (
+        <>
+          <circle
+            cx={C}
+            cy={C}
+            r={layout.bandR}
+            fill="none"
+            stroke={face.ink}
+            strokeWidth={RING_BAND}
+            opacity={0.07}
+          />
+          <circle
+            cx={C}
+            cy={C}
+            r={layout.edgeR}
+            fill="none"
+            stroke={face.ink}
+            strokeWidth={RING_EDGE}
+            opacity={0.14}
+          />
+        </>
+      )}
 
       {bands.map((b, i) => {
         const band = arcPath(C, C, layout.bandR, b.start, b.end);
@@ -268,6 +301,50 @@ export function Dial({
           </g>
         ) : null;
       })}
+
+      {/* The minutes, printed over the day: a chapter ring keeps its
+          numerals whatever the day has painted under them. Turned to lie
+          along the ring, and the lower half turned the other way so a 30
+          at six is not read upside down. */}
+      {ring.printed &&
+        chapterMarks().map((m) => {
+          if (m.kind === "tick") {
+            const [x1, y1] = polar(C, C, layout.ringOuter - 3.5, m.angle);
+            const [x2, y2] = polar(C, C, layout.ringOuter - 0.5, m.angle);
+            return (
+              <line
+                key={`m${m.minute}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke={ring.ink ?? face.ink}
+                strokeWidth={0.7}
+                opacity={0.85}
+              />
+            );
+          }
+          const [x, y] = polar(C, C, layout.bandR - 0.6, m.angle);
+          return (
+            <text
+              key={`m${m.minute}`}
+              x={x}
+              y={y}
+              dy="0.36em"
+              textAnchor="middle"
+              transform={`rotate(${m.turn} ${x} ${y})`}
+              fill={ring.ink ?? face.ink}
+              style={{
+                fontSize: "7.4px",
+                fontFamily: font.family,
+                fontWeight: font.weight,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {m.label}
+            </text>
+          );
+        })}
 
       {markers.map(({ hour, angle, kind }) => {
         if (isNumeral(kind)) {
@@ -304,6 +381,86 @@ export function Dial({
           </g>
         );
       })}
+
+      {/* The printing: the mark and the name under twelve, the movement's
+          word under them, and the window above six with the cog in it. The
+          name is set in the geometric face — wide, spaced capitals, the way
+          a maker's name is — and the word in the light one, whatever the
+          hours are set in. */}
+      <g aria-hidden="true">
+        <g
+          transform={`translate(${C - 18.4} ${C - SIGNATURE.name - 4}) scale(0.08)`}
+          fill="none"
+          stroke={face.ink}
+          strokeWidth={12}
+          strokeLinecap="round"
+        >
+          <circle cx="50" cy="50" r="34" />
+          <path d="M50 50 V28 M50 50 L66 60" />
+        </g>
+        <text
+          x={C - 8.2}
+          y={C - SIGNATURE.name}
+          dy="0.36em"
+          fill={face.ink}
+          style={{
+            fontSize: `${SIGNATURE.nameSize}px`,
+            fontFamily: DIAL_FONT.geometric.family,
+            fontWeight: DIAL_FONT.geometric.weight,
+            letterSpacing: "0.2em",
+          }}
+        >
+          {t("app.name").toLocaleUpperCase()}
+        </text>
+        <text
+          x={C}
+          y={C - SIGNATURE.line}
+          dy="0.36em"
+          textAnchor="middle"
+          fill={face.ink}
+          opacity={0.85}
+          style={{
+            fontSize: `${SIGNATURE.lineSize}px`,
+            fontFamily: DIAL_FONT.light.family,
+            fontWeight: 400,
+            letterSpacing: "0.24em",
+          }}
+        >
+          {t(`today.calibre.${dial.movement}` as const).toLocaleUpperCase()}
+        </text>
+        <rect
+          x={C - SIGNATURE.windowWidth / 2}
+          y={C + SIGNATURE.window - SIGNATURE.windowHeight / 2}
+          width={SIGNATURE.windowWidth}
+          height={SIGNATURE.windowHeight}
+          rx={1.4}
+          fill={recess}
+          stroke={face.ink}
+          strokeWidth={0.9}
+        />
+        <rect
+          x={C - SIGNATURE.windowWidth / 2 + 1.1}
+          y={C + SIGNATURE.window - SIGNATURE.windowHeight / 2 + 1.1}
+          width={SIGNATURE.windowWidth - 2.2}
+          height={SIGNATURE.windowHeight - 2.2}
+          rx={0.8}
+          fill="none"
+          stroke={facet}
+          strokeWidth={0.6}
+        />
+        {/* The framework's cog, on its 24-unit grid, at ten units. */}
+        <g
+          transform={`translate(${C - 5} ${C + SIGNATURE.window - 5}) scale(${10 / 24})`}
+          fill="none"
+          stroke={face.ink}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </g>
+      </g>
 
       <g
         filter={`url(#${shadowId})`}
@@ -389,7 +546,15 @@ function Marker({
   ink,
   facet,
 }: {
-  kind: "baton" | "doubleBaton" | "dot" | "triangle" | "wedge" | "tick";
+  kind:
+    | "baton"
+    | "doubleBaton"
+    | "lumeBaton"
+    | "wideLumeBaton"
+    | "dot"
+    | "triangle"
+    | "wedge"
+    | "tick";
   r: number;
   length: number;
   width: number;
@@ -430,6 +595,30 @@ function Marker({
             facet={facet}
           />
         </>
+      );
+    case "lumeBaton":
+      return (
+        <LumeBaton
+          x={C}
+          top={top}
+          bottom={bottom}
+          w={width}
+          plot={width}
+          ink={ink}
+          facet={facet}
+        />
+      );
+    case "wideLumeBaton":
+      return (
+        <LumeBaton
+          x={C}
+          top={top}
+          bottom={bottom}
+          w={width * 1.9}
+          plot={width}
+          ink={ink}
+          facet={facet}
+        />
       );
     case "tick":
       return (
@@ -507,6 +696,54 @@ function Baton({
         y2={bottom - 0.5}
         stroke={facet}
         strokeWidth={w * 0.3}
+      />
+    </>
+  );
+}
+
+/** A baton with a plot of lume at its outer end: the plot sits where the
+ *  baton's tip would, so the two together reach no further than a baton.
+ *  Lume is its own off-white, whatever the ink — it glows, it is not
+ *  printed — with a hairline of the ink round it to hold it on a light
+ *  face. */
+function LumeBaton({
+  x,
+  top,
+  bottom,
+  w,
+  plot,
+  ink,
+  facet,
+}: {
+  x: number;
+  top: number;
+  bottom: number;
+  w: number;
+  plot: number;
+  ink: string;
+  facet: string;
+}) {
+  const side = plot * 0.95;
+  return (
+    <>
+      <rect
+        x={x - side / 2}
+        y={top}
+        width={side}
+        height={side}
+        rx={0.3}
+        fill="#f3f4ec"
+        stroke={ink}
+        strokeWidth={0.35}
+        opacity={0.95}
+      />
+      <Baton
+        x={x}
+        top={top + side + 1}
+        bottom={bottom}
+        w={w}
+        ink={ink}
+        facet={facet}
       />
     </>
   );

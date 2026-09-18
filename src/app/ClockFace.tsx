@@ -8,7 +8,14 @@ import {
 } from "react";
 
 import { daySegments, type DaySegment } from "./day.ts";
-import { angleOf, dialLayout, polar, ringHit, timesAt } from "./clock.ts";
+import {
+  SIGNATURE,
+  angleOf,
+  dialLayout,
+  polar,
+  ringHit,
+  timesAt,
+} from "./clock.ts";
 import { DIAL_BOX, Dial, type Band } from "./Dial.tsx";
 import { formatTimeOfDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
@@ -59,6 +66,18 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 // the Today screen's menu). A finger cannot rest on anything, so the phone
 // keeps the legend.
 //
+// The dial carries the app's name and the Settings cog too, printed where a
+// watch prints its maker and its date (see `Dial.tsx`), so the Today screen
+// needs no bar over it for either: the cog's button is laid over the window
+// here, above the switch, the way the chips are.
+//
+// The light needs room. It is a disc inflated past the case by the spread,
+// and on a phone the case sits near the top of a screen that clips at its
+// edge — so the face keeps that much clear above the dial, as a share of
+// its own width, and the halo is whole rather than cut flat where the
+// screen begins. A desk centres the dial in a row with air round it and
+// keeps the room for the row.
+//
 // What the watch looks like — its face, its markers, its numerals, how its
 // second hand moves — is the dial the settings resolved (see `look.ts`); the
 // drawing itself is `Dial.tsx`, shared with the settings' previews.
@@ -89,6 +108,10 @@ type Props = {
   /** The right button, at a point in the window. Left out, the browser's
    *  own menu opens instead. */
   onMenu?: (x: number, y: number) => void;
+  /** The cog in the window above six. */
+  onOpenSettings: () => void;
+  /** Whether Settings is open — the desk's panel — which lights the cog. */
+  settingsOpen?: boolean;
 };
 
 /** What the pointer is resting on: the stretch, and where the card hangs. */
@@ -106,6 +129,8 @@ export function ClockFace({
   onToggle,
   onOpen,
   onMenu,
+  onOpenSettings,
+  settingsOpen = false,
 }: Props) {
   const t = useT();
   const sizing = CLOCK_SIZE[size];
@@ -224,115 +249,143 @@ export function ClockFace({
     state === "out" ? t("today.clockIn") : t("today.clockOut");
 
   return (
-    <div
-      ref={box}
-      onPointerMove={read}
-      onPointerLeave={() => setReading(null)}
-      onContextMenu={(e) => {
-        if (!onMenu) return;
-        e.preventDefault();
-        onMenu(e.clientX, e.clientY);
-      }}
-      className={`relative mx-auto w-full ${sizing.maxWidth} lg:max-w-none`}
-    >
-      {/* The light behind the case. Drawn first so everything else sits
+    <div className={`mx-auto w-full ${sizing.maxWidth} lg:max-w-none`}>
+      {/* The light's room above the case: the same share of the dial's
+          width the disc is inflated by, so however far the spread reaches
+          the halo is not cut flat at the top of the screen. A percentage
+          of the width, which is what a padding in percent is measured
+          against. The desk has the row's own air. */}
+      <div
+        aria-hidden="true"
+        className="lg:hidden"
+        style={{ paddingTop: `${halo.inset}%` }}
+      />
+      <div
+        ref={box}
+        onPointerMove={read}
+        onPointerLeave={() => setReading(null)}
+        onContextMenu={(e) => {
+          if (!onMenu) return;
+          e.preventDefault();
+          onMenu(e.clientX, e.clientY);
+        }}
+        className="relative w-full"
+      >
+        {/* The light behind the case. Drawn first so everything else sits
           over it; its colour, beat, strength and reach are the settings' —
           the reach as the four numbers `glowGeometry` makes of the spread,
           because where the gradient holds and fades depends on how far it
           is inflated (see `look.ts`). */}
-      <div
-        aria-hidden="true"
-        data-state={state}
-        data-beat={backlight.hz > 0 ? "on" : "off"}
-        className="app-glow"
-        style={
-          {
-            "--glow-color": glow,
-            "--glow-alpha": backlight.intensity / 100,
-            "--glow-period": backlight.hz > 0 ? `${1 / backlight.hz}s` : "1s",
-            "--glow-inset": `${halo.inset}%`,
-            "--glow-hold": `${halo.hold}%`,
-            "--glow-fade": `${halo.fade}%`,
-            "--glow-blur": `${halo.blur}px`,
-          } as Record<string, string | number>
-        }
-      />
-
-      <Dial
-        id="today"
-        dial={dial}
-        now={now}
-        bands={bands}
-        progress={progress}
-        live
-        className="app-clock relative block h-auto w-full"
-      >
-        <title>{t("today.clockLabel")}</title>
-        <desc>{t("today.clockDesc")}</desc>
-      </Dial>
-
-      {/* The dial is the button. It sits over the drawing rather than around
-          it so the chips below stay on top of it. */}
-      <button
-        type="button"
-        aria-label={switchLabel}
-        aria-pressed={state !== "out"}
-        title={switchLabel}
-        onClick={press}
-        className="absolute inset-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-      />
-
-      {reading && (
         <div
-          role="tooltip"
-          style={{ left: reading.left, top: reading.top }}
-          className="pointer-events-none absolute z-10 flex -translate-x-1/2 -translate-y-[calc(100%+0.75rem)] items-center gap-2 rounded-md border border-line bg-surface-2 px-2.5 py-1.5 text-xs whitespace-nowrap text-fg shadow-md"
-        >
-          <span
-            aria-hidden="true"
-            className="h-2.5 w-2.5 shrink-0 rounded-full"
-            style={{
-              background:
-                reading.segment.kind === "break"
-                  ? "var(--color-flag)"
-                  : reading.segment.typeId
-                    ? categoryColor(project, reading.segment.typeId)
-                    : "var(--color-accent)",
-            }}
-          />
-          <span className="font-semibold text-fg-bright">
-            {readingLabel(reading.segment)}
-          </span>
-          <span className="text-muted tabular-nums">
-            {t("log.span", {
-              start: formatTimeOfDay(reading.segment.start),
-              end: formatTimeOfDay(
-                reading.segment.running ? now : reading.segment.end,
-              ),
-            })}
-          </span>
-        </div>
-      )}
+          aria-hidden="true"
+          data-state={state}
+          data-beat={backlight.hz > 0 ? "on" : "off"}
+          className="app-glow"
+          style={
+            {
+              "--glow-color": glow,
+              "--glow-alpha": backlight.intensity / 100,
+              "--glow-period": backlight.hz > 0 ? `${1 / backlight.hz}s` : "1s",
+              "--glow-inset": `${halo.inset}%`,
+              "--glow-hold": `${halo.hold}%`,
+              "--glow-fade": `${halo.fade}%`,
+              "--glow-blur": `${halo.blur}px`,
+            } as Record<string, string | number>
+          }
+        />
 
-      {labels.map((l) => {
-        const label = t("today.breakEndLabel", {
-          name: l.typeId ? breakName(t, project, l.typeId) : "",
-          time: formatTimeOfDay(l.at),
-        });
-        return (
-          <button
-            key={l.at}
-            type="button"
-            onClick={() => onOpen(l.at)}
-            style={{ left: `${l.left}%`, top: `${l.top}%` }}
-            aria-label={label}
-            title={label}
-            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-flag/50 bg-surface-2 px-1.5 py-0.5 text-[0.625rem] leading-none font-bold text-flag tabular-nums shadow-sm"
+        <Dial
+          id="today"
+          dial={dial}
+          now={now}
+          bands={bands}
+          progress={progress}
+          live
+          className="app-clock relative block h-auto w-full"
+        >
+          <title>{t("today.clockLabel")}</title>
+          <desc>{t("today.clockDesc")}</desc>
+        </Dial>
+
+        {/* The dial is the button. It sits over the drawing rather than around
+          it so the chips below stay on top of it. */}
+        <button
+          type="button"
+          aria-label={switchLabel}
+          aria-pressed={state !== "out"}
+          title={switchLabel}
+          onClick={press}
+          className="absolute inset-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        />
+
+        {/* The cog, over the window the dial paints it in. A real button in
+          rem rather than a hit area scaled with the drawing, so it is a
+          thumb's target on a small dial too. */}
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          aria-label={t("nav.settings")}
+          aria-expanded={settingsOpen}
+          title={t("nav.settings")}
+          style={{
+            left: "50%",
+            top: `${((DIAL_BOX / 2 + SIGNATURE.window) / DIAL_BOX) * 100}%`,
+          }}
+          className="absolute h-11 w-11 -translate-x-1/2 -translate-y-1/2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        />
+
+        {reading && (
+          <div
+            role="tooltip"
+            style={{ left: reading.left, top: reading.top }}
+            className="pointer-events-none absolute z-10 flex -translate-x-1/2 -translate-y-[calc(100%+0.75rem)] items-center gap-2 rounded-md border border-line bg-surface-2 px-2.5 py-1.5 text-xs whitespace-nowrap text-fg shadow-md"
           >
-            {formatTimeOfDay(l.at)}
-          </button>
-        );
-      })}
+            <span
+              aria-hidden="true"
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{
+                background:
+                  reading.segment.kind === "break"
+                    ? "var(--color-flag)"
+                    : reading.segment.typeId
+                      ? categoryColor(project, reading.segment.typeId)
+                      : "var(--color-accent)",
+              }}
+            />
+            <span className="font-semibold text-fg-bright">
+              {readingLabel(reading.segment)}
+            </span>
+            <span className="text-muted tabular-nums">
+              {t("log.span", {
+                start: formatTimeOfDay(reading.segment.start),
+                end: formatTimeOfDay(
+                  reading.segment.running ? now : reading.segment.end,
+                ),
+              })}
+            </span>
+          </div>
+        )}
+
+        {labels.map((l) => {
+          const label = t("today.breakEndLabel", {
+            name: l.typeId ? breakName(t, project, l.typeId) : "",
+            time: formatTimeOfDay(l.at),
+          });
+          return (
+            <button
+              key={l.at}
+              type="button"
+              onClick={() => onOpen(l.at)}
+              style={{ left: `${l.left}%`, top: `${l.top}%` }}
+              aria-label={label}
+              title={label}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-flag/50 bg-surface-2 px-1.5 py-0.5 text-[0.625rem] leading-none font-bold text-flag tabular-nums shadow-sm"
+            >
+              {formatTimeOfDay(l.at)}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

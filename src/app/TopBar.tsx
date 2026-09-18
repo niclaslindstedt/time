@@ -26,6 +26,13 @@ import { KEY_HINT } from "./shortcuts.ts";
 // over an app with four places to be would be chrome pretending to be depth.
 // The cog stays on the right, on both shells, because Settings is a thing you
 // do and leave rather than a place you are.
+//
+// Except over the watch. The dial prints the app's name under twelve and
+// carries the cog in a window above six, the way a watch face carries its
+// maker and its date, so while Today is on screen the bar draws neither: on
+// the desk it is the tabs and whatever the right-hand cluster has, and on
+// the phone — where it would be a rule with nothing above it — `App` leaves
+// it out altogether unless there is a project to switch or a cloud to show.
 
 type Props = {
   active: Tab;
@@ -41,7 +48,21 @@ type Props = {
    *  single project there is nothing to choose, and the slot stays empty
    *  rather than showing a control with one option. */
   projectSlot?: ReactNode;
+  /** The watch is on screen, and carries the name and the cog itself. */
+  watch?: boolean;
 };
+
+/** Whether the bar has anything to draw for a screen: on the phone over the
+ *  watch, only the two slots — nothing, most days. */
+export function topBarNeeded(props: {
+  watch?: boolean;
+  onSelect?: unknown;
+  syncSlot?: ReactNode;
+  projectSlot?: ReactNode;
+}): boolean {
+  if (!props.watch || props.onSelect) return true;
+  return Boolean(props.syncSlot || props.projectSlot);
+}
 
 export function TopBar({
   active,
@@ -50,15 +71,22 @@ export function TopBar({
   settingsOpen = false,
   syncSlot,
   projectSlot,
+  watch = false,
 }: Props) {
   const t = useT();
   const onSettings = active === "settings" || settingsOpen;
   return (
     <header className="app-header relative flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-3 px-4 pb-3">
-      <h1 className="app-wordmark flex min-w-0 items-center gap-2 text-accent">
-        <AppMarkIcon className="h-6 w-6 shrink-0" />
-        <span className="truncate">{t("app.name")}</span>
-      </h1>
+      {watch ? (
+        // The dial has the name. The bar keeps its height, so the tabs and
+        // the slots land where they do on every other screen.
+        <div aria-hidden="true" className="h-9 w-0 shrink-0" />
+      ) : (
+        <h1 className="app-wordmark flex min-w-0 items-center gap-2 text-accent">
+          <AppMarkIcon className="h-6 w-6 shrink-0" />
+          <span className="truncate">{t("app.name")}</span>
+        </h1>
+      )}
 
       {/* Centred on the bar rather than between the two clusters, so the tabs
           stay put when the project switcher comes and goes. */}
@@ -95,23 +123,25 @@ export function TopBar({
       <div className="flex min-w-0 shrink items-center gap-2">
         {projectSlot}
         {syncSlot}
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          aria-label={t("nav.settings")}
-          aria-current={active === "settings" ? "page" : undefined}
-          aria-expanded={onSelect ? settingsOpen : undefined}
-          title={
-            onSelect
-              ? `${t("nav.settings")} (${KEY_HINT.settings})`
-              : t("nav.settings")
-          }
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-accent transition-colors ${
-            onSettings ? "bg-accent/15" : "hover:bg-surface-2"
-          }`}
-        >
-          <CogIcon className="h-5 w-5" />
-        </button>
+        {!watch && (
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            aria-label={t("nav.settings")}
+            aria-current={active === "settings" ? "page" : undefined}
+            aria-expanded={onSelect ? settingsOpen : undefined}
+            title={
+              onSelect
+                ? `${t("nav.settings")} (${KEY_HINT.settings})`
+                : t("nav.settings")
+            }
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-accent transition-colors ${
+              onSettings ? "bg-accent/15" : "hover:bg-surface-2"
+            }`}
+          >
+            <CogIcon className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </header>
   );
