@@ -41,6 +41,7 @@ src/app/
   shortcuts.ts      key → command, and whether Enter saves a modal   (pure)
   useShortcuts.ts   the window's keydown, turned into those commands
   useModalSave.ts   Enter inside a modal's card, turned into its Save
+  useLongPress.ts   a control held rather than tapped, and the right button
   backup.ts         export / restore a JSON file
   Dial.tsx          the watch face, drawn, with the day's progress on the bezel and the printing — shared by Today and Settings
   ClockFace.tsx     the day on the dial, the switch, the cog, the light, and the way into the stretches
@@ -53,7 +54,7 @@ src/app/
   ModalHeader.tsx   a dialog's top bar: cancel, the title, save — and Enter / Escape
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you started, corrected from the timer
-  NewKindModal.tsx  a kind of break or work, named on the spot
+  KindModal.tsx     a kind of break or work — invented, or held open to correct
   SpanEditModal.tsx the one editor behind every span
   ProjectEditModal.tsx  name, working days, breaks, kinds of work
   dev/              the demo-data switch: an in-memory DocBackend

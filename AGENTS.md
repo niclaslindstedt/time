@@ -304,9 +304,19 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/DayTimelineModal.tsx` — the day as the stretches `daySegments`
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.
-- `src/app/ArrivalModal.tsx`, `NewKindModal.tsx` — the Today screen's two
+- `src/app/ArrivalModal.tsx`, `KindModal.tsx` — the Today screen's two
   small forms: when you started (opened by the timer), and a kind of break or
-  work named on the spot (the "Custom" pill).
+  work — named on the spot from the "Custom" pill, or held open on one the
+  project already has to change what it is called and what it wears. One form
+  for both, because they are the same four questions; held open it starts on
+  the grid rather than the name. Removing a kind is still the project form's.
+- `src/app/useLongPress.ts` — a control held rather than tapped: the handlers
+  a button spreads, one factory for a screen because the pills are a list and
+  a hook may not be called in a loop. It swallows the click the hold ends
+  with, calls a wandering pointer a scroll, and takes the right button as the
+  same gesture. What makes it possible is that the screens are not selectable
+  (`.app-main` in `styles.css`) — a press held on a label is otherwise the
+  start of a selection.
 - `src/app/ModalHeader.tsx` — the top bar of every modal that is saved or
   abandoned: cancel on the left, the title between, save on the right. It is
   a sibling of the modal's scrolling body, so it stays put over a long form —
@@ -333,7 +343,7 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the project's list gives it.
 - `src/app/KindPicker.tsx` — the mark a kind wears and, for a kind of work,
   its colour: the grid unfolds under the row that opened it — in the project
-  form and in `NewKindModal` — rather than over it, and the marks in it are
+  form and in `KindModal` — rather than over it, and the marks in it are
   drawn in the hue being chosen, so the grid is the preview.
 - `src/app/i18n/en.ts` — every user-facing string.
 - `src/output.ts` — the §19.4 central output module (semantic log helpers
@@ -398,6 +408,8 @@ regression.
 | A change to what a project holds                   | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                                                                                                                                                                           |
 | A new glyph, or a colour a kind can wear           | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                                                                                                                                                               |
 | A new control on the span editor                   | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                                                                                                                                                                 |
+| A change to what a kind of break or work wears     | `src/app/KindModal.tsx` (the form, opened by "Custom" or by holding a pill) — the mark and the hue tables stay in `kinds.ts`                                                                                                                                                           |
+| A control that answers being held                  | `src/app/useLongPress.ts` — spread its handlers on the button; never a second timer in a screen                                                                                                                                                                                        |
 | A modal's save / cancel                            | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's                                                                                                                                                |
 | A new way to correct a time on Today               | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`                                                                                                                                                         |
 | A new screen                                       | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                                                                                                                              |

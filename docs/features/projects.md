@@ -65,7 +65,10 @@ drawn, and its mark with it.
 
 A kind invented from the Today screen's **Custom** pill is given its mark, and
 a kind of work its colour, in the same sheet that names it — it joins the
-project as a kind like any other.
+project as a kind like any other. A kind that already exists can be changed
+from there too: hold its pill on the Today screen (or press the right button
+on it) and the same sheet opens on it, with the picker already unfolded (see
+[`today.md`](today.md)). Removing one is still this form's job.
 
 ## One or many
 

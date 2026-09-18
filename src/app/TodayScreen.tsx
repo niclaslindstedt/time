@@ -23,7 +23,7 @@ import { ArrivalModal } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { dayTotals, progress } from "./day.ts";
-import { isWorkDay } from "./project.ts";
+import { breakTypeOf, categoryOf, isWorkDay } from "./project.ts";
 import { formatDuration, formatPercent, formatTimeOfDay } from "./format.ts";
 import {
   CLOCK_SIZE,
@@ -40,8 +40,8 @@ import {
   glyphOr,
   type GlyphId,
 } from "./kinds.ts";
-import { breakName, categoryColor } from "./labels.ts";
-import { NewKindModal } from "./NewKindModal.tsx";
+import { autoCategoryColor, breakName, categoryColor } from "./labels.ts";
+import { KindModal, type NewKind } from "./KindModal.tsx";
 import { KEY_HINT, type Command } from "./shortcuts.ts";
 import {
   blankDay,
@@ -51,6 +51,7 @@ import {
   type WorkDay,
 } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
+import { useLongPress } from "./useLongPress.ts";
 import { useNow } from "./useNow.ts";
 import { useShortcuts } from "./useShortcuts.ts";
 
@@ -70,6 +71,15 @@ import { useShortcuts } from "./useShortcuts.ts";
 // on the ring opens the day stretch by stretch, and "Custom" invents the kind
 // of break or work that nobody thought to set up in advance. None of them
 // leave this screen.
+//
+// A pill held rather than tapped is the fourth: it opens the kind itself, in
+// the same form "Custom" fills in, so the mark a kind wears and the hue a
+// kind of work is drawn in are changed where they are worn rather than in
+// the project form. Under a mouse the right button does it. A pill answers a
+// hold whether or not the day has started — a kind's look has nothing to do
+// with being clocked in — which is why the pills are marked `aria-disabled`
+// before the work starts rather than `disabled`: a disabled button is dead to
+// the pointer, and a hold is a pointer.
 //
 // On a desk the same controls stand round the dial — breaks to its left,
 // kinds of work to its right — and the dial takes the share of the window's
@@ -106,7 +116,9 @@ type Props = {
   settingsOpen?: boolean;
 };
 
-type Asking = { kind: "break" | "activity" };
+/** The kind form on screen: one being invented (`id` null), or the one being
+ *  corrected. */
+type Asking = { kind: "break" | "activity"; id: string | null };
 
 export function TodayScreen({
   store,
@@ -126,6 +138,7 @@ export function TodayScreen({
   const [timeline, setTimeline] = useState<{ at: Seconds | null } | null>(null);
   const [asking, setAsking] = useState<Asking | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const press = useLongPress();
 
   const day = useMemo<WorkDay | null>(() => {
     if (!project) return null;
@@ -247,6 +260,9 @@ export function TodayScreen({
 
   const expected = isWorkDay(project, now.today);
   const onBreak = state === "break";
+  /** Before the day has started the pills take no tap — but they still take a
+   *  hold, so they say so rather than being shut. */
+  const out = state === "out";
   const session = latestSession(day);
   const fraction = progress(totals.worked, project);
 
@@ -428,20 +444,23 @@ export function TodayScreen({
               <button
                 key={b.id}
                 type="button"
-                disabled={state === "out"}
+                aria-disabled={out}
                 aria-pressed={running}
-                onClick={() => pickBreak(b.id, b.defaultMinutes)}
-                title={
-                  state === "out"
-                    ? undefined
-                    : running
-                      ? t("today.endBreak", { name: b.name })
-                      : t("today.menuBreak", {
-                          name: b.name,
-                          minutes: String(b.defaultMinutes),
-                        })
-                }
-                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors disabled:opacity-40 lg:justify-start ${
+                {...press({
+                  press: () => pickBreak(b.id, b.defaultMinutes),
+                  hold: () => setAsking({ kind: "break", id: b.id }),
+                })}
+                title={`${
+                  running
+                    ? t("today.endBreak", { name: b.name })
+                    : t("today.menuBreak", {
+                        name: b.name,
+                        minutes: String(b.defaultMinutes),
+                      })
+                } · ${t("today.holdToEdit")}`}
+                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors lg:justify-start ${
+                  out ? "opacity-40" : ""
+                } ${
                   running
                     ? "border-flag bg-flag/20 text-fg-bright"
                     : "border-line bg-surface-3 text-fg hover:bg-surface-2"
@@ -465,7 +484,7 @@ export function TodayScreen({
           <button
             type="button"
             disabled={state === "out"}
-            onClick={() => setAsking({ kind: "break" })}
+            onClick={() => setAsking({ kind: "break", id: null })}
             className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent px-3 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 lg:justify-start"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
@@ -486,13 +505,16 @@ export function TodayScreen({
               <button
                 key={c.id}
                 type="button"
-                disabled={state === "out"}
+                aria-disabled={out}
                 aria-pressed={on}
-                onClick={() => pickCategory(c.id)}
-                title={
-                  key && state !== "out" ? `${c.name} (${key})` : undefined
-                }
-                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors disabled:opacity-40 lg:min-h-12 lg:rounded-xl lg:font-semibold ${categoryTone(on)}`}
+                {...press({
+                  press: () => pickCategory(c.id),
+                  hold: () => setAsking({ kind: "activity", id: c.id }),
+                })}
+                title={`${c.name}${key ? ` (${key})` : ""} · ${t("today.holdToEdit")}`}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors lg:min-h-12 lg:rounded-xl lg:font-semibold ${
+                  out ? "opacity-40" : ""
+                } ${categoryTone(on)}`}
               >
                 <KindGlyph
                   id={glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH)}
@@ -521,7 +543,7 @@ export function TodayScreen({
           <button
             type="button"
             disabled={state === "out"}
-            onClick={() => setAsking({ kind: "activity" })}
+            onClick={() => setAsking({ kind: "activity", id: null })}
             className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-line px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 lg:min-h-12 lg:rounded-xl lg:font-semibold"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
@@ -585,13 +607,43 @@ export function TodayScreen({
       )}
 
       {asking && (
-        <NewKindModal
+        <KindModal
           kind={asking.kind}
-          // A kind of work added now takes the next slot of the positional
-          // ramp if no colour is picked — which is what `categoryColor` gives
-          // an id the project does not have yet.
-          autoColor={categoryColor(project, "")}
+          existing={kindAsked(project, asking)}
+          // "Automatic" is the hue the kind's place in the list gives it —
+          // the slot after the last for one being invented, which is what an
+          // id the project does not have yet asks for.
+          autoColor={autoCategoryColor(project, asking.id ?? "")}
           onSave={({ name, minutes, glyph, color }) => {
+            // A kind that already exists keeps its id, so nothing logged
+            // under it moves; only what it is called and what it wears
+            // change, and every screen that reads `labels.ts` follows.
+            const at = asking.id;
+            if (at !== null) {
+              if (asking.kind === "break") {
+                stampProject({
+                  breakTypes: project.breakTypes.map((b) =>
+                    b.id === at
+                      ? { ...b, name, defaultMinutes: minutes, glyph }
+                      : b,
+                  ),
+                });
+              } else {
+                stampProject({
+                  categories: project.categories.map((c) => {
+                    if (c.id !== at) return c;
+                    // "Automatic" is stored as no colour at all, so the kind
+                    // goes on taking its position's hue.
+                    const rest = { ...c, name, glyph };
+                    delete rest.color;
+                    return color ? { ...rest, color } : rest;
+                  }),
+                });
+              }
+              onNotice(t("log.saved"));
+              setAsking(null);
+              return;
+            }
             const id = makeId();
             if (asking.kind === "break") {
               stampProject({
@@ -618,6 +670,34 @@ export function TodayScreen({
       )}
     </div>
   );
+}
+
+/** The kind the form opens on, as the form takes it: what a held pill wears
+ *  now, or null when the form is inventing one. A kind the project has since
+ *  lost is nothing to correct, so that is null too. */
+function kindAsked(project: Project, asking: Asking): NewKind | null {
+  if (asking.id === null) return null;
+  if (asking.kind === "break") {
+    const b = breakTypeOf(project, asking.id);
+    return b
+      ? {
+          name: b.name,
+          minutes: b.defaultMinutes,
+          glyph: glyphOr(b.glyph, DEFAULT_BREAK_GLYPH),
+          color: null,
+        }
+      : null;
+  }
+  const c = categoryOf(project, asking.id);
+  return c
+    ? {
+        // A kind of work has no assumed length; the form does not ask for one.
+        name: c.name,
+        minutes: 0,
+        glyph: glyphOr(c.glyph, DEFAULT_CATEGORY_GLYPH),
+        color: c.color ?? null,
+      }
+    : null;
 }
 
 /** The window's title, and the way to put it back. */

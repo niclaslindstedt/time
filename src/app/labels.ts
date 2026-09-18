@@ -43,20 +43,30 @@ export const CATEGORY_COLORS = AUTO_CATEGORY_COLORS.map(
   (id) => CATEGORY_COLOR[id],
 );
 
+/** The hue a category's *place in the list* gives it — what it is drawn in
+ *  when it has picked no colour of its own, and what "Automatic" stands for
+ *  in the picker. A category the project has since deleted takes the slot
+ *  after the last, which is also the slot the next one added will take. */
+export function autoCategoryColor(
+  project: Project,
+  categoryId: string,
+): string {
+  const index = project.categories.findIndex((c) => c.id === categoryId);
+  const slot = index === -1 ? project.categories.length : index;
+  return CATEGORY_COLORS[slot % CATEGORY_COLORS.length] ?? "var(--link)";
+}
+
 /** The colour a category is drawn in, everywhere it is drawn: the clock's
  *  inner ring, the chips, its own glyph and the report's charts read this one
  *  table, so a kind of work is one hue across the app.
  *
  *  The project's own choice first; failing that, the hue its position in the
  *  list gives it, which is what every kind of work wore before one could be
- *  picked. A category the project has since deleted takes the slot after the
- *  last. */
+ *  picked. */
 export function categoryColor(project: Project, categoryId: string): string {
-  const index = project.categories.findIndex((c) => c.id === categoryId);
-  const chosen = index === -1 ? undefined : project.categories[index]?.color;
+  const chosen = categoryOf(project, categoryId)?.color;
   if (chosen) return CATEGORY_COLOR[chosen];
-  const slot = index === -1 ? project.categories.length : index;
-  return CATEGORY_COLORS[slot % CATEGORY_COLORS.length] ?? "var(--link)";
+  return autoCategoryColor(project, categoryId);
 }
 
 /** The mark a break type wears — its own, or the cup every break started
