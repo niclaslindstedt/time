@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import {
   beatTurns,
   handAngles,
+  windMoment,
   windPlan,
   windTurns,
   type Turns,
@@ -49,6 +50,14 @@ import { nowExact } from "./useNow.ts";
 // under the hands comes off for the duration, because an SVG filter over a
 // moving group is re-rastered every frame.
 //
+// The day is told as well. A wind is not only the hands moving — it is the
+// whole dial standing at a moment that is not yet now (`windMoment`), and the
+// day drawn on the ring belongs to that moment too. So the loop hands out the
+// moment it is winding through, frame by frame, and `shown` holds it for a
+// render that lands mid-wind; `null` is the plain answer, the dial at the
+// time. Whoever is given it draws the day up to there off the render loop,
+// the same way and for the same reason the hands are drawn.
+//
 // A dial that is not `live` — the previews in Settings — runs none of this
 // and simply draws the moment it was handed.
 
@@ -58,6 +67,9 @@ export type Hands = {
   turns: Turns;
   /** True while the watch is being set: no transitions, no shadow. */
   winding: boolean;
+  /** The moment the dial stands at while it is being wound, for a render
+   *  that lands in the middle of one; `null` when it is at the time. */
+  shown: MutableRefObject<Seconds | null>;
   /** Put these on the three hand groups. */
   hour: HandRef;
   minute: HandRef;
@@ -70,6 +82,9 @@ export function useHands(
   now: Seconds,
   live: boolean,
   beats: number | null,
+  /** Called with the moment the dial has reached, every frame of a wind and
+   *  once with `null` when it ends. */
+  show?: (at: Seconds | null) => void,
 ): Hands {
   const hour = useRef<SVGGElement | null>(null);
   const minute = useRef<SVGGElement | null>(null);
@@ -83,9 +98,20 @@ export function useHands(
 
   const [winding, setWinding] = useState(false);
 
+  /** The moment the dial is standing at, and who to tell when it moves. The
+   *  callback comes in fresh on every render and the loop outlives them all,
+   *  so it is read through a ref rather than closed over. */
+  const shown = useRef<Seconds | null>(null);
+  const showing = useRef(show);
+  showing.current = show;
+
   useEffect(() => {
     if (!live) return;
     const hands = { hour, minute, second };
+    const reveal = (at: Seconds | null) => {
+      shown.current = at;
+      showing.current?.(at);
+    };
     /** The moment the hands last kept time at — not during a wind, when the
      *  hands are somewhere between two times rather than at one. */
     let kept: Seconds | null = null;
@@ -103,9 +129,13 @@ export function useHands(
           written,
           windTurns(wind.from, at, elapsed, wind.plan, beats),
         );
-        if (elapsed < wind.plan.total) return;
+        if (elapsed < wind.plan.total) {
+          reveal(windMoment(wind.from, at, elapsed, wind.plan));
+          return;
+        }
         wind = null;
         kept = at;
+        reveal(null);
         setWinding(false);
         return;
       }
@@ -118,6 +148,7 @@ export function useHands(
           wind = { from: kept, plan, started: performance.now() };
           setWinding(true);
           put(hands, written, windTurns(kept, at, 0, plan, beats));
+          reveal(windMoment(kept, at, 0, plan));
           return;
         }
       }
@@ -127,12 +158,19 @@ export function useHands(
     };
 
     frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      // A dial taken off mid-wind is a dial at the time again: whatever is
+      // drawing the day has to be told, or it keeps the moment the wind was
+      // interrupted at.
+      if (shown.current !== null) reveal(null);
+    };
   }, [live, beats]);
 
   return {
     turns: live ? painted.current : handAngles(now),
     winding,
+    shown,
     hour,
     minute,
     second,

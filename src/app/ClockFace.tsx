@@ -60,6 +60,12 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 // break that has not happened yet — the tail between now and its assumed
 // end — is drawn at half strength, because it is a plan rather than a record.
 //
+// Come back to a tab that has been asleep and the day is not on the ring
+// before the hands get there: the watch is wound, and the bands are filled in
+// under the hands as they sweep round to now (`Dial.tsx`, `windMoment`). The
+// tail of a break is marked `ahead` so it starts where the hands have reached
+// rather than at a now they are still winding towards.
+//
 // Under a mouse the ring answers the pointer too. Resting on a stretch says
 // what it was and when — the name a legend would have given the colour, and
 // the times the Log would have listed — so the dial reads without either.
@@ -167,14 +173,17 @@ export function ClockFace({
     }
     for (const s of segments) {
       // The tail of a break that has not been lived yet: assumed, so drawn
-      // as half a claim.
+      // as half a claim. The whole stretch goes over as `ahead` and the dial
+      // cuts it at the moment it stands at — now, or wherever a wind has got
+      // to, so the record grows into the plan instead of over it.
       if (s.end > now) {
         out.push({
-          start: now,
+          start: s.start,
           end: s.end,
           fill: "var(--color-flag)",
           edge: "var(--color-flag)",
           opacity: 0.4,
+          ahead: true,
         });
       }
     }

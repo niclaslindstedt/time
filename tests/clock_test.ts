@@ -25,6 +25,7 @@ import {
   onBeat,
   secondGap,
   windDistance,
+  windMoment,
   windPlan,
   windTurns,
 } from "../src/app/clock.ts";
@@ -525,6 +526,13 @@ describe("easeInOutSine", () => {
 /** Small enough to be a rounding error in the last digit of a rotation. */
 const STILL = 1e-6;
 
+/** How far apart two rotations are on the dial, in degrees: a hand does not
+ *  care how many turns it has taken to get where it is. */
+const apart = (a: number, b: number): number => {
+  const d = (((a - b) % 360) + 360) % 360;
+  return d > 180 ? 360 - d : d;
+};
+
 describe("easeOutBack", () => {
   it("lands on the mark, having gone a little past it", () => {
     expect(easeOutBack(0)).toBe(0);
@@ -624,6 +632,89 @@ describe("beatTurns", () => {
     // One place to rest in, plus the frames it spends landing there.
     expect(quartz.size).toBeLessThan(16);
     expect(glide.size).toBe(80);
+  });
+});
+
+describe("windMoment", () => {
+  const from = h(9, 30) + 15;
+  const to = h(11, 47) + 5;
+  const plan = windPlan(from, to)!;
+  /** The wind as it really runs: the clock moves on while the crown turns,
+   *  so a frame `elapsed` into it is that much later in the day too. */
+  const at = (elapsed: number) =>
+    windMoment(from, to + elapsed / 1000, elapsed, plan);
+
+  it("starts at the moment the dial was left at", () => {
+    expect(windMoment(from, to, 0, plan)).toBeCloseTo(from, 6);
+  });
+
+  it("ends on the live moment, so the day is whole when the hands stop", () => {
+    expect(at(plan.total)).toBeCloseTo(to + plan.total / 1000, 6);
+  });
+
+  it("is on the time already while the second hand catches up", () => {
+    // The hour and minute are set at `plan.hands`; everything after that is
+    // the second hand, and the dial is simply keeping time.
+    expect(at(plan.hands)).toBeCloseTo(to + plan.hands / 1000, 6);
+    const later = plan.hands + plan.second / 2;
+    expect(at(later)).toBeCloseTo(to + later / 1000, 6);
+  });
+
+  it("only ever goes forward — the day fills in, it does not un-fill", () => {
+    let last = at(0);
+    for (let elapsed = 0; elapsed <= plan.total; elapsed += 16) {
+      const moment = at(elapsed);
+      expect(moment).toBeGreaterThanOrEqual(last);
+      last = moment;
+    }
+  });
+
+  it("eases like the crown: slow at both ends, fastest in the middle", () => {
+    // Half way through the winding is exactly half the distance made up —
+    // the distance being to where the dial will be when the crown stops,
+    // which is the second or two the winding itself costs further on...
+    const half = from + windDistance(from, to + plan.hands / 1000) / 2;
+    expect(at(plan.hands / 2)).toBeCloseTo(half, 6);
+    // ...but the first tenth of the wind is nothing like a tenth of it.
+    expect(at(plan.hands * 0.1) - at(0)).toBeLessThan(
+      at(plan.hands * 0.6) - at(plan.hands * 0.5),
+    );
+  });
+
+  it("is what the hour and the minute hand are drawn at", () => {
+    // The two are one thing: the hands are this moment, and so is the day on
+    // the ring — which is what keeps the colour under the hand that is
+    // laying it down.
+    for (const elapsed of [0, 120, plan.hands / 2, plan.hands, plan.total]) {
+      const hands = windTurns(from, to + elapsed / 1000, elapsed, plan);
+      const drawn = handTurns(at(elapsed));
+      expect(apart(hands.hour, drawn.hour)).toBeCloseTo(0, 6);
+      expect(apart(hands.minute, drawn.minute)).toBeCloseTo(0, 6);
+    }
+  });
+
+  it("goes the long way round past midnight, the way the crown does", () => {
+    // Left at eleven at night, read again at ten past twelve: the dial winds
+    // forward through midnight rather than back over the evening, so every
+    // moment it passes is later than the one before it.
+    const night = h(23);
+    const morning = h(0, 10);
+    const over = windPlan(night, morning)!;
+    let last = windMoment(night, morning, 0, over);
+    expect(last).toBeCloseTo(night - 86_400, 6);
+    for (let elapsed = 0; elapsed <= over.total; elapsed += 16) {
+      const moment = windMoment(night, morning + elapsed / 1000, elapsed, over);
+      expect(moment).toBeGreaterThanOrEqual(last);
+      last = moment;
+    }
+    const landed = windMoment(
+      night,
+      morning + over.total / 1000,
+      over.total,
+      over,
+    );
+    expect(landed).toBeGreaterThanOrEqual(last);
+    expect(landed).toBeCloseTo(morning + over.total / 1000, 6);
   });
 });
 

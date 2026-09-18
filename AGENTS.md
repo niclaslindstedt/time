@@ -157,10 +157,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   inner edge, and the finer one on the face under it) — and `ringHit` /
   `timesAt`, which read a point on the ring back as a moment. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
-  stepper lands it with; and the **wind**, `windPlan` / `windTurns`, the
-  motion that sets the watch after the tab has been asleep — the minute hand
-  a turn an hour, the hour hand a twelfth of it, the second hand hacked until
-  the two are right, all on a sine's ease. Pure.
+  stepper lands it with; and the **wind**, `windPlan` / `windMoment` /
+  `windTurns`, the motion that sets the watch after the tab has been asleep —
+  the minute hand a turn an hour, the hour hand a twelfth of it, the second
+  hand hacked until the two are right, all on a sine's ease. `windMoment` is
+  where the _dial_ stands part way through that, which is the day's as much as
+  the hands': the ring is filled in up to there, so the hours slept through
+  arrive under the hands rather than before them. Pure.
 - `src/app/look.ts` — the app's two themes, and the dial's vocabulary: the
   eight faces, nine typefaces, nine marker styles, eight hour sizes, the
   three placements against the ring, the two rings the day is drawn on (a
@@ -213,7 +216,11 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   and an angle counted on from midnight spends them by mid-morning. The loop
   also notices the gaps — `requestAnimationFrame` does not run in a background
   tab, so the first frame after one comes back is an hour after the last, and
-  that is when the watch gets wound.
+  that is when the watch gets wound. A wind is the whole dial at a moment that
+  is not yet now, so the loop hands that moment out as it goes (`shown`, and
+  the `show` callback): `Dial.tsx` cuts the day's bands off there and writes
+  them frame by frame the same way, so the ring fills in under the hands
+  rather than being ahead of them.
 - `src/app/dev/` — the developer "Demo data" switch: two months of invented
   days (`demoData.ts`, pure and clock-free, every date an offset from
   `today`), the in-memory `DocBackend` that serves them, and the
@@ -244,7 +251,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   hairline of shadow round both where the metal meets the face. The hands are
   `useHands.ts`'s, off the render loop; the light on them is read from the
   moment the dial was handed, because a rotation the loop owns is not React's
-  to read and the light turns as slowly as the hand does.
+  to read and the light turns as slowly as the hand does. So is the day while
+  the watch is being set: each band is cut at the moment the wind has reached
+  (`reached`) and its arcs written from the same loop, so the ring fills in
+  under the hands instead of the whole day being on it before they arrive. A
+  band marked `ahead` is the other side of that cut — the assumed tail of a
+  break, drawn from the moment rather than up to it.
 - `src/app/ClockFace.tsx` — the day on the dial, and the switch. One ring:
   presence as the accent band and its thin outer line, a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
@@ -397,7 +409,7 @@ regression.
 | A new derived number                               | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                                                                                                                                                                      |
 | A change to what a button on Today does            | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                                                                                                                                                                            |
 | A change to how the clock draws                    | `src/app/clock.ts` (geometry, tested), `sheen.ts` (what the light does to the metal, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)                                                                                            |
-| A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there                                                                                                                                                          |
+| A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there; anything else on the dial that has to move with them is cut at `windMoment` and written from that loop too                                              |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
 | Something only the desk does                       | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                                                                                                                                  |
 | A new face, marker, typeface, ring, hand or preset | Run the `add-watch-face` skill (`.agents/skills/add-watch-face/`): `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, `main.tsx` for a bundled `@fontsource` family, and `make shots` to look at it — named for what it looks like, never for a maker |
