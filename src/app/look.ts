@@ -752,8 +752,15 @@ export const CLOCK_SIZE: Record<ClockSize, ClockSizeSpec> = {
 // watches at once. So every face has a light of its own (`FACE_BACKLIGHT`),
 // a preset is lit by its face's, and the four knobs are opened up under
 // Custom — the same place the rest of the dial is taken apart. The default
-// is silver's, which is the theme's accent, so a fresh install still glows
-// in the colour the ring already uses.
+// is silver's, the light behind the default dial.
+//
+// One colour is missing from the table on purpose: the theme's accent. The
+// backlight was the accent before it belonged to the faces, and silver
+// inherited it — but the accent is the day's own colour, the band that means
+// *at work* on the ring, the way the flag colour means *on a break*. Neither
+// is a dial's to wear, which is why `kinds.ts` refuses both and why burgundy
+// is lit rose rather than red. It stays on offer under Custom; no face is
+// lit by it.
 //
 // Four knobs: the colour, the beat, how strong the light is, and how far it
 // reaches. The last two are not the same thing — a dim wide halo and a
@@ -820,9 +827,12 @@ export const BACKLIGHT_SPREAD = { min: 0, max: 100, step: 5 };
 export const FACE_BACKLIGHT: Record<DialFace, Backlight> = {
   // A crisp white dial: a white light, close in and quiet.
   white: { color: "white", hz: 0.2, intensity: 45, spread: 35 },
-  // Neutral silver takes the theme's own accent — the colour the day's ring
-  // is already drawn in — which is the light the app has always had.
-  silver: { color: "accent", hz: 0.25, intensity: 60, spread: 50 },
+  // Steel has no colour of its own, so neither has its light: the same white
+  // as the white face, carrying further because a sunburst silver has more
+  // presence than a flat white one. It is the light behind the default dial,
+  // and behind the sixties dress watch, whose own colour is the navy chapter
+  // ring rather than anything the face does.
+  silver: { color: "white", hz: 0.25, intensity: 60, spread: 50 },
   // Cool grey, so a cool light, and a quicker beat: this is the technical one.
   slate: { color: "teal", hz: 0.3, intensity: 60, spread: 50 },
   // The instrument dial, lit the way an instrument is: a warm lamp, the

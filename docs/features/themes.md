@@ -173,31 +173,35 @@ Every face comes with one, and a preset is lit by the light of the face it
 wears — so the three black dials all glow alike however differently they are
 printed, and picking a dial is one choice rather than two.
 
-| Face          | Its light                                                                             |
-| ------------- | ------------------------------------------------------------------------------------- |
-| **White**     | White, and the closest and quietest of the eight: any hue behind it reads as a stain. |
-| **Silver**    | The theme's accent — the colour the day's ring is already drawn in. The default.      |
-| **Slate**     | Teal, and the quickest beat: the cold face is the one that should look like it runs.  |
-| **Black**     | Amber, the strongest and widest. The instrument dial, lit the way instruments are.    |
-| **Blue**      | Blue, quick and bright: the dial's own colour spilling past the case.                 |
-| **Green**     | Green, and the middle of every range — the same watch as blue, quieter.               |
-| **Burgundy**  | Rose, slow. Not red: red already means _on a break_ on the ring.                      |
-| **Champagne** | Amber, low and slow. The one pale face that takes a tint without looking soiled.      |
+| Face          | Its light                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| **White**     | White, and the closest and quietest of the eight: any hue behind it reads as a stain.       |
+| **Silver**    | White, carrying further than the white face's: steel has no colour of its own. The default. |
+| **Slate**     | Teal, and the quickest beat: the cold face is the one that should look like it runs.        |
+| **Black**     | Amber, the strongest and widest. The instrument dial, lit the way instruments are.          |
+| **Blue**      | Blue, quick and bright: the dial's own colour spilling past the case.                       |
+| **Green**     | Green, and the middle of every range — the same watch as blue, quieter.                     |
+| **Burgundy**  | Rose, slow. Not red: red already means _on a break_ on the ring.                            |
+| **Champagne** | Amber, low and slow. The one pale face that takes a tint without looking soiled.            |
 
-Two rules run through the table. The colour is the face's character rather
+Three rules run through the table. The colour is the face's character rather
 than a match of its paint — a glow sampled off the dial would be a bigger
-version of the watch instead of a light. And a dark face is lit at least as
+version of the watch instead of a light. A dark face is lit at least as
 strongly and as widely as a pale one: a dark dial is largely a silhouette the
 light is what shows of, while a halo blazing round a white dress dial would
-be the only thing in the room.
+be the only thing in the room. And no face wears the day's own two colours:
+the accent means _at work_ on the ring and the flag means _on a break_, so a
+watch lit in either would be saying the day's word back at it — which is why
+burgundy is lit rose rather than red, and why the two silver dials are lit
+white.
 
 Under Custom the four knobs are opened up, starting from the face's own
 light. Picking a face there brings its light with it, so the way back to
 where a light started is to pick its face again.
 
 - **Colour.** The theme's accent — the colour the ring already uses — or
-  white, amber, green, teal, blue, violet or rose. (Violet is Custom's
-  alone; no face is lit by it.)
+  white, amber, green, teal, blue, violet or rose. (The accent and violet are
+  Custom's alone; no face is lit by either.)
 - **Beat.** How often it breathes, from steady to twice a second. With
   reduced motion on it never beats.
 - **Brightness.** From off to full. Off is a way to turn the whole thing off.
