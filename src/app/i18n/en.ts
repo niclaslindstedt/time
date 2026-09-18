@@ -443,9 +443,9 @@ export const en = {
       tapered: "Tapered",
     },
     handsHint: {
-      bar: "The same width from the cap to the tip, printed in the face's ink.",
+      bar: "The same width from the cap to the tip, a half-round bar of steel.",
       tapered:
-        "The tapered hands of a dress watch, broad where they leave the cap and narrowing to a point, in polished steel, with a plain hairline second hand.",
+        "The tapered hands of a dress watch, broad where they leave the cap and narrowing to a point, with a ridge down each that takes the light on one side, and a plain hairline second hand.",
     },
     clockMovement: "Movement",
     movement: {

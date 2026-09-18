@@ -43,16 +43,29 @@ The tenth card opens the dial up piece by piece. It starts from the dial you
 were looking at, so changing one thing about a preset is two taps.
 
 - **Face.** Eight colours, in about the order dials sell in: white, silver,
-  slate, black, blue, green, burgundy, champagne. The markers are printed in
-  dark ink on a light face and white on a dark one, so a marker always reads
-  against the face under it — and so are the hands, unless the set you picked
-  is steel.
+  slate, black, blue, green, burgundy, champagne. The face's ink — dark on a
+  light face, white on a dark one — is what the dial's _printing_ is in: the
+  numerals, the minute track, the name and the movement's word, and the
+  second hand. The applied markers and the hands are not printed at all; they
+  are polished steel, and what they look like is the light on them.
 - **Hour markers.** Nine styles: applied **batons** (a double at twelve);
   **blocks**, the same baton the whole way out with one wide one at twelve
-  and no track on the rim; the **dots** of a diver (a triangle at twelve, batons at the quarters);
+  and no track on the rim; the **dots** of a diver (a triangle at twelve,
+  batons at the quarters);
   Arabic **numerals** at every hour; **Roman** numerals; numerals at the
   **quarters** with batons between; the **3 · 6 · 9** layout with a triangle
   at twelve; tapered **wedges**; and bare **ticks** on a minute track.
+
+  Every one of them but the ticks and the numerals is a part _applied_ to the
+  dial rather than printed on it, and is drawn as the metal it is. A block, a
+  wedge and a triangle are **roofs** — two flat faces put together at an
+  angle, tipping up to the ridge where they meet — so each face is one tone
+  and which of the two is the bright one is where the light is. A dot is a
+  **dome**, turned rather than folded, so the light comes back off it as a
+  band across its middle. Both catch the light per marker rather than per
+  dial: at any moment the block at eight is bright where the one at two is
+  in shade, the way a real dial is never evenly lit.
+
 - **Numerals.** The typeface the hours are set in, one for each family of
   dial typography a watch is likely to carry: **Grotesque** (the app's own,
   Inter), **Light** (the same face at its light weight, the print on a minute
@@ -77,17 +90,18 @@ were looking at, so changing one thing about a preset is two taps.
   the accent, a kind of work its hue, a break the flag colour, and the
   minutes stay printed over whatever the day put under them. The numerals
   are set in the Numerals face, whatever the hours wear.
-- **Hands.** Two sets. **Bars** are the same width from the cap to the tip,
-  printed in the face's ink with a facet down them — the hands every dial
-  here had. **Tapered** are the hands of a dress watch: broad where they
-  leave the cap and narrowing to a point, in polished steel rather than ink —
-  drawn as a shape split down its ridge, one half catching the light and the
-  other in shade, so the hand carries its own light round the dial as it
-  sweeps — with a plain hairline second hand, its tail a stub of the same hair
-  rather than a counterweight, which is what a dress watch carries. The
-  second hand stays the face's ink either way: at a hair's width there is no
-  room for a facet, and a dial with polished hands wears a dark one against
-  the polish.
+- **Hands.** Two shapes — what they are made of is not a choice, because a
+  hand is steel on every wrist watch there is. **Bars** are the same width
+  from the cap to the tip, a half-round bar with the light landing along it.
+  **Tapered** are the hands of a dress watch: broad where they leave the cap
+  and narrowing to a point, with a ridge down each that takes the light on
+  one side and lies in shade on the other — so a hand keeps catching and
+  losing the light as it sweeps, which is the one thing a drawn watch usually
+  gets wrong. Its second hand is a plain hairline, its tail a stub of the
+  same hair rather than a counterweight, which is what a dress watch carries.
+  The second hand stays the face's ink either way: a hair that fine has no
+  surface to catch anything, and a dial with polished hands wears a dark one
+  against the polish.
 - **Movement.** How the second hand moves. **Quartz** steps once a second,
   with the small overshoot a stepper motor gives it. **Mechanical** walks in
   eight small steps a second, the way a calibre at 28 800 vph beats. **Glide**

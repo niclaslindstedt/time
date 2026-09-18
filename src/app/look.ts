@@ -70,8 +70,10 @@ export const APP_LOOK: ThemeAppearance = appearanceFor("system");
 // The eight colours a dial is most often seen in, by how often they sell:
 // black first, then silver, blue, white, green, and the warmer ones a dress
 // watch wears. The ink is what the markers and hands are printed in — dark on
-// a light face, white on a dark one — because a hand has to read against the
-// face under it, and one ink for all eight would vanish on half of them.
+// a light face, white on a dark one — because the print has to read against
+// the face under it, and one ink for all eight would vanish on half of them.
+// The applied markers and the hands are not printed at all: they are steel,
+// and what they look like is the light on them (`STEEL`, and `sheen.ts`).
 
 export type DialFace =
   | "white"
@@ -88,7 +90,9 @@ export type DialFaceSpec = {
    *  finish is a gradient, and a flat one is the same colour twice. */
   dial: string;
   edge: string;
-  /** What the markers, numerals and hands are printed in. */
+  /** What the *printing* on the face is in: the numerals, the minute track,
+   *  the name and the movement's word, and the second hand. The applied
+   *  markers and the hands are steel instead (see `STEEL`). */
   ink: string;
   /** The bezel round the face. */
   bezel: string;
@@ -279,6 +283,22 @@ export const DIAL_FONT: Record<DialFont, DialFontSpec> = {
  *  where 12 is two digits. */
 export const ROMAN_WIDTH = 2;
 
+// ── The metal ──
+// What every applied part of the dial is made of: the markers screwed to the
+// face, and the hands over them. Those are objects rather than colours — a
+// block of steel has no shade of its own to print, only the light that is on
+// it — so they are not drawn in the face's ink at all. The ink is for what is
+// genuinely *printed*: the numerals, the minute track, the name and the
+// movement's word, and the second hand, which is a hair too fine to be a
+// polished thing.
+//
+// Steel is steel whatever the face under it, so one pair serves all eight —
+// the tone a surface turned into the light has, and the one turned away from
+// it. Which of the two any given surface wears is not a colour but a
+// reckoning, and `sheen.ts` does it from where the light is.
+
+export const STEEL = { light: "#f4f6f8", shade: "#7c838c" } as const;
+
 // ── The hour markers ──
 // The nine ways a dial marks its hours: applied batons (the commonest, with
 // a double at twelve), the long solid blocks of a sixties dress dial — the
@@ -365,6 +385,32 @@ export const DIAL_MARKERS: Record<DialMarkers, DialMarkersSpec> = {
 export function isNumeral(marker: Marker): marker is "arabic" | "roman" {
   return marker === "arabic" || marker === "roman";
 }
+/** How a marker's top is shaped, which is what decides how it is drawn.
+ *
+ *  A **roof** is a flat plate with a ridge down the middle — two faces put
+ *  together at an angle, tipping up where they meet — which is what an
+ *  applied block, wedge or triangle is: each face is flat, so each is one
+ *  tone, and which of the two is the bright one is where the light is. A
+ *  **dome** is turned rather than folded, the round plot of a diver's dial,
+ *  so the light comes back off it as a band that slides across as the light
+ *  moves. **Print** is not a part at all: a numeral or a tick, in the face's
+ *  ink, the same from every angle.
+ *
+ *  This is the whole difference between a dial you read the metal of and one
+ *  you read the print of, and it is the marker's own — a block is a block on
+ *  whichever dial it is screwed to. */
+export type MarkerProfile = "roof" | "dome" | "print";
+
+export function markerProfile(marker: Marker): MarkerProfile {
+  if (marker === "tick" || isNumeral(marker)) return "print";
+  return marker === "dot" ? "dome" : "roof";
+}
+
+/** Whether a marker is a part *applied* to the dial — polished metal, drawn
+ *  from the light on it (`sheen.ts`) — rather than something printed on it. */
+export function isApplied(marker: Marker): boolean {
+  return markerProfile(marker) !== "print";
+}
 
 // ── The hours' size ──
 // Eight steps, in the dial's 240-unit box: from the small numerals a dress
@@ -446,18 +492,16 @@ export const DIAL_MOVEMENT: Record<DialMovement, { beats: number | null }> = {
 };
 
 // ── The hands ──
-// What the hands are shaped like, and what they are made of. Two sets, which
-// is the whole range a dial of this kind wears: the plain bar — the same
-// width from the cap to its tip, printed in the face's ink, the hand every
-// dial here had — and the tapered hand of a sixties dress watch, broad where
-// it leaves the cap and narrowing to a point, polished rather than printed.
+// What the hands are *shaped* like; what they are made of is not a choice,
+// because a hand is steel on every wrist watch there is (see `STEEL`). Two
+// sets: the plain bar, the same width from the cap to its tip and domed
+// across it, and the tapered hand of a sixties dress watch, broad where it
+// leaves the cap and narrowing to a point, with a ridge down it that takes
+// the light on one side and lies in shade on the other.
 //
-// Steel is the object's own colour again, the way the face's and the chapter
-// ring's are: a polished hand is not ink, it is a facet that catches the
-// light on one side of its ridge and lies in shade on the other, so it is
-// drawn as two halves and reads as metal whichever face it is over. Only the
-// hour and minute hands are ever steel — a second hand is a hair wide, and
-// the dial this one is drawn from wears a dark one against the polish.
+// The second hand is the exception either way: a hair that fine has no
+// surface to catch anything, so it stays the face's ink, which is also what
+// a dial with polished hands wears against the polish.
 
 export type DialHands = "bar" | "tapered";
 
@@ -473,12 +517,9 @@ export type DialHandsSpec = {
    *  centre; a tapered hand gets none, because its widest point *is* the hub
    *  and a tail past it would flare out from under the cap. */
   boss: number;
-  /** Whether the hand narrows along its length — a taper is drawn as a
-   *  shape, a bar as a stroke with a facet down it. */
+  /** Whether the hand narrows along its length: a taper is drawn as two
+   *  facets either side of its ridge, a bar as one domed bar. */
   taper: boolean;
-  /** Polished steel: the lit side of the hand's ridge and the shaded one.
-   *  Null is a hand printed in the face's ink. */
-  steel: { light: string; shade: string } | null;
   /** What balances the second hand past the axle: the disc of a sports hand,
    *  or nothing at all — a dress watch's second hand is one hair from its tip
    *  to the end of its tail. */
@@ -493,7 +534,6 @@ export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
     tip: 1,
     boss: 5,
     taper: false,
-    steel: null,
     counterweight: "disc",
   },
   tapered: {
@@ -501,7 +541,6 @@ export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
     tip: 0.25,
     boss: 0,
     taper: true,
-    steel: { light: "#eceef2", shade: "#8b929b" },
     counterweight: "none",
   },
 };
