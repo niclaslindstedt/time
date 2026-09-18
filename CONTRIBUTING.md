@@ -27,6 +27,11 @@ make lint
 make fmt-check
 ```
 
+A change to how the dial draws is judged by eye. `make shots` builds and
+photographs the watch face in a few states into `shots/` (see
+`scripts/dial-shots.mjs` for the options); it needs Playwright, which is not a
+dependency of the app — the script says how to install it outside the lockfile.
+
 ## Development workflow
 
 1. Fork the repo.

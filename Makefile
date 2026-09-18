@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check actionlint release clean docs website website-dev install icons check-seo changelog bump
+.PHONY: build test lint fmt fmt-check actionlint release clean docs website website-dev install icons check-seo changelog bump shots
 
 build:
 	npm run build
@@ -27,6 +27,13 @@ install:
 # Regenerate the PWA install icons + the Open Graph image from the app mark.
 icons:
 	npm run icons
+
+# Pictures of the watch face in a few states, into shots/, for iterating on
+# its look. Builds first, so the picture is of the code as it is. Pass the
+# script's options through ARGS: `make shots ARGS="--preset all --theme light"`.
+# Needs playwright, installed outside the lockfile — the script says how.
+shots:
+	npm run build && node scripts/dial-shots.mjs $(ARGS)
 
 actionlint:
 	actionlint -color

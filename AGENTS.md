@@ -43,6 +43,7 @@ make fmt           # prettier --write
 make fmt-check     # verify formatting (CI)
 make check-seo     # build + assert the structural SEO/PWA signals
 make icons         # regenerate the PWA icons, favicon, and og image
+make shots         # build + photograph the dial in a few states into shots/ (ARGS="…" for options)
 ```
 
 The `@niclaslindstedt/oss-framework` dependency comes from the **GitHub
@@ -498,9 +499,10 @@ Skills live under `.agents/skills/` (OSS_SPEC §21); `.claude/skills` is a
 symlink into that tree. Each has a `SKILL.md` with its discovery process, its
 source→output mapping, and a `.last-updated` marker.
 
-| Skill             | Runs when                                                     |
-| ----------------- | ------------------------------------------------------------- |
-| `maintenance`     | The registry and run order for every other skill — start here |
-| `write-changeset` | Any user-visible change, before opening the PR                |
-| `update-docs`     | `src/app/` changed in a way a `docs/` topic describes         |
-| `update-readme`   | Commands, configuration, or the feature set changed           |
+| Skill             | Runs when                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `maintenance`     | The registry and run order for every other skill — start here                                                                                          |
+| `write-changeset` | Any user-visible change, before opening the PR                                                                                                         |
+| `update-docs`     | `src/app/` changed in a way a `docs/` topic describes                                                                                                  |
+| `update-readme`   | Commands, configuration, or the feature set changed                                                                                                    |
+| `add-watch-face`  | A new dial, preset, marker style, typeface or ring is asked for — often from a photograph of a watch; keeps makers' names and trademarked features out |
