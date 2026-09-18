@@ -23,7 +23,7 @@ import {
 } from "@niclaslindstedt/oss-framework/storage";
 
 import { isValidSpan } from "./actions.ts";
-import { isCategoryColor, isGlyphId } from "./kinds.ts";
+import { allowsGlyph, isCategoryColor, type KindSort } from "./kinds.ts";
 import {
   DEFAULT_HOURS_PER_DAY,
   DEFAULT_WORK_DAYS,
@@ -126,9 +126,11 @@ function parseWeekdays(value: unknown): Weekday[] {
  *
  *  A glyph or a colour the running version has no entry for is dropped rather
  *  than kept: these are ids into `kinds.ts`, and a document written by a newer
- *  version can name one this build cannot draw. Dropping it leaves the kind
- *  with the default mark and its positional hue, which is what a kind that
- *  never had either looks like. */
+ *  version can name one this build cannot draw. So is a glyph from the other
+ *  vocabulary — a break wearing a pair of angle brackets — which an older
+ *  version could store before the two lists were kept apart. Dropping it
+ *  leaves the kind with the default mark and its positional hue, which is what
+ *  a kind that never had either looks like. */
 function parseNamed<T extends { id: string; name: string }>(
   value: unknown,
   extend: (
@@ -150,9 +152,10 @@ function parseNamed<T extends { id: string; name: string }>(
   return out;
 }
 
-/** The mark a kind carries, when it carries one this build knows. */
-function parseGlyph(raw: Record<string, unknown>) {
-  return isGlyphId(raw.glyph) ? { glyph: raw.glyph } : {};
+/** The mark a kind carries, when it carries one this build knows and this
+ *  sort of kind may wear. */
+function parseGlyph(raw: Record<string, unknown>, kind: KindSort) {
+  return allowsGlyph(kind, raw.glyph) ? { glyph: raw.glyph } : {};
 }
 
 /** Coerce one stored project, or drop it when it has no id or name. */
@@ -164,13 +167,13 @@ function parseProject(key: string, value: unknown): Project | null {
   const breakTypes = parseNamed<BreakType>(value.breakTypes, (base, raw) => ({
     ...base,
     defaultMinutes: clampBreakMinutes(raw.defaultMinutes, 15),
-    ...parseGlyph(raw),
+    ...parseGlyph(raw, "break"),
   }));
   const categories = parseNamed<WorkCategory>(
     value.categories,
     (base, raw) => ({
       ...base,
-      ...parseGlyph(raw),
+      ...parseGlyph(raw, "category"),
       ...(isCategoryColor(raw.color) ? { color: raw.color } : {}),
     }),
   );

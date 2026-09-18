@@ -110,7 +110,9 @@ of the day, not a stopwatch.
 ## Custom
 
 The last pill in each row is **Custom**. It names a kind of break (with the
-minutes one is assumed to take) or a kind of work, gives it a mark — and a
+minutes one is assumed to take) or a kind of work, gives it a mark from that
+kind's own vocabulary — the day's pauses for a break, work's for a kind of
+work, and the neutral marks to either — and a
 kind of work a colour — adds it to the project, and starts it — so the walk nobody set up in advance is two taps rather than a trip
 to the project form. It stays there afterwards as another pill.
 

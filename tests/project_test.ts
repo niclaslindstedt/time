@@ -9,6 +9,7 @@ import {
   targetSeconds,
   weekdayOf,
 } from "../src/app/project.ts";
+import { allowsGlyph } from "../src/app/kinds.ts";
 import { project } from "./fixtures/helpers.ts";
 
 const labels = {
@@ -36,6 +37,16 @@ describe("projectTemplate", () => {
       "review",
       "admin",
     ]);
+  });
+
+  it("marks each of them from its own vocabulary", () => {
+    let n = 0;
+    const e = projectTemplate("Acme", labels, () => `id${++n}`, "now");
+    for (const b of e.breakTypes)
+      expect(allowsGlyph("break", b.glyph)).toBe(true);
+    for (const c of e.categories) {
+      expect(allowsGlyph("category", c.glyph)).toBe(true);
+    }
   });
 
   it("picks no colours, so the four take the hues their order gives them", () => {

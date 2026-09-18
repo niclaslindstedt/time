@@ -2,11 +2,11 @@
 import {
   CATEGORY_COLOR,
   CATEGORY_PALETTE,
-  GLYPH_GROUPS,
+  GLYPH_GROUPS_FOR,
   glyphsIn,
   type CategoryColor,
   type GlyphId,
-  type GlyphGroup,
+  type KindSort,
 } from "./kinds.ts";
 import { KindGlyph } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
@@ -20,9 +20,10 @@ import { useT } from "./i18n/index.ts";
 // the grid is the preview: pick a hue and every mark in the grid moves to it.
 
 type Props = {
-  /** Which vocabulary leads the grid — a break is usually looking for a cup,
-   *  a kind of work for a pair of brackets. Both may pick any of them. */
-  kind: "break" | "category";
+  /** Which vocabularies the grid offers: a break type is shown the day's
+   *  pauses, a kind of work is shown work's, and both are shown the neutral
+   *  marks. The other one's is not offered at all — see `GLYPH_GROUPS_FOR`. */
+  kind: KindSort;
   glyph: GlyphId;
   onGlyph: (glyph: GlyphId) => void;
   /** A kind of work's colour, or null when it takes the one its place in the
@@ -37,12 +38,6 @@ type Props = {
    *  hue it stands for rather than an empty square. */
   autoTint?: string;
 };
-
-/** The vocabularies, the one this kind is most likely to want first. */
-function groupOrder(kind: "break" | "category"): GlyphGroup[] {
-  const lead: GlyphGroup = kind === "break" ? "break" : "work";
-  return [lead, ...GLYPH_GROUPS.filter((g) => g !== lead)];
-}
 
 /**
  * The way into the picker: a square showing what the kind wears now, in the
@@ -146,7 +141,7 @@ export function KindPicker({
           in it, so picking a hue above repaints the marks below. */}
       <div className="flex flex-col gap-2" style={{ color: tint }}>
         <span className="text-xs text-muted">{t("kinds.mark")}</span>
-        {groupOrder(kind).map((group) => (
+        {GLYPH_GROUPS_FOR[kind].map((group) => (
           <div key={group} className="flex flex-col gap-1">
             <span className="text-[0.6875rem] font-semibold tracking-wide text-muted uppercase">
               {t(`kinds.group.${group}`)}

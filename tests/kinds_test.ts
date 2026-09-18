@@ -10,8 +10,11 @@ import {
   DEFAULT_CATEGORY_GLYPH,
   GLYPH,
   GLYPH_GROUPS,
+  GLYPH_GROUPS_FOR,
   GLYPH_IDS,
-  glyphOr,
+  allowsGlyph,
+  glyphFor,
+  glyphsFor,
   glyphsIn,
   isCategoryColor,
   isGlyphId,
@@ -79,11 +82,50 @@ describe("the glyph catalogue", () => {
   });
 
   it("falls back rather than drawing a mark it does not have", () => {
-    expect(glyphOr("coding", DEFAULT_CATEGORY_GLYPH)).toBe("coding");
-    expect(glyphOr(undefined, DEFAULT_CATEGORY_GLYPH)).toBe(
-      DEFAULT_CATEGORY_GLYPH,
-    );
-    expect(glyphOr("nonsense", DEFAULT_BREAK_GLYPH)).toBe(DEFAULT_BREAK_GLYPH);
+    expect(glyphFor("coding", "category")).toBe("coding");
+    expect(glyphFor(undefined, "category")).toBe(DEFAULT_CATEGORY_GLYPH);
+    expect(glyphFor("nonsense", "break")).toBe(DEFAULT_BREAK_GLYPH);
+  });
+
+  it("keeps the two vocabularies apart, and shares the neutral marks", () => {
+    expect(GLYPH_GROUPS_FOR.break).toEqual(["break", "mark"]);
+    expect(GLYPH_GROUPS_FOR.category).toEqual(["work", "mark"]);
+
+    // A break wears breaks and marks, never work's.
+    for (const id of glyphsFor("break")) {
+      expect(GLYPH[id].group, id).not.toBe("work");
+    }
+    // A kind of work wears work's and marks, never a break's.
+    for (const id of glyphsFor("category")) {
+      expect(GLYPH[id].group, id).not.toBe("break");
+    }
+    // Between them they still offer the whole catalogue.
+    expect(
+      [...new Set([...glyphsFor("break"), ...glyphsFor("category")])].sort(),
+    ).toEqual([...GLYPH_IDS].sort());
+  });
+
+  it("refuses a mark from the other vocabulary", () => {
+    expect(allowsGlyph("break", "coffee")).toBe(true);
+    expect(allowsGlyph("break", "coding")).toBe(false);
+    expect(allowsGlyph("category", "coding")).toBe(true);
+    expect(allowsGlyph("category", "coffee")).toBe(false);
+    // The neutral marks are both vocabularies'.
+    expect(allowsGlyph("break", "dot")).toBe(true);
+    expect(allowsGlyph("category", "dot")).toBe(true);
+    expect(allowsGlyph("break", "nonsense")).toBe(false);
+    expect(allowsGlyph("category", undefined)).toBe(false);
+  });
+
+  it("puts a kind wearing the other vocabulary's mark back on its own", () => {
+    // What an older version could store, before the lists were kept apart.
+    expect(glyphFor("coding", "break")).toBe(DEFAULT_BREAK_GLYPH);
+    expect(glyphFor("coffee", "category")).toBe(DEFAULT_CATEGORY_GLYPH);
+  });
+
+  it("starts both sorts on a mark that sort may wear", () => {
+    expect(allowsGlyph("break", DEFAULT_BREAK_GLYPH)).toBe(true);
+    expect(allowsGlyph("category", DEFAULT_CATEGORY_GLYPH)).toBe(true);
   });
 });
 
@@ -173,5 +215,17 @@ describe("what a kind is drawn in", () => {
     expect(categoryGlyph(p, "meet")).toBe("meeting");
     expect(categoryGlyph(p, "code")).toBe(DEFAULT_CATEGORY_GLYPH);
     expect(categoryGlyph(p, "gone")).toBe(DEFAULT_CATEGORY_GLYPH);
+  });
+
+  it("does not draw a kind in the other vocabulary's mark", () => {
+    // A document written before the two lists were kept apart.
+    const p = project({
+      breakTypes: [
+        { id: "lunch", name: "Lunch", defaultMinutes: 30, glyph: "coding" },
+      ],
+      categories: [{ id: "meet", name: "Meetings", glyph: "coffee" }],
+    });
+    expect(breakGlyph(p, "lunch")).toBe(DEFAULT_BREAK_GLYPH);
+    expect(categoryGlyph(p, "meet")).toBe(DEFAULT_CATEGORY_GLYPH);
   });
 });
