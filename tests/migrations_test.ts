@@ -8,7 +8,19 @@ import { day, project } from "./fixtures/helpers.ts";
 describe("parseDoc", () => {
   it("round-trips a document", () => {
     const doc = emptyDoc();
-    doc.projects.acme = project();
+    // Marked, because a kind with no mark of its own is given the app's on
+    // the way back in — what this pins is that a *marked* document survives
+    // the trip unchanged.
+    doc.projects.acme = project({
+      breakTypes: [
+        { id: "lunch", name: "Lunch", defaultMinutes: 30, glyph: "meal" },
+        { id: "coffee", name: "Coffee", defaultMinutes: 15, glyph: "coffee" },
+      ],
+      categories: [
+        { id: "meet", name: "Meetings", glyph: "meeting" },
+        { id: "code", name: "Coding", glyph: "coding" },
+      ],
+    });
     const d = day("2026-03-02", {
       sessions: [{ id: "s", start: 100, end: null }],
       breaks: [{ id: "b", typeId: "lunch", start: 200, end: 300 }],
@@ -160,7 +172,7 @@ describe("shape validation", () => {
           id: "e",
           name: "E",
           breakTypes: [
-            { id: "l", name: "Lunch", defaultMinutes: 30, glyph: "teleport" },
+            { id: "l", name: "Nap", defaultMinutes: 30, glyph: "teleport" },
           ],
           categories: [
             { id: "c", name: "Coding", glyph: 7, color: "chartreuse" },
@@ -171,7 +183,7 @@ describe("shape validation", () => {
     });
     expect(doc.projects.e!.breakTypes[0]).toEqual({
       id: "l",
-      name: "Lunch",
+      name: "Nap",
       defaultMinutes: 30,
     });
     expect(doc.projects.e!.categories[0]).toEqual({ id: "c", name: "Coding" });
@@ -179,8 +191,9 @@ describe("shape validation", () => {
 
   it("drops a mark from the other vocabulary", () => {
     // A break wearing a pair of angle brackets and a kind of work wearing a
-    // cup: both storable before the two lists were kept apart, and both left
-    // with the mark their sort starts out with instead.
+    // cup: both storable before the two lists were kept apart, and neither
+    // kept. Named things the app never suggested, so nothing is put back in
+    // their place.
     const doc = normalizeDoc({
       version: 2,
       projects: {
@@ -188,7 +201,7 @@ describe("shape validation", () => {
           id: "e",
           name: "E",
           breakTypes: [
-            { id: "l", name: "Lunch", defaultMinutes: 30, glyph: "coding" },
+            { id: "l", name: "Nap", defaultMinutes: 30, glyph: "coding" },
           ],
           categories: [{ id: "c", name: "Coding", glyph: "coffee" }],
         },
@@ -205,7 +218,7 @@ describe("shape validation", () => {
           id: "e",
           name: "E",
           breakTypes: [
-            { id: "l", name: "Lunch", defaultMinutes: 30, glyph: "dot" },
+            { id: "l", name: "Nap", defaultMinutes: 30, glyph: "dot" },
           ],
           categories: [{ id: "c", name: "Coding", glyph: "tag" }],
         },
@@ -216,21 +229,55 @@ describe("shape validation", () => {
     expect(marks.projects.e!.categories[0]!.glyph).toBe("tag");
   });
 
-  it("leaves a document from before there were marks alone", () => {
+  it("marks a kind the app itself suggested, whatever wrote it", () => {
+    // A document from before there were marks: its Lunch, Coffee, Toilet,
+    // Meetings, Planning, Retro and Admin are the app's own suggestions, and
+    // are given the marks a project made today would have. The name is
+    // matched however it was cased.
     const doc = normalizeDoc({
       version: 2,
       projects: {
         e: {
           id: "e",
           name: "E",
-          breakTypes: [{ id: "l", name: "Lunch", defaultMinutes: 30 }],
+          breakTypes: [
+            { id: "l", name: "Lunch", defaultMinutes: 30 },
+            { id: "t", name: "  toilet ", defaultMinutes: 5 },
+          ],
+          categories: [
+            { id: "m", name: "Meetings" },
+            { id: "a", name: "Admin" },
+          ],
+        },
+      },
+      days: {},
+    });
+    expect(doc.projects.e!.breakTypes[0]!.glyph).toBe("meal");
+    expect(doc.projects.e!.breakTypes[1]!.glyph).toBe("toilet");
+    expect(doc.projects.e!.categories[0]!.glyph).toBe("meeting");
+    expect(doc.projects.e!.categories[1]!.glyph).toBe("admin");
+    // Nothing else is invented: no colour, and no mark for a name the app
+    // never suggested.
+    expect(doc.projects.e!.categories[0]!.color).toBeUndefined();
+  });
+
+  it("leaves a kind the app never suggested unmarked", () => {
+    const doc = normalizeDoc({
+      version: 2,
+      projects: {
+        e: {
+          id: "e",
+          name: "E",
+          // "Meetings" as a *break*: the app suggests it as a kind of work,
+          // so its mark is not handed across the two vocabularies.
+          breakTypes: [{ id: "l", name: "Meetings", defaultMinutes: 30 }],
           categories: [{ id: "c", name: "Coding" }],
         },
       },
       days: {},
     });
     expect(doc.projects.e!.breakTypes[0]!.glyph).toBeUndefined();
-    expect(doc.projects.e!.categories[0]!.color).toBeUndefined();
+    expect(doc.projects.e!.categories[0]!.glyph).toBeUndefined();
   });
 
   it("clamps a project's numbers and fills in the defaults", () => {

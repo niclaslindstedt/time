@@ -46,19 +46,31 @@ the cloud, a release, tests, support, security, analytics, a branch, admin,
 finance, ideas, focus, maintenance — and it stretches far enough that a
 workshop, a bookkeeping afternoon or an on-call shift has something better
 than a dot. **Breaks** is the day's pauses: coffee, a meal, the toilet, a
-walk, outdoors, exercise, rest, an errand, travel, health, music, or just a
-pause. **Marks** is the neutral handful — a label, a star, a flag, a place, an
+drop, a walk, outdoors, exercise, rest, an errand, travel, health, music, or
+just a pause. **Marks** is the neutral handful — a label, a star, a flag, a place, an
 urgent bolt, a plain ring — for anything the other two miss.
 
 A kind wears its own vocabulary: a break type is offered the breaks, a kind of
-work is offered work's, and both are offered the neutral marks — eighteen marks
-for a break type, forty for a kind of work. The other group is not offered at
+work is offered work's, and both are offered the neutral marks — nineteen
+marks for a break type, forty for a kind of work. The other group is not offered at
 all, so a break cannot end up carrying a pair of angle brackets and a kind of
 work cannot end up carrying a cup; the two lists sit next to each other on the
 Today screen, where the mark is what tells them apart at a glance. A mark
 stored the other way round by an older version is dropped when the document is
 read, leaving that kind with the one its sort starts out with — the cup for a
 break, the label for a kind of work.
+
+A kind the app itself suggested is marked whether or not it was marked when it
+was written. The three break types and four kinds of work a new project opens
+with — Lunch, Coffee, Toilet, Meetings, Planning, Retro and Admin — each have
+a mark of the app's choosing, and a kind of one of those names carrying none
+of its own is given it when the document is read, so a project made before
+there were marks shows a fork on its Lunch rather than the cup every unmarked
+break would otherwise fall back to. Only those names, and only within the
+kind's own vocabulary: a break someone called "Meetings" is left unmarked
+rather than given a kind of work's mark, and so is anything the app never
+suggested. Changing the mark afterwards is the picker's, and what is picked
+stays picked.
 
 A kind of work also has a **colour**, picked in the same place: blue, ocean,
 violet, amber, red, mint, rose or slate, or **Automatic**, which is the hue

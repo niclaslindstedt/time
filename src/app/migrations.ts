@@ -12,10 +12,11 @@
 //
 // A *purely additive optional* field is the one change that needs no step: a
 // kind of work's glyph and colour are absent on every document written before
-// them, and absent is exactly what "the mark and hue this kind always had"
-// means, so there is nothing for a step to rewrite. What such a field does
-// need is the validation below — the value is an id into `kinds.ts`, and an
-// id this build has no entry for is dropped like any other unknown field.
+// them, and absent is a thing this module can read — it is the validation
+// below, rather than a step, that says what such a kind looks like. The value
+// is an id into `kinds.ts`, so an id this build has no entry for is dropped
+// like any other unknown field, and a break or a kind of work left with no
+// mark at all takes the one the app's own suggested kind of that name wears.
 
 import {
   createMigrator,
@@ -23,12 +24,14 @@ import {
 } from "@niclaslindstedt/oss-framework/storage";
 
 import { isValidSpan } from "./actions.ts";
+import { en } from "./i18n/en.ts";
 import { allowsGlyph, isCategoryColor, type KindSort } from "./kinds.ts";
 import {
   DEFAULT_HOURS_PER_DAY,
   DEFAULT_WORK_DAYS,
   clampBreakMinutes,
   clampHours,
+  suggestedGlyph,
 } from "./project.ts";
 import {
   DOC_VERSION,
@@ -129,8 +132,8 @@ function parseWeekdays(value: unknown): Weekday[] {
  *  version can name one this build cannot draw. So is a glyph from the other
  *  vocabulary — a break wearing a pair of angle brackets — which an older
  *  version could store before the two lists were kept apart. Dropping it
- *  leaves the kind with the default mark and its positional hue, which is what
- *  a kind that never had either looks like. */
+ *  leaves the kind with its positional hue and whichever mark `parseGlyph`
+ *  finds for it, which is what a kind that never had either looks like. */
 function parseNamed<T extends { id: string; name: string }>(
   value: unknown,
   extend: (
@@ -153,9 +156,23 @@ function parseNamed<T extends { id: string; name: string }>(
 }
 
 /** The mark a kind carries, when it carries one this build knows and this
- *  sort of kind may wear. */
-function parseGlyph(raw: Record<string, unknown>, kind: KindSort) {
-  return allowsGlyph(kind, raw.glyph) ? { glyph: raw.glyph } : {};
+ *  sort of kind may wear — failing that, the one the app's own suggested kind
+ *  of that name wears.
+ *
+ *  That second step is what gives a project written before there were marks
+ *  the marks it would be made with today: its Lunch is the app's Lunch, so it
+ *  gets the fork and knife rather than the cup an unmarked break falls back
+ *  to. The names it matches are the ones the template stamped in, which is why
+ *  the catalog is read here rather than passed in — English is the only one,
+ *  and a kind of a name the app never suggested is left unmarked. */
+function parseGlyph(
+  raw: Record<string, unknown>,
+  base: { name: string },
+  kind: KindSort,
+) {
+  if (allowsGlyph(kind, raw.glyph)) return { glyph: raw.glyph };
+  const suggested = suggestedGlyph(base.name, kind, en.projects.defaults);
+  return suggested ? { glyph: suggested } : {};
 }
 
 /** Coerce one stored project, or drop it when it has no id or name. */
@@ -167,13 +184,13 @@ function parseProject(key: string, value: unknown): Project | null {
   const breakTypes = parseNamed<BreakType>(value.breakTypes, (base, raw) => ({
     ...base,
     defaultMinutes: clampBreakMinutes(raw.defaultMinutes, 15),
-    ...parseGlyph(raw, "break"),
+    ...parseGlyph(raw, base, "break"),
   }));
   const categories = parseNamed<WorkCategory>(
     value.categories,
     (base, raw) => ({
       ...base,
-      ...parseGlyph(raw, "category"),
+      ...parseGlyph(raw, base, "category"),
       ...(isCategoryColor(raw.color) ? { color: raw.color } : {}),
     }),
   );

@@ -47,15 +47,22 @@ function demoProject(): Project {
     name: "Demo AB",
     workDays: [1, 2, 3, 4, 5],
     hoursPerDay: 8,
+    // Marked the way a real project's kinds are, so the demo shows the pills
+    // and the Log's rows as someone would actually see them.
     breakTypes: [
-      { id: "demo-lunch", name: "Lunch", defaultMinutes: 30 },
-      { id: "demo-coffee", name: "Coffee", defaultMinutes: 15 },
-      { id: "demo-walk", name: "Walk", defaultMinutes: 20 },
+      { id: "demo-lunch", name: "Lunch", defaultMinutes: 30, glyph: "meal" },
+      {
+        id: "demo-coffee",
+        name: "Coffee",
+        defaultMinutes: 15,
+        glyph: "coffee",
+      },
+      { id: "demo-walk", name: "Walk", defaultMinutes: 20, glyph: "walk" },
     ],
     categories: [
-      { id: "demo-meetings", name: "Meetings" },
-      { id: "demo-coding", name: "Coding" },
-      { id: "demo-admin", name: "Admin" },
+      { id: "demo-meetings", name: "Meetings", glyph: "meeting" },
+      { id: "demo-coding", name: "Coding", glyph: "coding" },
+      { id: "demo-admin", name: "Admin", glyph: "admin" },
     ],
     updatedAt: STAMP,
   };

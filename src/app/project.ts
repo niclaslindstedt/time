@@ -13,7 +13,7 @@ import {
   type DayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
 
-import type { GlyphId } from "./kinds.ts";
+import type { GlyphId, KindSort } from "./kinds.ts";
 import type {
   BreakType,
   Project,
@@ -54,18 +54,60 @@ export type ProjectTemplateLabels = {
   admin: string;
 };
 
-/** The marks the default breaks and kinds of work start out wearing. The
- *  names beside them are the user's to change; the marks are too, in the
- *  project form — these are only what a new project opens with. */
-const TEMPLATE_GLYPHS = {
-  lunch: "meal",
-  coffee: "coffee",
-  toilet: "toilet",
-  meetings: "meeting",
-  planning: "planning",
-  retro: "review",
-  admin: "admin",
-} satisfies Record<keyof ProjectTemplateLabels, GlyphId>;
+/**
+ * The kinds the app itself suggests — the three breaks and four kinds of work
+ * a new project opens with — and what each one is: which of the two sorts it
+ * is, and the mark it wears.
+ *
+ * The names beside them are the catalog's (`projects.defaults`) and the
+ * user's to change; the marks are the user's too, in the project form. These
+ * are only what the app puts there to begin with — and what `suggestedGlyph`
+ * hands a kind of one of these names that has no mark of its own, so a
+ * project made before there were marks shows a fork on its Lunch rather than
+ * the cup every unmarked break falls back to.
+ */
+export const DEFAULT_KINDS = {
+  lunch: { sort: "break", glyph: "meal" },
+  coffee: { sort: "break", glyph: "coffee" },
+  toilet: { sort: "break", glyph: "toilet" },
+  meetings: { sort: "category", glyph: "meeting" },
+  planning: { sort: "category", glyph: "planning" },
+  retro: { sort: "category", glyph: "review" },
+  admin: { sort: "category", glyph: "admin" },
+} satisfies Record<
+  keyof ProjectTemplateLabels,
+  { sort: KindSort; glyph: GlyphId }
+>;
+
+/** The keys of `DEFAULT_KINDS`, in the order the template lists them. */
+const DEFAULT_KEYS = Object.keys(
+  DEFAULT_KINDS,
+) as (keyof ProjectTemplateLabels)[];
+
+/**
+ * The mark the app's own suggested kind of this name wears, or undefined for
+ * a name it never suggested.
+ *
+ * The labels come in rather than out of the catalog, the way the template's
+ * do — this module stays free of the i18n runtime — and only the sort's own
+ * suggestions are considered, so a break someone called "Meetings" is still
+ * not given a work mark. Matched on the name ignoring case and the space
+ * either side, which is how the template wrote it.
+ */
+export function suggestedGlyph(
+  name: string,
+  sort: KindSort,
+  labels: ProjectTemplateLabels,
+): GlyphId | undefined {
+  const wanted = name.trim().toLowerCase();
+  if (!wanted) return undefined;
+  const key = DEFAULT_KEYS.find(
+    (k) =>
+      DEFAULT_KINDS[k].sort === sort &&
+      labels[k].trim().toLowerCase() === wanted,
+  );
+  return key && DEFAULT_KINDS[key].glyph;
+}
 
 /** A new project with the standard week and the default breaks. `id`
  *  is called once per thing that needs one, so a test can hand out names. */
@@ -80,29 +122,29 @@ export function projectTemplate(
       id: id(),
       name: labels.lunch,
       defaultMinutes: DEFAULT_LUNCH_MINUTES,
-      glyph: TEMPLATE_GLYPHS.lunch,
+      glyph: DEFAULT_KINDS.lunch.glyph,
     },
     {
       id: id(),
       name: labels.coffee,
       defaultMinutes: DEFAULT_COFFEE_MINUTES,
-      glyph: TEMPLATE_GLYPHS.coffee,
+      glyph: DEFAULT_KINDS.coffee.glyph,
     },
     {
       id: id(),
       name: labels.toilet,
       defaultMinutes: DEFAULT_TOILET_MINUTES,
-      glyph: TEMPLATE_GLYPHS.toilet,
+      glyph: DEFAULT_KINDS.toilet.glyph,
     },
   ];
   // No colour on the kinds of work: a new project's four take the hues their
   // positions give them, the same four they have always been drawn in. A
   // colour is set only when someone picks one.
   const categories: WorkCategory[] = [
-    { id: id(), name: labels.meetings, glyph: TEMPLATE_GLYPHS.meetings },
-    { id: id(), name: labels.planning, glyph: TEMPLATE_GLYPHS.planning },
-    { id: id(), name: labels.retro, glyph: TEMPLATE_GLYPHS.retro },
-    { id: id(), name: labels.admin, glyph: TEMPLATE_GLYPHS.admin },
+    { id: id(), name: labels.meetings, glyph: DEFAULT_KINDS.meetings.glyph },
+    { id: id(), name: labels.planning, glyph: DEFAULT_KINDS.planning.glyph },
+    { id: id(), name: labels.retro, glyph: DEFAULT_KINDS.retro.glyph },
+    { id: id(), name: labels.admin, glyph: DEFAULT_KINDS.admin.glyph },
   ];
   return {
     id: id(),
