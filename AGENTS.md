@@ -331,9 +331,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   a button spreads, one factory for a screen because the pills are a list and
   a hook may not be called in a loop. It swallows the click the hold ends
   with, calls a wandering pointer a scroll, and takes the right button as the
-  same gesture. What makes it possible is that the screens are not selectable
-  (`.app-main` in `styles.css`) — a press held on a label is otherwise the
-  start of a selection.
+  same gesture. What makes it possible is that nothing in the app is
+  selectable (`html` in `styles.css`, with text fields and code blocks put
+  back) — a press held on a label is otherwise the start of a selection, and
+  on iOS the start of the glass lens a caret is placed with.
 - `src/app/ModalHeader.tsx` — the top bar of every modal that is saved or
   abandoned: cancel on the left, the title between, save on the right. It is
   a sibling of the modal's scrolling body, so it stays put over a long form —

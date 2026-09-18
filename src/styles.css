@@ -242,26 +242,64 @@ body {
   min-height: 3rem;
 }
 
-/* ── Selection ───────────────────────────────────────────────────────────────
-   The screens are an instrument rather than a document: nothing between the
-   bars is there to be read out and quoted, and a phone treats a press held on
-   a label as the start of a selection — so the pill you meant to hold comes
-   back with a blue wash and two handles over it, and a drag to page between
-   tabs selects a paragraph of the Log instead. Both go, along with iOS's own
-   callout, which is the other thing a held control summons.
+/* ── Selection, and the lens a caret is placed with ──────────────────────────
+   The app is an instrument rather than a document: nothing on screen is there
+   to be read out and quoted, and a phone treats a press held on a label as the
+   start of a selection — so the pill you meant to hold comes back with a blue
+   wash and two handles over it, and a drag to page between tabs selects a
+   paragraph of the Log instead. Both go, along with iOS's own callout, which is
+   the other thing a held control summons.
 
-   Off for the screens, not for the shell around them, and put back wherever
-   there is text somebody would actually want: a field's own value, and the
-   monospaced blocks the framework's log viewer prints. A dialog is the
-   framework's to render outside <main>, so a modal's text is untouched by
-   this. */
-.app-main {
+   On `html` rather than on `<main>`, because the app is more than its screens.
+   The bars top and bottom, the toasts, the desk's settings panel and — the
+   ones a rule on `<main>` could never have reached — the framework's modals,
+   which portal into `document.body` outside `#root` entirely, all used to
+   select. A gesture does not respect the boundary either: a drag that starts
+   on a nav label and ends on the screen is one selection, so half a rule left
+   half the problem.
+
+   It is also the only thing that reaches the **caret lens** — the glass iOS
+   puts over the page while a press is held, the magnifier a finger places a
+   text cursor with. That lens is a UIKit gesture the web view arms before it
+   consults a stylesheet, so no property turns it off; what turns it off is
+   having nothing for it to do. Where a press can start no selection the
+   gesture never arms. It matters most in the installed PWA, where the lens is
+   the system's own full-screen glass rather than a lozenge inside a browser
+   tab, and where there is no surrounding chrome to blame it on.
+
+   Selection is put back wherever there is text somebody would actually want:
+   a field's own value, and the monospaced blocks the framework's log viewer
+   prints. */
+html {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
 
-.app-main :is(input, textarea, [contenteditable="true"], pre, code) {
+/* A field is not one thing, and that distinction is the rest of the lens. An
+   `<input type="text">` wants it: placing a caret in a project name typed
+   wrong is precisely what the magnifier is for, and taking it away would leave
+   the field editable only by retyping it. The pickers do not — `time` and
+   `date` open the phone's own wheel, `file` opens a sheet, `range` is a
+   slider, `color` a swatch — and a press held on one of those raised a lens
+   over a control with no text under it to find. The Restore button is the
+   sharpest case: it is a <label> around a visually hidden `type="file"`, so
+   the blanket exception this list replaces armed the text interaction on an
+   input nobody can see, under a button. */
+:is(textarea, [contenteditable="true"], pre, code),
+input:not(
+  [type="button"],
+  [type="checkbox"],
+  [type="color"],
+  [type="date"],
+  [type="file"],
+  [type="image"],
+  [type="radio"],
+  [type="range"],
+  [type="reset"],
+  [type="submit"],
+  [type="time"]
+) {
   user-select: text;
   -webkit-user-select: text;
   -webkit-touch-callout: default;
@@ -555,11 +593,13 @@ body {
    were already rounded to the whole degree. The loop writes a hand's angle on
    its own dial instead, which is small enough to be exact — and a rotation
    that is not continuous from one frame to the next is one nothing may
-   interpolate between. */
-.app-clock {
-  user-select: none;
-  -webkit-user-select: none;
-}
+   interpolate between.
+
+   Nor is there anything here about selection any more. The dial used to turn
+   it off for itself — a press on the face is the day's switch, and a switch
+   that comes back highlighted is a switch that looks broken — but the whole
+   document is unselectable now (see above), which covers the preset cards in
+   the picker as well as the one on Today. */
 
 /* The watch is being set — the tab came back from an hour in the background
    and `useHands` is winding the hands on (see `clock.ts`). `will-change` asks

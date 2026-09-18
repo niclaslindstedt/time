@@ -131,10 +131,20 @@ the times they have — the minutes are only what the _next_ one is assumed to
 take. Removing a kind is still the project form's job (see
 [`projects.md`](projects.md)).
 
-Nothing on the screens is selectable, which is what makes a hold a hold: a
-press held on a label used to be read as the start of a selection, and a drag
-to page between tabs as a drag across a paragraph. Fields and the log viewer's
-text stay selectable.
+Nothing in the app is selectable, which is what makes a hold a hold: a press
+held on a label used to be read as the start of a selection, and a drag to page
+between tabs as a drag across a paragraph. It is the whole app and not only the
+screens — the bars, the toasts and the modals too, since a drag that starts on
+a nav label and ends on the screen is one selection.
+
+On iOS that is also what keeps the glass lens away. A press held on the page
+raises the magnifier the phone places a text caret with, and in an installed
+app that lens is the system's own, filling the screen; there is no property
+that switches it off, so the only thing that reaches it is leaving it nothing
+to select. Fields and the log viewer's text stay selectable and still get the
+lens, which is what it is for — but the pickers do not count as fields for
+this: a time, a date, a file or a slider opens the phone's own control and has
+no text under it to magnify.
 
 ## On a desk
 
