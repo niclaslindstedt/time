@@ -353,6 +353,16 @@ describe("the light each face is lit by", () => {
     }
   });
 
+  it("leaves the day's own two colours off every face", () => {
+    // The accent means *at work* on the ring and the flag means *on a break*.
+    // A face that wore either would be saying the day's word back at it —
+    // the same reason `kinds.ts` refuses both, and the reason burgundy is
+    // lit rose rather than red. Both stay on offer under Custom.
+    for (const face of DIAL_FACES) {
+      expect(FACE_BACKLIGHT[face].color).not.toBe("accent");
+    }
+  });
+
   it("is a different light behind more than half of the eight", () => {
     // Not eight distinct ones — two warm faces may share a lamp — but enough
     // that picking a face is picking a light.
@@ -366,8 +376,7 @@ describe("the light each face is lit by", () => {
     expect(DEFAULT_BACKLIGHT).toBe(
       FACE_BACKLIGHT[DIAL_PRESET[DEFAULT_DIAL_PRESET].face],
     );
-    // Which is the theme's accent: the colour the day's ring is drawn in.
-    expect(DEFAULT_BACKLIGHT.color).toBe("accent");
+    expect(DEFAULT_BACKLIGHT.color).toBe("white");
   });
 });
 
