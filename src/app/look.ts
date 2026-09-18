@@ -302,8 +302,9 @@ export const STEEL = { light: "#f4f6f8", shade: "#7c838c" } as const;
 // ── The hour markers ──
 // The nine ways a dial marks its hours: applied batons (the commonest, with
 // a double at twelve), the long solid blocks of a sixties dress dial — the
-// same baton the whole way out, one wide one at twelve, and no track on the
-// rim — the dots of a diver (a triangle at twelve, batons at the quarters),
+// same baton the whole way out to the ring, one wide one at twelve, a lumed
+// plot on the ring at the end of each, and no track on the rim — the dots of
+// a diver (a triangle at twelve, batons at the quarters),
 // numerals at every hour, Roman numerals, numerals at the quarters only, the
 // 3-6-9 layout of an expedition watch, the tapered wedges of a mid-century
 // dress dial, and a bare minute track with the hours as longer ticks.
@@ -336,6 +337,14 @@ export type DialMarkersSpec = {
   at: (hour: number) => Marker;
   /** Sixty minute ticks round the rim, or a bare rim. */
   minuteTrack: boolean;
+  /** Whether the hours run the whole way out to the day's ring rather than
+   *  stopping short of it, and are finished with a lumed plot printed on the
+   *  ring itself. The sixties dress dial's arrangement: the hour is one long
+   *  block of steel from the middle of the dial to the ring, and the lume is
+   *  a dot on the ring at the end of it — which is also what leaves the
+   *  block plain metal, with nothing painted on it. Only where the markers
+   *  are *inside* the ring is there anything to reach; see `dialLayout`. */
+  reachesRing: boolean;
 };
 
 export const DIAL_MARKER_STYLES: DialMarkers[] = [
@@ -356,29 +365,35 @@ export const DIAL_MARKERS: Record<DialMarkers, DialMarkersSpec> = {
   batons: {
     at: (h) => (h % 12 === 0 ? "doubleBaton" : "baton"),
     minuteTrack: true,
+    reachesRing: false,
   },
   // No track on the rim: the dial this is drawn for prints its minutes on
-  // the ring (see `DIAL_RING.chapter`).
+  // the ring (see `DIAL_RING.chapter`). And no gap before the ring either —
+  // the block runs out to it and the lume is a plot on the ring.
   blocks: {
     at: (h) => (h % 12 === 0 ? "wideBaton" : "baton"),
     minuteTrack: false,
+    reachesRing: true,
   },
   dots: {
     at: (h) => (h % 12 === 0 ? "triangle" : quarter(h) ? "baton" : "dot"),
     minuteTrack: true,
+    reachesRing: false,
   },
-  numerals: { at: () => "arabic", minuteTrack: true },
-  roman: { at: () => "roman", minuteTrack: false },
+  numerals: { at: () => "arabic", minuteTrack: true, reachesRing: false },
+  roman: { at: () => "roman", minuteTrack: false, reachesRing: false },
   quarters: {
     at: (h) => (quarter(h) ? "arabic" : "baton"),
     minuteTrack: true,
+    reachesRing: false,
   },
   threeSixNine: {
     at: (h) => (h % 12 === 0 ? "triangle" : quarter(h) ? "arabic" : "baton"),
     minuteTrack: true,
+    reachesRing: false,
   },
-  wedges: { at: () => "wedge", minuteTrack: false },
-  ticks: { at: () => "tick", minuteTrack: true },
+  wedges: { at: () => "wedge", minuteTrack: false, reachesRing: false },
+  ticks: { at: () => "tick", minuteTrack: true, reachesRing: false },
 };
 
 /** Whether a marker is set in the numerals' typeface. */

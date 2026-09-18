@@ -163,27 +163,30 @@ describe("dialLayout", () => {
         for (const scale of DIAL_SCALES)
           every.push({ placement, markers, font, scale });
 
-  /** Half the widest thing a style draws at a size, the way the layout
-   *  measures it. */
+  /** How far the widest thing a style draws reaches either side of the
+   *  marker's own radius, the way the layout measures it — half a numeral's
+   *  width, or half the applied marker's length, which is what a style that
+   *  runs its hours out to the ring stretches. */
   const reachOf = (
     dial: Pick<DialConfig, "markers" | "font">,
-    size: number,
+    l: ReturnType<typeof dialLayout>,
   ) => {
     const kinds = DIAL_HOURS.map((hour) =>
       DIAL_MARKERS[dial.markers].at(hour % 12),
     );
     const roman = kinds.includes("roman");
     const numerals = kinds.some(isNumeral);
-    const share = numerals
-      ? DIAL_FONT[dial.font].widthFactor * (roman ? ROMAN_WIDTH : 1)
-      : 0.5;
-    return size * share;
+    return numerals
+      ? l.numeralSize *
+          DIAL_FONT[dial.font].widthFactor *
+          (roman ? ROMAN_WIDTH : 1)
+      : l.markerLength / 2;
   };
 
   it("keeps every marker clear of the ring and on the face, whatever the dial", () => {
     for (const dial of every) {
       const l = dialLayout(dial);
-      const reach = reachOf(dial, l.numeralSize);
+      const reach = reachOf(dial, l);
       const where = JSON.stringify(dial);
       const outer = l.markerR + reach;
       const inner = l.markerR - reach;
@@ -192,9 +195,18 @@ describe("dialLayout", () => {
         TRACK_R - 4,
       );
       if (dial.placement === "inside") {
-        expect(outer, `${where} runs into the ring`).toBeLessThanOrEqual(
-          l.ringInner,
-        );
+        if (DIAL_MARKERS[dial.markers].reachesRing) {
+          // These hours are meant to meet the ring: on its inner edge, not
+          // short of it and not over it.
+          expect(outer, `${where} does not reach the ring`).toBeCloseTo(
+            l.ringInner,
+            6,
+          );
+        } else {
+          expect(outer, `${where} runs into the ring`).toBeLessThanOrEqual(
+            l.ringInner,
+          );
+        }
         expect(inner, `${where} leaves no dial`).toBeGreaterThan(40);
       } else if (dial.placement === "outside") {
         expect(inner, `${where} runs into the ring`).toBeGreaterThanOrEqual(
@@ -228,7 +240,7 @@ describe("dialLayout", () => {
       // Inside the ring the markers hang under it at twelve; the name has
       // to clear them too, on every size.
       if (dial.placement === "inside") {
-        const reach = reachOf(dial, l.numeralSize);
+        const reach = reachOf(dial, l);
         expect(
           l.markerR - reach,
           `${where} prints over twelve`,
@@ -262,13 +274,19 @@ describe("dialLayout", () => {
         `${where}: the face's track is on the ring`,
       ).toBeLessThan(l.ringInner);
       expect(tracks.face.inner).toBeLessThan(tracks.face.outer);
-      // And where the markers are inside the ring, the track stops short of
-      // them: a tick that reached a marker would foul the largest hour size.
-      if (dial.placement === "inside") {
+      // And where the markers are inside the ring and stop short of it, the
+      // track stops short of them too: a tick that reached a marker would
+      // foul the largest hour size. The hours that run out to the ring are
+      // the exception — they cross the track, which is what puts them
+      // against the ring rather than against a row of stray ticks.
+      if (
+        dial.placement === "inside" &&
+        !DIAL_MARKERS[dial.markers].reachesRing
+      ) {
         expect(
           tracks.face.inner,
           `${where}: the face's track runs into the markers`,
-        ).toBeGreaterThan(l.markerR + reachOf(dial, l.numeralSize));
+        ).toBeGreaterThan(l.markerR + reachOf(dial, l));
       }
     }
   });
@@ -321,11 +339,71 @@ describe("dialLayout", () => {
       scale: 8,
     });
     expect(l.numeralSize).toBeLessThan(DIAL_SCALE[8]);
-    const reach = reachOf(
-      { markers: "roman", font: "inscribed" },
-      l.numeralSize,
-    );
+    const reach = reachOf({ markers: "roman", font: "inscribed" }, l);
     expect(l.markerR + reach).toBeLessThanOrEqual(TRACK_R - 4);
+  });
+
+  it("runs a dress dial's blocks out to the ring, and finishes them with a plot on it", () => {
+    for (const scale of DIAL_SCALES) {
+      const dial = {
+        placement: "inside",
+        markers: "blocks",
+        font: "light",
+        scale,
+      } as const;
+      const l = dialLayout(dial);
+      const plain = dialLayout({ ...dial, markers: "batons" });
+      // The block ends on the ring's inner edge — where the plain baton of
+      // the same size stops short of it, by the air a marker is given.
+      expect(l.markerR + l.markerLength / 2).toBeCloseTo(l.ringInner, 6);
+      expect(plain.markerR + plain.markerLength / 2).toBeLessThan(
+        l.ringInner - 1,
+      );
+      // It keeps the inner end its size gave it: the hour grows outward to
+      // meet the ring, it does not slide out from under the printing.
+      expect(l.markerR - l.markerLength / 2).toBeCloseTo(
+        plain.markerR - plain.markerLength / 2,
+        6,
+      );
+      expect(l.markerLength).toBeGreaterThan(plain.markerLength);
+      expect(l.markerWidth).toBeCloseTo(plain.markerWidth, 6);
+      // And it crosses the face's track on the way, which is the stray tick
+      // the arrangement is rid of.
+      expect(l.markerR + l.markerLength / 2).toBeGreaterThan(
+        chapterTracks(l.ringInner).face.outer,
+      );
+      // The plot sits on the ring, in the room the ring's own ticks take —
+      // which at an hour is room the minutes are not using, because every
+      // hour is a place the chapter ring prints a numeral.
+      const track = chapterTracks(l.ringInner).ring;
+      expect(l.pip).not.toBeNull();
+      expect(l.pip?.r).toBeCloseTo((track.inner + track.outer) / 2, 6);
+      expect(l.pip?.radius).toBeCloseTo((track.outer - track.inner) / 2, 6);
+      const pip = l.pip;
+      if (!pip) throw new Error("no plot");
+      expect(pip.r - pip.radius).toBeGreaterThanOrEqual(l.ringInner);
+      expect(pip.r + pip.radius).toBeLessThan(l.ringOuter);
+      expect(
+        chapterMarks().filter((m) => m.kind === "tick" && m.angle % 30 === 0),
+      ).toHaveLength(0);
+    }
+  });
+
+  it("leaves the hours where they were on every other dial, and outside the ring", () => {
+    for (const dial of every) {
+      const l = dialLayout(dial);
+      const reaches =
+        DIAL_MARKERS[dial.markers].reachesRing && dial.placement === "inside";
+      // Only a reaching style inside the ring has a plot; nothing else grows
+      // one, and a block placed over or outside the ring has no gap to close.
+      expect(l.pip === null, JSON.stringify(dial)).toBe(!reaches);
+      if (DIAL_MARKERS[dial.markers].reachesRing && !reaches) {
+        expect(l.markerLength).toBeCloseTo(
+          dialLayout({ ...dial, markers: "batons" }).markerLength,
+          6,
+        );
+      }
+    }
   });
 
   it("scales the applied markers with the step", () => {

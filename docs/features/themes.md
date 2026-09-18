@@ -28,17 +28,17 @@ itself — the light as much as the dial. A card's light is held steady rather
 than beating: ten cards beating at ten rates would be a fairground, and what
 a card is showing is the colour and the reach.
 
-| Preset        | The dial                                                                                                  |
-| ------------- | --------------------------------------------------------------------------------------------------------- |
-| **Snowfield** | Textured silver, applied batons, a second hand that glides. The default.                                  |
-| **Abyss**     | The diver: black, dots with a triangle at twelve and batons at the quarters.                              |
-| **Trailhead** | The field watch: every hour numbered in a tall condensed sans, outside the ring.                          |
-| **Summit**    | The expedition dial: 3, 6 and 9 in an engineered sans, batons between.                                    |
-| **Boulevard** | The dress watch: white, Roman numerals in a high-contrast serif, quartz.                                  |
-| **Studio**    | Small geometric numerals at the rim, and nothing else.                                                    |
-| **Tidewater** | A blue sunburst with tapered wedges.                                                                      |
-| **Harvest**   | Champagne, numerals at the quarters in a serif.                                                           |
-| **Uptown**    | The sixties dress watch: silver, long applied blocks, tapered steel hands, the day on a blue minute ring. |
+| Preset        | The dial                                                                                                                                                       |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Snowfield** | Textured silver, applied batons, a second hand that glides. The default.                                                                                       |
+| **Abyss**     | The diver: black, dots with a triangle at twelve and batons at the quarters.                                                                                   |
+| **Trailhead** | The field watch: every hour numbered in a tall condensed sans, outside the ring.                                                                               |
+| **Summit**    | The expedition dial: 3, 6 and 9 in an engineered sans, batons between.                                                                                         |
+| **Boulevard** | The dress watch: white, Roman numerals in a high-contrast serif, quartz.                                                                                       |
+| **Studio**    | Small geometric numerals at the rim, and nothing else.                                                                                                         |
+| **Tidewater** | A blue sunburst with tapered wedges.                                                                                                                           |
+| **Harvest**   | Champagne, numerals at the quarters in a serif.                                                                                                                |
+| **Uptown**    | The sixties dress watch: silver, long applied blocks out to the ring with a lumed plot on it at each hour, tapered steel hands, the day on a blue minute ring. |
 
 ### Custom
 
@@ -60,6 +60,17 @@ is lit by the light its face comes with.
   Arabic **numerals** at every hour; **Roman** numerals; numerals at the
   **quarters** with batons between; the **3 · 6 · 9** layout with a triangle
   at twelve; tapered **wedges**; and bare **ticks** on a minute track.
+
+  The blocks are the one style whose hours run the whole way _out to the
+  ring_ rather than stopping short of it: the block starts where its size
+  puts it and ends on the ring's inner edge, crossing the fine track on the
+  way, and what finishes it is a lumed plot — a filled dot in the ring's own
+  ink — printed on the ring at the hour. The twelve hours are the twelve
+  places a minute ring prints a numeral rather than a tick, so the plots land
+  in room the minutes are not using, and like the minutes they stay printed
+  over whatever colour the day has painted under them. On a dial whose
+  markers sit over or outside the ring there is no gap to close, and the
+  blocks are batons like any other.
 
   Every one of them but the ticks and the numerals is a part _applied_ to the
   dial rather than printed on it, and is drawn as the metal it is. A block, a
