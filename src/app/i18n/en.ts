@@ -364,10 +364,10 @@ export const en = {
     themeSystem: "Device",
     clock: "The clock",
     clockHint:
-      "The dial on Today, as a wrist watch. Pick one of the presets, or Custom and put one together: the face, the markers, the numerals and their size, where they sit against the day's ring, what the ring is, what the hands are, and how the second hand moves.",
+      "The dial on Today, as a wrist watch. Each one comes with the light that suits it. Pick one of the presets, or Custom and put one together: the face, the markers, the numerals and their size, where they sit against the day's ring, what the ring is, what the hands are, how the second hand moves, and the light behind the case.",
     clockPreset: "Dial",
     clockCustom: "Custom",
-    clockCustomHint: "Your own dial, piece by piece.",
+    clockCustomHint: "Your own dial and its light, piece by piece.",
     // The nine presets, named for what they look like.
     preset: {
       snowfield: "Snowfield",
@@ -499,6 +499,8 @@ export const en = {
     backlightSpread: "Spread",
     backlightSpreadHint:
       "How far the light reaches past the case. Turn it down if the glow runs into the bars around a large dial.",
+    backlightFaceHint:
+      "Every face comes with a light of its own — warm behind the dark dials, quiet behind the pale ones. Picking a face above brings its light with it; change it here afterwards if you want another.",
     backlightOff: "Off",
     backlightPercent: "{percent}%",
     calendar: "Week",

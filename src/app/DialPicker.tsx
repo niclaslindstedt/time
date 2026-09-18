@@ -5,6 +5,11 @@ import { Dial, type Band } from "./Dial.tsx";
 import { useT } from "./i18n/index.ts";
 import { CATEGORY_COLORS } from "./labels.ts";
 import {
+  BACKLIGHT_COLOR,
+  BACKLIGHT_COLORS,
+  BACKLIGHT_HZ,
+  BACKLIGHT_INTENSITY,
+  BACKLIGHT_SPREAD,
   DIAL_FACE,
   DIAL_FACES,
   DIAL_FONT,
@@ -18,7 +23,12 @@ import {
   DIAL_RINGS,
   DIAL_SCALE,
   DIAL_SCALES,
+  FACE_BACKLIGHT,
+  glowGeometry,
+  resolveBacklight,
   resolveDial,
+  type Backlight,
+  type BacklightColor,
   type DialConfig,
   type DialFace,
   type DialFont,
@@ -39,7 +49,12 @@ import type { Seconds } from "./types.ts";
 // morning on it and the hands at ten past ten — the choice previews itself,
 // because the dial is on another screen and a name says nothing about what
 // it looks like. Under Custom the same drawing is the live preview of what
-// the eight pickers below it add up to.
+// the pickers below it add up to.
+//
+// Every card is lit by its own backlight as well, steadily rather than
+// beating: the light belongs to the face (`FACE_BACKLIGHT` in `look.ts`), so
+// a card that showed only the dial would be half the choice. A card clips its
+// own halo, so ten lights sit in one grid without spilling into each other.
 //
 // The pickers read and write the caller's settings; nothing here is state.
 
@@ -70,15 +85,28 @@ const SAMPLE: Band[] = [
 type Props = {
   preset: DialPreset | "custom";
   custom: DialConfig;
+  /** The light Custom holds. A preset's own is its face's, looked up. */
+  backlight: Backlight;
   onPreset: (next: DialPreset | "custom") => void;
   onCustom: (next: DialConfig) => void;
+  onBacklight: (next: Backlight) => void;
 };
 
-export function DialPicker({ preset, custom, onPreset, onCustom }: Props) {
+export function DialPicker({
+  preset,
+  custom,
+  backlight,
+  onPreset,
+  onCustom,
+  onBacklight,
+}: Props) {
   const t = useT();
   const current = resolveDial(preset, custom);
+  const glow = resolveBacklight(preset, backlight);
   const set = <K extends keyof DialConfig>(key: K, value: DialConfig[K]) =>
     onCustom({ ...current, [key]: value });
+  const setGlow = <K extends keyof Backlight>(key: K, value: Backlight[K]) =>
+    onBacklight({ ...glow, [key]: value });
 
   return (
     <div className="flex flex-col gap-3">
@@ -94,6 +122,7 @@ export function DialPicker({ preset, custom, onPreset, onCustom }: Props) {
             dial={DIAL_PRESET[id]}
             name={t(`settings.preset.${id}`)}
             hint={t(`settings.presetHint.${id}`)}
+            glow={FACE_BACKLIGHT[DIAL_PRESET[id].face]}
             on={preset === id}
             onPick={() => onPreset(id)}
           />
@@ -103,12 +132,17 @@ export function DialPicker({ preset, custom, onPreset, onCustom }: Props) {
           dial={custom}
           name={t("settings.clockCustom")}
           hint={t("settings.clockCustomHint")}
+          glow={backlight}
           on={preset === "custom"}
           onPick={() => {
             // Custom starts from the dial you are looking at, not from the
             // one you left there last time — the reason to open it up is to
-            // change one thing about this one.
-            if (preset !== "custom") onCustom(current);
+            // change one thing about this one. Its light comes across with
+            // it, which for a preset is the light of the face it wears.
+            if (preset !== "custom") {
+              onCustom(current);
+              onBacklight(glow);
+            }
             onPreset("custom");
           }}
         />
@@ -128,7 +162,13 @@ export function DialPicker({ preset, custom, onPreset, onCustom }: Props) {
                   face={face}
                   name={t(`settings.face.${face}`)}
                   on={current.face === face}
-                  onPick={() => set("face", face)}
+                  onPick={() => {
+                    // A face brings its own light. Tuning one afterwards is
+                    // what the four knobs below are for, and picking the
+                    // face again is how you get back to where it started.
+                    set("face", face);
+                    onBacklight(FACE_BACKLIGHT[face]);
+                  }}
                 />
               ))}
             </div>
@@ -249,6 +289,81 @@ export function DialPicker({ preset, custom, onPreset, onCustom }: Props) {
               {t(`settings.movementHint.${current.movement}`)}
             </p>
           </Labelled>
+
+          {/* The light behind the case. It lives here rather than out in the
+              settings because it belongs to the face: a preset is lit by its
+              own, and this is where a dial is taken apart. Its colour is the
+              watch's rather than the theme's — see `look.ts` for why that is
+              not a palette. */}
+          <Labelled label={t("settings.backlight")}>
+            <p className="text-xs text-muted">{t("settings.backlightHint")}</p>
+            <div
+              role="radiogroup"
+              aria-label={t("settings.backlightColor")}
+              className="flex flex-wrap gap-2"
+            >
+              {BACKLIGHT_COLORS.map((color) => (
+                <GlowSwatch
+                  key={color}
+                  color={color}
+                  name={t(
+                    `settings.backlightColorName.${color}` as "settings.backlightColorName.accent",
+                  )}
+                  on={glow.color === color}
+                  onPick={() => setGlow("color", color)}
+                />
+              ))}
+            </div>
+            <Slider
+              label={t("settings.backlightBeat")}
+              value={glow.hz}
+              min={BACKLIGHT_HZ.min}
+              max={BACKLIGHT_HZ.max}
+              step={BACKLIGHT_HZ.step}
+              display={
+                glow.hz === 0
+                  ? t("settings.backlightSteady")
+                  : t("settings.backlightHz", { hz: glow.hz.toFixed(2) })
+              }
+              onChange={(hz) => setGlow("hz", hz)}
+            />
+            <Slider
+              label={t("settings.backlightIntensity")}
+              value={glow.intensity}
+              min={BACKLIGHT_INTENSITY.min}
+              max={BACKLIGHT_INTENSITY.max}
+              step={BACKLIGHT_INTENSITY.step}
+              display={
+                glow.intensity === 0
+                  ? t("settings.backlightOff")
+                  : t("settings.backlightPercent", {
+                      percent: String(glow.intensity),
+                    })
+              }
+              onChange={(intensity) => setGlow("intensity", intensity)}
+            />
+            {/* How far the light lands, as against how strong it is. A large
+                dial has little room around it, and a halo wider than that
+                room runs into the bars and is cut off at them — so the reach
+                is a knob of its own rather than a constant. */}
+            <Slider
+              label={t("settings.backlightSpread")}
+              value={glow.spread}
+              min={BACKLIGHT_SPREAD.min}
+              max={BACKLIGHT_SPREAD.max}
+              step={BACKLIGHT_SPREAD.step}
+              display={t("settings.backlightPercent", {
+                percent: String(glow.spread),
+              })}
+              onChange={(spread) => setGlow("spread", spread)}
+            />
+            <p className="text-xs text-muted">
+              {t("settings.backlightSpreadHint")}
+            </p>
+            <p className="text-xs text-muted">
+              {t("settings.backlightFaceHint")}
+            </p>
+          </Labelled>
         </div>
       )}
     </div>
@@ -260,6 +375,7 @@ function PresetCard({
   dial,
   name,
   hint,
+  glow,
   on,
   onPick,
 }: {
@@ -267,9 +383,11 @@ function PresetCard({
   dial: DialConfig;
   name: string;
   hint: string;
+  glow: Backlight;
   on: boolean;
   onPick: () => void;
 }) {
+  const halo = glowGeometry(glow.spread);
   return (
     <button
       type="button"
@@ -278,22 +396,45 @@ function PresetCard({
       aria-label={`${name}. ${hint}`}
       title={hint}
       onClick={onPick}
-      className={`flex flex-col items-center gap-1.5 rounded-xl border p-2 transition-colors ${
+      className={`relative flex flex-col items-center gap-1.5 overflow-hidden rounded-xl border p-2 transition-colors ${
         on
           ? "border-accent bg-accent/10"
           : "border-line bg-surface-3 hover:bg-surface-2"
       }`}
     >
+      {/* The card's own light, drawn as Today draws it but held steady: ten
+          cards beating at ten rates would be a fairground, and what is being
+          shown here is the colour and the reach rather than the beat. It is
+          behind the drawing and clipped by the card, so a wide halo lights
+          this tile and not its neighbours. */}
+      <span
+        aria-hidden="true"
+        data-state="working"
+        data-beat="off"
+        className="app-glow"
+        style={
+          {
+            "--glow-color": BACKLIGHT_COLOR[glow.color],
+            "--glow-alpha": glow.intensity / 100,
+            "--glow-inset": `${halo.inset}%`,
+            "--glow-hold": `${halo.hold}%`,
+            "--glow-fade": `${halo.fade}%`,
+            "--glow-blur": `${halo.blur}px`,
+          } as Record<string, string | number>
+        }
+      />
       <Dial
         id={`preset-${id}`}
         dial={dial}
         now={SHOWROOM}
         bands={SAMPLE}
         ariaHidden
-        className="block h-auto w-full"
+        className="relative block h-auto w-full"
       />
       <span
-        className={`text-xs font-semibold ${on ? "text-fg-bright" : "text-fg"}`}
+        className={`relative text-xs font-semibold ${
+          on ? "text-fg-bright" : "text-fg"
+        }`}
       >
         {name}
       </span>
@@ -330,6 +471,83 @@ function Swatch({
         background: `radial-gradient(circle at 40% 35%, ${spec.dial}, ${spec.edge})`,
       }}
     />
+  );
+}
+
+/** A backlight colour, as a lit dot: the one picker about a light, drawn as
+ *  the light rather than named. */
+function GlowSwatch({
+  color,
+  name,
+  on,
+  onPick,
+}: {
+  color: BacklightColor;
+  name: string;
+  on: boolean;
+  onPick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={on}
+      aria-label={name}
+      title={name}
+      onClick={onPick}
+      className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${
+        on ? "border-fg-bright" : "border-transparent hover:border-line"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className="h-5 w-5 rounded-full shadow-[0_0_10px_var(--swatch)]"
+        style={
+          {
+            background: BACKLIGHT_COLOR[color],
+            "--swatch": BACKLIGHT_COLOR[color],
+          } as Record<string, string>
+        }
+      />
+    </button>
+  );
+}
+
+/** A native range, with its value said in words beside the label — a slider
+ *  on its own is a question with no answer. */
+function Slider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  display,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  display: string;
+  onChange: (next: number) => void;
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="flex items-center justify-between text-xs">
+        <span className="text-fg">{label}</span>
+        <span className="text-muted tabular-nums">{display}</span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.currentTarget.value))}
+        className="app-range w-full"
+      />
+    </label>
   );
 }
 

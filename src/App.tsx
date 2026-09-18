@@ -29,7 +29,7 @@ import { demoBackendModule, useDemoData } from "./app/dev/useDemoData.ts";
 import { ProjectsScreen } from "./app/ProjectsScreen.tsx";
 import { useT } from "./app/i18n/index.ts";
 import { LogScreen } from "./app/LogScreen.tsx";
-import { appearanceFor, resolveDial } from "./app/look.ts";
+import { appearanceFor, resolveBacklight, resolveDial } from "./app/look.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { ReportScreen } from "./app/ReportScreen.tsx";
@@ -207,7 +207,7 @@ export function App() {
       weekStartsOn={settings.weekStartsOn}
       dial={resolveDial(settings.clockPreset, settings.clock)}
       clockSize={settings.clockSize}
-      backlight={settings.backlight}
+      backlight={resolveBacklight(settings.clockPreset, settings.backlight)}
       reflect={settings.reflect}
       onAddProject={() => {
         setOpenNewProject(true);
