@@ -2,6 +2,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  BACKLIGHT_COLOR,
+  BACKLIGHT_COLORS,
+  BACKLIGHT_HZ,
+  BACKLIGHT_INTENSITY,
   BACKLIGHT_SPREAD,
   CLOCK_SIZE,
   CLOCK_SIZES,
@@ -24,10 +28,12 @@ import {
   DIAL_RINGS,
   DIAL_SCALE,
   DIAL_SCALES,
+  FACE_BACKLIGHT,
   STEEL,
   glowGeometry,
   isApplied,
   isNumeral,
+  resolveBacklight,
   resolveDial,
   type DialConfig,
 } from "../src/app/look.ts";
@@ -300,6 +306,95 @@ describe("the presets", () => {
     );
     expect([...movements].sort()).toEqual([...DIAL_MOVEMENTS].sort());
     expect([...placements].sort()).toEqual([...DIAL_PLACEMENTS].sort());
+  });
+});
+
+describe("the light each face is lit by", () => {
+  it("has one light behind every face, and no light without a face", () => {
+    expect(Object.keys(FACE_BACKLIGHT).sort()).toEqual([...DIAL_FACES].sort());
+  });
+
+  it("is made of the colours and the ranges the settings offer", () => {
+    for (const face of DIAL_FACES) {
+      const light = FACE_BACKLIGHT[face];
+      expect(BACKLIGHT_COLORS).toContain(light.color);
+      expect(BACKLIGHT_COLOR[light.color]).toBeTruthy();
+      expect(light.hz).toBeGreaterThanOrEqual(BACKLIGHT_HZ.min);
+      expect(light.hz).toBeLessThanOrEqual(BACKLIGHT_HZ.max);
+      expect(light.intensity).toBeGreaterThanOrEqual(BACKLIGHT_INTENSITY.min);
+      expect(light.intensity).toBeLessThanOrEqual(BACKLIGHT_INTENSITY.max);
+      expect(light.spread).toBeGreaterThanOrEqual(BACKLIGHT_SPREAD.min);
+      expect(light.spread).toBeLessThanOrEqual(BACKLIGHT_SPREAD.max);
+    }
+  });
+
+  it("lands on a step of each slider, so a knob shows the face's own value", () => {
+    const steps = (value: number, step: number) =>
+      expect(Math.round(value / step) * step).toBeCloseTo(value, 6);
+    for (const face of DIAL_FACES) {
+      const light = FACE_BACKLIGHT[face];
+      steps(light.hz, BACKLIGHT_HZ.step);
+      steps(light.intensity, BACKLIGHT_INTENSITY.step);
+      steps(light.spread, BACKLIGHT_SPREAD.step);
+    }
+  });
+
+  it("lights a dark face at least as strongly, and as widely, as a pale one", () => {
+    // A dark dial is a shape the light is most of what shows of; a halo that
+    // blazed round a white dress dial would be the only thing in the room.
+    const of = (dark: boolean, key: "intensity" | "spread") =>
+      DIAL_FACES.filter((face) => DIAL_FACE[face].dark === dark).map(
+        (face) => FACE_BACKLIGHT[face][key],
+      );
+    for (const key of ["intensity", "spread"] as const) {
+      expect(Math.min(...of(true, key))).toBeGreaterThanOrEqual(
+        Math.max(...of(false, key)),
+      );
+    }
+  });
+
+  it("is a different light behind more than half of the eight", () => {
+    // Not eight distinct ones — two warm faces may share a lamp — but enough
+    // that picking a face is picking a light.
+    const seen = new Set(
+      DIAL_FACES.map((face) => JSON.stringify(FACE_BACKLIGHT[face])),
+    );
+    expect(seen.size).toBeGreaterThan(4);
+  });
+
+  it("gives a fresh install the default dial's own light", () => {
+    expect(DEFAULT_BACKLIGHT).toBe(
+      FACE_BACKLIGHT[DIAL_PRESET[DEFAULT_DIAL_PRESET].face],
+    );
+    // Which is the theme's accent: the colour the day's ring is drawn in.
+    expect(DEFAULT_BACKLIGHT.color).toBe("accent");
+  });
+});
+
+describe("resolveBacklight", () => {
+  const custom = { color: "violet", hz: 1, intensity: 35, spread: 20 } as const;
+
+  it("lights a preset with its face's own light, looked up rather than copied", () => {
+    for (const id of DIAL_PRESETS) {
+      expect(resolveBacklight(id, custom)).toBe(
+        FACE_BACKLIGHT[DIAL_PRESET[id].face],
+      );
+    }
+  });
+
+  it("leaves the stored light alone under Custom", () => {
+    expect(resolveBacklight("custom", custom)).toBe(custom);
+  });
+
+  it("lights two presets on the same face the same way", () => {
+    // Abyss, Trailhead and Summit are all black dials, so all three glow
+    // alike however differently they are printed.
+    expect(resolveBacklight("abyss", custom)).toBe(
+      resolveBacklight("summit", custom),
+    );
+    expect(resolveBacklight("trailhead", custom)).toBe(
+      resolveBacklight("abyss", custom),
+    );
   });
 });
 

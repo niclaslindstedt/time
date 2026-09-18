@@ -27,15 +27,7 @@ import { requestTilt, tiltSupport } from "./useTilt.ts";
 import { mergeDocs } from "./merge.ts";
 import { serializeDoc } from "./migrations.ts";
 import { emptyDoc } from "./types.ts";
-import {
-  BACKLIGHT_COLOR,
-  BACKLIGHT_COLORS,
-  BACKLIGHT_HZ,
-  BACKLIGHT_INTENSITY,
-  BACKLIGHT_SPREAD,
-  CLOCK_SIZES,
-  type ClockSize,
-} from "./look.ts";
+import { CLOCK_SIZES, type ClockSize } from "./look.ts";
 import type { AppSettings, ThemeChoice } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
 import {
@@ -129,8 +121,10 @@ export function SettingsScreen({
         <DialPicker
           preset={settings.clockPreset}
           custom={settings.clock}
+          backlight={settings.backlight}
           onPreset={(next) => update("clockPreset", next)}
           onCustom={(next) => update("clock", next)}
+          onBacklight={(next) => update("backlight", next)}
         />
         <Labelled label={t("settings.clockSize")}>
           <SegmentedControl<ClockSize>
@@ -176,106 +170,6 @@ export function SettingsScreen({
             )}
           </>
         )}
-        {/* The light behind the case. Its colour is the watch's own, like
-            the face's — see `look.ts` for why that is not a palette. */}
-        <Labelled label={t("settings.backlight")}>
-          <p className="text-xs text-muted">{t("settings.backlightHint")}</p>
-          <div
-            role="radiogroup"
-            aria-label={t("settings.backlightColor")}
-            className="flex flex-wrap gap-2"
-          >
-            {BACKLIGHT_COLORS.map((color) => {
-              const on = settings.backlight.color === color;
-              const name = t(
-                `settings.backlightColorName.${color}` as "settings.backlightColorName.accent",
-              );
-              return (
-                <button
-                  key={color}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  aria-label={name}
-                  title={name}
-                  onClick={() =>
-                    update("backlight", { ...settings.backlight, color })
-                  }
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${
-                    on
-                      ? "border-fg-bright"
-                      : "border-transparent hover:border-line"
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="h-5 w-5 rounded-full shadow-[0_0_10px_var(--swatch)]"
-                    style={
-                      {
-                        background: BACKLIGHT_COLOR[color],
-                        "--swatch": BACKLIGHT_COLOR[color],
-                      } as Record<string, string>
-                    }
-                  />
-                </button>
-              );
-            })}
-          </div>
-          <Slider
-            label={t("settings.backlightBeat")}
-            value={settings.backlight.hz}
-            min={BACKLIGHT_HZ.min}
-            max={BACKLIGHT_HZ.max}
-            step={BACKLIGHT_HZ.step}
-            display={
-              settings.backlight.hz === 0
-                ? t("settings.backlightSteady")
-                : t("settings.backlightHz", {
-                    hz: settings.backlight.hz.toFixed(2),
-                  })
-            }
-            onChange={(hz) =>
-              update("backlight", { ...settings.backlight, hz })
-            }
-          />
-          <Slider
-            label={t("settings.backlightIntensity")}
-            value={settings.backlight.intensity}
-            min={BACKLIGHT_INTENSITY.min}
-            max={BACKLIGHT_INTENSITY.max}
-            step={BACKLIGHT_INTENSITY.step}
-            display={
-              settings.backlight.intensity === 0
-                ? t("settings.backlightOff")
-                : t("settings.backlightPercent", {
-                    percent: String(settings.backlight.intensity),
-                  })
-            }
-            onChange={(intensity) =>
-              update("backlight", { ...settings.backlight, intensity })
-            }
-          />
-          {/* How far the light lands, as against how strong it is. A large
-              dial has little room around it, and a halo wider than that room
-              runs into the bars and is cut off at them — so the reach is a
-              knob of its own rather than a constant. */}
-          <Slider
-            label={t("settings.backlightSpread")}
-            value={settings.backlight.spread}
-            min={BACKLIGHT_SPREAD.min}
-            max={BACKLIGHT_SPREAD.max}
-            step={BACKLIGHT_SPREAD.step}
-            display={t("settings.backlightPercent", {
-              percent: String(settings.backlight.spread),
-            })}
-            onChange={(spread) =>
-              update("backlight", { ...settings.backlight, spread })
-            }
-          />
-          <p className="text-xs text-muted">
-            {t("settings.backlightSpreadHint")}
-          </p>
-        </Labelled>
       </Section>
 
       <Section
@@ -502,43 +396,5 @@ function Labelled({
       <span className="text-xs font-medium text-fg">{label}</span>
       {children}
     </div>
-  );
-}
-
-/** A native range, with its value said in words beside the label — a slider
- *  on its own is a question with no answer. */
-function Slider({
-  label,
-  value,
-  min,
-  max,
-  step,
-  display,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  display: string;
-  onChange: (next: number) => void;
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="flex items-center justify-between text-xs">
-        <span className="text-fg">{label}</span>
-        <span className="text-muted tabular-nums">{display}</span>
-      </span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.currentTarget.value))}
-        className="app-range w-full"
-      />
-    </label>
   );
 }

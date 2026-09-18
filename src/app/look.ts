@@ -744,8 +744,16 @@ export const CLOCK_SIZE: Record<ClockSize, ClockSizeSpec> = {
 // beats while the day is being counted, holds steady and dimmer on a break,
 // and is off when you are not working. Like the face, it is the watch's own
 // light rather than the theme's — a colour an object has — so it may be any
-// of these without being a palette. The default is the theme's accent, so a
-// fresh install glows in the colour the ring already uses.
+// of these without being a palette.
+//
+// Which is also why the light belongs to the *face* rather than to the app.
+// A black instrument dial is lit by a warm lamp and a white dress dial by a
+// quiet one; a dial that kept the last face's light would read as two
+// watches at once. So every face has a light of its own (`FACE_BACKLIGHT`),
+// a preset is lit by its face's, and the four knobs are opened up under
+// Custom — the same place the rest of the dial is taken apart. The default
+// is silver's, which is the theme's accent, so a fresh install still glows
+// in the colour the ring already uses.
 //
 // Four knobs: the colour, the beat, how strong the light is, and how far it
 // reaches. The last two are not the same thing — a dim wide halo and a
@@ -800,12 +808,49 @@ export const BACKLIGHT_HZ = { min: 0, max: 2, step: 0.05 };
 export const BACKLIGHT_INTENSITY = { min: 0, max: 100, step: 5 };
 export const BACKLIGHT_SPREAD = { min: 0, max: 100, step: 5 };
 
-export const DEFAULT_BACKLIGHT: Backlight = {
-  color: "accent",
-  hz: 0.25,
-  intensity: 60,
-  spread: 50,
+/** The light each face is lit by: a colour that belongs with the dial, and a
+ *  beat, a brightness and a reach in the same spirit. Two rules run through
+ *  it. The colour is the face's own character rather than a match of its
+ *  paint — a warm lamp behind the instrument dials, a cool one behind the
+ *  cold faces, the theme's accent behind the neutral silver, which is where
+ *  the app's default light comes from. And a dark face is lit more strongly
+ *  and more widely than a light one: a dark dial is a shape the light is all
+ *  that shows of, while a halo that blazed round a white dress dial would be
+ *  the only thing in the room. */
+export const FACE_BACKLIGHT: Record<DialFace, Backlight> = {
+  // A crisp white dial: a white light, close in and quiet.
+  white: { color: "white", hz: 0.2, intensity: 45, spread: 35 },
+  // Neutral silver takes the theme's own accent — the colour the day's ring
+  // is already drawn in — which is the light the app has always had.
+  silver: { color: "accent", hz: 0.25, intensity: 60, spread: 50 },
+  // Cool grey, so a cool light, and a quicker beat: this is the technical one.
+  slate: { color: "teal", hz: 0.3, intensity: 60, spread: 50 },
+  // The instrument dial, lit the way an instrument is: a warm lamp, the
+  // strongest and widest of the eight, beating slowly.
+  black: { color: "amber", hz: 0.2, intensity: 70, spread: 60 },
+  blue: { color: "blue", hz: 0.3, intensity: 65, spread: 55 },
+  green: { color: "green", hz: 0.25, intensity: 60, spread: 50 },
+  // The two dress faces breathe slowest: a formal watch does not blink at you.
+  burgundy: { color: "rose", hz: 0.15, intensity: 60, spread: 50 },
+  champagne: { color: "amber", hz: 0.15, intensity: 50, spread: 40 },
 };
+
+/** The light a fresh install glows with: the default dial's face's own, so
+ *  the default watch and its light are one choice rather than two. */
+export const DEFAULT_BACKLIGHT: Backlight =
+  FACE_BACKLIGHT[DIAL_PRESET[DEFAULT_DIAL_PRESET].face];
+
+/** The light a dial choice resolves to, the way `resolveDial` resolves the
+ *  dial: a preset is lit by its face's own light, and Custom by the one the
+ *  settings hold. Stored per device like the rest of the look. */
+export function resolveBacklight(
+  preset: DialPreset | "custom",
+  custom: Backlight,
+): Backlight {
+  return preset === "custom"
+    ? custom
+    : FACE_BACKLIGHT[DIAL_PRESET[preset].face];
+}
 
 /** The glow's geometry, in the numbers `.app-glow` is drawn from: how far
  *  the disc is inflated past the dial, where along its radius the light

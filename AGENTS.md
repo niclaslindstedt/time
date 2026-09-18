@@ -172,7 +172,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   steel), the three movements, and the nine presets they combine into. Also
   `STEEL`, the one metal every applied part is made of, and `markerProfile`,
   which says whether a marker is a roof, a dome or print — the difference
-  between a part screwed to the dial and something written on it. Every option is an id and a spec, so the
+  between a part screwed to the dial and something written on it. And the
+  backlight: `FACE_BACKLIGHT`, the light each of the eight faces is lit by —
+  warm behind the dark dials, quiet behind the pale ones, the theme's accent
+  behind the neutral silver — which `resolveBacklight` looks a preset's light
+  up in the way `resolveDial` looks its dial up, so a dial is one choice
+  rather than two and only Custom takes the four knobs apart. Every option is an id and a spec, so the
   settings can validate and the tests can walk them.
 - `src/app/sheen.ts` — where the light is, and what it does to the dial's
   metal. A `Light` is a bearing on the dial and how far off the crystal it
@@ -412,6 +417,7 @@ regression.
 | A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there; anything else on the dial that has to move with them is cut at `windMoment` and written from that loop too                                              |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
 | Something only the desk does                       | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                                                                                                                                  |
+| A change to the light behind the case              | `src/app/look.ts` (`FACE_BACKLIGHT`, the light a face is lit by, and `resolveBacklight` — walked by `tests/look_test.ts`) + `DialPicker.tsx`, which is the only screen the knobs are on; never a second backlight table                                                                |
 | A new face, marker, typeface, ring, hand or preset | Run the `add-watch-face` skill (`.agents/skills/add-watch-face/`): `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, `main.tsx` for a bundled `@fontsource` family, and `make shots` to look at it — named for what it looks like, never for a maker |
 | A change to the Report's month chart               | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                                                                                                                                                                       |
 | A change to the Report's week chart                | `src/app/dayBars.ts` (how a day splits at its target, tested in `tests/dayBars_test.ts`) or `DayBars.tsx` (paint)                                                                                                                                                                      |
