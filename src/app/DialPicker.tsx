@@ -58,6 +58,13 @@ import type { Seconds } from "./types.ts";
 //
 // The pickers read and write the caller's settings; nothing here is state.
 
+/** How much of its light a preset card is lit by. A card is nearly all
+ *  dial, so the halo is cropped at the tile's edge before it has fallen off
+ *  — at full strength the brightest lights come out as a flat wash of
+ *  colour rather than a glow behind a watch. The dial on Today has the
+ *  screen to fall off into and is drawn at its own strength. */
+const CARD_GLOW = 0.55;
+
 /** Ten past ten, the time a watch is photographed at: the hands frame the
  *  marker at twelve and hide none of the quarters. */
 const SHOWROOM: Seconds = 10 * 3600 + 9 * 60 + 36;
@@ -402,11 +409,12 @@ function PresetCard({
           : "border-line bg-surface-3 hover:bg-surface-2"
       }`}
     >
-      {/* The card's own light, drawn as Today draws it but held steady: ten
-          cards beating at ten rates would be a fairground, and what is being
-          shown here is the colour and the reach rather than the beat. It is
-          behind the drawing and clipped by the card, so a wide halo lights
-          this tile and not its neighbours. */}
+      {/* The card's own light, held steady: ten cards beating at ten rates
+          would be a fairground, and what a card shows is the colour and the
+          reach rather than the beat. It is behind the drawing and clipped by
+          the card, so a wide halo lights this tile and not its neighbours —
+          and dimmed by `CARD_GLOW`, because that clip is also what would
+          make it a flat wash. */}
       <span
         aria-hidden="true"
         data-state="working"
@@ -415,7 +423,7 @@ function PresetCard({
         style={
           {
             "--glow-color": BACKLIGHT_COLOR[glow.color],
-            "--glow-alpha": glow.intensity / 100,
+            "--glow-alpha": (glow.intensity / 100) * CARD_GLOW,
             "--glow-inset": `${halo.inset}%`,
             "--glow-hold": `${halo.hold}%`,
             "--glow-fade": `${halo.fade}%`,
