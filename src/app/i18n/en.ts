@@ -187,7 +187,7 @@ export const en = {
     invalid: "The end has to come after the start.",
     tooManyOpen: "Something of this kind is already running.",
     delete: "Delete",
-    deleteConfirm: "Delete this {kind}?",
+    deleteAgain: "Press again to delete",
   },
 
   report: {

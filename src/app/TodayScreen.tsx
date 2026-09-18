@@ -432,7 +432,7 @@ export function TodayScreen({
         <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
           {t("today.breaks")}
         </h2>
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+        <div className="flex flex-wrap gap-2 lg:flex-col">
           {project.breakTypes.map((b) => {
             const running = current?.typeId === b.id;
             return (
@@ -453,7 +453,7 @@ export function TodayScreen({
                         minutes: String(b.defaultMinutes),
                       })
                 } · ${t("today.holdToEdit")}`}
-                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors lg:justify-start ${
+                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors lg:min-h-12 lg:rounded-xl lg:font-semibold ${
                   out ? "opacity-40" : ""
                 } ${
                   running
@@ -480,7 +480,7 @@ export function TodayScreen({
             type="button"
             disabled={state === "out"}
             onClick={() => setAsking({ kind: "break", id: null })}
-            className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent px-3 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 lg:justify-start"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-line bg-transparent px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 lg:min-h-12 lg:rounded-xl lg:font-semibold"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
             <span className="truncate">{t("today.custom")}</span>

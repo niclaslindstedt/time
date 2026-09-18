@@ -3,7 +3,6 @@ import { useState } from "react";
 
 import {
   Button,
-  ConfirmDialog,
   LabeledInput,
   Modal,
   SegmentedControl,
@@ -15,6 +14,7 @@ import { parseTimeOfDay, toTimeInput } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
 import type { Project, Seconds } from "./types.ts";
+import { useConfirmPress } from "./useConfirmPress.ts";
 
 // The one editor behind every row in the Log: a kind (for a break or an
 // activity), a start, an end, and whether the span is still running. It edits
@@ -73,7 +73,7 @@ export function SpanEditModal({
         end: now,
       },
   );
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmDelete = useConfirmPress(() => onDelete?.());
 
   const running = draft.end === null;
   const valid =
@@ -82,119 +82,106 @@ export function SpanEditModal({
   const kindLabel = t(`editor.kind.${kind}` as const);
 
   return (
-    <>
-      <Modal
-        open
-        onClose={onClose}
-        labelledBy="span-editor-title"
-        closeLabel={t("common.close")}
-        centered
-        size="max-w-sm"
-      >
-        <ModalHeader
-          titleId="span-editor-title"
-          title={
-            initial
-              ? t("log.edit", { kind: kindLabel })
-              : t("log.add", { kind: kindLabel })
-          }
-          onCancel={onClose}
-          onSave={() => onSave(draft)}
-          saveDisabled={!valid}
-        />
+    <Modal
+      open
+      onClose={onClose}
+      labelledBy="span-editor-title"
+      closeLabel={t("common.close")}
+      centered
+      size="max-w-sm"
+    >
+      <ModalHeader
+        titleId="span-editor-title"
+        title={
+          initial
+            ? t("log.edit", { kind: kindLabel })
+            : t("log.add", { kind: kindLabel })
+        }
+        onCancel={onClose}
+        onSave={() => onSave(draft)}
+        saveDisabled={!valid}
+      />
 
-        <div className="flex flex-col gap-4 overflow-y-auto px-3 py-4">
-          {options.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-muted">
-                {kind === "break" ? t("editor.type") : t("editor.category")}
-              </span>
-              <SegmentedControl
-                value={draft.typeId ?? ""}
-                options={options}
-                onChange={(typeId) => setDraft((d) => ({ ...d, typeId }))}
-                ariaLabel={
-                  kind === "break" ? t("editor.type") : t("editor.category")
-                }
-                fullWidth
-              />
-            </div>
-          )}
-
-          {/* `min-w-0` on the columns and on the fields inside them: a
-              native time input has an intrinsic width of its own, and
-              without a zero minimum the pair pushes the modal's content
-              wider than the card — which on a phone clips the right-hand
-              field and everything under it. */}
-          <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
-            <LabeledInput
-              label={t("editor.start")}
-              type="time"
-              value={toTimeInput(draft.start)}
-              onCommit={(text) => {
-                const s = parseTimeOfDay(text);
-                if (s !== null) setDraft((d) => ({ ...d, start: s }));
-              }}
-            />
-            <LabeledInput
-              key={running ? "running" : "ended"}
-              label={t("editor.end")}
-              type="time"
-              disabled={running}
-              value={running ? "" : toTimeInput(draft.end ?? now)}
-              onCommit={(text) => {
-                const s = parseTimeOfDay(text);
-                if (s === null) return;
-                // An end typed before the start on the clock is the next
-                // day's — a night shift, or a lunch that ran past midnight.
-                setDraft((d) => ({
-                  ...d,
-                  end: s < d.start ? s + 86_400 : s,
-                }));
-              }}
+      <div className="flex flex-col gap-4 overflow-y-auto px-3 py-4">
+        {options.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted">
+              {kind === "break" ? t("editor.type") : t("editor.category")}
+            </span>
+            <SegmentedControl
+              value={draft.typeId ?? ""}
+              options={options}
+              onChange={(typeId) => setDraft((d) => ({ ...d, typeId }))}
+              ariaLabel={
+                kind === "break" ? t("editor.type") : t("editor.category")
+              }
+              fullWidth
             />
           </div>
-          <ToggleRow
-            label={t("editor.running")}
-            checked={running}
-            onChange={(next) =>
+        )}
+
+        {/* `min-w-0` on the columns and on the fields inside them: a
+            native time input has an intrinsic width of its own, and
+            without a zero minimum the pair pushes the modal's content
+            wider than the card — which on a phone clips the right-hand
+            field and everything under it. */}
+        <div className="grid grid-cols-2 gap-2 [&>*]:min-w-0">
+          <LabeledInput
+            label={t("editor.start")}
+            type="time"
+            value={toTimeInput(draft.start)}
+            onCommit={(text) => {
+              const s = parseTimeOfDay(text);
+              if (s !== null) setDraft((d) => ({ ...d, start: s }));
+            }}
+          />
+          <LabeledInput
+            key={running ? "running" : "ended"}
+            label={t("editor.end")}
+            type="time"
+            disabled={running}
+            value={running ? "" : toTimeInput(draft.end ?? now)}
+            onCommit={(text) => {
+              const s = parseTimeOfDay(text);
+              if (s === null) return;
+              // An end typed before the start on the clock is the next
+              // day's — a night shift, or a lunch that ran past midnight.
               setDraft((d) => ({
                 ...d,
-                end: next ? null : Math.max(d.start + 60, now),
-              }))
-            }
+                end: s < d.start ? s + 86_400 : s,
+              }));
+            }}
           />
-          {!valid && (
-            <p className="text-xs text-danger">{t("editor.invalid")}</p>
-          )}
-
-          {/* The one thing left down here: deleting the span is neither
-              saving nor abandoning the draft, and it wants to be away from
-              the two buttons that are. */}
-          {initial && onDelete && (
-            <Button
-              variant="danger"
-              className="w-full"
-              onClick={() => setConfirmDelete(true)}
-            >
-              {t("editor.delete")}
-            </Button>
-          )}
         </div>
-      </Modal>
+        <ToggleRow
+          label={t("editor.running")}
+          checked={running}
+          onChange={(next) =>
+            setDraft((d) => ({
+              ...d,
+              end: next ? null : Math.max(d.start + 60, now),
+            }))
+          }
+        />
+        {!valid && <p className="text-xs text-danger">{t("editor.invalid")}</p>}
 
-      <ConfirmDialog
-        open={confirmDelete}
-        title={t("editor.deleteConfirm", { kind: kindLabel })}
-        confirmLabel={t("common.delete")}
-        tone="danger"
-        labels={{ cancel: t("common.cancel"), close: t("common.close") }}
-        onConfirm={() => {
-          setConfirmDelete(false);
-          onDelete?.();
-        }}
-        onCancel={() => setConfirmDelete(false)}
-      />
-    </>
+        {/* The one thing left down here: deleting the span is neither
+            saving nor abandoning the draft, and it wants to be away from
+            the two buttons that are. It asks in its own label rather than
+            behind a second card — the first press arms it, the second
+            deletes (see `useConfirmPress.ts`). */}
+        {initial && onDelete && (
+          <Button
+            variant="danger"
+            className={`w-full ${confirmDelete.armed ? "ring-1 ring-danger" : ""}`}
+            onClick={confirmDelete.press}
+            onBlur={confirmDelete.disarm}
+            aria-live="polite"
+          >
+            {confirmDelete.armed ? t("editor.deleteAgain") : t("editor.delete")}
+          </Button>
+        )}
+      </div>
+    </Modal>
   );
 }

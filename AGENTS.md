@@ -335,6 +335,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   selectable (`html` in `styles.css`, with text fields and code blocks put
   back) — a press held on a label is otherwise the start of a selection, and
   on iOS the start of the glass lens a caret is placed with.
+- `src/app/useConfirmPress.ts` — a button that asks in its own label rather
+  than behind a card: the first press arms it, the second does the thing, and
+  it disarms itself after a few seconds or when the focus leaves. The span
+  editor's Delete is what it was written for — a dialog over a sheet to ask
+  one question is a second card the eye has to find, and the two presses are
+  the same two taps either way.
 - `src/app/ModalHeader.tsx` — the top bar of every modal that is saved or
   abandoned: cancel on the left, the title between, save on the right. It is
   a sibling of the modal's scrolling body, so it stays put over a long form —
@@ -429,6 +435,7 @@ regression.
 | A new control on the span editor                   | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                                                                                                                                                                 |
 | A change to what a kind of break or work wears     | `src/app/KindModal.tsx` (the form, opened by "Custom" or by holding a pill) — the mark and the hue tables stay in `kinds.ts`                                                                                                                                                           |
 | A control that answers being held                  | `src/app/useLongPress.ts` — spread its handlers on the button; never a second timer in a screen                                                                                                                                                                                        |
+| A control that asks before it acts                 | `src/app/useConfirmPress.ts` — the button's own label is the confirmation; never a `ConfirmDialog` over a modal that is already a card                                                                                                                                                 |
 | A modal's save / cancel                            | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's                                                                                                                                                |
 | A new way to correct a time on Today               | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`                                                                                                                                                         |
 | A new screen                                       | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                                                                                                                              |

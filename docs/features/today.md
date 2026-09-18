@@ -50,8 +50,10 @@ The main screen, and the whole app for most of a day.
   whole rather than cut flat where the screen begins.
 - **The line under the dial.** The day's state in words — "Working · since
   08:02", "On a break · Lunch until 12:30", "Not working · Stopped at 17:10".
-- **The buttons.** A row of break buttons, one per break type the project
-  defines, each showing its mark and the length it is assumed to take; tapping
+- **The buttons.** A row of break pills, one per break type the project
+  defines — the same pill the kinds of work wear, so the two rows read as one
+  set of controls rather than two sizes of button — each showing its mark and
+  the length it is assumed to take; tapping
   one takes it now — written down as the length its kind usually takes, to be
   corrected on the clock — and the button turns into **End lunch** for as long
   as you are on it. A row of chips, one per kind of work, each wearing its own mark in
