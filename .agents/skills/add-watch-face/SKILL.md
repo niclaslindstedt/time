@@ -137,6 +137,31 @@ the ring, and both are painted _after_ the bands so the day fills the ring
 and the print lies over it. Numerals lie along the ring, and the lower half
 is turned the other way up (`chapterMarks`).
 
+## Looking at it
+
+A dial is judged by eye, and `scripts/dial-shots.mjs` is how: it serves the
+production build headless, seeds a day in a state, pins the hands at ten past
+ten and photographs the dial — and lays more than one picture out on a contact
+sheet, `shots/sheet.png`, a row per dial and a column per state. `make shots
+ARGS="…"` builds first and passes the options through. The ones that matter
+here:
+
+```sh
+make shots ARGS="--preset <id> --state out,working,break,over"     # the new preset, every state
+make shots ARGS="--preset all"                                     # every preset beside it
+make shots ARGS="--preset <id> --shell phone,desk --theme dark,light"
+make shots ARGS="--dial '{\"face\":\"black\",\"ring\":\"chapter\"}'"  # a custom combination
+make shots ARGS="--preset <id> --settings"                         # the picker, with the new card
+make shots ARGS="--preset <id> --state over --at 18:30"            # a long day, at a sane hour
+```
+
+Look at the sheet for: the day's bands reading on the face and on the ring in
+both themes; the break-end chip on the rim; the name, the movement's word and
+the cog clear of the markers and the ring; the light whole round the case; and
+the preset card in Settings reading at card size. Playwright is not a
+dependency of the app — the script says how to install it outside the
+lockfile, and finds the Chromium a web session already has.
+
 ## Update checklist
 
 - [ ] Name the preset for what it looks like; check the id, the strings, the
@@ -159,9 +184,8 @@ is turned the other way up (`chapterMarks`).
       `CLAUDE.md`'s `look.ts` line and the fonts rule, the README's Settings
       row
 - [ ] A changelog fragment
-- [ ] Look at it: `make shots ARGS="--preset <id> --state out,working,break,over --theme dark,light"`
-      and `--shell desk`; a custom combination with `--dial '{…}'`; the
-      picker with `--settings`
+- [ ] Look at it, per "Looking at it" above: every state, both themes, both
+      shells, a custom combination, and the picker
 - [ ] Record the marker:
 
       git rev-parse HEAD > .agents/skills/add-watch-face/.last-updated

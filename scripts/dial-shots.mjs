@@ -7,8 +7,10 @@
 // to how it draws is judged by eye — so this puts the production build in a
 // headless browser, seeds a day in one of a few states, pins the clock to
 // ten past ten (the time a watch is photographed at), and takes a picture of
-// the dial for each combination asked for. Run it after `make build`, or
-// through `make shots`, which builds first.
+// the dial for each combination asked for — and, when there is more than
+// one, lays them out on a contact sheet, `sheet.png`, a row per dial and a
+// column per state, so a change is read across the states at a glance. Run
+// it after `make build`, or through `make shots`, which builds first.
 //
 //   node scripts/dial-shots.mjs                          the default dial, working, phone, dark
 //   node scripts/dial-shots.mjs --preset all             every preset
@@ -30,6 +32,7 @@
 //                         at ten past ten started in the night — pass 18:30
 //   --settings            a picture of Settings' dial section too, opened from the dial
 //   --full                the whole screen rather than the dial and its light
+//   --no-sheet            the pictures only, without the contact sheet
 //   --out     <dir>       where the pictures go                 (default: shots/)
 //   --url     <url>       a running server to use               (default: http://localhost:4173/)
 //   --browser <path>      a Chromium to run; otherwise Playwright's own
@@ -46,7 +49,7 @@
 // Nothing here reaches the network: the page is the local build, served by
 // vite preview, which the script starts if nothing answers at --url.
 
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 
@@ -95,6 +98,9 @@ const { chromium } = await loadPlaywright();
 const server = (await answers(url)) ? null : await startPreview(url);
 mkdirSync(out, { recursive: true });
 
+/** Every picture taken, for the sheet. */
+const taken = [];
+
 try {
   const browser = await chromium.launch({ executablePath: chromiumPath() });
   for (const dial of dials)
@@ -133,6 +139,13 @@ try {
             clip: args.full ? undefined : await dialClip(page, SHELLS[shell]),
           });
           console.log(`${name}.png`);
+          taken.push({
+            file: `${out}/${name}.png`,
+            dial: dial.name,
+            state,
+            shell,
+            theme,
+          });
 
           if (args.settings) {
             await page
@@ -151,9 +164,75 @@ try {
           }
           await context.close();
         }
+  if (taken.length > 1 && !args["no-sheet"]) {
+    await sheet(browser, taken, `${out}/sheet.png`);
+    console.log("sheet.png");
+  }
   await browser.close();
 } finally {
   server?.kill();
+}
+
+/** The pictures on one page: a row for each dial, shell and theme, a column
+ *  for each state, every cell labelled — the same page in the same browser,
+ *  with the pictures inlined, so it needs nothing the shots did not. */
+async function sheet(browser, shots, file) {
+  const columns = states.filter((s) => shots.some((x) => x.state === s));
+  const rows = [];
+  for (const shot of shots) {
+    const key = `${shot.dial} · ${shot.shell} · ${shot.theme}`;
+    let row = rows.find((r) => r.key === key);
+    if (!row) rows.push((row = { key, cells: {} }));
+    row.cells[shot.state] = shot.file;
+  }
+  const cell = 340;
+  const html = `<!doctype html><meta charset="utf-8">
+<style>
+  body { margin: 0; padding: 24px; background: #15171a; color: #d7dae0;
+         font: 13px/1.4 system-ui, sans-serif; }
+  h1 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: #f2f3f5; }
+  table { border-collapse: separate; border-spacing: 12px; }
+  th { text-align: left; font-weight: 600; color: #f2f3f5; white-space: nowrap;
+       vertical-align: top; padding-top: 6px; }
+  thead th { text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px;
+             color: #9aa0a8; padding: 0 0 4px; }
+  td { width: ${cell}px; vertical-align: top; background: #0b0c0e;
+       border-radius: 12px; padding: 8px; }
+  img { display: block; width: ${cell}px; height: auto; border-radius: 8px; }
+</style>
+<h1>${escape(`Dial shots · hands at ${args.at ?? "10:09:36"}`)}</h1>
+<table>
+  <thead><tr><th></th>${columns.map((c) => `<th>${escape(c)}</th>`).join("")}</tr></thead>
+  <tbody>${rows
+    .map(
+      (r) =>
+        `<tr><th>${escape(r.key)}</th>${columns
+          .map((c) =>
+            r.cells[c]
+              ? `<td><img src="${dataUri(r.cells[c])}"></td>`
+              : "<td></td>",
+          )
+          .join("")}</tr>`,
+    )
+    .join("")}</tbody>
+</table>`;
+  const page = await browser.newPage({
+    viewport: { width: 220 + columns.length * (cell + 28) + 48, height: 800 },
+  });
+  await page.setContent(html);
+  await page.screenshot({ path: file, fullPage: true });
+  await page.close();
+}
+
+function dataUri(file) {
+  return `data:image/png;base64,${readFileSync(file).toString("base64")}`;
+}
+
+function escape(text) {
+  return String(text).replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+  );
 }
 
 /** The day, the project and the settings a state is drawn from, written
