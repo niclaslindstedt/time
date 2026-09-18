@@ -9,6 +9,7 @@ import {
   DIAL_FACES,
   DIAL_FONT,
   DIAL_FONTS,
+  DIAL_HAND_SETS,
   DIAL_MARKER_STYLES,
   DIAL_MOVEMENTS,
   DIAL_PLACEMENTS,
@@ -21,6 +22,7 @@ import {
   type DialConfig,
   type DialFace,
   type DialFont,
+  type DialHands,
   type DialMarkers,
   type DialMovement,
   type DialPlacement,
@@ -37,7 +39,7 @@ import type { Seconds } from "./types.ts";
 // morning on it and the hands at ten past ten — the choice previews itself,
 // because the dial is on another screen and a name says nothing about what
 // it looks like. Under Custom the same drawing is the live preview of what
-// the seven pickers below it add up to.
+// the eight pickers below it add up to.
 //
 // The pickers read and write the caller's settings; nothing here is state.
 
@@ -213,6 +215,22 @@ export function DialPicker({ preset, custom, onPreset, onCustom }: Props) {
             />
             <p className="text-xs text-muted">
               {t(`settings.ringHint.${current.ring}`)}
+            </p>
+          </Labelled>
+
+          <Labelled label={t("settings.clockHands")}>
+            <SegmentedControl<DialHands>
+              value={current.hands}
+              options={DIAL_HAND_SETS.map((h) => ({
+                value: h,
+                label: t(`settings.hands.${h}`),
+              }))}
+              onChange={(h) => set("hands", h)}
+              ariaLabel={t("settings.clockHands")}
+              fullWidth
+            />
+            <p className="text-xs text-muted">
+              {t(`settings.handsHint.${current.hands}`)}
             </p>
           </Labelled>
 

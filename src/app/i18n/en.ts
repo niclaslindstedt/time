@@ -357,7 +357,7 @@ export const en = {
     themeSystem: "Device",
     clock: "The clock",
     clockHint:
-      "The dial on Today, as a wrist watch. Pick one of the presets, or Custom and put one together: the face, the markers, the numerals and their size, where they sit against the day's ring, what the ring is, and how the second hand moves.",
+      "The dial on Today, as a wrist watch. Pick one of the presets, or Custom and put one together: the face, the markers, the numerals and their size, where they sit against the day's ring, what the ring is, what the hands are, and how the second hand moves.",
     clockPreset: "Dial",
     clockCustom: "Custom",
     clockCustomHint: "Your own dial, piece by piece.",
@@ -383,7 +383,7 @@ export const en = {
       tidewater: "Blue sunburst, tapered wedges.",
       harvest: "Champagne, numerals at the quarters in a serif.",
       uptown:
-        "The sixties dress watch: silver, lumed batons, the day on a blue minute ring.",
+        "The sixties dress watch: silver blocks, tapered steel hands, the day on a blue minute ring.",
     },
     clockFace: "Face",
     face: {
@@ -399,7 +399,7 @@ export const en = {
     clockMarkers: "Hour markers",
     markers: {
       batons: "Batons",
-      plots: "Lumed batons",
+      blocks: "Blocks",
       dots: "Dots",
       numerals: "Numerals",
       roman: "Roman",
@@ -436,6 +436,16 @@ export const en = {
       groove: "A faint track the day is drawn into.",
       chapter:
         "A blue ring printed with the minutes, which the day fills — work, breaks and kinds of work — with the minutes printed over them.",
+    },
+    clockHands: "Hands",
+    hands: {
+      bar: "Bars",
+      tapered: "Tapered",
+    },
+    handsHint: {
+      bar: "The same width from the cap to the tip, printed in the face's ink.",
+      tapered:
+        "The tapered hands of a dress watch, broad where they leave the cap and narrowing to a point, in polished steel with a needle second hand.",
     },
     clockMovement: "Movement",
     movement: {

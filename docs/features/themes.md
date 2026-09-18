@@ -25,17 +25,17 @@ Nine, each a combination a real dial is often seen in, named for what it
 looks like. Every card in Settings is a drawing of the dial it picks, with an
 invented morning on it, so the choice previews itself.
 
-| Preset        | The dial                                                                         |
-| ------------- | -------------------------------------------------------------------------------- |
-| **Snowfield** | Textured silver, applied batons, a second hand that glides. The default.         |
-| **Abyss**     | The diver: black, dots with a triangle at twelve and batons at the quarters.     |
-| **Trailhead** | The field watch: every hour numbered in a tall condensed sans, outside the ring. |
-| **Summit**    | The expedition dial: 3, 6 and 9 in an engineered sans, batons between.           |
-| **Boulevard** | The dress watch: white, Roman numerals in a high-contrast serif, quartz.         |
-| **Studio**    | Small geometric numerals at the rim, and nothing else.                           |
-| **Tidewater** | A blue sunburst with tapered wedges.                                             |
-| **Harvest**   | Champagne, numerals at the quarters in a serif.                                  |
-| **Uptown**    | The sixties dress watch: silver, lumed batons, the day on a blue minute ring.    |
+| Preset        | The dial                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| **Snowfield** | Textured silver, applied batons, a second hand that glides. The default.                                  |
+| **Abyss**     | The diver: black, dots with a triangle at twelve and batons at the quarters.                              |
+| **Trailhead** | The field watch: every hour numbered in a tall condensed sans, outside the ring.                          |
+| **Summit**    | The expedition dial: 3, 6 and 9 in an engineered sans, batons between.                                    |
+| **Boulevard** | The dress watch: white, Roman numerals in a high-contrast serif, quartz.                                  |
+| **Studio**    | Small geometric numerals at the rim, and nothing else.                                                    |
+| **Tidewater** | A blue sunburst with tapered wedges.                                                                      |
+| **Harvest**   | Champagne, numerals at the quarters in a serif.                                                           |
+| **Uptown**    | The sixties dress watch: silver, long applied blocks, tapered steel hands, the day on a blue minute ring. |
 
 ### Custom
 
@@ -43,12 +43,13 @@ The tenth card opens the dial up piece by piece. It starts from the dial you
 were looking at, so changing one thing about a preset is two taps.
 
 - **Face.** Eight colours, in about the order dials sell in: white, silver,
-  slate, black, blue, green, burgundy, champagne. The markers and hands are
-  printed in dark ink on a light face and white on a dark one, so a hand
-  always reads against the face under it.
+  slate, black, blue, green, burgundy, champagne. The markers are printed in
+  dark ink on a light face and white on a dark one, so a marker always reads
+  against the face under it — and so are the hands, unless the set you picked
+  is steel.
 - **Hour markers.** Nine styles: applied **batons** (a double at twelve);
-  **lumed batons**, a plot of lume at the outer end of each and one wide
-  block at twelve; the **dots** of a diver (a triangle at twelve, batons at the quarters);
+  **blocks**, the same baton the whole way out with one wide one at twelve
+  and no track on the rim; the **dots** of a diver (a triangle at twelve, batons at the quarters);
   Arabic **numerals** at every hour; **Roman** numerals; numerals at the
   **quarters** with batons between; the **3 · 6 · 9** layout with a triangle
   at twelve; tapered **wedges**; and bare **ticks** on a minute track.
@@ -76,6 +77,16 @@ were looking at, so changing one thing about a preset is two taps.
   the accent, a kind of work its hue, a break the flag colour, and the
   minutes stay printed over whatever the day put under them. The numerals
   are set in the Numerals face, whatever the hours wear.
+- **Hands.** Two sets. **Bars** are the same width from the cap to the tip,
+  printed in the face's ink with a facet down them — the hands every dial
+  here had. **Tapered** are the hands of a dress watch: broad where they
+  leave the cap and narrowing to a point, in polished steel rather than ink —
+  drawn as a shape split down its ridge, one half catching the light and the
+  other in shade, so the hand carries its own light round the dial as it
+  sweeps — with a needle second hand on a slim lozenge counterweight. The
+  second hand stays the face's ink either way: at a hair's width there is no
+  room for a facet, and a dial with polished hands wears a dark one against
+  the polish.
 - **Movement.** How the second hand moves. **Quartz** steps once a second,
   with the small overshoot a stepper motor gives it. **Mechanical** walks in
   eight small steps a second, the way a calibre at 28 800 vph beats. **Glide**
