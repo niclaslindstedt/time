@@ -16,9 +16,10 @@ import type { MouseEvent, PointerEvent } from "react";
 // swallowed, so holding "Lunch" opens its form rather than also starting one;
 // a pointer that wanders is a scroll rather than a hold and calls it off; and
 // under a mouse the right button is the same gesture, which is where a desk
-// looks for it. The text under the finger is not selectable (`styles.css`),
-// which is what keeps the phone from putting a selection handle over the pill
-// while it is held.
+// looks for it. Nothing under the finger is selectable (`html` in
+// `styles.css`), which is what keeps the phone from putting a selection handle
+// over the pill while it is held — and, on iOS, what keeps it from raising the
+// glass lens it places a text caret with over the hold.
 
 /** How long a press is held before it counts as one. Long enough not to fire
  *  on a slow tap, short enough to be found by accident. */
