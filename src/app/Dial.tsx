@@ -22,11 +22,13 @@ import { useT } from "./i18n/index.ts";
 import {
   DIAL_FACE,
   DIAL_FONT,
+  DIAL_HANDS,
   DIAL_MARKERS,
   DIAL_MOVEMENT,
   DIAL_RING,
   isNumeral,
   type DialConfig,
+  type DialHandsSpec,
 } from "./look.ts";
 import type { Seconds } from "./types.ts";
 import { useHands } from "./useHands.ts";
@@ -70,6 +72,12 @@ import { useHands } from "./useHands.ts";
 // a render. This component only gives the loop somewhere to write, and draws
 // the moment it was handed for the first paint. A dial that is not `live` —
 // the previews in Settings — has no loop and simply is where it is.
+//
+// What they are *shaped* like is the set the settings chose: a bar printed in
+// the face's ink with a facet down it, or the tapered hand of a dress watch,
+// drawn as a shape rather than a stroke and split down its ridge into a lit
+// half and a shaded one, so a polished hand carries its own light round the
+// dial as it sweeps.
 
 export const DIAL_BOX = 240;
 const C = DIAL_BOX / 2;
@@ -122,6 +130,7 @@ export function Dial({
   const font = DIAL_FONT[dial.font];
   const style = DIAL_MARKERS[dial.markers];
   const ring = DIAL_RING[dial.ring];
+  const handSet = DIAL_HANDS[dial.hands];
   const layout = dialLayout(dial);
   const hands = useHands(now, live, DIAL_MOVEMENT[dial.movement].beats);
   const turns = hands.turns;
@@ -467,56 +476,30 @@ export function Dial({
         data-winding={hands.winding ? "" : undefined}
       >
         <g data-hand="hour" ref={hands.hour} style={hand(turns.hour)}>
-          <line
-            x1={C}
-            y1={C + 5}
-            x2={C}
-            y2={C - layout.hands.hour}
-            stroke={face.ink}
-            strokeWidth={HANDS.hour}
-            strokeLinecap="round"
-          />
-          <line
-            x1={C}
-            y1={C - 2}
-            x2={C}
-            y2={C - layout.hands.hour + 3}
-            stroke={facet}
-            strokeWidth={HANDS.hour * 0.3}
-            strokeLinecap="round"
+          <Hand
+            set={handSet}
+            length={layout.hands.hour}
+            width={HANDS.hour}
+            ink={face.ink}
+            facet={facet}
           />
         </g>
         <g data-hand="minute" ref={hands.minute} style={hand(turns.minute)}>
-          <line
-            x1={C}
-            y1={C + 5}
-            x2={C}
-            y2={C - layout.hands.minute}
-            stroke={face.ink}
-            strokeWidth={HANDS.minute}
-            strokeLinecap="round"
-          />
-          <line
-            x1={C}
-            y1={C - 2}
-            x2={C}
-            y2={C - layout.hands.minute + 3}
-            stroke={facet}
-            strokeWidth={HANDS.minute * 0.3}
-            strokeLinecap="round"
+          <Hand
+            set={handSet}
+            length={layout.hands.minute}
+            width={HANDS.minute}
+            ink={face.ink}
+            facet={facet}
           />
         </g>
         <g data-hand="second" ref={hands.second} style={hand(turns.second)}>
-          <line
-            x1={C}
-            y1={C + HANDS.tail}
-            x2={C}
-            y2={C - layout.hands.second}
-            stroke={face.ink}
-            strokeWidth={HANDS.second}
-            strokeLinecap="round"
+          <SecondHand
+            set={handSet}
+            length={layout.hands.second}
+            width={HANDS.second}
+            ink={face.ink}
           />
-          <circle cx={C} cy={C + HANDS.tail * 0.7} r={2.2} fill={face.ink} />
         </g>
         <circle cx={C} cy={C} r={HANDS.cap} fill={face.ink} />
         <circle cx={C} cy={C} r={1.1} fill={face.dial} />
@@ -549,8 +532,7 @@ function Marker({
   kind:
     | "baton"
     | "doubleBaton"
-    | "lumeBaton"
-    | "wideLumeBaton"
+    | "wideBaton"
     | "dot"
     | "triangle"
     | "wedge"
@@ -596,26 +578,13 @@ function Marker({
           />
         </>
       );
-    case "lumeBaton":
+    case "wideBaton":
       return (
-        <LumeBaton
-          x={C}
-          top={top}
-          bottom={bottom}
-          w={width}
-          plot={width}
-          ink={ink}
-          facet={facet}
-        />
-      );
-    case "wideLumeBaton":
-      return (
-        <LumeBaton
+        <Baton
           x={C}
           top={top}
           bottom={bottom}
           w={width * 1.9}
-          plot={width}
           ink={ink}
           facet={facet}
         />
@@ -701,50 +670,113 @@ function Baton({
   );
 }
 
-/** A baton with a plot of lume at its outer end: the plot sits where the
- *  baton's tip would, so the two together reach no further than a baton.
- *  Lume is its own off-white, whatever the ink — it glows, it is not
- *  printed — with a hairline of the ink round it to hold it on a light
- *  face. */
-function LumeBaton({
-  x,
-  top,
-  bottom,
-  w,
-  plot,
+/** The hour or minute hand, drawn at twelve o'clock — the caller's group
+ *  rotates it. `length` is its tip from the centre, `width` the width the
+ *  geometry gives it, and the set what it is shaped like and made of.
+ *
+ *  A bar is a stroke the same width all the way out with a facet down it. A
+ *  tapered hand is a shape: broad where it leaves the cap, narrowing to its
+ *  tip, and split down the ridge into the half that catches the light and the
+ *  half in shade — which is what makes it read as polished steel rather than
+ *  as print. Steel takes a hairline of the ink round it too, because a bright
+ *  hand over a pale face needs an edge to be a hand. */
+function Hand({
+  set,
+  length,
+  width,
   ink,
   facet,
 }: {
-  x: number;
-  top: number;
-  bottom: number;
-  w: number;
-  plot: number;
+  set: DialHandsSpec;
+  length: number;
+  width: number;
   ink: string;
   facet: string;
 }) {
-  const side = plot * 0.95;
+  const top = C - length;
+  const bottom = C + set.boss;
+  if (!set.taper) {
+    return (
+      <>
+        <line
+          x1={C}
+          y1={bottom}
+          x2={C}
+          y2={top}
+          stroke={ink}
+          strokeWidth={width}
+          strokeLinecap="round"
+        />
+        <line
+          x1={C}
+          y1={C - 2}
+          x2={C}
+          y2={top + 3}
+          stroke={facet}
+          strokeWidth={width * 0.3}
+          strokeLinecap="round"
+        />
+      </>
+    );
+  }
+  const base = (width * set.base) / 2;
+  const tip = (width * set.tip) / 2;
+  const left = `${C - base},${bottom} ${C - tip},${top}`;
+  const right = `${C + tip},${top} ${C + base},${bottom}`;
   return (
     <>
-      <rect
-        x={x - side / 2}
-        y={top}
-        width={side}
-        height={side}
-        rx={0.3}
-        fill="#f3f4ec"
+      <polygon
+        points={`${left} ${C},${top} ${C},${bottom}`}
+        fill={set.steel?.light ?? ink}
+      />
+      <polygon
+        points={`${C},${bottom} ${C},${top} ${right}`}
+        fill={set.steel?.shade ?? ink}
+      />
+      <polygon
+        points={`${left} ${right}`}
+        fill="none"
+        stroke={set.steel ? ink : facet}
+        strokeWidth={0.5}
+        strokeLinejoin="round"
+        opacity={set.steel ? 0.45 : 1}
+      />
+    </>
+  );
+}
+
+/** The second hand: one hair from its tip to the end of its tail, and
+ *  whatever balances it past the axle — the disc of a sports hand, or nothing
+ *  at all, which is what a dress watch's carries. Printed in the face's ink
+ *  whatever the rest of the set is made of: at a unit wide there is no room
+ *  for a facet, and a dial with polished hands wears a dark second hand
+ *  against the polish. */
+function SecondHand({
+  set,
+  length,
+  width,
+  ink,
+}: {
+  set: DialHandsSpec;
+  length: number;
+  width: number;
+  ink: string;
+}) {
+  const tail = C + HANDS.tail;
+  return (
+    <>
+      <line
+        x1={C}
+        y1={tail}
+        x2={C}
+        y2={C - length}
         stroke={ink}
-        strokeWidth={0.35}
-        opacity={0.95}
+        strokeWidth={width}
+        strokeLinecap="round"
       />
-      <Baton
-        x={x}
-        top={top + side + 1}
-        bottom={bottom}
-        w={w}
-        ink={ink}
-        facet={facet}
-      />
+      {set.counterweight === "disc" && (
+        <circle cx={C} cy={C + HANDS.tail * 0.7} r={2.2} fill={ink} />
+      )}
     </>
   );
 }

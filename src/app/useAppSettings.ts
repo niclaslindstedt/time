@@ -10,6 +10,7 @@ import {
   DEFAULT_DIAL_PRESET,
   DIAL_FACE,
   DIAL_FONT,
+  DIAL_HANDS,
   DIAL_MARKERS,
   DIAL_MOVEMENT,
   DIAL_PLACEMENTS,
@@ -94,7 +95,14 @@ function parseDial(value: unknown): DialConfig {
   return {
     face: oneOf(DIAL_FACE, raw.face, base.face),
     font: oneOf(DIAL_FONT, raw.font, base.font),
-    markers: oneOf(DIAL_MARKERS, raw.markers, base.markers),
+    // The lumed batons lost their lume and became plain blocks; a device
+    // that stored the old id keeps the markers it had rather than falling
+    // back to the default style.
+    markers: oneOf(
+      DIAL_MARKERS,
+      raw.markers === "plots" ? "blocks" : raw.markers,
+      base.markers,
+    ),
     scale: (scale in DIAL_SCALE ? scale : base.scale) as DialConfig["scale"],
     placement: DIAL_PLACEMENTS.includes(
       raw.placement as DialConfig["placement"],
@@ -105,6 +113,9 @@ function parseDial(value: unknown): DialConfig {
     // the ring every dial had.
     ring: oneOf(DIAL_RING, raw.ring, base.ring),
     movement: oneOf(DIAL_MOVEMENT, raw.movement, base.movement),
+    // A dial stored before the hands were a choice gets the bar, which is
+    // the hand every dial had.
+    hands: oneOf(DIAL_HANDS, raw.hands, base.hands),
   };
 }
 

@@ -53,6 +53,7 @@ first, because that is where the vocabulary last grew.
    | How big the hours are                                                  | `scale`     | `DIAL_SCALE`             |
    | Where the day's ring sits against the markers                          | `placement` | `DIAL_PLACEMENTS`        |
    | What the day is drawn on: a groove, or a ring printed with the minutes | `ring`      | `DIAL_RING`              |
+   | What the hands are shaped like, and what they are made of              | `hands`     | `DIAL_HANDS`             |
    | How the second hand moves                                              | `movement`  | `DIAL_MOVEMENT`          |
 
    Things every dial already carries and a new face does not choose: the
@@ -88,7 +89,11 @@ parts that identify one maker:
   under the name, and nothing else.
 - A distinctive hand shape, bezel or case that _is_ the brand — the sword,
   snowflake or lollipop hands, a fluted bezel, a cushion case, a cyclops over
-  the date. The hands here are plain batons with a facet, on every dial.
+  the date. `hands` is a dimension, but only for shapes a century of
+  watchmaking has in common: a bar, a taper, a needle second hand. A shape
+  one maker is known by is not one of them, and neither is a lume plot cut to
+  a shape that identifies a dial — draw the hand in plain metal or ink
+  instead, which is what it is under the inlay.
 - A trademarked colour pairing or dial motif — a particular two-tone bezel,
   a textured pattern, a starburst of a named shape.
 - Any wording from the maker's marketing in the preset's hint or the docs.
@@ -100,17 +105,18 @@ is all the app should.
 
 ## Mapping
 
-| To add                                    | Change                                                                                                                                                                                                                                                                                         |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A preset                                  | `DialPreset`, `DIAL_PRESETS`, `DIAL_PRESET` in `look.ts`; `settings.preset.<id>` and `settings.presetHint.<id>` in `en.ts`; the presets table in `docs/features/themes.md`; the count in `tests/look_test.ts` and the "eight/nine" wording in `CLAUDE.md`, the README and `look.ts`'s comments |
-| A face colour                             | `DialFace`, `DIAL_FACES`, `DIAL_FACE` (dial, edge, ink, bezel, dark) in `look.ts`; `settings.face.<id>` in `en.ts`; `tests/look_test.ts` checks the ink reads against the dial                                                                                                                 |
-| A marker style                            | `DialMarkers`, `DIAL_MARKER_STYLES`, `DIAL_MARKERS` (`at(hour)`, `minuteTrack`) in `look.ts`; a `Marker` kind if the shape is new, drawn at twelve in `Dial.tsx`'s `Marker` and rotated into place; `settings.markers.<id>` in `en.ts`; the layout test in `tests/clock_test.ts` walks it      |
-| A typeface                                | `DialFont`, `DIAL_FONTS`, `DIAL_FONT` (family, weight, widthFactor, scale) in `look.ts`; the `@fontsource` import in `src/main.tsx` — one weight, the `latin` subset, never a font host; `settings.font.<id>` in `en.ts`; the fonts list in `CLAUDE.md`'s dependency rule and `themes.md`      |
-| A ring the day is drawn on                | `DialRing`, `DIAL_RINGS`, `DIAL_RING` (printed, fill, ink) in `look.ts`; the ring's paint in `Dial.tsx` between the face and the bands, and its print _after_ the bands; `settings.ring.<id>`, `settings.ringHint.<id>` in `en.ts`; `parseDial` in `useAppSettings.ts` already clamps it       |
-| A new dimension of `DialConfig`           | The type and its table in `look.ts`; `ring: "groove"`-style defaults on every preset; `parseDial` in `useAppSettings.ts` with a fallback for a dial stored before it existed; a picker under Custom in `DialPicker.tsx`; `tests/settings_test.ts` for the fallback; `themes.md`'s Custom list  |
-| Printing on the dial (name, word, window) | `SIGNATURE` in `clock.ts` and its paint in `Dial.tsx`; `MAX_REACH.inside` is derived from it so the markers stay clear                                                                                                                                                                         |
-| The picture on the preset card            | Nothing — the card is a `Dial` with `SAMPLE` bands at `SHOWROOM` (ten past ten) in `DialPicker.tsx`, so a preset previews itself                                                                                                                                                               |
-| A user-visible change of any of the above | A fragment under `.changes/unreleased/` (see `write-changeset`)                                                                                                                                                                                                                                |
+| To add                                    | Change                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A preset                                  | `DialPreset`, `DIAL_PRESETS`, `DIAL_PRESET` in `look.ts`; `settings.preset.<id>` and `settings.presetHint.<id>` in `en.ts`; the presets table in `docs/features/themes.md`; the count in `tests/look_test.ts` and the "eight/nine" wording in `CLAUDE.md`, the README and `look.ts`'s comments                                                      |
+| A face colour                             | `DialFace`, `DIAL_FACES`, `DIAL_FACE` (dial, edge, ink, bezel, dark) in `look.ts`; `settings.face.<id>` in `en.ts`; `tests/look_test.ts` checks the ink reads against the dial                                                                                                                                                                      |
+| A marker style                            | `DialMarkers`, `DIAL_MARKER_STYLES`, `DIAL_MARKERS` (`at(hour)`, `minuteTrack`) in `look.ts`; a `Marker` kind if the shape is new, drawn at twelve in `Dial.tsx`'s `Marker` and rotated into place; `settings.markers.<id>` in `en.ts`; the layout test in `tests/clock_test.ts` walks it                                                           |
+| A typeface                                | `DialFont`, `DIAL_FONTS`, `DIAL_FONT` (family, weight, widthFactor, scale) in `look.ts`; the `@fontsource` import in `src/main.tsx` — one weight, the `latin` subset, never a font host; `settings.font.<id>` in `en.ts`; the fonts list in `CLAUDE.md`'s dependency rule and `themes.md`                                                           |
+| A set of hands                            | `DialHands`, `DIAL_HAND_SETS`, `DIAL_HANDS` (base, tip, taper, steel, counterweight) in `look.ts`; the drawing in `Dial.tsx`'s `Hand` / `SecondHand`, both at twelve o'clock inside the group `useHands` rotates; `settings.hands.<id>`, `settings.handsHint.<id>` in `en.ts`; a picker under Custom in `DialPicker.tsx`; a fallback in `parseDial` |
+| A ring the day is drawn on                | `DialRing`, `DIAL_RINGS`, `DIAL_RING` (printed, fill, ink) in `look.ts`; the ring's paint in `Dial.tsx` between the face and the bands, and its print _after_ the bands; `settings.ring.<id>`, `settings.ringHint.<id>` in `en.ts`; `parseDial` in `useAppSettings.ts` already clamps it                                                            |
+| A new dimension of `DialConfig`           | The type and its table in `look.ts`; `ring: "groove"`-style defaults on every preset; `parseDial` in `useAppSettings.ts` with a fallback for a dial stored before it existed; a picker under Custom in `DialPicker.tsx`; `tests/settings_test.ts` for the fallback; `themes.md`'s Custom list                                                       |
+| Printing on the dial (name, word, window) | `SIGNATURE` in `clock.ts` and its paint in `Dial.tsx`; `MAX_REACH.inside` is derived from it so the markers stay clear                                                                                                                                                                                                                              |
+| The picture on the preset card            | Nothing — the card is a `Dial` with `SAMPLE` bands at `SHOWROOM` (ten past ten) in `DialPicker.tsx`, so a preset previews itself                                                                                                                                                                                                                    |
+| A user-visible change of any of the above | A fragment under `.changes/unreleased/` (see `write-changeset`)                                                                                                                                                                                                                                                                                     |
 
 ## What the geometry has to hold
 
@@ -131,6 +137,15 @@ lume _within_ that length, not beyond it. A new typeface's `widthFactor` is
 half the width of a two-digit numeral as a share of the font size — measure
 it, because a numeral wider than the factor says runs into the ring. A
 numeral that would not fit is set smaller by the layout, never let through.
+
+A hand is drawn straight up from the centre and rotated by `useHands`, so
+its shape is written once at twelve o'clock in the same 240-unit box: its tip
+at `layout.hands.*` from the centre, its tail `HAND_BOSS` the other side of
+it. A hand wider at the boss than the cap over the axle (`HANDS.cap`) shows
+its own root, so a taper's `base` is measured against the width `HANDS`
+gives it rather than chosen freely — twice it is about as wide as the cap
+covers. A second hand is too thin to carry a facet: give it a shape, not two
+tones.
 
 A printed ring's numerals go on `bandR`, its ticks in the outer 3.5 units of
 the ring, and both are painted _after_ the bands so the day fills the ring
@@ -169,7 +184,8 @@ lockfile, and finds the Chromium a web session already has.
       model's name (see above) — `git diff | grep -i` for the names you
       were shown
 - [ ] Add the ids and specs in `look.ts`, and every preset gets a value for
-      any new dimension
+      any new dimension — including the ones the new option is not for, so a
+      dial that changes is the one asked for and no other
 - [ ] Paint it in `Dial.tsx` — the drawing only; colours come from the spec
 - [ ] Offer it under Custom in `DialPicker.tsx`: a new option in an existing
       table appears by itself; a new dimension needs a picker

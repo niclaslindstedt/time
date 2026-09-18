@@ -53,6 +53,7 @@ describe("parseSettings", () => {
           placement: "under",
           ring: "halo",
           movement: "steam",
+          hands: "feathers",
         },
       }),
     );
@@ -72,6 +73,24 @@ describe("parseSettings", () => {
     expect(parseSettings('{"clock":{"ring":"chapter"}}').clock.ring).toBe(
       "chapter",
     );
+  });
+
+  it("gives a dial stored before the hands were a choice the bar", () => {
+    const s = parseSettings(
+      JSON.stringify({
+        clockPreset: "custom",
+        clock: { ...DIAL_PRESET.abyss, hands: undefined },
+      }),
+    );
+    expect(s.clock.hands).toBe("bar");
+    expect(parseSettings('{"clock":{"hands":"tapered"}}').clock.hands).toBe(
+      "tapered",
+    );
+  });
+
+  it("keeps the markers of a dial stored when the blocks were lumed", () => {
+    const s = parseSettings('{"clock":{"markers":"plots"}}');
+    expect(s.clock.markers).toBe("blocks");
   });
 
   it("clamps each dial field on its own, not all of them together", () => {
