@@ -17,3 +17,6 @@ coverage/
 # Node
 node_modules/
 dist/
+
+# Pictures of the dial (scripts/dial-shots.mjs)
+shots/

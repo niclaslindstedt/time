@@ -14,6 +14,13 @@ The main screen, and the whole app for most of a day.
   — its face, its markers, its numerals, how its second hand moves, and how
   much of the screen it takes — is yours to pick under **Settings → The
   clock** (see [`themes.md`](themes.md)).
+- **The printing.** The dial is printed the way a watch is: the app's mark
+  and name under twelve, in wide spaced capitals; under them the movement's
+  word — AUTOMATIC for a mechanical, QUARTZ for a quartz, GLIDE for a glide
+  wheel — and above six a window where a date would be, with the Settings
+  cog in it. That cog is Settings; over the watch the top bar carries
+  neither the name nor a cog, and on a phone, with nothing else to show on
+  it, there is no bar at all: the watch is the top of the screen.
 - **Coming back to it.** Leave the tab for an hour and the hands are an hour
   behind. They are not swapped for the right time — the watch is _set_. The
   crown winds forward: the minute hand goes round once for every hour there
@@ -34,12 +41,15 @@ The main screen, and the whole app for most of a day.
   beats while you are working, holds low and steady in the break colour on a
   break, and is off when you are not working. Its colour, its beat, how bright
   it is and how far it reaches are under **Settings → The clock → Backlight**.
+  On a phone the face keeps that reach clear above the case, so the halo is
+  whole rather than cut flat where the screen begins.
 - **The line under the dial.** The day's state in words — "Working · since
   08:02", "On a break · Lunch until 12:30", "Not working · Stopped at 17:10".
 - **The buttons.** A row of break buttons, one per break type the project
   defines, each showing its mark and the length it is assumed to take; tapping
-  one takes it now, and the button turns into **End lunch** for as long as you
-  are on it. A row of chips, one per kind of work, each wearing its own mark in
+  one takes it now — written down as the length its kind usually takes, to be
+  corrected on the clock — and the button turns into **End lunch** for as long
+  as you are on it. A row of chips, one per kind of work, each wearing its own mark in
   its own colour; tapping one says that is what you are doing from now, tapping
   it again stops labelling. Both rows end in **Custom**. Breaks and chips take
   no tap until you have started working, and say so by going pale — but they
@@ -138,7 +148,8 @@ decoration is not something to scroll to.
 Under a mouse the ring answers the pointer. Rest on a stretch and it says
 what the stretch was and when; press the right button anywhere on the dial
 and a menu opens where the pointer is with everything the day can do — start
-or stop, each break, each kind of work, the arrival, the stretches. The
+or stop, each break, each kind of work, the arrival, the stretches. The cog
+in the window above six opens the Settings panel, as `,` does. The
 keyboard reaches the same things: `S` starts or stops working, `1`–`9` pick
 the kinds of work in the order the project lists them, `,` opens Settings and
 `P` the projects. A key held with ⌘, Ctrl or Alt is left to the browser, and

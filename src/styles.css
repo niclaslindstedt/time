@@ -212,6 +212,15 @@ body {
   padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
+/* A screen with no bar over it — Today on a phone, where the watch carries
+   the name and the cog itself — starts at the top of the viewport, and pads
+   down from the status bar the way the header would have. The bare inset
+   rather than the header's `max(0.75rem, …)`: the screen has its own
+   padding under this, and in a browser tab the inset is nothing. */
+.app-bare {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 /* The nav is the last thing above the screen edge, and the app paints under
    the home indicator (`viewport-fit=cover`), so 10px is all that sits below
    the labels. Carrying `env(safe-area-inset-bottom)` as well left them 44px

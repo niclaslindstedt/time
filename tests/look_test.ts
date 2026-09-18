@@ -18,6 +18,8 @@ import {
   DIAL_PLACEMENTS,
   DIAL_PRESET,
   DIAL_PRESETS,
+  DIAL_RING,
+  DIAL_RINGS,
   DIAL_SCALE,
   DIAL_SCALES,
   glowGeometry,
@@ -29,12 +31,13 @@ import {
 const HOURS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
 describe("the dial's vocabulary", () => {
-  it("offers eight of each, and three placements, movements and sizes", () => {
+  it("offers eight faces and sizes, nine fonts, markers and presets, two rings", () => {
     expect(DIAL_FACES).toHaveLength(8);
-    expect(DIAL_FONTS).toHaveLength(8);
-    expect(DIAL_MARKER_STYLES).toHaveLength(8);
+    expect(DIAL_FONTS).toHaveLength(9);
+    expect(DIAL_MARKER_STYLES).toHaveLength(9);
     expect(DIAL_SCALES).toHaveLength(8);
-    expect(DIAL_PRESETS).toHaveLength(8);
+    expect(DIAL_PRESETS).toHaveLength(9);
+    expect(DIAL_RINGS).toHaveLength(2);
     expect(DIAL_PLACEMENTS).toHaveLength(3);
     expect(DIAL_MOVEMENTS).toHaveLength(3);
     expect(CLOCK_SIZES).toHaveLength(3);
@@ -50,6 +53,7 @@ describe("the dial's vocabulary", () => {
       [...DIAL_SCALES].sort(),
     );
     expect(Object.keys(DIAL_PRESET).sort()).toEqual([...DIAL_PRESETS].sort());
+    expect(Object.keys(DIAL_RING).sort()).toEqual([...DIAL_RINGS].sort());
   });
 
   it("names the six faces asked for, and two more", () => {
@@ -78,6 +82,19 @@ describe("the dial's vocabulary", () => {
     }
   });
 
+  it("prints the minutes on the chapter ring, in white on blue, and nothing on the groove", () => {
+    expect(DIAL_RING.groove.printed).toBe(false);
+    expect(DIAL_RING.groove.fill).toBeNull();
+    expect(DIAL_RING.chapter.printed).toBe(true);
+    // A blue, and a dark one: the day's bands and the white print both
+    // have to read on it.
+    const [r, g, b] = rgb(DIAL_RING.chapter.fill!);
+    expect(b).toBeGreaterThan(r);
+    expect(b).toBeGreaterThan(g);
+    expect(luminance(DIAL_RING.chapter.fill!)).toBeLessThan(0.05);
+    expect(luminance(DIAL_RING.chapter.ink!)).toBeGreaterThan(0.8);
+  });
+
   it("sizes the hours in steps that only grow", () => {
     let last = 0;
     for (const scale of DIAL_SCALES) {
@@ -98,6 +115,13 @@ describe("the hour markers", () => {
     expect(DIAL_MARKERS.batons.at(0)).toBe("doubleBaton");
     for (const h of HOURS.slice(1))
       expect(DIAL_MARKERS.batons.at(h)).toBe("baton");
+  });
+
+  it("lume the batons, with one wide block at twelve, and print no track on the rim", () => {
+    expect(DIAL_MARKERS.plots.at(0)).toBe("wideLumeBaton");
+    for (const h of HOURS.slice(1))
+      expect(DIAL_MARKERS.plots.at(h)).toBe("lumeBaton");
+    expect(DIAL_MARKERS.plots.minuteTrack).toBe(false);
   });
 
   it("are a diver's: a triangle at twelve, batons at the quarters, dots between", () => {
@@ -166,15 +190,30 @@ describe("the presets", () => {
       expect(DIAL_MARKER_STYLES).toContain(dial.markers);
       expect(DIAL_SCALES).toContain(dial.scale);
       expect(DIAL_PLACEMENTS).toContain(dial.placement);
+      expect(DIAL_RINGS).toContain(dial.ring);
       expect(DIAL_MOVEMENTS).toContain(dial.movement);
     }
   });
 
-  it("are eight different dials", () => {
+  it("are nine different dials", () => {
     const seen = new Set(
       DIAL_PRESETS.map((id) => JSON.stringify(DIAL_PRESET[id])),
     );
-    expect(seen.size).toBe(8);
+    expect(seen.size).toBe(9);
+  });
+
+  it("draw the sixties dress watch on a printed ring, and say it is an automatic", () => {
+    const dial = DIAL_PRESET.uptown;
+    expect(dial.ring).toBe("chapter");
+    expect(dial.markers).toBe("plots");
+    expect(dial.font).toBe("light");
+    expect(dial.movement).toBe("mechanical");
+    // The ring is at the rim, where a chapter ring is.
+    expect(dial.placement).toBe("inside");
+    // And it is the only preset on one: the rest keep the groove.
+    for (const id of DIAL_PRESETS) {
+      if (id !== "uptown") expect(DIAL_PRESET[id].ring).toBe("groove");
+    }
   });
 
   it("cover every movement and every placement between them", () => {
@@ -196,6 +235,7 @@ describe("resolveDial", () => {
     markers: "ticks",
     scale: 2,
     placement: "over",
+    ring: "groove",
     movement: "quartz",
   };
 
@@ -207,6 +247,15 @@ describe("resolveDial", () => {
     expect(resolveDial("custom", custom)).toBe(custom);
   });
 });
+
+/** The three channels of a `#rrggbb` colour, 0 – 255. */
+function rgb(hex: string): [number, number, number] {
+  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [
+    number,
+    number,
+    number,
+  ];
+}
 
 /** Relative luminance of a `#rrggbb` colour, 0 black to 1 white. */
 function luminance(hex: string): number {

@@ -88,6 +88,11 @@ import { useShortcuts } from "./useShortcuts.ts";
 // (`shortcuts.ts`), and the right button on the dial opens the lot as a menu
 // where the pointer is.
 //
+// The dial carries the app's name and the Settings cog, printed where a
+// watch prints its maker and its date, so on a phone this screen has no bar
+// over it unless there is a project to switch or a cloud to show: the watch
+// is the top of the screen.
+//
 // The screen owns no state beyond the modals it opens. Every band is derived
 // from the day's spans up to `now`, once a second, through `day.ts`; every
 // button is one of the pure edits in `actions.ts` applied to the day and
@@ -103,6 +108,10 @@ type Props = {
   backlight: Backlight;
   onAddProject: () => void;
   onNotice: (message: string) => void;
+  /** The cog on the dial. Settings is a screen on the phone and a panel on
+   *  the desk; the shell knows which. */
+  onOpenSettings: () => void;
+  settingsOpen?: boolean;
 };
 
 /** The kind form on screen: one being invented (`id` null), or the one being
@@ -117,6 +126,8 @@ export function TodayScreen({
   backlight,
   onAddProject,
   onNotice,
+  onOpenSettings,
+  settingsOpen,
 }: Props) {
   const t = useT();
   const now = useNow(1000);
@@ -373,6 +384,8 @@ export function TodayScreen({
             onToggle={toggleWork}
             onOpen={(at) => setTimeline({ at: at ?? null })}
             onMenu={(x, y) => setMenu({ x, y })}
+            onOpenSettings={onOpenSettings}
+            settingsOpen={settingsOpen}
           />
         </div>
         <button
@@ -474,9 +487,6 @@ export function TodayScreen({
             <span className="truncate">{t("today.custom")}</span>
           </button>
         </div>
-        {state !== "out" && (
-          <p className="app-hint text-xs text-muted">{t("today.breaksHint")}</p>
-        )}
       </section>
 
       <section data-area="kinds" className="flex flex-col gap-1.5">

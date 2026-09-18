@@ -6,9 +6,12 @@ import {
   DIAL_R,
   DIAL_SECONDS,
   ROMAN_HOURS,
+  SIGNATURE,
+  SIGNATURE_REACH,
   TRACK_R,
   angleOf,
   arcPath,
+  chapterMarks,
   dialLayout,
   handAngles,
   handTurns,
@@ -205,6 +208,38 @@ describe("dialLayout", () => {
     }
   });
 
+  it("keeps the printing — the name, the word and the window — inside the ring on every dial", () => {
+    // The reach is the further of the two ends: the top of the name under
+    // twelve, and the foot of the window above six.
+    expect(SIGNATURE_REACH).toBe(
+      Math.max(
+        SIGNATURE.name + SIGNATURE.nameSize / 2,
+        SIGNATURE.window + SIGNATURE.windowHeight / 2,
+      ),
+    );
+    for (const dial of every) {
+      const l = dialLayout(dial);
+      const where = JSON.stringify(dial);
+      expect(l.ringInner, `${where} prints over the ring`).toBeGreaterThan(
+        SIGNATURE_REACH,
+      );
+      // Inside the ring the markers hang under it at twelve; the name has
+      // to clear them too, on every size.
+      if (dial.placement === "inside") {
+        const reach = reachOf(dial, l.numeralSize);
+        expect(
+          l.markerR - reach,
+          `${where} prints over twelve`,
+        ).toBeGreaterThan(SIGNATURE.name + SIGNATURE.nameSize / 2);
+      }
+    }
+    // The word sits between the name and the centre, the window below it.
+    expect(SIGNATURE.line + SIGNATURE.lineSize / 2).toBeLessThan(
+      SIGNATURE.name - SIGNATURE.nameSize / 2,
+    );
+    expect(SIGNATURE.window - SIGNATURE.windowHeight / 2).toBeGreaterThan(20);
+  });
+
   it("stops the hands at the ring: minute on the band, second at its edge", () => {
     for (const dial of every) {
       const l = dialLayout(dial);
@@ -275,6 +310,54 @@ describe("dialLayout", () => {
     });
     expect(large.markerLength).toBeGreaterThan(small.markerLength);
     expect(large.markerWidth).toBeGreaterThan(small.markerWidth);
+  });
+});
+
+describe("chapterMarks", () => {
+  const marks = chapterMarks();
+
+  it("prints sixty marks: a numeral every five minutes, a tick between", () => {
+    expect(marks).toHaveLength(60);
+    const numerals = marks.filter((m) => m.kind === "numeral");
+    expect(numerals).toHaveLength(12);
+    expect(numerals.map((m) => m.label)).toEqual([
+      "60",
+      "05",
+      "10",
+      "15",
+      "20",
+      "25",
+      "30",
+      "35",
+      "40",
+      "45",
+      "50",
+      "55",
+    ]);
+    expect(marks.filter((m) => m.kind === "tick")).toHaveLength(48);
+  });
+
+  it("lays a mark at every six degrees, clockwise from twelve", () => {
+    marks.forEach((m, i) => expect(m.angle).toBe(i * 6));
+  });
+
+  it("turns a numeral along the ring, and the lower half the other way up", () => {
+    const at = (minute: number) => {
+      const m = marks.find((x) => x.kind === "numeral" && x.minute === minute);
+      if (!m || m.kind !== "numeral")
+        throw new Error(`no numeral at ${minute}`);
+      return m.turn;
+    };
+    expect(at(60)).toBe(0);
+    expect(at(5)).toBe(30);
+    expect(at(15)).toBe(90);
+    // Past three the numerals would hang upside down, so they are flipped.
+    expect(at(20)).toBe(300);
+    expect(at(30)).toBe(0);
+    expect(at(40)).toBe(60);
+    // And right again from nine.
+    expect(at(45)).toBe(270);
+    expect(at(55)).toBe(330);
   });
 });
 

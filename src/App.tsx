@@ -36,7 +36,7 @@ import { ReportScreen } from "./app/ReportScreen.tsx";
 import { SettingsScreen } from "./app/SettingsScreen.tsx";
 import { SidePanel } from "./app/SidePanel.tsx";
 import { TodayScreen } from "./app/TodayScreen.tsx";
-import { TopBar } from "./app/TopBar.tsx";
+import { TopBar, topBarNeeded } from "./app/TopBar.tsx";
 import { projectList } from "./app/types.ts";
 import { useAppSettings } from "./app/useAppSettings.ts";
 import { useDesk } from "./app/useDesk.ts";
@@ -213,6 +213,8 @@ export function App() {
         show("projects");
       }}
       onNotice={notice}
+      onOpenSettings={toggleSettings}
+      settingsOpen={desk && settingsOpen}
     />
   );
   const logScreen = (
@@ -246,37 +248,49 @@ export function App() {
     />
   );
 
+  // The top bar, and whether there is one. The watch carries the app's name
+  // and the cog itself (see `Dial.tsx`), so over Today the bar has neither;
+  // on the phone that leaves it empty unless there is a project to switch
+  // or a cloud to show, and an empty bar is not drawn — the watch is the
+  // top of the screen, and the screen pads down from the status bar itself
+  // (`.app-bare`).
+  const bar = {
+    watch: tab === "today",
+    onSelect: desk ? show : undefined,
+    projectSlot:
+      projects.length > 1 && project ? (
+        <SelectPicker<string>
+          value={project.id}
+          options={projects.map((e) => ({ value: e.id, label: e.name }))}
+          onChange={(id) => update("activeProjectId", id)}
+          ariaLabel={t("common.project")}
+          triggerClassName="max-w-[9rem] truncate lg:max-w-[16rem]"
+        />
+      ) : undefined,
+    syncSlot:
+      sync.backend !== "local" ? (
+        <SyncStatus
+          providerName={sync.providerName}
+          status={sync.status}
+          dirty={sync.dirty}
+          offline={sync.offline}
+          onOpenDetails={() => setSyncDetailsOpen(true)}
+          labels={{ syncedTo: (name) => t("sync.syncedTo", { name }) }}
+        />
+      ) : undefined,
+  };
+  const bare = !topBarNeeded(bar);
+
   return (
     <div className="flex h-full flex-col bg-page text-fg">
-      <TopBar
-        active={tab}
-        onOpenSettings={toggleSettings}
-        onSelect={desk ? show : undefined}
-        settingsOpen={desk && settingsOpen}
-        projectSlot={
-          projects.length > 1 && project ? (
-            <SelectPicker<string>
-              value={project.id}
-              options={projects.map((e) => ({ value: e.id, label: e.name }))}
-              onChange={(id) => update("activeProjectId", id)}
-              ariaLabel={t("common.project")}
-              triggerClassName="max-w-[9rem] truncate lg:max-w-[16rem]"
-            />
-          ) : undefined
-        }
-        syncSlot={
-          sync.backend !== "local" ? (
-            <SyncStatus
-              providerName={sync.providerName}
-              status={sync.status}
-              dirty={sync.dirty}
-              offline={sync.offline}
-              onOpenDetails={() => setSyncDetailsOpen(true)}
-              labels={{ syncedTo: (name) => t("sync.syncedTo", { name }) }}
-            />
-          ) : undefined
-        }
-      />
+      {!bare && (
+        <TopBar
+          active={tab}
+          onOpenSettings={toggleSettings}
+          settingsOpen={desk && settingsOpen}
+          {...bar}
+        />
+      )}
 
       {/* The content area. It is the frame rather than the scroller: the
           screen inside it scrolls, and so does the desk's settings panel,
@@ -309,7 +323,9 @@ export function App() {
             data-enter={enter}
             className={`app-screen mx-auto flex min-h-full max-w-2xl flex-col ${
               desk ? "lg:max-w-3xl" : ""
-            } ${desk && tab === "today" ? "lg:h-full lg:max-w-none" : ""}`}
+            } ${desk && tab === "today" ? "lg:h-full lg:max-w-none" : ""} ${
+              bare ? "app-bare" : ""
+            }`}
           >
             {tab === "today" && todayScreen}
             {tab === "log" && logScreen}
