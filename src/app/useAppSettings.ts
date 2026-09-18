@@ -51,6 +51,13 @@ export type AppSettings = {
   /** The light behind the dial while working: its colour, its beat and how
    *  bright. Per device, like the size — a light suits a room. */
   backlight: Backlight;
+  /** Whether the light on the dial's metal follows the device: tilt the
+   *  phone and the reflection slides across the markers and hands, the way
+   *  it does on a watch. Off until it is asked for, because on iOS the
+   *  sensor needs the user's permission and the tap that turns this on is
+   *  what asks for it (`useTilt.ts`). Per device, like the size and the
+   *  light behind the case. */
+  reflect: boolean;
   /** The project the Today, Log and Report screens show. Null until one is
    *  chosen; `App` falls back to the first project by name. */
   activeProjectId: string | null;
@@ -67,6 +74,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   clock: DIAL_PRESET[DEFAULT_DIAL_PRESET],
   clockSize: "large",
   backlight: DEFAULT_BACKLIGHT,
+  reflect: false,
   activeProjectId: null,
   devMode: false,
   captureLogs: false,
@@ -152,6 +160,9 @@ export function parseSettings(raw: string): AppSettings {
     clock: parseDial(merged.clock),
     clockSize: oneOf(CLOCK_SIZE, merged.clockSize, DEFAULT_SETTINGS.clockSize),
     backlight: clampBacklight(merged.backlight),
+    // A device that stored its settings before the light could be moved has
+    // it off, which is what every device starts with anyway.
+    reflect: merged.reflect === true,
     activeProjectId,
     devMode: merged.devMode === true,
     captureLogs: merged.captureLogs === true,

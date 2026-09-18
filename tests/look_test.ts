@@ -24,7 +24,9 @@ import {
   DIAL_RINGS,
   DIAL_SCALE,
   DIAL_SCALES,
+  STEEL,
   glowGeometry,
+  isApplied,
   isNumeral,
   resolveDial,
   type DialConfig,
@@ -86,6 +88,44 @@ describe("the dial's vocabulary", () => {
     }
   });
 
+  it("makes every applied part of one metal, which reads on every face", () => {
+    // Two tones of steel, one lit and one in shade, and they are tones of
+    // one metal rather than two colours: a cool cast is what steel has, a
+    // hue is what it does not.
+    expect(luminance(STEEL.light)).toBeGreaterThan(luminance(STEEL.shade));
+    expect(saturation(STEEL.light)).toBeLessThan(0.15);
+    expect(saturation(STEEL.shade)).toBeLessThan(0.15);
+    for (const face of DIAL_FACES) {
+      const dial = luminance(DIAL_FACE[face].dial);
+      const best = Math.max(
+        Math.abs(luminance(STEEL.light) - dial),
+        Math.abs(luminance(STEEL.shade) - dial),
+      );
+      expect(best, `steel does not read on the ${face} face`).toBeGreaterThan(
+        0.1,
+      );
+    }
+  });
+
+  it("applies every marker but the printed ones", () => {
+    // A block, a dot, a wedge, a triangle: parts screwed to the dial, and so
+    // drawn from the light on them.
+    for (const kind of [
+      "baton",
+      "doubleBaton",
+      "wideBaton",
+      "dot",
+      "triangle",
+      "wedge",
+    ] as const) {
+      expect(isApplied(kind), kind).toBe(true);
+    }
+    // The print is the ink's: a numeral, and a tick on a minute track.
+    for (const kind of ["arabic", "roman", "tick"] as const) {
+      expect(isApplied(kind), kind).toBe(false);
+    }
+  });
+
   it("prints the minutes on the chapter ring, in white on blue, and nothing on the groove", () => {
     expect(DIAL_RING.groove.printed).toBe(false);
     expect(DIAL_RING.groove.fill).toBeNull();
@@ -107,12 +147,11 @@ describe("the dial's vocabulary", () => {
     }
   });
 
-  it("draws a bar in the ink and a tapered hand in steel, narrowing to its tip", () => {
+  it("shapes a bar as a bar and a tapered hand narrowing to its tip", () => {
     const bar = DIAL_HANDS.bar;
     expect(bar.taper).toBe(false);
     expect(bar.base).toBe(1);
     expect(bar.tip).toBe(1);
-    expect(bar.steel).toBeNull();
     expect(bar.counterweight).toBe("disc");
     // A stub past the axle, which the cap covers.
     expect(bar.boss).toBeGreaterThan(0);
@@ -124,24 +163,6 @@ describe("the dial's vocabulary", () => {
     expect(tapered.base).toBeGreaterThan(1);
     expect(tapered.tip).toBeLessThan(1);
     expect(tapered.tip).toBeLessThan(tapered.base);
-    // Two tones of steel, one lit and one in shade, and they are tones of
-    // one metal rather than two colours: a cool cast is what steel has, a
-    // hue is what it does not.
-    const steel = tapered.steel!;
-    expect(luminance(steel.light)).toBeGreaterThan(luminance(steel.shade));
-    expect(saturation(steel.light)).toBeLessThan(0.15);
-    expect(saturation(steel.shade)).toBeLessThan(0.15);
-    // And it reads on every face, light or dark.
-    for (const face of DIAL_FACES) {
-      const dial = luminance(DIAL_FACE[face].dial);
-      const best = Math.max(
-        Math.abs(luminance(steel.light) - dial),
-        Math.abs(luminance(steel.shade) - dial),
-      );
-      expect(best, `steel does not read on the ${face} face`).toBeGreaterThan(
-        0.1,
-      );
-    }
     // Nothing past the axle: the widest point is the hub, and a tail past it
     // would flare out from under the cap.
     expect(tapered.boss).toBe(0);

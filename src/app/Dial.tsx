@@ -8,6 +8,7 @@ import {
   DIAL_R,
   DIAL_SECONDS,
   HANDS,
+  handAngles,
   RING_BAND,
   RING_EDGE,
   ROMAN_HOURS,
@@ -15,6 +16,7 @@ import {
   TRACK_R,
   arcPath,
   chapterMarks,
+  chapterTracks,
   dialLayout,
   polar,
 } from "./clock.ts";
@@ -30,6 +32,15 @@ import {
   type DialConfig,
   type DialHandsSpec,
 } from "./look.ts";
+import {
+  AMBIENT,
+  domeSheen,
+  facetTone,
+  sheenTurn,
+  steelTone,
+  type Dome,
+  type Light,
+} from "./sheen.ts";
 import type { Seconds } from "./types.ts";
 import { useHands } from "./useHands.ts";
 
@@ -107,6 +118,9 @@ type Props = {
   /** Worked over target, drawn on the bezel: 1 is the day done, above 1
    *  overtime. Left out, the bezel is only a bezel. */
   progress?: number;
+  /** Where the light on the metal comes from. Left out, the dial is lit the
+   *  way a photographed watch is — over the left shoulder. */
+  light?: Light;
   className?: string;
   /** The accessible name and description, as `<title>` / `<desc>` children,
    *  or nothing for a dial that is decoration. */
@@ -121,6 +135,7 @@ export function Dial({
   live = false,
   id,
   progress,
+  light = AMBIENT,
   className,
   children,
   ariaHidden,
@@ -138,6 +153,10 @@ export function Dial({
   // one, a darker line down a light one, so they read as metal with an edge
   // rather than as print.
   const facet = face.dark ? "rgba(0,0,0,0.28)" : "rgba(255,255,255,0.4)";
+  // The line round an applied part, where the metal meets the dial: dark
+  // whatever the face, because it is a shadow rather than an ink — this is
+  // what holds a polished marker on a pale dial.
+  const metalEdge = "rgba(0,0,0,0.38)";
   // The window's recess: a shade off the face, the way a date disc sits a
   // step below the dial.
   const recess = face.dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.05)";
@@ -155,11 +174,31 @@ export function Dial({
       })
     : [];
 
+  // The printed ring's two tracks, and where its numerals sit in what the
+  // ticks leave of the ring.
+  const tracks = chapterTracks(layout.ringInner);
+  const numeralR = (tracks.ring.outer + layout.ringOuter) / 2;
+  const faceTrack = ring.printed
+    ? Array.from({ length: 60 }, (_, i) => {
+        const hour = i % 5 === 0;
+        const inner = hour ? tracks.face.inner : tracks.face.inner + 1.1;
+        const [x1, y1] = polar(C, C, inner, i * 6);
+        const [x2, y2] = polar(C, C, tracks.face.outer, i * 6);
+        return { x1, y1, x2, y2, hour };
+      })
+    : [];
+
   const done = progress === undefined ? 0 : Math.max(0, Math.min(1, progress));
   const over =
     progress === undefined ? 0 : Math.max(0, Math.min(1, progress - 1));
   const doneArc = arcPath(C, C, BEZEL_R, 0, done * DIAL_SECONDS);
   const overArc = arcPath(C, C, BEZEL_R, 0, over * DIAL_SECONDS);
+
+  // Where the hands point, for the light on them. The rotations the loop
+  // writes are not React's to read, and they do not need to be: the light on
+  // a hand turns as slowly as the hand does, so the moment this render was
+  // handed is near enough, and a preview is exact.
+  const bearing = handAngles(now);
 
   const markers = DIAL_HOURS.map((hour) => ({
     hour,
@@ -181,7 +220,14 @@ export function Dial({
           <stop offset="70%" stopColor={face.dial} />
           <stop offset="100%" stopColor={face.edge} />
         </radialGradient>
-        <linearGradient id={sheenId} x1="0" y1="0" x2="1" y2="1">
+        <linearGradient
+          id={sheenId}
+          x1="0"
+          y1="0"
+          x2="1"
+          y2="1"
+          gradientTransform={`rotate(${sheenTurn(light)} 0.5 0.5)`}
+        >
           <stop offset="0%" stopColor="#fff" stopOpacity="0.22" />
           <stop offset="45%" stopColor="#fff" stopOpacity="0" />
           <stop offset="100%" stopColor="#000" stopOpacity="0.16" />
@@ -284,6 +330,24 @@ export function Dial({
         </>
       )}
 
+      {/* And the track under it, on the face: the finer one the minute hand
+          is read against, hanging below the ring and growing inward. Drawn
+          before the day, because it is on the dial rather than on the ring —
+          nothing the day paints reaches it. */}
+      {ring.printed &&
+        faceTrack.map((tick, i) => (
+          <line
+            key={`f${i}`}
+            x1={tick.x1}
+            y1={tick.y1}
+            x2={tick.x2}
+            y2={tick.y2}
+            stroke={face.ink}
+            strokeWidth={tick.hour ? 1 : 0.6}
+            opacity={tick.hour ? 0.6 : 0.4}
+          />
+        ))}
+
       {bands.map((b, i) => {
         const band = arcPath(C, C, layout.bandR, b.start, b.end);
         const edge = b.edge
@@ -312,14 +376,15 @@ export function Dial({
       })}
 
       {/* The minutes, printed over the day: a chapter ring keeps its
-          numerals whatever the day has painted under them. Turned to lie
-          along the ring, and the lower half turned the other way so a 30
-          at six is not read upside down. */}
+          numerals whatever the day has painted under them. Its ticks stand on
+          the ring's inner edge and grow outward across it, with the numerals
+          in the room that leaves — turned to lie along the ring, and the lower
+          half turned the other way so a 30 at six is not read upside down. */}
       {ring.printed &&
         chapterMarks().map((m) => {
           if (m.kind === "tick") {
-            const [x1, y1] = polar(C, C, layout.ringOuter - 3.5, m.angle);
-            const [x2, y2] = polar(C, C, layout.ringOuter - 0.5, m.angle);
+            const [x1, y1] = polar(C, C, tracks.ring.inner, m.angle);
+            const [x2, y2] = polar(C, C, tracks.ring.outer, m.angle);
             return (
               <line
                 key={`m${m.minute}`}
@@ -333,7 +398,7 @@ export function Dial({
               />
             );
           }
-          const [x, y] = polar(C, C, layout.bandR - 0.6, m.angle);
+          const [x, y] = polar(C, C, numeralR, m.angle);
           return (
             <text
               key={`m${m.minute}`}
@@ -385,7 +450,10 @@ export function Dial({
               length={layout.markerLength}
               width={layout.markerWidth}
               ink={face.ink}
-              facet={facet}
+              edge={metalEdge}
+              light={light}
+              axis={angle}
+              gradient={`${id}-m${hour}`}
             />
           </g>
         );
@@ -480,8 +548,10 @@ export function Dial({
             set={handSet}
             length={layout.hands.hour}
             width={HANDS.hour}
-            ink={face.ink}
-            facet={facet}
+            edge={metalEdge}
+            light={light}
+            axis={bearing.hour}
+            gradient={`${id}-hour`}
           />
         </g>
         <g data-hand="minute" ref={hands.minute} style={hand(turns.minute)}>
@@ -489,8 +559,10 @@ export function Dial({
             set={handSet}
             length={layout.hands.minute}
             width={HANDS.minute}
-            ink={face.ink}
-            facet={facet}
+            edge={metalEdge}
+            light={light}
+            axis={bearing.minute}
+            gradient={`${id}-minute`}
           />
         </g>
         <g data-hand="second" ref={hands.second} style={hand(turns.second)}>
@@ -518,16 +590,25 @@ function hand(degrees: number) {
   };
 }
 
-/** One applied marker, drawn at twelve o'clock — the caller rotates it.
- *  `r` is the marker's centre, `length` its extent along the radius and
- *  `width` across it. */
+/** One marker, drawn at twelve o'clock — the caller rotates it. `r` is the
+ *  marker's centre, `length` its extent along the radius and `width` across
+ *  it; `axis` is the bearing it stands at and `light` where the light is.
+ *
+ *  What it is drawn as is its profile (`markerProfile`). A roof is a plate
+ *  with a ridge: two facets, each one flat tone, and the ridge down the
+ *  middle where they meet. A dome is a turned plot, painted through a
+ *  gradient so the light lands as a band across it. Print is the ink's.
+ */
 function Marker({
   kind,
   r,
   length,
   width,
   ink,
-  facet,
+  edge,
+  light,
+  axis,
+  gradient,
 }: {
   kind:
     | "baton"
@@ -541,53 +622,69 @@ function Marker({
   length: number;
   width: number;
   ink: string;
-  facet: string;
+  edge: string;
+  light: Light;
+  axis: number;
+  gradient: string;
 }) {
   const top = C - r - length / 2;
   const bottom = C - r + length / 2;
+  // The two faces of every roof on this marker: one tone each, and which is
+  // the bright one is the light's business.
+  const lit = steelTone(facetTone(axis, -1, light));
+  const shade = steelTone(facetTone(axis, 1, light));
+  const roof = (x: number, w: number) => (
+    <Roof
+      key={x}
+      {...plate(x, w, top, bottom)}
+      lit={lit}
+      shade={shade}
+      edge={edge}
+    />
+  );
   switch (kind) {
     case "baton":
-      return (
-        <Baton
-          x={C}
-          top={top}
-          bottom={bottom}
-          w={width}
-          ink={ink}
-          facet={facet}
-        />
-      );
+      return roof(C, width);
     case "doubleBaton":
       return (
         <>
-          <Baton
-            x={C - width * 0.9}
-            top={top}
-            bottom={bottom}
-            w={width}
-            ink={ink}
-            facet={facet}
-          />
-          <Baton
-            x={C + width * 0.9}
-            top={top}
-            bottom={bottom}
-            w={width}
-            ink={ink}
-            facet={facet}
-          />
+          {roof(C - width * 0.9, width)}
+          {roof(C + width * 0.9, width)}
         </>
       );
     case "wideBaton":
+      return roof(C, width * 1.9);
+    case "triangle":
       return (
-        <Baton
-          x={C}
-          top={top}
-          bottom={bottom}
-          w={width * 1.9}
-          ink={ink}
-          facet={facet}
+        <Roof
+          {...wedge(length * 0.48, top, bottom)}
+          lit={lit}
+          shade={shade}
+          edge={edge}
         />
+      );
+    case "wedge":
+      return (
+        <Roof
+          {...wedge(width * 0.9, top, bottom)}
+          lit={lit}
+          shade={shade}
+          edge={edge}
+        />
+      );
+    case "dot":
+      return (
+        <>
+          <Steel id={gradient} dome={domeSheen(axis, light)} />
+          <circle
+            cx={C}
+            cy={C - r}
+            r={length * 0.32}
+            fill={`url(#${gradient})`}
+            stroke={edge}
+            strokeWidth={0.4}
+          />
+        </>
       );
     case "tick":
       return (
@@ -599,149 +696,143 @@ function Marker({
           fill={ink}
         />
       );
-    case "dot":
-      return (
-        <>
-          <circle cx={C} cy={C - r} r={length * 0.32} fill={ink} />
-          <circle
-            cx={C}
-            cy={C - r}
-            r={length * 0.32 - width * 0.35}
-            fill="none"
-            stroke={facet}
-            strokeWidth={width * 0.35}
-          />
-        </>
-      );
-    case "triangle":
-      return (
-        <polygon
-          points={`${C - length * 0.48},${top} ${C + length * 0.48},${top} ${C},${bottom}`}
-          fill={ink}
-        />
-      );
-    case "wedge":
-      return (
-        <>
-          <polygon
-            points={`${C - width * 0.9},${top} ${C + width * 0.9},${top} ${C},${bottom}`}
-            fill={ink}
-          />
-          <line
-            x1={C}
-            y1={top + 1}
-            x2={C}
-            y2={bottom - 1}
-            stroke={facet}
-            strokeWidth={width * 0.3}
-          />
-        </>
-      );
   }
 }
 
-function Baton({
-  x,
-  top,
-  bottom,
-  w,
-  ink,
-  facet,
+/** A plate with a ridge down it: the face to the left of the ridge, the face
+ *  to the right, and the hairline of shadow round the pair where the metal
+ *  meets the dial. The caller knows the shape; this knows what the light
+ *  does with it. */
+function Roof({
+  left,
+  right,
+  outline,
+  lit,
+  shade,
+  edge,
 }: {
-  x: number;
-  top: number;
-  bottom: number;
-  w: number;
-  ink: string;
-  facet: string;
+  left: string;
+  right: string;
+  outline: string;
+  lit: string;
+  shade: string;
+  edge: string;
 }) {
   return (
     <>
-      <rect x={x - w / 2} y={top} width={w} height={bottom - top} fill={ink} />
-      <line
-        x1={x}
-        y1={top + 0.5}
-        x2={x}
-        y2={bottom - 0.5}
-        stroke={facet}
-        strokeWidth={w * 0.3}
+      <polygon points={left} fill={lit} />
+      <polygon points={right} fill={shade} />
+      <polygon
+        points={outline}
+        fill="none"
+        stroke={edge}
+        strokeWidth={0.4}
+        strokeLinejoin="round"
       />
     </>
   );
 }
 
+/** A straight block, `w` across and centred on `x`: its two faces and its
+ *  outline, as polygon points. */
+function plate(x: number, w: number, top: number, bottom: number) {
+  const half = w / 2;
+  return {
+    left: `${x - half},${top} ${x},${top} ${x},${bottom} ${x - half},${bottom}`,
+    right: `${x},${top} ${x + half},${top} ${x + half},${bottom} ${x},${bottom}`,
+    outline: `${x - half},${top} ${x + half},${top} ${x + half},${bottom} ${x - half},${bottom}`,
+  };
+}
+
+/** A block that narrows to a point at the inner end — a wedge, or the
+ *  triangle at twelve — `half` across at its wide end. */
+function wedge(half: number, top: number, bottom: number) {
+  return {
+    left: `${C - half},${top} ${C},${top} ${C},${bottom}`,
+    right: `${C},${top} ${C + half},${top} ${C},${bottom}`,
+    outline: `${C - half},${top} ${C + half},${top} ${C},${bottom}`,
+  };
+}
+
+/** The gradient a polished part is filled through: the band where the light
+ *  comes back off the curve, and the two shoulders either side of it. Across
+ *  the shape's own width, so it turns with whatever group rotates the part —
+ *  which is why the band is in the same place on the drawing and the light is
+ *  in the same place on the dial. */
+function Steel({ id, dome }: { id: string; dome: Dome }) {
+  return (
+    <defs>
+      <linearGradient id={id} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor={steelTone(dome.left)} />
+        <stop
+          offset={`${Math.round(dome.crest * 100)}%`}
+          stopColor={steelTone(dome.peak)}
+        />
+        <stop offset="100%" stopColor={steelTone(dome.right)} />
+      </linearGradient>
+    </defs>
+  );
+}
+
 /** The hour or minute hand, drawn at twelve o'clock — the caller's group
  *  rotates it. `length` is its tip from the centre, `width` the width the
- *  geometry gives it, and the set what it is shaped like and made of.
+ *  geometry gives it, `axis` where it is pointing on the dial and `light`
+ *  where the light is.
  *
- *  A bar is a stroke the same width all the way out with a facet down it. A
- *  tapered hand is a shape: broad where it leaves the cap, narrowing to its
- *  tip, and split down the ridge into the half that catches the light and the
- *  half in shade — which is what makes it read as polished steel rather than
- *  as print. Steel takes a hairline of the ink round it too, because a bright
- *  hand over a pale face needs an edge to be a hand. */
+ *  Both sets are steel, because a hand is. A bar is one domed bar, lit across
+ *  its width the way an applied marker is. A tapered hand is a shape with a
+ *  ridge down it: broad where it leaves the cap, narrowing to its tip, and
+ *  drawn as the two flat facets either side of that ridge — so which half is
+ *  the bright one depends on where the hand is pointing, and changes as it
+ *  sweeps. Either way a hairline of shadow round it holds it on a pale face.
+ */
 function Hand({
   set,
   length,
   width,
-  ink,
-  facet,
+  edge,
+  light,
+  axis,
+  gradient,
 }: {
   set: DialHandsSpec;
   length: number;
   width: number;
-  ink: string;
-  facet: string;
+  edge: string;
+  light: Light;
+  axis: number;
+  gradient: string;
 }) {
   const top = C - length;
   const bottom = C + set.boss;
   if (!set.taper) {
     return (
       <>
-        <line
-          x1={C}
-          y1={bottom}
-          x2={C}
-          y2={top}
-          stroke={ink}
-          strokeWidth={width}
-          strokeLinecap="round"
-        />
-        <line
-          x1={C}
-          y1={C - 2}
-          x2={C}
-          y2={top + 3}
-          stroke={facet}
-          strokeWidth={width * 0.3}
-          strokeLinecap="round"
+        <Steel id={gradient} dome={domeSheen(axis, light)} />
+        <rect
+          x={C - width / 2}
+          y={top}
+          width={width}
+          height={bottom - top}
+          rx={width / 2}
+          fill={`url(#${gradient})`}
+          stroke={edge}
+          strokeWidth={0.35}
         />
       </>
     );
   }
   const base = (width * set.base) / 2;
   const tip = (width * set.tip) / 2;
-  const left = `${C - base},${bottom} ${C - tip},${top}`;
-  const right = `${C + tip},${top} ${C + base},${bottom}`;
   return (
-    <>
-      <polygon
-        points={`${left} ${C},${top} ${C},${bottom}`}
-        fill={set.steel?.light ?? ink}
-      />
-      <polygon
-        points={`${C},${bottom} ${C},${top} ${right}`}
-        fill={set.steel?.shade ?? ink}
-      />
-      <polygon
-        points={`${left} ${right}`}
-        fill="none"
-        stroke={set.steel ? ink : facet}
-        strokeWidth={0.5}
-        strokeLinejoin="round"
-        opacity={set.steel ? 0.45 : 1}
-      />
-    </>
+    <Roof
+      left={`${C - base},${bottom} ${C - tip},${top} ${C},${top} ${C},${bottom}`}
+      right={`${C},${bottom} ${C},${top} ${C + tip},${top} ${C + base},${bottom}`}
+      outline={`${C - base},${bottom} ${C - tip},${top} ${C + tip},${top} ${C + base},${bottom}`}
+      lit={steelTone(facetTone(axis, -1, light))}
+      shade={steelTone(facetTone(axis, 1, light))}
+      edge={edge}
+    />
   );
 }
 

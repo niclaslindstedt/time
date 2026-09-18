@@ -152,7 +152,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   target, the clamps.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
   rotations, arc paths, `dialLayout` — where the day's ring, the hour markers
-  and the hands sit for a given placement and marker size — and `ringHit` /
+  and the hands sit for a given placement and marker size — `chapterTracks`,
+  the two minute tracks a printed ring is read against (its own ticks on its
+  inner edge, and the finer one on the face under it) — and `ringHit` /
   `timesAt`, which read a point on the ring back as a moment. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
   stepper lands it with; and the **wind**, `windPlan` / `windTurns`, the
@@ -162,11 +164,21 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/look.ts` — the app's two themes, and the dial's vocabulary: the
   eight faces, nine typefaces, nine marker styles, eight hour sizes, the
   three placements against the ring, the two rings the day is drawn on (a
-  groove, or the printed chapter ring the day fills), the two sets of hands
-  (a bar printed in the face's ink, or the tapered steel of a dress watch
-  with a hairline second hand),
-  the three movements, and the nine presets they combine into. Every option is an id and a spec, so the
+  groove, or the printed chapter ring the day fills), the two shapes of hand
+  (a half-round bar, or the ridged taper of a dress watch, both of them
+  steel), the three movements, and the nine presets they combine into. Also
+  `STEEL`, the one metal every applied part is made of, and `markerProfile`,
+  which says whether a marker is a roof, a dome or print — the difference
+  between a part screwed to the dial and something written on it. Every option is an id and a spec, so the
   settings can validate and the tests can walk them.
+- `src/app/sheen.ts` — where the light is, and what it does to the dial's
+  metal. A `Light` is a bearing on the dial and how far off the crystal it
+  stands; `facetTone` is how bright one flat face of a roof is under it (a
+  hand's two halves, a block's two faces), `domeSheen` is the band and
+  shoulders of a turned plot, `steelTone` mixes `STEEL` to a tone and
+  `sheenTurn` swings the crystal's own glare. Pure and clock-free, so a test
+  can pin what a marker at four o'clock looks like without a renderer.
+  `useTilt.ts` is what moves the light.
 - `src/app/format.ts` — durations, timers, times of day, and the parse of a
   typed time.
 - `src/app/merge.ts` — the per-record, last-edit-wins document merge that
@@ -178,6 +190,14 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/useSyncEngine.ts` — the sync engine over the framework's storage
   adapters (debounced push, conflict / auth / throttle handling). Suspended
   wholesale while demo data has taken over storage.
+- `src/app/useTilt.ts` — the one place the device's orientation is read: the
+  `deviceorientation` readings, eased so a hand's shake is not a flicker,
+  turned into `sheen.ts`'s light and handed to the dial, so the reflection on
+  the metal slides as the phone is turned. Behind a setting, because on iOS
+  the sensor needs permission and the tap that switches it on is what asks.
+  Still when reduced motion is asked for. **The readings never leave the
+  frame they are drawn in** — nothing is stored, nothing is sent; the light
+  is the only thing that survives a reading.
 - `src/app/useNow.ts` — the one place the clock is read: `today` and
   `seconds`, ticking at the rate a screen asks for and re-read on focus.
 - `src/app/useHands.ts` — the frames behind `clock.ts`'s hands. A
@@ -218,10 +238,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the Settings cog where a date would be — geometry in `clock.ts`
   (`SIGNATURE`), which the markers are clamped to clear. Paint only, no
   vocabulary, so the same drawing serves Today and the preset cards in
-  Settings. A hand is a bar with a facet or the tapered shape a dress watch
-  wears — whichever `look.ts`'s hand set says, split down its ridge into a
-  lit half and a shaded one when it is steel. The hands are `useHands.ts`'s,
-  off the render loop.
+  Settings. Every applied part — the markers and the hands — is steel rather
+  than ink, drawn from the light `sheen.ts` reckons on it: a roof as its two
+  flat faces either side of the ridge, a dome through a gradient, and a
+  hairline of shadow round both where the metal meets the face. The hands are
+  `useHands.ts`'s, off the render loop; the light on them is read from the
+  moment the dial was handed, because a rotation the loop owns is not React's
+  to read and the light turns as slowly as the hand does.
 - `src/app/ClockFace.tsx` — the day on the dial, and the switch. One ring:
   presence as the accent band and its thin outer line, a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
@@ -363,7 +386,7 @@ regression.
 | A new thing to log about a day                     | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds                                                                                                                                                  |
 | A new derived number                               | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                                                                                                                                                                      |
 | A change to what a button on Today does            | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                                                                                                                                                                            |
-| A change to how the clock draws                    | `src/app/clock.ts` (geometry, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)                                                                                                                                                   |
+| A change to how the clock draws                    | `src/app/clock.ts` (geometry, tested), `sheen.ts` (what the light does to the metal, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)                                                                                            |
 | A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there                                                                                                                                                          |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
 | Something only the desk does                       | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                                                                                                                                  |
@@ -378,6 +401,7 @@ regression.
 | A modal's save / cancel                            | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's                                                                                                                                                |
 | A new way to correct a time on Today               | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`                                                                                                                                                         |
 | A new screen                                       | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                                                                                                                              |
+| A change to the light on the dial's metal          | `src/app/sheen.ts` (the light, and what it does to a facet or a dome — tested in `tests/sheen_test.ts`), `useTilt.ts` (the device's own readings) or `Dial.tsx` (paint)                                                                                                                |
 | A new setting                                      | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                                                                                                                                                                   |
 | A new developer-only affordance                    | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                                                                                                                                                             |
 | A change to what the demo shows                    | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demoData_test.ts`                                                                                                                                                                            |
@@ -389,8 +413,9 @@ regression.
 
 Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and run under
 Vitest in the `node` environment — they cover the pure domain modules
-(`intervals`, `day`, `actions`, `report`, `monthChart`, `clock`, `format`,
-`project`, `kinds`, `merge`, `migrations`, `demoData`, `shortcuts`), which is where the app's real
+(`intervals`, `day`, `actions`, `report`, `monthChart`, `clock`, `sheen`,
+`format`, `project`, `kinds`, `merge`, `migrations`, `demoData`,
+`shortcuts`), which is where the app's real
 logic is. No
 DOM, no testing-library, no mocked clock. `tests/fixtures/helpers.ts` holds the shared
 fixtures (a project, a day, a named-id `ctx`).
@@ -450,7 +475,9 @@ with `[Learn more](feature:<slug>)`.
   black on the light theme. Its ink, bezel and gradient are the face's own and
   never reach the UI around it; the day drawn on it stays the theme's accent,
   flag and category hues. Everything else about the dial — markers, typeface,
-  size, placement, movement — is shape, not colour. A dial option that tinted
+  size, placement, movement — is shape, not colour. The applied parts are
+  not a colour at all: `STEEL` is one metal for all eight faces, and what a
+  marker or a hand looks like is `sheen.ts`'s reckoning of the light on it. A dial option that tinted
   a button or a card would be the palette gallery this rule exists to refuse.
 - **Four destinations, no sidebar, no drawer.** On the phone they are the
   bottom bar, in a fixed left-to-right order a swipe moves along; on the desk

@@ -93,6 +93,15 @@ describe("parseSettings", () => {
     expect(s.clock.markers).toBe("blocks");
   });
 
+  it("keeps the light on the metal still until it is asked for", () => {
+    expect(DEFAULT_SETTINGS.reflect).toBe(false);
+    // A device that stored its settings before there was anything to move
+    // the light with, and one that stored an answer that is not an answer.
+    expect(parseSettings("{}").reflect).toBe(false);
+    expect(parseSettings('{"reflect":"yes"}').reflect).toBe(false);
+    expect(parseSettings('{"reflect":true}').reflect).toBe(true);
+  });
+
   it("clamps each dial field on its own, not all of them together", () => {
     const s = parseSettings(
       JSON.stringify({

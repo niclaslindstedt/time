@@ -23,6 +23,7 @@ import { logStore } from "./log.ts";
 import { downloadBackup, readBackupFile } from "./backup.ts";
 import type { DemoDataToggle } from "./dev/useDemoData.ts";
 import { useT } from "./i18n/index.ts";
+import { requestTilt, tiltSupport } from "./useTilt.ts";
 import { mergeDocs } from "./merge.ts";
 import { serializeDoc } from "./migrations.ts";
 import { emptyDoc } from "./types.ts";
@@ -74,6 +75,9 @@ export function SettingsScreen({
 }: Props) {
   const t = useT();
   const [confirmClear, setConfirmClear] = useState(false);
+  // The device said no to its motion sensor: the switch goes back off, and
+  // says why rather than pretending it is on.
+  const [denied, setDenied] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const importBackup = async (file: File) => {
@@ -143,6 +147,35 @@ export function SettingsScreen({
           />
           <p className="text-xs text-muted">{t("settings.clockSizeHint")}</p>
         </Labelled>
+        {/* The light on the metal, moved by the device. Only offered where
+            there is a sensor to move it with — a switch that cannot do
+            anything is worse than no switch — and the tap is what asks iOS
+            for the sensor, so the answer decides whether it stays on. */}
+        {tiltSupport().has && (
+          <>
+            <ToggleRow
+              label={t("settings.reflect")}
+              hint={t("settings.reflectHint")}
+              checked={settings.reflect}
+              onChange={(next) => {
+                if (!next) {
+                  setDenied(false);
+                  update("reflect", false);
+                  return;
+                }
+                void requestTilt().then((granted) => {
+                  setDenied(!granted);
+                  update("reflect", granted);
+                });
+              }}
+            />
+            {denied && (
+              <p className="text-xs text-muted">
+                {t("settings.reflectDenied")}
+              </p>
+            )}
+          </>
+        )}
         {/* The light behind the case. Its colour is the watch's own, like
             the face's — see `look.ts` for why that is not a palette. */}
         <Labelled label={t("settings.backlight")}>
