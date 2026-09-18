@@ -31,6 +31,11 @@ The main screen, and the whole app for most of a day.
   is a longer wind, up to about three seconds; a gap of a couple of seconds
   is not one at all, and simply ticks. With reduced motion asked for there is
   no wind: the hands are at the time.
+  The day goes round with them. The hours worked and the breaks taken while
+  the tab slept are not on the ring waiting for the hands — the bands fill in
+  under them as they sweep, so the colour is laid down by the hand that is
+  passing over it, and a break that is running when you come back grows into
+  its own half-strength tail rather than over it.
 - **The bezel is the percentage.** It fills clockwise from twelve as the day
   is worked, closing the loop at 100% of the target — and past it, goes round
   again in the flag colour, so overtime is the bezel overshooting rather than

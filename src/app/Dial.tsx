@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import type { ReactNode } from "react";
+import { useRef, type MutableRefObject, type ReactNode } from "react";
 
 import {
   BEZEL_R,
@@ -84,6 +84,14 @@ import { useHands } from "./useHands.ts";
 // the moment it was handed for the first paint. A dial that is not `live` —
 // the previews in Settings — has no loop and simply is where it is.
 //
+// Neither does the day, while the watch is being set. A wind is the whole
+// dial at a moment that is not yet now (see `windMoment`), so the bands are
+// cut off where the hands have reached and grow as they turn — the hours that
+// went by while the tab slept are laid down under the hands rather than being
+// on the ring before them. They are written onto the paths from the same
+// loop, for the same reason: re-rendering a dial sixty times a second to move
+// two arcs is what would make the hands over them stutter.
+//
 // What they are *shaped* like is the set the settings chose: a bar printed in
 // the face's ink with a facet down it, or the tapered hand of a dress watch,
 // drawn as a shape rather than a stroke and split down its ridge into a lit
@@ -103,7 +111,55 @@ export type Band = {
   fill: string;
   edge?: string;
   opacity?: number;
+  /** A stretch that has not been lived yet — the tail of a break, assumed
+   *  rather than recorded. Give it the whole stretch it belongs to: what is
+   *  drawn is whatever of it lies ahead of the moment the dial stands at,
+   *  so a record and its plan meet under the hands rather than at a moment
+   *  the dial has not reached. */
+  ahead?: boolean;
 };
+
+/**
+ * The part of a band the dial has reached: `at` is the moment it stands at
+ * while it is being wound, and `null` the ordinary answer — at the time.
+ *
+ * A record is drawn up to the moment and a plan from it. The plan is cut at
+ * the moment either way, because what is left of a stretch is measured from
+ * where the dial is; a stretch the dial has not got to yet is not drawn at
+ * all, not even as a plan.
+ */
+function reached(
+  b: Band,
+  at: Seconds | null,
+  now: Seconds,
+): [Seconds, Seconds] {
+  if (!b.ahead) {
+    return at === null ? [b.start, b.end] : [b.start, Math.min(b.end, at)];
+  }
+  const cut = at ?? now;
+  return cut < b.start ? [b.start, b.start] : [cut, b.end];
+}
+
+/** A band's two arcs, once they are on the page. */
+type BandShape = { band: SVGPathElement | null; edge: SVGPathElement | null };
+
+/** Keep hold of a band's arc, so a wind has somewhere to write. */
+function hold(
+  shapes: MutableRefObject<BandShape[]>,
+  i: number,
+  part: keyof BandShape,
+  el: SVGPathElement | null,
+): void {
+  const shape = (shapes.current[i] ??= { band: null, edge: null });
+  shape[part] = el;
+}
+
+/** Write an arc, skipping one that is already drawn where it belongs. */
+function draw(el: SVGPathElement | null, d: string | null): void {
+  const path = d ?? "";
+  if (!el || el.getAttribute("d") === path) return;
+  el.setAttribute("d", path);
+}
 
 type Props = {
   dial: DialConfig;
@@ -147,8 +203,33 @@ export function Dial({
   const ring = DIAL_RING[dial.ring];
   const handSet = DIAL_HANDS[dial.hands];
   const layout = dialLayout(dial);
-  const hands = useHands(now, live, DIAL_MOVEMENT[dial.movement].beats);
+
+  // The day, while the watch is being set. The bands are the ones the last
+  // render was handed and the arcs are `clock.ts`'s, so this is the same
+  // drawing the render does — written straight onto the paths, for the same
+  // reason the hands are: a wind is sixty frames a second, and the whole
+  // dial re-rendering under it is what would make the hands themselves
+  // stutter. Both live in refs because the loop outlives the render that
+  // started it.
+  const shapes = useRef<BandShape[]>([]);
+  const day = useRef(bands);
+  day.current = bands;
+  const fill = (at: Seconds | null) => {
+    day.current.forEach((b, i) => {
+      const shape = shapes.current[i];
+      if (!shape) return;
+      const [from, to] = reached(b, at, now);
+      draw(shape.band, arcPath(C, C, layout.bandR, from, to));
+      if (b.edge) draw(shape.edge, arcPath(C, C, layout.edgeR, from, to));
+    });
+  };
+
+  const hands = useHands(now, live, DIAL_MOVEMENT[dial.movement].beats, fill);
   const turns = hands.turns;
+  // Where the dial stands for this render: mid-wind when one is running, so
+  // a band drawn for the first time during a wind is drawn where the wind
+  // has got to rather than flashing whole for a frame.
+  const reach = hands.shown.current;
   // The facet along an applied marker and a hand: a lighter line down a dark
   // one, a darker line down a light one, so they read as metal with an edge
   // rather than as print.
@@ -349,22 +430,28 @@ export function Dial({
         ))}
 
       {bands.map((b, i) => {
-        const band = arcPath(C, C, layout.bandR, b.start, b.end);
-        const edge = b.edge
-          ? arcPath(C, C, layout.edgeR, b.start, b.end)
-          : null;
-        return band ? (
+        // Every band that has any length at all gets its paths, even when
+        // the moment the dial has reached leaves them empty: a wind fills
+        // them in from the loop, and it can only write to a path that is
+        // there.
+        if (b.end <= b.start) return null;
+        const [from, to] = reached(b, reach, now);
+        const band = arcPath(C, C, layout.bandR, from, to);
+        const edge = b.edge ? arcPath(C, C, layout.edgeR, from, to) : null;
+        return (
           <g key={`b${i}`} opacity={b.opacity}>
             <path
-              d={band}
+              ref={(el) => hold(shapes, i, "band", el)}
+              d={band ?? ""}
               fill="none"
               stroke={b.fill}
               strokeWidth={RING_BAND}
               strokeLinecap="butt"
             />
-            {edge && (
+            {b.edge && (
               <path
-                d={edge}
+                ref={(el) => hold(shapes, i, "edge", el)}
+                d={edge ?? ""}
                 fill="none"
                 stroke={b.edge}
                 strokeWidth={RING_EDGE}
@@ -372,7 +459,7 @@ export function Dial({
               />
             )}
           </g>
-        ) : null;
+        );
       })}
 
       {/* The minutes, printed over the day: a chapter ring keeps its

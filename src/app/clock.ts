@@ -414,6 +414,12 @@ export function arcPath(
 // Winding forward always, never back: a dial left at eleven at night and read
 // again at ten past midnight goes the long way round, which is the only way a
 // crown turns.
+//
+// And the day goes round with them. `windMoment` is where the whole dial
+// stands part way through a wind — the moment the hour and minute hands are
+// drawn at — so the bands on the ring are cut off there too: the hours worked
+// while the tab slept fill in under the hands that are setting the watch,
+// instead of being on the ring before they have reached them.
 
 /** Past this many seconds behind, the hands are wound rather than ticked.
  *  Two, so a frame the browser skipped is still a tick. */
@@ -543,16 +549,42 @@ export function easeInOutSine(t: number): number {
 }
 
 /**
- * The hands, part way through a wind: `elapsed` milliseconds into `plan`, on
- * the way from `from` to the live moment `to`.
+ * The moment the dial is standing at, part way through a wind: `from` on the
+ * first frame, the live moment `to` by the last, and the crown's own ease in
+ * between.
  *
- * The clock goes on turning while the crown does, so each phase aims at where
- * its hands *will be* when it arrives rather than where they are now —
- * `to` plus whatever is left to run. That target does not move (the moment
+ * The clock goes on turning while the crown does, so the wind aims at where
+ * the hands *will be* when it arrives rather than where they are now — `to`
+ * plus whatever is left to run — and works back from there by however much
+ * of the distance is still to make up. That target does not move (the moment
  * advances exactly as fast as the time left shrinks), which is what holds the
  * second hand dead still through the winding, and it is the live moment by
  * the last frame, so the wind ends on the true time and the ordinary frame
  * after it does not move.
+ *
+ * This is the whole dial's moment, not only the hands': the day drawn on the
+ * ring is filled in up to here too, so the hours that went by while the tab
+ * slept are laid down under the hands that are setting the watch rather than
+ * arriving all at once before they move.
+ */
+export function windMoment(
+  from: Seconds,
+  to: Seconds,
+  elapsed: number,
+  plan: WindPlan,
+): Seconds {
+  const windingAt = to + Math.max(0, plan.hands - elapsed) / 1000;
+  const wound = 1 - easeInOutSine(elapsed / plan.hands);
+  return windingAt - windDistance(from, windingAt) * wound;
+}
+
+/**
+ * The hands, part way through a wind: `elapsed` milliseconds into `plan`, on
+ * the way from `from` to the live moment `to`.
+ *
+ * The hour and the minute hand are simply `windMoment` drawn. The second hand
+ * is not on that moment at all — it is hacked where it stood until the other
+ * two are right, and then let go.
  */
 export function windTurns(
   from: Seconds,
@@ -563,13 +595,14 @@ export function windTurns(
 ): Turns {
   const windingAt = to + Math.max(0, plan.hands - elapsed) / 1000;
   const syncAt = to + Math.max(0, plan.total - elapsed) / 1000;
-  const wound = 1 - easeInOutSine(elapsed / plan.hands);
+  /** The travel the crown has still to make up: how far behind the moment it
+   *  is winding towards the hands are being held. */
+  const behind = windingAt - windMoment(from, to, elapsed, plan);
   const synced = easeInOutSine((elapsed - plan.hands) / plan.second);
   const set = handTurns(windingAt);
-  const distance = windDistance(from, windingAt);
   return {
-    hour: set.hour - (distance / 120) * wound,
-    minute: set.minute - (distance / 10) * wound,
+    hour: set.hour - behind / 120,
+    minute: set.minute - behind / 10,
     second:
       beatTurns(syncAt, beats).second -
       secondGap(from, syncAt, beats) * (1 - synced),
