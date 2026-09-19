@@ -734,7 +734,7 @@ function Marker({
   kind:
     | "baton"
     | "doubleBaton"
-    | "wideBaton"
+    | "twinBaton"
     | "dot"
     | "triangle"
     | "wedge"
@@ -773,8 +773,16 @@ function Marker({
           {roof(C + width * 0.9, width)}
         </>
       );
-    case "wideBaton":
-      return roof(C, width * 1.9);
+    // Twelve, on a dial whose hours are blocks: two of them side by side,
+    // which is what the dial does instead of one broad one. They meet in the
+    // middle and the hairline round each is the join.
+    case "twinBaton":
+      return (
+        <>
+          {roof(C - width / 2, width)}
+          {roof(C + width / 2, width)}
+        </>
+      );
     case "triangle":
       return (
         <Roof
@@ -901,11 +909,12 @@ function Steel({ id, dome }: { id: string; dome: Dome }) {
  *  where the light is.
  *
  *  Both sets are steel, because a hand is. A bar is one domed bar, lit across
- *  its width the way an applied marker is. A tapered hand is a shape with a
- *  ridge down it: broad where it leaves the cap, narrowing to its tip, and
- *  drawn as the two flat facets either side of that ridge — so which half is
- *  the bright one depends on where the hand is pointing, and changes as it
- *  sweeps. Either way a hairline of shadow round it holds it on a pale face.
+ *  its width the way an applied marker is. A pointed hand is a shape with a
+ *  ridge down it: sides dead straight from the cap up to its shoulder and
+ *  then closing on the tip over the last of its length, drawn as the two flat
+ *  facets either side of that ridge — so which half is the bright one depends
+ *  on where the hand is pointing, and changes as it sweeps. Either way a
+ *  hairline of shadow round it holds it on a pale face.
  */
 function Hand({
   set,
@@ -945,11 +954,13 @@ function Hand({
   }
   const base = (width * set.base) / 2;
   const tip = (width * set.tip) / 2;
+  // Where the sides stop running straight and start closing on the tip.
+  const shoulder = top + length * set.point;
   return (
     <Roof
-      left={`${C - base},${bottom} ${C - tip},${top} ${C},${top} ${C},${bottom}`}
-      right={`${C},${bottom} ${C},${top} ${C + tip},${top} ${C + base},${bottom}`}
-      outline={`${C - base},${bottom} ${C - tip},${top} ${C + tip},${top} ${C + base},${bottom}`}
+      left={`${C - base},${bottom} ${C - base},${shoulder} ${C - tip},${top} ${C},${top} ${C},${bottom}`}
+      right={`${C},${bottom} ${C},${top} ${C + tip},${top} ${C + base},${shoulder} ${C + base},${bottom}`}
+      outline={`${C - base},${bottom} ${C - base},${shoulder} ${C - tip},${top} ${C + tip},${top} ${C + base},${shoulder} ${C + base},${bottom}`}
       lit={steelTone(facetTone(axis, -1, light))}
       shade={steelTone(facetTone(axis, 1, light))}
       edge={edge}

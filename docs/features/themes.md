@@ -62,9 +62,10 @@ is lit by the light its face comes with.
   at twelve; tapered **wedges**; and bare **ticks** on a minute track.
 
   The blocks are the one style drawn broader than a baton — half as wide
-  again, which is the whole of what the two words mean on a dial — and the
-  one whose hours run the whole way _out to the ring_ rather than stopping
-  short of it: the block ends on the ring's inner edge, crossing the face's
+  again, which is the whole of what the two words mean on a dial — the one
+  that marks twelve with _two_ blocks side by side rather than one broad one,
+  and the one whose hours run the whole way _out to the ring_ rather than
+  stopping short of it: the block ends on the ring's inner edge, crossing the face's
   track on the way. That edge is where the ring is painted to on its inner
   side, so the two meet rather than the hour lapping onto the blue. It does
   not fill the whole run out from where a baton of the same size would have
@@ -132,13 +133,14 @@ is lit by the light its face comes with.
 - **Hands.** Two shapes — what they are made of is not a choice, because a
   hand is steel on every wrist watch there is. **Bars** are the same width
   from the cap to the tip, a half-round bar with the light landing along it.
-  **Tapered** are the hands of a dress watch: broad where they leave the cap
-  and narrowing to a point, with a ridge down each that takes the light on
-  one side and lies in shade on the other — so a hand keeps catching and
-  losing the light as it sweeps, which is the one thing a drawn watch usually
-  gets wrong. The two sets part again past the axle: a bar's second hand
-  balances itself with the disc of a sports hand on a stub of the same hair,
-  a tapered set with the long blade of a dress watch — a wedge that leaves
+  **Tapered** are the hands of a dress watch: sides dead straight for the
+  bulk of their length and then closing on a point over the last of it — not
+  a wedge that narrows the whole way, which is the shape a drawn watch
+  usually gets instead — with a ridge down each that takes the light on one
+  side and lies in shade on the other, so a hand keeps catching and losing
+  the light as it sweeps. The two sets part again past the axle: a bar's
+  second hand balances itself with the disc of a sports hand on a stub of the
+  same hair, a tapered set with the long blade of a dress watch — a wedge that leaves
   the hub as the same hair and swells as it goes, so the weight is out at the
   end of it where it does the balancing rather than under the cap where it
   would do none. The second hand stays the face's ink either way: a

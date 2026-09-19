@@ -324,7 +324,7 @@ export type DialMarkers =
 export type Marker =
   | "baton"
   | "doubleBaton"
-  | "wideBaton"
+  | "twinBaton"
   | "dot"
   | "triangle"
   | "wedge"
@@ -378,7 +378,7 @@ export const DIAL_MARKERS: Record<DialMarkers, DialMarkersSpec> = {
   // the ring (see `DIAL_RING.chapter`). And no gap before the ring either —
   // the block runs out to it and the lume is a plot on the ring.
   blocks: {
-    at: (h) => (h % 12 === 0 ? "wideBaton" : "baton"),
+    at: (h) => (h % 12 === 0 ? "twinBaton" : "baton"),
     minuteTrack: false,
     width: 1.5,
     reachesRing: true,
@@ -536,9 +536,12 @@ export const DIAL_MOVEMENT: Record<DialMovement, { beats: number | null }> = {
 // What the hands are *shaped* like; what they are made of is not a choice,
 // because a hand is steel on every wrist watch there is (see `STEEL`). Two
 // sets: the plain bar, the same width from the cap to its tip and domed
-// across it, and the tapered hand of a sixties dress watch, broad where it
-// leaves the cap and narrowing to a point, with a ridge down it that takes
-// the light on one side and lies in shade on the other.
+// across it, and the pointed hand of a sixties dress watch — sides dead
+// straight for most of its length and then closing on a point over the last
+// of it, with a ridge down it that takes the light on one side and lies in
+// shade on the other. Straight and then sharp, measured off the dial: not a
+// wedge that narrows the whole way, which is the shape a drawn watch usually
+// gets instead.
 //
 // The second hand is the exception either way: a hair that fine has no
 // surface to catch anything, so it stays the face's ink, which is also what
@@ -552,19 +555,26 @@ export const DIAL_MOVEMENT: Record<DialMovement, { beats: number | null }> = {
 export type DialHands = "bar" | "tapered";
 
 export type DialHandsSpec = {
-  /** The width the hour and minute hands leave the cap at, and the width
-   *  they end at, as shares of the width `HANDS` in `clock.ts` gives them.
-   *  A bar is one and one; a tapered hand is broader at the boss because it
-   *  gives all of it back at the tip. */
+  /** The width the hour and minute hands are drawn at, and the width they
+   *  end at, as shares of the width `HANDS` in `clock.ts` gives them. A bar
+   *  is one and one. A pointed hand is a little broader than the width it is
+   *  given, because it carries that width the whole way rather than starting
+   *  wide and giving it back, and it ends on next to nothing — which is what
+   *  a point is. */
   base: number;
   tip: number;
+  /** How much of a hand's length the point at the end of it takes, as a
+   *  share. Zero for a bar, which has no point; a fraction for a hand whose
+   *  sides run straight and then close on the tip. */
+  point: number;
   /** How far the hand's tail reaches past the axle, in the dial's units. A
    *  bar gets a stub, which reads as a hand pivoted rather than hinged at the
    *  centre; a tapered hand gets none, because its widest point *is* the hub
    *  and a tail past it would flare out from under the cap. */
   boss: number;
-  /** Whether the hand narrows along its length: a taper is drawn as two
-   *  facets either side of its ridge, a bar as one domed bar. */
+  /** Whether the hand has a shape to it rather than being one even bar: a
+   *  pointed hand is drawn as two facets either side of its ridge, a bar as
+   *  one domed bar. */
   taper: boolean;
   /** What balances the second hand past the axle: the disc of a sports hand
    *  on a stub of the same hair, or the long widening blade of a dress
@@ -587,6 +597,7 @@ export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
   bar: {
     base: 1,
     tip: 1,
+    point: 0,
     boss: 5,
     taper: false,
     counterweight: "disc",
@@ -594,8 +605,9 @@ export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
     tailWidth: 1,
   },
   tapered: {
-    base: 2,
-    tip: 0.25,
+    base: 1.35,
+    tip: 0.1,
+    point: 0.15,
     boss: 0,
     taper: true,
     counterweight: "blade",

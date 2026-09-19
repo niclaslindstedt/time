@@ -119,7 +119,7 @@ describe("the dial's vocabulary", () => {
     for (const kind of [
       "baton",
       "doubleBaton",
-      "wideBaton",
+      "twinBaton",
       "dot",
       "triangle",
       "wedge",
@@ -162,13 +162,21 @@ describe("the dial's vocabulary", () => {
     // A stub past the axle, which the cap covers.
     expect(bar.boss).toBeGreaterThan(0);
 
+    // A bar is a bar the whole way: no point on the end of it.
+    expect(bar.point).toBe(0);
+
     const tapered = DIAL_HANDS.tapered;
     expect(tapered.taper).toBe(true);
-    // Broader at the boss than the width it is given, and finer at the tip:
-    // a taper gives back at one end what it takes at the other.
+    // Straight sides a little broader than the width it is given, carried
+    // the whole way, and then a point over the last of its length rather
+    // than a wedge that narrows from the cap.
     expect(tapered.base).toBeGreaterThan(1);
-    expect(tapered.tip).toBeLessThan(1);
+    expect(tapered.tip).toBeLessThan(0.2);
     expect(tapered.tip).toBeLessThan(tapered.base);
+    expect(tapered.point).toBeGreaterThan(0);
+    // A point, not most of the hand: the sides are straight for the bulk of
+    // it, which is what tells this shape from a wedge.
+    expect(tapered.point).toBeLessThan(0.25);
     // Nothing past the axle: the widest point is the hub, and a tail past it
     // would flare out from under the cap.
     expect(tapered.boss).toBe(0);
@@ -199,7 +207,9 @@ describe("the hour markers", () => {
   });
 
   it("are solid blocks, one wide at twelve, and print no track on the rim", () => {
-    expect(DIAL_MARKERS.blocks.at(0)).toBe("wideBaton");
+    // Twelve is two blocks side by side rather than one broad one, which is
+    // what the dial this style is drawn after carries.
+    expect(DIAL_MARKERS.blocks.at(0)).toBe("twinBaton");
     for (const h of HOURS.slice(1))
       expect(DIAL_MARKERS.blocks.at(h)).toBe("baton");
     expect(DIAL_MARKERS.blocks.minuteTrack).toBe(false);

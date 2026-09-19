@@ -58,7 +58,9 @@ export const en = {
     clockOut: "Stop working",
     endBreak: "End {name}",
     percentOfTarget: "{percent} of today's target",
-    dayOff: "A day off — every minute counts extra",
+    // Just the fact. That every minute of a day off is time in hand is what
+    // the app does with it, not something the line has to say.
+    dayOff: "Day off",
     breaks: "Breaks",
     categories: "Working on",
     paused: "paused",
