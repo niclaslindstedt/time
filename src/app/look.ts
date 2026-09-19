@@ -337,6 +337,12 @@ export type DialMarkersSpec = {
   at: (hour: number) => Marker;
   /** Sixty minute ticks round the rim, or a bare rim. */
   minuteTrack: boolean;
+  /** How wide the applied markers are drawn, as a share of the width the
+   *  hour size gives them. One for a baton, which is a bar; more for a style
+   *  whose hours are *blocks*, which are a good half as wide again — that
+   *  breadth is the difference between the two words, and it is measured
+   *  off the dial the blocks are drawn after. */
+  width: number;
   /** Whether the hours run the whole way out to the day's ring rather than
    *  stopping short of it, and are finished with a lumed plot printed on the
    *  ring itself. The sixties dress dial's arrangement: the hour is one long
@@ -365,6 +371,7 @@ export const DIAL_MARKERS: Record<DialMarkers, DialMarkersSpec> = {
   batons: {
     at: (h) => (h % 12 === 0 ? "doubleBaton" : "baton"),
     minuteTrack: true,
+    width: 1,
     reachesRing: false,
   },
   // No track on the rim: the dial this is drawn for prints its minutes on
@@ -373,27 +380,46 @@ export const DIAL_MARKERS: Record<DialMarkers, DialMarkersSpec> = {
   blocks: {
     at: (h) => (h % 12 === 0 ? "wideBaton" : "baton"),
     minuteTrack: false,
+    width: 1.5,
     reachesRing: true,
   },
   dots: {
     at: (h) => (h % 12 === 0 ? "triangle" : quarter(h) ? "baton" : "dot"),
     minuteTrack: true,
+    width: 1,
     reachesRing: false,
   },
-  numerals: { at: () => "arabic", minuteTrack: true, reachesRing: false },
-  roman: { at: () => "roman", minuteTrack: false, reachesRing: false },
+  numerals: {
+    at: () => "arabic",
+    minuteTrack: true,
+    width: 1,
+    reachesRing: false,
+  },
+  roman: {
+    at: () => "roman",
+    minuteTrack: false,
+    width: 1,
+    reachesRing: false,
+  },
   quarters: {
     at: (h) => (quarter(h) ? "arabic" : "baton"),
     minuteTrack: true,
+    width: 1,
     reachesRing: false,
   },
   threeSixNine: {
     at: (h) => (h % 12 === 0 ? "triangle" : quarter(h) ? "arabic" : "baton"),
     minuteTrack: true,
+    width: 1,
     reachesRing: false,
   },
-  wedges: { at: () => "wedge", minuteTrack: false, reachesRing: false },
-  ticks: { at: () => "tick", minuteTrack: true, reachesRing: false },
+  wedges: {
+    at: () => "wedge",
+    minuteTrack: false,
+    width: 1,
+    reachesRing: false,
+  },
+  ticks: { at: () => "tick", minuteTrack: true, width: 1, reachesRing: false },
 };
 
 /** Whether a marker is set in the numerals' typeface. */

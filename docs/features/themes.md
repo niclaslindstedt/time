@@ -61,10 +61,16 @@ is lit by the light its face comes with.
   **quarters** with batons between; the **3 · 6 · 9** layout with a triangle
   at twelve; tapered **wedges**; and bare **ticks** on a minute track.
 
-  The blocks are the one style whose hours run the whole way _out to the
-  ring_ rather than stopping short of it: the block starts where its size
-  puts it and ends on the ring's inner edge, crossing the face's track on the
-  way, and what finishes it is a lumed plot — a small rounded block in the
+  The blocks are the one style drawn broader than a baton — half as wide
+  again, which is the whole of what the two words mean on a dial — and the
+  one whose hours run the whole way _out to the ring_ rather than stopping
+  short of it: the block ends on the ring's inner edge, crossing the face's
+  track on the way. That edge is where the ring is painted to on its inner
+  side, so the two meet rather than the hour lapping onto the blue. It does
+  not fill the whole run out from where a baton of the same size would have
+  started, either — it gives a fifth of that back at the inner end, because
+  an applied hour reaches nothing like that far into the dial. What finishes
+  it is a lumed plot — a small rounded block in the
   ring's own ink — printed on the ring at the hour, standing on the minutes'
   own track a shade shorter than one of them and more than twice as wide, so
   an hour reads as a block of lume where a minute is a line. The twelve hours
@@ -115,9 +121,11 @@ is lit by the light its face comes with.
   mark rather than two. Twelve takes both, because twelve carries the widest
   hour of every marker style, and beside twelve you see none. That is the track
   the hands are read against on this ring: the minute hand crosses the tips
-  of the face's ticks and stops there, and the second hand runs on over the
-  ring's own ticks and stops just past them, a dark hair a few units onto the
-  ring rather than out at its edge. The day _fills_ the ring: a stretch at work paints it
+  of the face's ticks and stops there, and the second hand goes on to the
+  ring itself and stops the width of a print onto the near end of its ticks,
+  where a dark hair over a white one is the contrast that makes it readable.
+  Onto them and barely: a second hand running the length of the marks it is
+  read against would cover the very thing it is pointing at. The day _fills_ the ring: a stretch at work paints it
   the accent, a kind of work its hue, a break the flag colour, and the
   minutes stay printed over whatever the day put under them. The numerals
   are set in the Numerals face, whatever the hours wear.

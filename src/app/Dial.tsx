@@ -20,6 +20,7 @@ import {
   dialLayout,
   faceMarks,
   MINUTE_INK,
+  RING_BLEED,
   polar,
 } from "./clock.ts";
 import { useT } from "./i18n/index.ts";
@@ -389,10 +390,10 @@ export function Dial({
         <circle
           cx={C}
           cy={C}
-          r={(layout.ringInner + layout.ringOuter) / 2}
+          r={(layout.ringInner + layout.ringOuter + RING_BLEED) / 2}
           fill="none"
           stroke={ring.fill ?? face.ink}
-          strokeWidth={layout.ringOuter - layout.ringInner + 1}
+          strokeWidth={layout.ringOuter - layout.ringInner + RING_BLEED}
         />
       ) : (
         <>

@@ -67,6 +67,12 @@ const RIM = 5;
 export const TRACK_R = 116;
 /** Air between the ring and a marker beside it. */
 const MARKER_GAP = 4;
+/** The day's ring is painted a little wider than it measures, so nothing
+ *  shows through where it meets the bezel. Outward only: on the inside it is
+ *  painted to `ringInner` exactly, because that is where an hour that runs
+ *  out to the ring ends, and a ring painted past it would have the hour
+ *  lapping onto the blue. `Dial.tsx` paints with this number. */
+export const RING_BLEED = 1;
 /** The dial's printing, as radii from the centre: the name under twelve,
  *  the movement's word under the name, and the window above six — the
  *  Settings cog, where a date would be. Fixed rather than laid out per
@@ -107,13 +113,26 @@ const MAX_REACH: Record<DialPlacement, number> = {
 };
 
 /** An applied marker's length as a share of the numeral size it stands in
- *  for. */
+ *  for, and its width across the radius as a share of that length — before
+ *  the style's own `width`, which is what tells a block from a baton. */
 const MARKER_SHARE = 1;
+const MARKER_WIDTH = 0.22;
+
+/** How much of the run from a block's own inner end out to the ring the
+ *  block actually takes. One would have it filling the whole run, which
+ *  reaches further into the dial than an applied hour does on the watch this
+ *  is drawn after. What it gives back comes off the *inner* end, because the
+ *  outer end is the one that has to meet the ring. */
+const BLOCK_LENGTH = 0.8;
 
 /** How far a hand's tip goes past the mark it is read against, where there
  *  is one. A tip that stops exactly on a tick reads as short of it; a tip
  *  that crosses it reads as pointing at it. */
 const HAND_PAST = 1;
+/** The second hand takes half of that, because what it is read on is the
+ *  ring's own ticks: a hair that ran along one would cover the mark it is
+ *  pointing at instead of marking it. */
+const SECOND_PAST = HAND_PAST / 2;
 
 /** The hands' widths, the second hand's tail past the centre, and the cap
  *  over the axle. Thin, the way a wrist watch's are. */
@@ -165,15 +184,21 @@ export type DialLayout = {
  * groove that is the ring itself: the minute hand on the band, the second
  * hand at its outer edge, the hour hand well short of both. On a printed
  * ring it is the print — the minute hand crosses the tips of the track under
- * the ring and stops there, and the second hand carries on over the ring's
- * own ticks and stops just past them, a few units onto the ring, where a
- * dark hair over a printed tick is the contrast that makes it readable.
+ * the ring and stops there, and the second hand goes on to the ring itself
+ * and stops the width of a print onto the near end of its ticks, where a
+ * dark hair over a white one is the contrast that makes it readable. Onto
+ * them and barely: a second hand running the length of the marks it is read
+ * against would cover the very thing it is pointing at.
  *
  * A style that `reachesRing` is the exception, and only inside the ring,
- * where there is a gap to close: the block keeps the inner end the size gave
- * it and its outer end is taken out to the ring's inner edge, so the hour is
- * one part running from the middle of the dial to the day's track rather
- * than a baton with air and a stray tick after it. What finishes it is a
+ * where there is a gap to close: the block's outer end is taken out to the
+ * ring's inner edge, so the hour runs into the day's track rather than
+ * stopping short of it behind a stray tick. It does not fill the whole run
+ * out from where a baton of the same size would have started — it gives a
+ * fifth of it back at the inner end (`BLOCK_LENGTH`), because an applied
+ * hour reaches nothing like that far into the dial. The ring is painted to
+ * exactly the radius the block ends at on its inner side (`RING_BLEED`), so
+ * the hour and the ring meet rather than the hour lapping onto it. What finishes it is a
  * lumed plot on the ring, centred on the ring's own ticks — the hours are the twelve places a chapter ring prints a
  * numeral rather than a tick, so the plot lands in room the minutes are not
  * using — standing on the same track as the ticks, a shade shorter than one
@@ -221,8 +246,8 @@ export function dialLayout(
   let pip: DialLayout["pip"] = null;
   if (style.reachesRing && dial.placement === "inside") {
     const innerEnd = markerR - markerLength / 2;
-    markerLength = ringInner - innerEnd;
-    markerR = innerEnd + markerLength / 2;
+    markerLength = (ringInner - innerEnd) * BLOCK_LENGTH;
+    markerR = ringInner - markerLength / 2;
     pip = {
       r: (tracks.ring.inner + tracks.ring.outer) / 2,
       length: (tracks.ring.outer - tracks.ring.inner) * PLOT_LENGTH,
@@ -240,12 +265,12 @@ export function dialLayout(
     markerR,
     numeralSize: size,
     markerLength,
-    markerWidth: size * 0.22,
+    markerWidth: size * MARKER_WIDTH * style.width,
     pip,
     hands: {
       hour: bandR * 0.62,
       minute: printed ? tracks.face.inner + HAND_PAST : bandR,
-      second: printed ? tracks.ring.outer + HAND_PAST : ringOuter,
+      second: printed ? tracks.ring.inner + SECOND_PAST : ringOuter,
     },
   };
 }

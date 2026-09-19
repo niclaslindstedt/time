@@ -16,6 +16,7 @@ import {
   dialLayout,
   faceMarks,
   MINUTE_INK,
+  RING_BLEED,
   handAngles,
   handTurns,
   polar,
@@ -318,13 +319,16 @@ describe("dialLayout", () => {
       const where = JSON.stringify(dial);
       if (DIAL_RING[dial.ring].printed) {
         // Read against the print: the minute hand crosses the tips of the
-        // track under the ring and stops there, and the second hand carries
-        // on over the ring's own ticks — a few units onto the ring, and
-        // nowhere near its outer edge.
+        // track under the ring and stops there, and the second hand goes on
+        // to the ring and stops a hair onto the near end of its ticks —
+        // touching the mark it points at without lying along it, and nowhere
+        // near the ring's outer edge.
         expect(l.hands.minute, where).toBeGreaterThan(tracks.face.inner);
         expect(l.hands.minute, where).toBeLessThan(tracks.face.outer);
-        expect(l.hands.second, where).toBeGreaterThan(tracks.ring.outer);
-        expect(l.hands.second, where).toBeLessThan(l.ringOuter);
+        expect(l.hands.second, where).toBeGreaterThan(tracks.ring.inner);
+        expect(l.hands.second, where).toBeLessThan(
+          tracks.ring.inner + (tracks.ring.outer - tracks.ring.inner) / 4,
+        );
       } else {
         expect(l.hands.minute, where).toBeCloseTo(l.bandR, 6);
         expect(l.hands.second, where).toBeCloseTo(l.ringOuter, 6);
@@ -398,19 +402,30 @@ describe("dialLayout", () => {
       const l = dialLayout(dial);
       const plain = dialLayout({ ...dial, markers: "batons" });
       // The block ends on the ring's inner edge — where the plain baton of
-      // the same size stops short of it, by the air a marker is given.
+      // the same size stops short of it, by the air a marker is given. The
+      // ring is painted to exactly that radius on its inner side, so the two
+      // meet rather than the hour lapping onto the ring.
       expect(l.markerR + l.markerLength / 2).toBeCloseTo(l.ringInner, 6);
+      expect(RING_BLEED).toBeGreaterThan(0);
       expect(plain.markerR + plain.markerLength / 2).toBeLessThan(
         l.ringInner - 1,
       );
-      // It keeps the inner end its size gave it: the hour grows outward to
-      // meet the ring, it does not slide out from under the printing.
-      expect(l.markerR - l.markerLength / 2).toBeCloseTo(
+      // What it gives back it gives back at the inner end: the outer end is
+      // the one that has to meet the ring, so the hour starts further out
+      // than the baton of the same size would have, not shorter of the ring.
+      const run = l.ringInner - (plain.markerR - plain.markerLength / 2);
+      expect(l.markerLength).toBeLessThan(run);
+      expect(l.markerLength).toBeGreaterThan(run * 0.7);
+      expect(l.markerR - l.markerLength / 2).toBeGreaterThan(
         plain.markerR - plain.markerLength / 2,
+      );
+      // And it is a block rather than a baton: half as wide again, which is
+      // the whole of what the two words mean on a dial.
+      expect(l.markerWidth).toBeCloseTo(
+        plain.markerWidth * DIAL_MARKERS.blocks.width,
         6,
       );
-      expect(l.markerLength).toBeGreaterThan(plain.markerLength);
-      expect(l.markerWidth).toBeCloseTo(plain.markerWidth, 6);
+      expect(DIAL_MARKERS.blocks.width).toBeGreaterThan(1);
       // And it crosses the face's track on the way, which is the stray tick
       // the arrangement is rid of.
       expect(l.markerR + l.markerLength / 2).toBeGreaterThan(
