@@ -61,6 +61,97 @@ describe("a day as it happens", () => {
   });
 });
 
+describe("a minute either side of the face", () => {
+  it("drops a session stopped less than a minute after it started", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = clockOut(d, h(8) + 59, c);
+    expect(d.sessions).toEqual([]);
+  });
+
+  it("keeps a session stopped a minute after it started", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = clockOut(d, h(8) + 60, c);
+    expect(d.sessions).toEqual([{ id: "id1", start: h(8), end: h(8) + 60 }]);
+  });
+
+  it("drops what was begun inside a session it drops", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = setCategory(d, "code", h(8) + 5, c);
+    d = takeBreak(d, "coffee", h(8) + 10, 15 * 60, c);
+    d = clockOut(d, h(8) + 30, c);
+    expect(d.sessions).toEqual([]);
+    expect(d.breaks).toEqual([]);
+    expect(d.activities).toEqual([]);
+  });
+
+  it("leaves an earlier session alone when it drops a mis-tap", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = setCategory(d, "code", h(8), c);
+    d = clockOut(d, h(12), c);
+    d = clockIn(d, h(13), c);
+    d = clockOut(d, h(13) + 20, c);
+    expect(d.sessions).toEqual([{ id: "id1", start: h(8), end: h(12) }]);
+    expect(d.activities).toEqual([
+      { id: "id2", categoryId: "code", start: h(8), end: h(12) },
+    ]);
+  });
+
+  it("picks the session back up when it restarts inside a minute", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = setCategory(d, "code", h(8), c);
+    d = clockOut(d, h(12), c);
+    d = clockIn(d, h(12) + 30, c);
+    // The same session, still open, with the gap inside it.
+    expect(d.sessions).toEqual([{ id: "id1", start: h(8), end: null }]);
+    // And the kind of work it was cut off in the middle of.
+    expect(d.activities).toEqual([
+      { id: "id2", categoryId: "code", start: h(8), end: null },
+    ]);
+    expect(dayTotals(d, h(12) + 30).worked).toBe(h(4) + 30);
+  });
+
+  it("opens a second session when a minute has gone by", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = clockOut(d, h(12), c);
+    d = clockIn(d, h(12) + 60, c);
+    expect(d.sessions).toEqual([
+      { id: "id1", start: h(8), end: h(12) },
+      { id: "id2", start: h(12) + 60, end: null },
+    ]);
+  });
+
+  it("resumes the session that ended last", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = clockOut(d, h(9), c);
+    d = clockIn(d, h(12), c);
+    d = clockOut(d, h(13), c);
+    d = clockIn(d, h(13) + 10, c);
+    expect(d.sessions).toEqual([
+      { id: "id1", start: h(8), end: h(9) },
+      { id: "id2", start: h(12), end: null },
+    ]);
+  });
+
+  it("does not resume a break that was cut short with the session", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = takeBreak(d, "lunch", h(12), 30 * 60, c);
+    d = clockOut(d, h(12, 10), c);
+    d = clockIn(d, h(12, 10) + 30, c);
+    expect(d.sessions).toEqual([{ id: "id1", start: h(8), end: null }]);
+    expect(d.breaks).toEqual([
+      { id: "id2", typeId: "lunch", start: h(12), end: h(12, 10) },
+    ]);
+  });
+});
+
 describe("invariants", () => {
   it("does not open a second session", () => {
     const c = ctx();
