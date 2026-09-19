@@ -95,19 +95,26 @@ project's target for the day, unclamped: 112% is overtime, not an error.
 `actions.ts` is the set of edits a day can take, each a pure function from a
 day to a new day:
 
-| Edit                                    | Rule                                                                                                                                           |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `clockIn`                               | Opens a session; a no-op while one is open.                                                                                                    |
-| `clockOut`                              | Closes the session, and the running break and activity with it.                                                                                |
-| `takeBreak`                             | Needs an open session; writes a break of the kind's assumed length, ending a break already going on first.                                     |
-| `endBreak`                              | "I'm back": ends the break `now` falls inside, dropping it if under a minute is left of it.                                                    |
-| `setCategory`                           | Needs an open session; closes the running activity, opens one of the new kind.                                                                 |
-| `addBreak`, `addSession`, `addActivity` | After the fact, with both ends (or an open end, if none of that kind is open).                                                                 |
-| `setSessionStart`                       | Moves when a session began — the arrival, corrected from the timer. Refused if it reaches back over an earlier session.                        |
-| `moveBoundary`                          | Moves a moment two stretches meet at: everything that starts or ends there moves, so a later lunch end is a later start for the work after it. |
-| `updateSpan`, `removeSpan`              | Move a span's ends or kind, or drop it. An edit that would make it invalid is refused.                                                         |
+| Edit                                    | Rule                                                                                                                                                      |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clockIn`                               | Opens a session; a no-op while one is open. Inside a minute of the last one having ended, reopens that one instead — gap and kind of work and all.        |
+| `clockOut`                              | Closes the session, and the running break and activity with it. Drops the session outright, with whatever began inside it, when it is under a minute old. |
+| `takeBreak`                             | Needs an open session; writes a break of the kind's assumed length, ending a break already going on first.                                                |
+| `endBreak`                              | "I'm back": ends the break `now` falls inside, dropping it if under a minute is left of it.                                                               |
+| `setCategory`                           | Needs an open session; closes the running activity, opens one of the new kind.                                                                            |
+| `addBreak`, `addSession`, `addActivity` | After the fact, with both ends (or an open end, if none of that kind is open).                                                                            |
+| `setSessionStart`                       | Moves when a session began — the arrival, corrected from the timer. Refused if it reaches back over an earlier session.                                   |
+| `moveBoundary`                          | Moves a moment two stretches meet at: everything that starts or ends there moves, so a later lunch end is a later start for the work after it.            |
+| `updateSpan`, `removeSpan`              | Move a span's ends or kind, or drop it. An edit that would make it invalid is refused.                                                                    |
 
 A span closed in the second it opened is dropped rather than stored inverted.
+The face is held to a minute either side: a session stopped less than a minute
+after it started never happened, and a session started less than a minute after
+one stopped is that same one picked back up rather than a second stretch — the
+two presses cancel out, so a mis-tap leaves the day exactly as it was. Breaks
+are held to the same minute by `endBreak`. A short span typed into the Log on
+purpose is untouched by either rule; the threshold is about the face, not about
+the document.
 Pushing a boundary forward drags along anything that started inside the stretch
 it swallows and drops what it swallowed whole; a move that would invert a
 session is refused outright, because presence has two ends and both of them are

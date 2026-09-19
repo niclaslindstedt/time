@@ -67,6 +67,15 @@ function closeCurrent<S extends Span>(spans: readonly S[], at: Seconds): S[] {
  *  lunch, and the record is better off without it. */
 const MIN_BREAK_SECONDS: Seconds = 60;
 
+/** The shortest stretch of presence the app will keep, and the longest gap
+ *  between two that is no gap at all. A press on the face and the press that
+ *  undoes it are a mis-tap rather than a minute of work, so stopping inside
+ *  the minute drops the session; and starting again inside the minute of
+ *  having stopped picks the last one back up rather than opening a second,
+ *  because a watch stopped and restarted in the same breath was never really
+ *  stopped. */
+const MIN_SESSION_SECONDS: Seconds = 60;
+
 /** Close the break going on at `at`, dropping it when that leaves less than
  *  a minute of it. Breaks that had already ended, and any that have not
  *  started, are passed through untouched — a short break somebody typed into
@@ -87,18 +96,74 @@ function dropEmpty<S extends Span>(spans: readonly S[]): S[] {
   return spans.filter((s) => s.end === null || s.end > s.start);
 }
 
-/** Start working. A no-op while a session is already open. */
+/** The session `at` is close enough behind to be the same one: the last to
+ *  have ended, less than a minute ago. Null when the nearest one is further
+ *  back than that, or when the day has none. */
+function resumable(sessions: readonly Span[], at: Seconds): Span | null {
+  let best: Span | null = null;
+  for (const s of sessions) {
+    if (s.end === null || s.end > at || at - s.end >= MIN_SESSION_SECONDS) {
+      continue;
+    }
+    if (!best || s.end! > best.end!) best = s;
+  }
+  return best;
+}
+
+/** Put back the kind of work the clock-out cut off at `at`, so a session
+ *  picked back up carries on with what it was doing rather than turning into
+ *  uncategorised time. Left alone if something is already running. */
+function reopenActivity(
+  activities: readonly ActivitySpan[],
+  at: Seconds,
+): ActivitySpan[] {
+  const out = [...activities];
+  if (out.some((a) => a.end === null)) return out;
+  let index = -1;
+  for (let i = 0; i < out.length; i++) if (out[i]!.end === at) index = i;
+  if (index === -1) return out;
+  out[index] = { ...out[index]!, end: null };
+  return out;
+}
+
+/** Start working. A no-op while a session is already open.
+ *
+ *  Stopping and starting again inside a minute is the same stretch of the
+ *  day, not two: the session that just ended is reopened — the gap with it —
+ *  and the kind of work it was cut off in the middle of starts again. */
 export function clockIn(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
   if (day.sessions.some((s) => s.end === null)) return day;
+  const again = resumable(day.sessions, at);
+  if (again) {
+    return stamp(day, ctx, {
+      sessions: day.sessions.map((s) =>
+        s.id === again.id ? { ...s, end: null } : s,
+      ),
+      activities: reopenActivity(day.activities, again.end!),
+    });
+  }
   return stamp(day, ctx, {
     sessions: [...day.sessions, { id: ctx.id(), start: at, end: null }],
   });
 }
 
 /** Stop working. Closes the running session, and with it whatever break
- *  or activity was running — nothing runs once the work has stopped. */
+ *  or activity was running — nothing runs once the work has stopped.
+ *
+ *  A session stopped less than a minute after it started is dropped instead,
+ *  along with whatever was begun inside it: that is a press on the face and
+ *  the press that undoes it, and the day is better off without the minute. */
 export function clockOut(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
-  if (!day.sessions.some((s) => s.end === null)) return day;
+  const open = day.sessions.find((s) => s.end === null);
+  if (!open) return day;
+  if (at - open.start < MIN_SESSION_SECONDS) {
+    const outside = (s: Span) => s.start < open.start;
+    return stamp(day, ctx, {
+      sessions: day.sessions.filter((s) => s.id !== open.id),
+      breaks: closeBreaks(day.breaks.filter(outside), at),
+      activities: dropEmpty(closeCurrent(day.activities.filter(outside), at)),
+    });
+  }
   return stamp(day, ctx, {
     sessions: dropEmpty(closeOpen(day.sessions, at)),
     breaks: closeBreaks(day.breaks, at),

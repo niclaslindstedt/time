@@ -67,6 +67,13 @@ There is no start button. **The face is the switch**: press it to start
 working, press it again to stop — the way a watch has one crown. The light
 comes up and the line under the dial says so.
 
+A press and the press that takes it back are not a minute of work. Stop within
+a minute of having started and the session is dropped, along with any break or
+kind of work begun inside it; start again within a minute of having stopped and
+it is the same stretch picked back up — the same session, the gap counted as
+presence, and the kind of work it was cut off in the middle of running again.
+So a mis-tap on the face costs nothing, in either direction.
+
 Everything on the screen is derived from the day's spans up to the current
 second (see [`../day-model.md`](../day-model.md)); the screen holds no state
 of its own.
