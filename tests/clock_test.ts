@@ -15,6 +15,7 @@ import {
   chapterTracks,
   dialLayout,
   faceMarks,
+  MINUTE_INK,
   handAngles,
   handTurns,
   polar,
@@ -420,12 +421,20 @@ describe("dialLayout", () => {
       // hour is a place the chapter ring prints a numeral.
       const track = chapterTracks(l.ringInner).ring;
       expect(l.pip).not.toBeNull();
-      expect(l.pip?.r).toBeCloseTo((track.inner + track.outer) / 2, 6);
-      expect(l.pip?.radius).toBeCloseTo((track.outer - track.inner) / 2, 6);
       const pip = l.pip;
       if (!pip) throw new Error("no plot");
-      expect(pip.r - pip.radius).toBeGreaterThanOrEqual(l.ringInner);
-      expect(pip.r + pip.radius).toBeLessThan(l.ringOuter);
+      // Centred on the ticks' own track, so the two read as one row.
+      expect(pip.r).toBeCloseTo((track.inner + track.outer) / 2, 6);
+      // A block rather than a dot: shorter along the radius than the tick it
+      // stands in the place of, and well over twice as wide across it.
+      const tick = track.outer - track.inner;
+      expect(pip.length).toBeLessThan(tick);
+      expect(pip.length).toBeGreaterThan(tick * 0.75);
+      expect(pip.width).toBeGreaterThan(MINUTE_INK * 2);
+      expect(pip.width).toBeLessThan(pip.length);
+      // And it stays on the ring, both ends.
+      expect(pip.r - pip.length / 2).toBeGreaterThanOrEqual(l.ringInner);
+      expect(pip.r + pip.length / 2).toBeLessThan(l.ringOuter);
       expect(
         chapterMarks().filter((m) => m.kind === "tick" && m.angle % 30 === 0),
       ).toHaveLength(0);
@@ -519,18 +528,52 @@ describe("chapterMarks", () => {
 
 describe("faceMarks", () => {
   const marks = faceMarks();
+  const minutes = marks.filter((m) => m.minute);
+  const thirds = marks.filter((m) => !m.minute);
+  /** The finer marks in the gap that runs from `minute` to the next. */
+  const between = (minute: number) =>
+    thirds
+      .map((m) => m.angle)
+      .filter((a) => a > minute * 6 && a < minute * 6 + 6)
+      .map((a) => a - minute * 6);
 
-  it("divides every minute into three, and counts only the minutes", () => {
-    expect(marks).toHaveLength(180);
-    expect(marks.filter((m) => m.minute)).toHaveLength(60);
-    // Two finer marks between one minute and the next, all the way round.
-    marks.forEach((m, i) => expect(m.minute).toBe(i % 3 === 0));
+  it("divides a minute into thirds, and counts only the minutes", () => {
+    expect(minutes).toHaveLength(60);
+    expect(minutes.map((m) => m.angle)).toEqual(
+      chapterMarks().map((m) => m.angle),
+    );
+    // Two thirds in a gap between two plain minutes, all the way round.
+    for (const minute of [1, 2, 3, 16, 17, 43, 57]) {
+      expect(between(minute), `minute ${minute}`).toEqual([2, 4]);
+    }
   });
 
-  it("lays a mark at every two degrees, and a minute on the ring's own", () => {
-    marks.forEach((m, i) => expect(m.angle).toBe(i * 2));
-    const minutes = marks.filter((m) => m.minute).map((m) => m.angle);
-    expect(minutes).toEqual(chapterMarks().map((m) => m.angle));
+  it("drops the third an hour's marker stands over", () => {
+    // Beside an hour, one mark rather than two — and it is the far one, so
+    // the rhythm of thirds carries on through the gap rather than shifting.
+    expect(between(4)).toEqual([2]);
+    expect(between(5)).toEqual([4]);
+    expect(between(29)).toEqual([2]);
+    expect(between(30)).toEqual([4]);
+  });
+
+  it("leaves the gaps either side of twelve bare", () => {
+    // Twelve carries the widest hour of every marker style, and stands over
+    // both thirds rather than one.
+    expect(between(0)).toEqual([]);
+    expect(between(59)).toEqual([]);
+    // The minute at twelve itself stays: the track meets it squarely.
+    expect(minutes.map((m) => m.angle)).toContain(0);
+  });
+
+  it("lays them in order, clockwise from twelve, within one turn", () => {
+    const angles = marks.map((m) => m.angle);
+    expect(angles).toEqual([...angles].sort((a, b) => a - b));
+    expect(Math.min(...angles)).toBe(0);
+    expect(Math.max(...angles)).toBeLessThan(360);
+    // 120 thirds, less the one each of the eleven plain hours stands over on
+    // either side, less both of twelve's two gaps.
+    expect(thirds).toHaveLength(120 - 11 * 2 - 4);
   });
 });
 

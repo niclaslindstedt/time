@@ -19,6 +19,7 @@ import {
   chapterTracks,
   dialLayout,
   faceMarks,
+  MINUTE_INK,
   polar,
 } from "./clock.ts";
 import { useT } from "./i18n/index.ts";
@@ -489,7 +490,7 @@ export function Dial({
                 x2={x2}
                 y2={y2}
                 stroke={ring.ink ?? face.ink}
-                strokeWidth={0.7}
+                strokeWidth={MINUTE_INK}
                 opacity={0.85}
               />
             );
@@ -519,22 +520,25 @@ export function Dial({
       {/* And the lume at the end of the hours, where a dial's blocks run out
           to the ring: a filled plot printed on the ring at each hour, in the
           ring's own ink, standing in the room the minutes leave — every hour
-          is a place the chapter ring prints a numeral rather than a tick.
-          Printed over the day, the way the minutes are: the plot says where
-          the hour is, whatever colour the day has put under it. */}
+          is a place the chapter ring prints a numeral rather than a tick. It
+          stands on the minutes' own track, a shade shorter than one of them
+          and more than twice as wide, so an hour reads as a block of lume
+          where a minute is a line. Printed over the day, the way the minutes
+          are: the plot says where the hour is, whatever colour the day has
+          put under it. */}
       {pip &&
-        markers.map(({ hour, angle }) => {
-          const [x, y] = polar(C, C, pip.r, angle);
-          return (
-            <circle
-              key={`p${hour}`}
-              cx={x}
-              cy={y}
-              r={pip.radius}
-              fill={ring.ink ?? face.ink}
-            />
-          );
-        })}
+        markers.map(({ hour, angle }) => (
+          <rect
+            key={`p${hour}`}
+            x={C - pip.width / 2}
+            y={C - pip.r - pip.length / 2}
+            width={pip.width}
+            height={pip.length}
+            rx={pip.width * 0.3}
+            transform={`rotate(${angle} ${C} ${C})`}
+            fill={ring.ink ?? face.ink}
+          />
+        ))}
 
       {markers.map(({ hour, angle, kind }) => {
         if (isNumeral(kind)) {
@@ -954,8 +958,8 @@ function Hand({
 
 /** The second hand: one hair from the axle to its tip, and whatever balances
  *  it past the axle — the disc of a sports hand on a stub of the same hair,
- *  or the blade of a dress watch, which leaves the hub several times the
- *  hair's width and tapers to a point well out on the dial. Printed in the
+ *  or the blade of a dress watch, which leaves the hub as the same hair and
+ *  widens as it goes, so the weight is out at the end of it. Printed in the
  *  face's ink whatever the rest of the set is made of: at a unit wide there
  *  is no room for a facet, and a dial with polished hands wears a dark second
  *  hand against the polish. */
@@ -986,7 +990,7 @@ function SecondHand({
       />
       {blade ? (
         <polygon
-          points={`${C - flare},${C} ${C + flare},${C} ${C + width / 2},${tail} ${C - width / 2},${tail}`}
+          points={`${C - width / 2},${C} ${C + width / 2},${C} ${C + flare},${tail} ${C - flare},${tail}`}
           fill={ink}
         />
       ) : (

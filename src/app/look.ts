@@ -518,9 +518,10 @@ export const DIAL_MOVEMENT: Record<DialMovement, { beats: number | null }> = {
 // surface to catch anything, so it stays the face's ink, which is also what
 // a dial with polished hands wears against the polish. What it does get is a
 // tail, and the tail is where the two sets part: a sports hand balances
-// itself with a disc on a stub, a dress watch's with a long slim triangle
-// that leaves the hub at several times the hair's width and comes to a point
-// well out on the dial.
+// itself with a disc on a stub, a dress watch's with a long blade that
+// leaves the hub as the same hair and swells as it goes, so the weight is
+// out at the end where it does the balancing rather than under the cap where
+// it would do none.
 
 export type DialHands = "bar" | "tapered";
 
@@ -540,14 +541,16 @@ export type DialHandsSpec = {
    *  facets either side of its ridge, a bar as one domed bar. */
   taper: boolean;
   /** What balances the second hand past the axle: the disc of a sports hand
-   *  on a stub of the same hair, or the long tapering blade of a dress
-   *  watch — a triangle rather than a hair, which is the counterweight you
-   *  see across a room. */
+   *  on a stub of the same hair, or the long widening blade of a dress
+   *  watch — a wedge rather than a hair, which is the counterweight you see
+   *  across a room. */
   counterweight: "disc" | "blade";
   /** How far that tail reaches past the axle, as a share of `HANDS.tail` in
-   *  `clock.ts`, and how wide it is where it leaves the axle, as a share of
-   *  the second hand's own width. A hair is one and one; a blade is longer
-   *  than the stub it replaces and several times as wide at the hub. */
+   *  `clock.ts`, and how wide it is at its far end, as a share of the second
+   *  hand's own width. A hair is one and one; a blade is longer than the stub
+   *  it replaces and several times as wide by the end of it — it leaves the
+   *  hub as the hair and swells from there, the way a counterweight has to
+   *  if it is to weigh anything. */
   tail: number;
   tailWidth: number;
 };

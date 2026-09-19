@@ -174,7 +174,8 @@ describe("the dial's vocabulary", () => {
     expect(tapered.boss).toBe(0);
     // The second hand's tail is the other way round: a dress watch balances
     // it with a blade rather than a disc — longer than the sports hand's
-    // stub, and several times the hair's width where it leaves the hub.
+    // stub, and several times the hair's width by the far end of it, which
+    // is where a counterweight's weight has to be.
     expect(tapered.counterweight).toBe("blade");
     expect(tapered.tail).toBeGreaterThan(bar.tail);
     expect(tapered.tailWidth).toBeGreaterThan(3);
