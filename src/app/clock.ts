@@ -140,10 +140,11 @@ export type DialLayout = {
   markerLength: number;
   markerWidth: number;
   /** The lumed plot at the end of an hour that runs out to the ring: where
-   *  its centre sits and how big it is. Null on every other dial, which is
-   *  most of them — an hour that stops short of the ring has nothing on the
-   *  ring to finish it with. */
-  pip: { r: number; radius: number } | null;
+   *  its centre sits, how far it reaches along the radius and how wide it is
+   *  across — a block of lume rather than a dot, which is why it has two
+   *  numbers. Null on every other dial, which is most of them — an hour that
+   *  stops short of the ring has nothing on the ring to finish it with. */
+  pip: { r: number; length: number; width: number } | null;
   /** The hands' tips from the centre. */
   hands: { hour: number; minute: number; second: number };
 };
@@ -173,10 +174,10 @@ export type DialLayout = {
  * it and its outer end is taken out to the ring's inner edge, so the hour is
  * one part running from the middle of the dial to the day's track rather
  * than a baton with air and a stray tick after it. What finishes it is a
- * lumed plot on the ring, as wide as the ring's own ticks are long and
- * centred on them — the hours are the twelve places a chapter ring prints a
+ * lumed plot on the ring, centred on the ring's own ticks — the hours are the twelve places a chapter ring prints a
  * numeral rather than a tick, so the plot lands in room the minutes are not
- * using.
+ * using — standing on the same track as the ticks, a shade shorter than one
+ * and more than twice as wide.
  */
 export function dialLayout(
   dial: Pick<DialConfig, "placement" | "markers" | "font" | "scale" | "ring">,
@@ -217,14 +218,15 @@ export function dialLayout(
   const tracks = chapterTracks(ringInner);
 
   let markerLength = size * MARKER_SHARE;
-  let pip: { r: number; radius: number } | null = null;
+  let pip: DialLayout["pip"] = null;
   if (style.reachesRing && dial.placement === "inside") {
     const innerEnd = markerR - markerLength / 2;
     markerLength = ringInner - innerEnd;
     markerR = innerEnd + markerLength / 2;
     pip = {
       r: (tracks.ring.inner + tracks.ring.outer) / 2,
-      radius: (tracks.ring.outer - tracks.ring.inner) / 2,
+      length: (tracks.ring.outer - tracks.ring.inner) * PLOT_LENGTH,
+      width: MINUTE_INK * PLOT_WIDTH,
     };
   }
 
@@ -277,8 +279,8 @@ export type ChapterTracks = {
   /** Where each track begins and ends: `inner` nearer the centre. */
   ring: { inner: number; outer: number };
   face: { inner: number; outer: number };
-  /** The two finer marks between one minute and the next: the same outer
-   *  edge as the minutes, and not nearly as far in. */
+  /** The finer marks that divide a minute: the same outer edge as the
+   *  minutes, and not nearly as far in. */
   fine: { inner: number; outer: number };
 };
 
@@ -291,6 +293,18 @@ const FACE_TRACK_CLEAR = 0.2;
 const MINUTE_TICK = MARKER_GAP - FACE_TRACK_GAP - FACE_TRACK_CLEAR;
 /** How much of that a third of a minute gets. */
 const FINE_TICK_SHARE = 0.44;
+/** How thick the ring's own minute ticks are printed. The plot at an hour is
+ *  measured against this, so the two move together. */
+export const MINUTE_INK = 0.7;
+/** The plot an hour is finished with, against the minute tick it stands in
+ *  the place of: a little shorter along the radius, and well over twice as
+ *  thick across it. A minute is a line; an hour's lume is a block, and that
+ *  difference is most of what makes the twelve hours findable on a ring of
+ *  sixty marks. Measured off a photograph of the dial this one is drawn
+ *  after, where the plot runs about seven-eighths of a tick's length at
+ *  nearly two and a half times its width. */
+const PLOT_LENGTH = 0.86;
+const PLOT_WIDTH = 2.4;
 
 export function chapterTracks(ringInner: number): ChapterTracks {
   const outer = ringInner - FACE_TRACK_GAP;
@@ -305,16 +319,37 @@ export function chapterTracks(ringInner: number): ChapterTracks {
  *  finer marks that divide it. */
 export type FaceMark = { angle: number; minute: boolean };
 
+/** Whether a minute is one of the twelve an hour stands at. */
+const isHour = (minute: number) => minute % 5 === 0;
+
 /**
- * The hundred and eighty marks that track carries: a minute every six
- * degrees, and two finer ones between each pair of them. `angle` is
- * clockwise from twelve, as `chapterMarks` gives it.
+ * The marks that track carries: a minute every six degrees, and the gap
+ * after it in thirds. `angle` is clockwise from twelve, as `chapterMarks`
+ * gives it.
+ *
+ * Except where an hour is in the way, which is the whole of the difference
+ * between a track that is printed and a track that is read. An applied hour
+ * is a block of steel standing across the track, and the third of a minute
+ * beside it is under that block: on a real dial it is printed and hidden, so
+ * what you see beside an hour is one mark rather than two. Here it is simply
+ * not drawn — a mark half under a marker reads as a burr on the marker
+ * rather than as a mark. Twelve takes both, because twelve is where every
+ * style puts its widest hour, and what you see beside twelve is nothing.
  */
 export function faceMarks(): FaceMark[] {
-  return Array.from({ length: 180 }, (_, i) => ({
-    angle: i * 2,
-    minute: i % 3 === 0,
-  }));
+  const marks: FaceMark[] = [];
+  for (let minute = 0; minute < 60; minute += 1) {
+    marks.push({ angle: minute * 6, minute: true });
+    const next = (minute + 1) % 60;
+    const twelve = minute === 0 || next === 0;
+    if (!twelve && !isHour(minute)) {
+      marks.push({ angle: minute * 6 + 2, minute: false });
+    }
+    if (!twelve && !isHour(next)) {
+      marks.push({ angle: minute * 6 + 4, minute: false });
+    }
+  }
+  return marks;
 }
 
 /** One mark of a chapter ring: a minute tick, or a numeral every five. The

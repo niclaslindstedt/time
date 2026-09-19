@@ -64,10 +64,12 @@ is lit by the light its face comes with.
   The blocks are the one style whose hours run the whole way _out to the
   ring_ rather than stopping short of it: the block starts where its size
   puts it and ends on the ring's inner edge, crossing the face's track on the
-  way, and what finishes it is a lumed plot — a filled dot in the ring's own
-  ink — printed on the ring at the hour. The twelve hours are the twelve
-  places a minute ring prints a numeral rather than a tick, so the plots land
-  in room the minutes are not using, and like the minutes they stay printed
+  way, and what finishes it is a lumed plot — a small rounded block in the
+  ring's own ink — printed on the ring at the hour, standing on the minutes'
+  own track a shade shorter than one of them and more than twice as wide, so
+  an hour reads as a block of lume where a minute is a line. The twelve hours
+  are the twelve places a minute ring prints a numeral rather than a tick, so
+  the plots land in room the minutes are not using, and like the minutes they stay printed
   over whatever colour the day has painted under them. On a dial whose
   markers sit over or outside the ring there is no gap to close, and the
   blocks are batons like any other.
@@ -107,7 +109,11 @@ is lit by the light its face comes with.
   half of that track is on the face itself, just under the ring: a tick a
   minute of the ring's own length, in the ring's own colour, with two finer
   marks between each pair — thirds of a minute — so the two halves read as
-  one minute track with the ring's edge running through it. That is the track
+  one minute track with the ring's edge running through it. Except where an
+  hour is in the way: an applied hour is a block of steel standing across the
+  track, so the third beside it is not drawn, and beside an hour you see one
+  mark rather than two. Twelve takes both, because twelve carries the widest
+  hour of every marker style, and beside twelve you see none. That is the track
   the hands are read against on this ring: the minute hand crosses the tips
   of the face's ticks and stops there, and the second hand runs on over the
   ring's own ticks and stops just past them, a dark hair a few units onto the
@@ -124,9 +130,10 @@ is lit by the light its face comes with.
   losing the light as it sweeps, which is the one thing a drawn watch usually
   gets wrong. The two sets part again past the axle: a bar's second hand
   balances itself with the disc of a sports hand on a stub of the same hair,
-  a tapered set with the long tapering blade of a dress watch — a triangle
-  that leaves the hub several times the hair's width and comes to a point
-  well out on the dial. The second hand stays the face's ink either way: a
+  a tapered set with the long blade of a dress watch — a wedge that leaves
+  the hub as the same hair and swells as it goes, so the weight is out at the
+  end of it where it does the balancing rather than under the cap where it
+  would do none. The second hand stays the face's ink either way: a
   hair that fine has no surface to catch anything, and a dial with polished
   hands wears a dark one against the polish.
 - **Movement.** How the second hand moves. **Quartz** steps once a second,
