@@ -172,9 +172,15 @@ describe("the dial's vocabulary", () => {
     // Nothing past the axle: the widest point is the hub, and a tail past it
     // would flare out from under the cap.
     expect(tapered.boss).toBe(0);
-    // And nothing past the axle to balance it: a dress watch's second hand
-    // is one hair the whole way.
-    expect(tapered.counterweight).toBe("none");
+    // The second hand's tail is the other way round: a dress watch balances
+    // it with a blade rather than a disc — longer than the sports hand's
+    // stub, and several times the hair's width where it leaves the hub.
+    expect(tapered.counterweight).toBe("blade");
+    expect(tapered.tail).toBeGreaterThan(bar.tail);
+    expect(tapered.tailWidth).toBeGreaterThan(3);
+    // The sports hand's is that hair, with the disc doing the balancing.
+    expect(bar.tail).toBe(1);
+    expect(bar.tailWidth).toBe(1);
   });
 
   it("beats once, eight times, or not at all", () => {

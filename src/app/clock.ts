@@ -11,6 +11,7 @@
 import {
   DIAL_FONT,
   DIAL_MARKERS,
+  DIAL_RING,
   DIAL_SCALE,
   ROMAN_WIDTH,
   type DialConfig,
@@ -109,6 +110,11 @@ const MAX_REACH: Record<DialPlacement, number> = {
  *  for. */
 const MARKER_SHARE = 1;
 
+/** How far a hand's tip goes past the mark it is read against, where there
+ *  is one. A tip that stops exactly on a tick reads as short of it; a tip
+ *  that crosses it reads as pointing at it. */
+const HAND_PAST = 1;
+
 /** The hands' widths, the second hand's tail past the centre, and the cap
  *  over the axle. Thin, the way a wrist watch's are. */
 export const HANDS = {
@@ -152,8 +158,15 @@ export type DialLayout = {
  * minute track, and then comes in just far enough. Either way the widest thing the style draws — two digits, VIII, or a
  * baton's length — is what has to clear, halved into a `reach` either side
  * of the marker's own radius, and clamped to what the placement leaves room
- * for. The hands stop at the ring: the minute hand on the band, the second
- * hand at its outer edge, the hour hand well short of both.
+ * for.
+ *
+ * The hands stop at whatever the dial gives them to be read against. On a
+ * groove that is the ring itself: the minute hand on the band, the second
+ * hand at its outer edge, the hour hand well short of both. On a printed
+ * ring it is the print — the minute hand crosses the tips of the track under
+ * the ring and stops there, and the second hand carries on over the ring's
+ * own ticks and stops just past them, a few units onto the ring, where a
+ * dark hair over a printed tick is the contrast that makes it readable.
  *
  * A style that `reachesRing` is the exception, and only inside the ring,
  * where there is a gap to close: the block keeps the inner end the size gave
@@ -166,7 +179,7 @@ export type DialLayout = {
  * using.
  */
 export function dialLayout(
-  dial: Pick<DialConfig, "placement" | "markers" | "font" | "scale">,
+  dial: Pick<DialConfig, "placement" | "markers" | "font" | "scale" | "ring">,
 ): DialLayout {
   const style = DIAL_MARKERS[dial.markers];
   const font = DIAL_FONT[dial.font];
@@ -201,18 +214,21 @@ export function dialLayout(
   const bandR = ringOuter - RING_EDGE - RING_BAND / 2;
   const ringInner = ringOuter - RING_EDGE - RING_BAND;
 
+  const tracks = chapterTracks(ringInner);
+
   let markerLength = size * MARKER_SHARE;
   let pip: { r: number; radius: number } | null = null;
   if (style.reachesRing && dial.placement === "inside") {
     const innerEnd = markerR - markerLength / 2;
     markerLength = ringInner - innerEnd;
     markerR = innerEnd + markerLength / 2;
-    const track = chapterTracks(ringInner).ring;
     pip = {
-      r: (track.inner + track.outer) / 2,
-      radius: (track.outer - track.inner) / 2,
+      r: (tracks.ring.inner + tracks.ring.outer) / 2,
+      radius: (tracks.ring.outer - tracks.ring.inner) / 2,
     };
   }
+
+  const printed = DIAL_RING[dial.ring].printed;
 
   return {
     bandR,
@@ -224,24 +240,35 @@ export function dialLayout(
     markerLength,
     markerWidth: size * 0.22,
     pip,
-    hands: { hour: bandR * 0.62, minute: bandR, second: ringOuter },
+    hands: {
+      hour: bandR * 0.62,
+      minute: printed ? tracks.face.inner + HAND_PAST : bandR,
+      second: printed ? tracks.ring.outer + HAND_PAST : ringOuter,
+    },
   };
 }
 
 /**
- * The two minute tracks a printed ring is read against, as radii from the
- * centre, for a ring whose inner edge is at `ringInner`.
+ * The minute tracks a printed ring is read against, as radii from the centre,
+ * for a ring whose inner edge is at `ringInner`.
  *
  * A chapter ring's own ticks stand on its *inner* edge and grow outward
  * across it, with the numerals in the room that leaves above them — which is
  * the way round a dial of this kind is printed, and the opposite of where a
- * rim track goes. Under the ring, on the face itself, the dial wears a second
- * finer track: the one the minute hand is actually read against, hanging just
- * below the ring and growing inward.
+ * rim track goes. Under the ring, on the face itself, the dial wears the
+ * other half of the same track: a tick a minute of the ring's own length,
+ * hanging just below the ring and growing inward, so the two read as one
+ * minute track with the ring's edge running through it.
+ *
+ * Between one minute and the next the face's track carries two finer marks —
+ * thirds of a minute, which is what a track this long is divided into on a
+ * dial of this kind — reaching less than half as far in, so the minutes stay
+ * the marks that are counted.
  *
  * The face's track has to fit in the air the markers are clamped to leave
  * (`MARKER_GAP`), because a tick that reached past it would run into the
- * marker at twelve on the largest hour size. `tests/clock_test.ts` says so.
+ * marker at twelve on the largest hour size — so its length is the ring's,
+ * clamped to what that air has room for. `tests/clock_test.ts` says so.
  * The one dial that crosses it does so on purpose: a style that `reachesRing`
  * takes its blocks out over the track, and the twelve ticks under them are
  * the twelve the hours stand on anyway.
@@ -250,13 +277,44 @@ export type ChapterTracks = {
   /** Where each track begins and ends: `inner` nearer the centre. */
   ring: { inner: number; outer: number };
   face: { inner: number; outer: number };
+  /** The two finer marks between one minute and the next: the same outer
+   *  edge as the minutes, and not nearly as far in. */
+  fine: { inner: number; outer: number };
 };
 
+/** Air between the ring's inner edge and the track hanging under it, and
+ *  between that track's tips and the markers inside them. */
+const FACE_TRACK_GAP = 0.4;
+const FACE_TRACK_CLEAR = 0.2;
+/** A minute's tick, on either side of the ring's edge: the one length the
+ *  two halves of the track share, which is all the air the markers leave. */
+const MINUTE_TICK = MARKER_GAP - FACE_TRACK_GAP - FACE_TRACK_CLEAR;
+/** How much of that a third of a minute gets. */
+const FINE_TICK_SHARE = 0.44;
+
 export function chapterTracks(ringInner: number): ChapterTracks {
+  const outer = ringInner - FACE_TRACK_GAP;
   return {
-    ring: { inner: ringInner + 0.5, outer: ringInner + 4 },
-    face: { inner: ringInner - MARKER_GAP + 0.8, outer: ringInner - 0.6 },
+    ring: { inner: ringInner + 0.5, outer: ringInner + 0.5 + MINUTE_TICK },
+    face: { inner: outer - MINUTE_TICK, outer },
+    fine: { inner: outer - MINUTE_TICK * FINE_TICK_SHARE, outer },
   };
+}
+
+/** One mark of the track under a printed ring: a minute, or one of the two
+ *  finer marks that divide it. */
+export type FaceMark = { angle: number; minute: boolean };
+
+/**
+ * The hundred and eighty marks that track carries: a minute every six
+ * degrees, and two finer ones between each pair of them. `angle` is
+ * clockwise from twelve, as `chapterMarks` gives it.
+ */
+export function faceMarks(): FaceMark[] {
+  return Array.from({ length: 180 }, (_, i) => ({
+    angle: i * 2,
+    minute: i % 3 === 0,
+  }));
 }
 
 /** One mark of a chapter ring: a minute tick, or a numeral every five. The

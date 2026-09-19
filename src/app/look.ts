@@ -516,7 +516,11 @@ export const DIAL_MOVEMENT: Record<DialMovement, { beats: number | null }> = {
 //
 // The second hand is the exception either way: a hair that fine has no
 // surface to catch anything, so it stays the face's ink, which is also what
-// a dial with polished hands wears against the polish.
+// a dial with polished hands wears against the polish. What it does get is a
+// tail, and the tail is where the two sets part: a sports hand balances
+// itself with a disc on a stub, a dress watch's with a long slim triangle
+// that leaves the hub at several times the hair's width and comes to a point
+// well out on the dial.
 
 export type DialHands = "bar" | "tapered";
 
@@ -535,10 +539,17 @@ export type DialHandsSpec = {
   /** Whether the hand narrows along its length: a taper is drawn as two
    *  facets either side of its ridge, a bar as one domed bar. */
   taper: boolean;
-  /** What balances the second hand past the axle: the disc of a sports hand,
-   *  or nothing at all — a dress watch's second hand is one hair from its tip
-   *  to the end of its tail. */
-  counterweight: "disc" | "none";
+  /** What balances the second hand past the axle: the disc of a sports hand
+   *  on a stub of the same hair, or the long tapering blade of a dress
+   *  watch — a triangle rather than a hair, which is the counterweight you
+   *  see across a room. */
+  counterweight: "disc" | "blade";
+  /** How far that tail reaches past the axle, as a share of `HANDS.tail` in
+   *  `clock.ts`, and how wide it is where it leaves the axle, as a share of
+   *  the second hand's own width. A hair is one and one; a blade is longer
+   *  than the stub it replaces and several times as wide at the hub. */
+  tail: number;
+  tailWidth: number;
 };
 
 export const DIAL_HAND_SETS: DialHands[] = ["bar", "tapered"];
@@ -550,13 +561,17 @@ export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
     boss: 5,
     taper: false,
     counterweight: "disc",
+    tail: 1,
+    tailWidth: 1,
   },
   tapered: {
     base: 2,
     tip: 0.25,
     boss: 0,
     taper: true,
-    counterweight: "none",
+    counterweight: "blade",
+    tail: 1.9,
+    tailWidth: 4,
   },
 };
 

@@ -153,8 +153,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
   rotations, arc paths, `dialLayout` — where the day's ring, the hour markers
   and the hands sit for a given placement and marker size — `chapterTracks`,
-  the two minute tracks a printed ring is read against (its own ticks on its
-  inner edge, and the finer one on the face under it) — and `ringHit` /
+  the two halves of the minute track a printed ring is read against (its own
+  ticks on its inner edge, and the same length again on the face under it,
+  with two finer marks between each minute) — and `ringHit` /
   `timesAt`, which read a point on the ring back as a moment. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
   stepper lands it with; and the **wind**, `windPlan` / `windMoment` /
