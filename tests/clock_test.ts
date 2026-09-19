@@ -14,6 +14,7 @@ import {
   chapterMarks,
   chapterTracks,
   dialLayout,
+  faceMarks,
   handAngles,
   handTurns,
   polar,
@@ -35,6 +36,8 @@ import {
   DIAL_MARKERS,
   DIAL_MARKER_STYLES,
   DIAL_PLACEMENTS,
+  DIAL_RING,
+  DIAL_RINGS,
   DIAL_SCALE,
   DIAL_SCALES,
   ROMAN_WIDTH,
@@ -155,13 +158,17 @@ describe("handTurns", () => {
 });
 
 describe("dialLayout", () => {
-  const every: Pick<DialConfig, "placement" | "markers" | "font" | "scale">[] =
-    [];
+  type Dial = Pick<
+    DialConfig,
+    "placement" | "markers" | "font" | "scale" | "ring"
+  >;
+  const every: Dial[] = [];
   for (const placement of DIAL_PLACEMENTS)
     for (const markers of DIAL_MARKER_STYLES)
       for (const font of DIAL_FONTS)
         for (const scale of DIAL_SCALES)
-          every.push({ placement, markers, font, scale });
+          for (const ring of DIAL_RINGS)
+            every.push({ placement, markers, font, scale, ring });
 
   /** How far the widest thing a style draws reaches either side of the
    *  marker's own radius, the way the layout measures it — half a numeral's
@@ -274,6 +281,18 @@ describe("dialLayout", () => {
         `${where}: the face's track is on the ring`,
       ).toBeLessThan(l.ringInner);
       expect(tracks.face.inner).toBeLessThan(tracks.face.outer);
+      // The two halves of the one track are the same length, so the ring's
+      // edge runs through the middle of a minute rather than between two.
+      expect(
+        tracks.face.outer - tracks.face.inner,
+        `${where}: the face's minutes are not the ring's length`,
+      ).toBeCloseTo(tracks.ring.outer - tracks.ring.inner, 6);
+      // And the thirds of a minute hang from the same edge, not half as far.
+      expect(tracks.fine.outer).toBeCloseTo(tracks.face.outer, 6);
+      expect(tracks.fine.inner).toBeGreaterThan(tracks.face.inner);
+      expect(tracks.fine.outer - tracks.fine.inner).toBeLessThan(
+        (tracks.face.outer - tracks.face.inner) / 2,
+      );
       // And where the markers are inside the ring and stop short of it, the
       // track stops short of them too: a tick that reached a marker would
       // foul the largest hour size. The hours that run out to the ring are
@@ -291,18 +310,39 @@ describe("dialLayout", () => {
     }
   });
 
-  it("stops the hands at the ring: minute on the band, second at its edge", () => {
+  it("stops the hands at whatever the dial is read against", () => {
     for (const dial of every) {
       const l = dialLayout(dial);
-      expect(l.hands.minute).toBeCloseTo(l.bandR, 6);
-      expect(l.hands.second).toBeCloseTo(l.ringOuter, 6);
-      expect(l.hands.hour).toBeLessThan(l.hands.minute);
-      expect(l.hands.hour).toBeGreaterThan(30);
+      const tracks = chapterTracks(l.ringInner);
+      const where = JSON.stringify(dial);
+      if (DIAL_RING[dial.ring].printed) {
+        // Read against the print: the minute hand crosses the tips of the
+        // track under the ring and stops there, and the second hand carries
+        // on over the ring's own ticks — a few units onto the ring, and
+        // nowhere near its outer edge.
+        expect(l.hands.minute, where).toBeGreaterThan(tracks.face.inner);
+        expect(l.hands.minute, where).toBeLessThan(tracks.face.outer);
+        expect(l.hands.second, where).toBeGreaterThan(tracks.ring.outer);
+        expect(l.hands.second, where).toBeLessThan(l.ringOuter);
+      } else {
+        expect(l.hands.minute, where).toBeCloseTo(l.bandR, 6);
+        expect(l.hands.second, where).toBeCloseTo(l.ringOuter, 6);
+      }
+      // Either way the second hand reaches past the minute hand, and the
+      // hour hand is well short of both.
+      expect(l.hands.second, where).toBeGreaterThan(l.hands.minute);
+      expect(l.hands.hour, where).toBeLessThan(l.hands.minute);
+      expect(l.hands.hour, where).toBeGreaterThan(30);
     }
   });
 
   it("pulls the ring in to make room for markers outside it", () => {
-    const base = { markers: "numerals", font: "grotesque", scale: 4 } as const;
+    const base = {
+      markers: "numerals",
+      font: "grotesque",
+      scale: 4,
+      ring: "groove",
+    } as const;
     const inside = dialLayout({ ...base, placement: "inside" });
     const over = dialLayout({ ...base, placement: "over" });
     const outside = dialLayout({ ...base, placement: "outside" });
@@ -322,6 +362,7 @@ describe("dialLayout", () => {
         markers: "numerals",
         font: "grotesque",
         scale,
+        ring: "groove",
       });
       expect(l.numeralSize).toBeGreaterThan(last);
       last = l.numeralSize;
@@ -337,6 +378,7 @@ describe("dialLayout", () => {
       markers: "roman",
       font: "inscribed",
       scale: 8,
+      ring: "groove",
     });
     expect(l.numeralSize).toBeLessThan(DIAL_SCALE[8]);
     const reach = reachOf({ markers: "roman", font: "inscribed" }, l);
@@ -350,6 +392,7 @@ describe("dialLayout", () => {
         markers: "blocks",
         font: "light",
         scale,
+        ring: "chapter",
       } as const;
       const l = dialLayout(dial);
       const plain = dialLayout({ ...dial, markers: "batons" });
@@ -412,12 +455,14 @@ describe("dialLayout", () => {
       markers: "batons",
       font: "grotesque",
       scale: 1,
+      ring: "groove",
     });
     const large = dialLayout({
       placement: "inside",
       markers: "batons",
       font: "grotesque",
       scale: 8,
+      ring: "groove",
     });
     expect(large.markerLength).toBeGreaterThan(small.markerLength);
     expect(large.markerWidth).toBeGreaterThan(small.markerWidth);
@@ -469,6 +514,23 @@ describe("chapterMarks", () => {
     // And right again from nine.
     expect(at(45)).toBe(270);
     expect(at(55)).toBe(330);
+  });
+});
+
+describe("faceMarks", () => {
+  const marks = faceMarks();
+
+  it("divides every minute into three, and counts only the minutes", () => {
+    expect(marks).toHaveLength(180);
+    expect(marks.filter((m) => m.minute)).toHaveLength(60);
+    // Two finer marks between one minute and the next, all the way round.
+    marks.forEach((m, i) => expect(m.minute).toBe(i % 3 === 0));
+  });
+
+  it("lays a mark at every two degrees, and a minute on the ring's own", () => {
+    marks.forEach((m, i) => expect(m.angle).toBe(i * 2));
+    const minutes = marks.filter((m) => m.minute).map((m) => m.angle);
+    expect(minutes).toEqual(chapterMarks().map((m) => m.angle));
   });
 });
 

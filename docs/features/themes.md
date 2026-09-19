@@ -63,7 +63,7 @@ is lit by the light its face comes with.
 
   The blocks are the one style whose hours run the whole way _out to the
   ring_ rather than stopping short of it: the block starts where its size
-  puts it and ends on the ring's inner edge, crossing the fine track on the
+  puts it and ends on the ring's inner edge, crossing the face's track on the
   way, and what finishes it is a lumed plot — a filled dot in the ring's own
   ink — printed on the ring at the hour. The twelve hours are the twelve
   places a minute ring prints a numeral rather than a tick, so the plots land
@@ -103,9 +103,15 @@ is lit by the light its face comes with.
   **minute ring** is the chapter ring a sixties dress dial wears at its rim —
   a deep blue, printed in white with a numeral every five, 05 round to 60,
   and a tick a minute standing on the ring's _inner_ edge with the numerals
-  in the room that leaves, the way a dial of this kind is printed. Under it,
-  on the face itself, is the finer track the minute hand is actually read
-  against. The day _fills_ the ring: a stretch at work paints it
+  in the room that leaves, the way a dial of this kind is printed. The other
+  half of that track is on the face itself, just under the ring: a tick a
+  minute of the ring's own length, in the ring's own colour, with two finer
+  marks between each pair — thirds of a minute — so the two halves read as
+  one minute track with the ring's edge running through it. That is the track
+  the hands are read against on this ring: the minute hand crosses the tips
+  of the face's ticks and stops there, and the second hand runs on over the
+  ring's own ticks and stops just past them, a dark hair a few units onto the
+  ring rather than out at its edge. The day _fills_ the ring: a stretch at work paints it
   the accent, a kind of work its hue, a break the flag colour, and the
   minutes stay printed over whatever the day put under them. The numerals
   are set in the Numerals face, whatever the hours wear.
@@ -116,11 +122,13 @@ is lit by the light its face comes with.
   and narrowing to a point, with a ridge down each that takes the light on
   one side and lies in shade on the other — so a hand keeps catching and
   losing the light as it sweeps, which is the one thing a drawn watch usually
-  gets wrong. Its second hand is a plain hairline, its tail a stub of the
-  same hair rather than a counterweight, which is what a dress watch carries.
-  The second hand stays the face's ink either way: a hair that fine has no
-  surface to catch anything, and a dial with polished hands wears a dark one
-  against the polish.
+  gets wrong. The two sets part again past the axle: a bar's second hand
+  balances itself with the disc of a sports hand on a stub of the same hair,
+  a tapered set with the long tapering blade of a dress watch — a triangle
+  that leaves the hub several times the hair's width and comes to a point
+  well out on the dial. The second hand stays the face's ink either way: a
+  hair that fine has no surface to catch anything, and a dial with polished
+  hands wears a dark one against the polish.
 - **Movement.** How the second hand moves. **Quartz** steps once a second,
   with the small overshoot a stepper motor gives it. **Mechanical** walks in
   eight small steps a second, the way a calibre at 28 800 vph beats. **Glide**

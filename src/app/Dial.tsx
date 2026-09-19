@@ -18,6 +18,7 @@ import {
   chapterMarks,
   chapterTracks,
   dialLayout,
+  faceMarks,
   polar,
 } from "./clock.ts";
 import { useT } from "./i18n/index.ts";
@@ -262,12 +263,11 @@ export function Dial({
   const tracks = chapterTracks(layout.ringInner);
   const numeralR = (tracks.ring.outer + layout.ringOuter) / 2;
   const faceTrack = ring.printed
-    ? Array.from({ length: 60 }, (_, i) => {
-        const hour = i % 5 === 0;
-        const inner = hour ? tracks.face.inner : tracks.face.inner + 1.1;
-        const [x1, y1] = polar(C, C, inner, i * 6);
-        const [x2, y2] = polar(C, C, tracks.face.outer, i * 6);
-        return { x1, y1, x2, y2, hour };
+    ? faceMarks().map((m) => {
+        const inner = m.minute ? tracks.face.inner : tracks.fine.inner;
+        const [x1, y1] = polar(C, C, inner, m.angle);
+        const [x2, y2] = polar(C, C, tracks.face.outer, m.angle);
+        return { x1, y1, x2, y2, minute: m.minute };
       })
     : [];
 
@@ -416,10 +416,14 @@ export function Dial({
         </>
       )}
 
-      {/* And the track under it, on the face: the finer one the minute hand
-          is read against, hanging below the ring and growing inward. Drawn
-          before the day, because it is on the dial rather than on the ring —
-          nothing the day paints reaches it. */}
+      {/* And the other half of that track, on the face: a minute of the
+          ring's own length hanging below it and growing inward, with two
+          finer marks between each pair — thirds of a minute, for the minute
+          hand to be read to. Printed in the ring's own colour rather than the
+          face's ink, so the track is one mark carried across the ring's edge
+          rather than two that happen to line up. Drawn before the day,
+          because it is on the dial rather than on the ring — nothing the day
+          paints reaches it. */}
       {ring.printed &&
         faceTrack.map((tick, i) => (
           <line
@@ -428,9 +432,9 @@ export function Dial({
             y1={tick.y1}
             x2={tick.x2}
             y2={tick.y2}
-            stroke={face.ink}
-            strokeWidth={tick.hour ? 1 : 0.6}
-            opacity={tick.hour ? 0.6 : 0.4}
+            stroke={ring.fill ?? face.ink}
+            strokeWidth={tick.minute ? 0.9 : 0.5}
+            opacity={tick.minute ? 0.95 : 0.75}
           />
         ))}
 
@@ -948,12 +952,13 @@ function Hand({
   );
 }
 
-/** The second hand: one hair from its tip to the end of its tail, and
- *  whatever balances it past the axle — the disc of a sports hand, or nothing
- *  at all, which is what a dress watch's carries. Printed in the face's ink
- *  whatever the rest of the set is made of: at a unit wide there is no room
- *  for a facet, and a dial with polished hands wears a dark second hand
- *  against the polish. */
+/** The second hand: one hair from the axle to its tip, and whatever balances
+ *  it past the axle — the disc of a sports hand on a stub of the same hair,
+ *  or the blade of a dress watch, which leaves the hub several times the
+ *  hair's width and tapers to a point well out on the dial. Printed in the
+ *  face's ink whatever the rest of the set is made of: at a unit wide there
+ *  is no room for a facet, and a dial with polished hands wears a dark second
+ *  hand against the polish. */
 function SecondHand({
   set,
   length,
@@ -965,19 +970,26 @@ function SecondHand({
   width: number;
   ink: string;
 }) {
-  const tail = C + HANDS.tail;
+  const blade = set.counterweight === "blade";
+  const tail = C + HANDS.tail * set.tail;
+  const flare = (width * set.tailWidth) / 2;
   return (
     <>
       <line
         x1={C}
-        y1={tail}
+        y1={blade ? C : tail}
         x2={C}
         y2={C - length}
         stroke={ink}
         strokeWidth={width}
         strokeLinecap="round"
       />
-      {set.counterweight === "disc" && (
+      {blade ? (
+        <polygon
+          points={`${C - flare},${C} ${C + flare},${C} ${C + width / 2},${tail} ${C - width / 2},${tail}`}
+          fill={ink}
+        />
+      ) : (
         <circle cx={C} cy={C + HANDS.tail * 0.7} r={2.2} fill={ink} />
       )}
     </>
