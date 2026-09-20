@@ -18,8 +18,8 @@ import { KEY_HINT } from "./shortcuts.ts";
 // the stylesheet (`.app-header`), which takes the larger of the row's own
 // padding and the status-bar inset.
 //
-// On a desk (`useDesk`) the four destinations sit here too, in the middle of
-// the bar, in the bottom bar's order. That is where a desktop web app keeps
+// On a desk (`useDesk`, `shape.ts`) the four destinations sit here too, in
+// the middle of the bar, in the bottom bar's order. That is where a desktop web app keeps
 // its navigation — the top of the window, where the eye starts — and it
 // leaves the whole height below for the screen. It is a row of tabs and not
 // a menubar: the browser already has one of those, and File / Edit / View

@@ -50,8 +50,9 @@ The main screen, and the whole app for most of a day.
   beats while you are working, holds low and steady in the break colour on a
   break, and is off when you are not working. Its colour, its beat, how bright
   it is and how far it reaches are under **Settings → The clock → Backlight**.
-  On a phone the face keeps that reach clear above the case, so the halo is
-  whole rather than cut flat where the screen begins.
+  On a phone held upright the face keeps that reach clear above the case, so
+  the halo is whole rather than cut flat where the screen begins. Laid down
+  or on a desk the dial has air round it already.
 - **The line under the dial.** The day's state in words — "Working · since
   08:02", "On a break · Lunch until 12:30", "Not working · Stopped at 17:10"
   — and, on a day the project expects work on, when today's hours are done:
@@ -72,8 +73,10 @@ The main screen, and the whole app for most of a day.
   no tap until you have started working, and say so by going pale — but they
   still answer a hold, because what a kind looks like has nothing to do with
   being clocked in.
-  On a desk the two rows stand either side of the dial, breaks to its left
-  and kinds of work to its right.
+  Given the width — a desk, or a phone laid on its side — the two rows stand
+  either side of the dial instead, breaks to its left and kinds of work to
+  its right, and a list longer than the window is tall scrolls in its own
+  column.
 
 There is no start button. **The face is the switch**: press it to start
 working, press it again to stop — the way a watch has one crown. The light
@@ -174,6 +177,29 @@ lens, which is what it is for — but the pickers do not count as fields for
 this: a time, a date, a file or a slider opens the phone's own control and has
 no text under it to magnify.
 
+## Laid on its side
+
+A phone turned sideways is not a shorter phone. The screen is a third of the
+height and twice the width, which is the one shape the upright layout cannot
+be folded into: the dial is as wide as the window, the window is half a dial
+tall, and everything that works the day ends up under a fold nobody scrolls
+past on a screen they only meant to glance at.
+
+So from there the app lays the Today screen out the way the desk does — the
+dial in the middle, sized by the height there is, breaks down the left and
+kinds of work down the right, the state of the day in a line under the watch.
+Everything else stays the phone's: the four places are still the bottom bar,
+a swipe still moves along it, Settings is still a screen. The bar only gets
+shorter, each label moving beside its glyph, and both bars keep clear of the
+notch, which sideways is down one edge of the screen.
+
+It is meant to be left like that — propped against something on the desk, a
+clock that is also the day's record, with every break and every kind of work
+one press away and nothing to scroll.
+
+The switch is over from 44rem of height, so a browser window dragged short
+and wide gets the same layout for the same reason.
+
 ## On a desk
 
 From 1024px wide the app is a desk rather than a phone: the four places move
@@ -184,7 +210,8 @@ behind it holds still.
 
 The dial takes the share of the window's height its size asks for (see
 [`themes.md`](themes.md)), with the breaks to its left and the kinds of work
-to its right. The screen is laid out to the window and does not scroll — the
+to its right, and more room round all three than a phone on its side has. The
+screen is laid out to the window and does not scroll — the
 light behind the dial reaches past the edge of it on purpose, and a
 decoration is not something to scroll to.
 

@@ -39,7 +39,7 @@ import { TodayScreen } from "./app/TodayScreen.tsx";
 import { TopBar, topBarNeeded } from "./app/TopBar.tsx";
 import { projectList } from "./app/types.ts";
 import { useAppSettings } from "./app/useAppSettings.ts";
-import { useDesk } from "./app/useDesk.ts";
+import { useDesk, useWide } from "./app/useShape.ts";
 import { localDocBackend, useDocStore } from "./app/useDocStore.ts";
 import { useShortcuts } from "./app/useShortcuts.ts";
 import { useSyncEngine } from "./app/useSyncEngine.ts";
@@ -59,6 +59,13 @@ import { status } from "./output.ts";
 // slides in over the right-hand edge (`SidePanel.tsx`) so the dial is still
 // in view while a watch face is picked, and the keyboard reaches the lot
 // (`shortcuts.ts`). The screens themselves know nothing of either shell.
+//
+// Three *shapes* of window, though, and the third is the phone laid on its
+// side — the stand (`shape.ts`). It keeps the phone's shell down to the last
+// habit, bottom bar and swipe included, and changes only the Today screen,
+// which has no height to stack in and stands its controls beside the dial
+// the way the desk does. `useWide` is that pair of shapes and nothing more;
+// everything it guards here is layout.
 
 // Module-scoped so the identity stays stable across renders (the framework's
 // `useToasts` keys its subscription on the store object).
@@ -94,6 +101,11 @@ export function App() {
     null;
 
   const desk = useDesk();
+  // Whether the Today screen stands its controls beside the dial: the desk,
+  // and a phone laid on its side (see `shape.ts`). Layout only — the stand
+  // keeps every one of the phone shell's habits, bottom bar and swipe
+  // included.
+  const wide = useWide();
   const [tab, setTab] = useState<Tab>("today");
   // Where the bottom nav was left, so closing Settings comes back to it.
   const [home, setHome] = useState<NavTab>("today");
@@ -316,7 +328,7 @@ export function App() {
             clipped at the edge of the content area. */}
         <div
           className={`h-full overflow-y-auto overflow-x-hidden ${
-            desk && tab === "today" ? "lg:overflow-hidden" : ""
+            wide && tab === "today" ? "wide:overflow-hidden" : ""
           }`}
         >
           <div
@@ -324,7 +336,7 @@ export function App() {
             data-enter={enter}
             className={`app-screen mx-auto flex min-h-full max-w-2xl flex-col ${
               desk ? "lg:max-w-3xl" : ""
-            } ${desk && tab === "today" ? "lg:h-full lg:max-w-none" : ""} ${
+            } ${wide && tab === "today" ? "wide:h-full wide:max-w-none" : ""} ${
               bare ? "app-bare" : ""
             }`}
           >

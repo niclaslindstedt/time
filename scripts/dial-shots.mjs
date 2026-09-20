@@ -16,7 +16,7 @@
 //   node scripts/dial-shots.mjs --preset all             every preset
 //   node scripts/dial-shots.mjs --preset uptown --state out,working,break,over
 //   node scripts/dial-shots.mjs --dial '{"face":"black","ring":"chapter"}'
-//   node scripts/dial-shots.mjs --shell phone,desk --theme dark,light
+//   node scripts/dial-shots.mjs --shell phone,stand,desk --theme dark,light
 //   node scripts/dial-shots.mjs --preset abyss --settings
 //   node scripts/dial-shots.mjs --preset uptown --tilt '0,0/25,0/0,-25/20,20'
 //
@@ -24,7 +24,7 @@
 //   --preset  <ids|all>   a preset id from look.ts (default: the default preset)
 //   --dial    <json>      a custom dial instead, as fields over the default preset
 //   --state   <list>      out | working | break | over          (default: working)
-//   --shell   <list>      phone | desk                          (default: phone)
+//   --shell   <list>      phone | stand | desk                  (default: phone)
 //   --theme   <list>      dark | light                          (default: dark)
 //   --size    <id>        small | medium | large                (default: large)
 //   --backlight <json>    backlight fields over the default (colour, hz, intensity, spread)
@@ -66,6 +66,11 @@ import {
 const STATES = ["out", "working", "break", "over"];
 const SHELLS = {
   phone: { width: 393, height: 852 },
+  // The same phone laid on its side: the stand (see `shape.ts`), where the
+  // day's controls stand beside the dial and the dial is sized by the height
+  // there is rather than the width. Worth `--full` more than the others are,
+  // since what changed there is the screen round the watch.
+  stand: { width: 852, height: 393 },
   desk: { width: 1280, height: 800 },
 };
 const THEMES = ["dark", "light"];

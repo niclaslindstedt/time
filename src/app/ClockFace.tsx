@@ -86,11 +86,12 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 // here, above the switch, the way the chips are.
 //
 // The light needs room. It is a disc inflated past the case by the spread,
-// and on a phone the case sits near the top of a screen that clips at its
-// edge — so the face keeps that much clear above the dial, as a share of
-// its own width, and the halo is whole rather than cut flat where the
-// screen begins. A desk centres the dial in a row with air round it and
-// keeps the room for the row.
+// and on a phone held upright the case sits near the top of a screen that
+// clips at its edge — so the face keeps that much clear above the dial, as a
+// share of its own width, and the halo is whole rather than cut flat where
+// the screen begins. Anywhere the dial is centred in a row with air round it
+// — the desk, and the same phone laid on its side — the row keeps the room
+// and the spacer goes (`wide:`, see `shape.ts`).
 //
 // What the watch looks like — its face, its markers, its numerals, how its
 // second hand moves — is the dial the settings resolved (see `look.ts`); the
@@ -301,7 +302,7 @@ export function ClockFace({
     state === "out" ? t("today.clockIn") : t("today.clockOut");
 
   return (
-    <div className={`mx-auto w-full ${sizing.maxWidth} lg:max-w-none`}>
+    <div className={`mx-auto w-full ${sizing.maxWidth} wide:max-w-none`}>
       {/* The light's room above the case: the same share of the dial's
           width the disc is inflated by, so however far the spread reaches
           the halo is not cut flat at the top of the screen. A percentage
@@ -309,7 +310,7 @@ export function ClockFace({
           against. The desk has the row's own air. */}
       <div
         aria-hidden="true"
-        className="lg:hidden"
+        className="wide:hidden"
         style={{ paddingTop: `${halo.inset}%` }}
       />
       <div

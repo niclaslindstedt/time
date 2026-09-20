@@ -323,9 +323,16 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the form it saves, scoped to its own `aria-modal` card so only the top
   dialog answers, and deferred a tick so a field that commits on blur has
   committed before the save reads the draft. Escape is the framework's.
-- `src/app/useDesk.ts` — whether the window is a desk (64rem and wider) or a
-  phone. The one number, shared with every `lg:` and `@media (min-width:
-64rem)` in the app.
+- `src/app/shape.ts` — what shape the window is, which is the only thing the
+  shell asks about a device: a `phone` (a column), a `stand` (the same phone
+  laid on its side — wide enough for three columns and far too short to stack
+  them) or a `desk` (64rem and wider). The two edges live here as numbers, as
+  the media queries the stylesheet uses, and as a pure `shapeOf` the tests
+  walk real windows through. `useShape.ts` is the live reading:
+  `useDesk` for the shell — the top bar's tabs, the side panel, no swipe —
+  and `useWide` for the pair of shapes that stand the day's controls beside
+  the dial, which is the stylesheet's `wide:` variant read from JavaScript.
+  Keep the numbers here and the numbers in `styles.css` the same.
 - `src/app/SidePanel.tsx` — Settings on the desk: a panel over the
   right-hand edge of the content area, so the dial changes live as a face is
   picked. A dialog to assistive tech and to the shortcuts.
@@ -462,6 +469,7 @@ regression.
 | A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there; anything else on the dial that has to move with them is cut at `windMoment` and written from that loop too                                              |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
 | Something only the desk does                       | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                                                                                                                                  |
+| Something the desk and a phone on its side share   | Behind `useWide()`, or a `wide:` class / the paired `@media` list in `styles.css` — never `lg:` alone, which leaves a landscape phone on the layout it has no height for; the edges are `shape.ts`'s                                                                                   |
 | A change to the light behind the case              | `src/app/look.ts` (`FACE_BACKLIGHT`, the light a face is lit by, and `resolveBacklight` — walked by `tests/look_test.ts`) + `DialPicker.tsx`, which is the only screen the knobs are on; never a second backlight table                                                                |
 | A new face, marker, typeface, ring, hand or preset | Run the `add-watch-face` skill (`.agents/skills/add-watch-face/`): `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, `main.tsx` for a bundled `@fontsource` family, and `make shots` to look at it — named for what it looks like, never for a maker |
 | A change to the Report's month chart               | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                                                                                                                                                                       |
@@ -559,9 +567,12 @@ with `[Learn more](feature:<slug>)`.
   marker or a hand looks like is `sheen.ts`'s reckoning of the light on it. A dial option that tinted
   a button or a card would be the palette gallery this rule exists to refuse.
 - **Four destinations, no sidebar, no drawer.** On the phone they are the
-  bottom bar, in a fixed left-to-right order a swipe moves along; on the desk
-  the same four, in the same order, are tabs on the top bar, and the bottom
-  bar is not drawn. Things you do and then leave belong on the top bar, which
+  bottom bar, in a fixed left-to-right order a swipe moves along — laid down
+  as well as upright, where the bar only gets shorter and puts each label
+  beside its glyph; on the desk the same four, in the same order, are tabs on
+  the top bar, and the bottom bar is not drawn. A phone on its side does not
+  get a rail down its edge: that is the sidebar this rule refuses, and the
+  thumb is where it always was. Things you do and then leave belong on the top bar, which
   is where Settings went — a screen on the phone, a side panel on the desk.
   Over Today the watch carries the name and the cog itself, the way a dial
   carries its maker and its date, and the bar goes without them; on the
