@@ -170,12 +170,15 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the bezel on every dial the way the printing is fixed, so the two rings
   under the case are the day's target and the day's shape — `FACE_R`, the
   radius the watch itself is laid out inside once the day has taken that
-  much, `dialLayout` — where the dial's ring, the hour markers
+  much, `placementOf` — where a dial's hours _actually_ sit, which is inside
+  a printed ring whatever the setting says, because a scale is read from the
+  outside in — `dialLayout` — where the dial's ring, the hour markers
   and the hands sit for a given placement and marker size — `chapterTracks`,
   the two halves of the minute track a printed ring is read against (its own
   ticks on its inner edge, and the same length again on the face under it,
   with two finer marks between each minute) — and `ringHit` /
-  `timesAt`, which read a point on the day's track back as a moment. Also how the
+  `timesAt`, which read a point on the day's track back as a moment, and
+  `faceHit`, which says whether a point is on the face — the switch's edge. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
   stepper lands it with; and the **wind**, `windPlan` / `windMoment` /
   `windTurns`, the motion that sets the watch after the tab has been asleep —
@@ -188,7 +191,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   eight faces, nine typefaces, nine marker styles, eight hour sizes, the
   three placements against the ring, the two rings the markers are placed
   against (a faint groove, or the printed chapter ring — the day is not on
-  either of them any more, see `DAY_TRACK`), the two shapes of hand
+  either of them any more, see `DAY_TRACK`; and a printed ring takes the
+  hours inside it whatever the placement says, see `placementOf`, so the
+  picker drops the control for it), the two shapes of hand
   (a half-round bar, or the ridged taper of a dress watch, both of them
   steel), the three movements, and the nine presets they combine into. Also
   `STEEL`, the one metal every applied part is made of, and `markerProfile`,
@@ -294,9 +299,11 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
   both, and the light going round them while the day is being counted.
-  Reads `day.ts` only. The face is the button that starts and stops
-  the day; a stretch on the track, and the break ends printed on the rim,
-  open the day's stretches instead; the window above six is the cog. On a
+  Reads `day.ts` only. The face — what `faceHit` calls the face, inside the
+  dial's own ring — is the button that starts and stops the day; every press
+  outside it opens the day's stretches, at the stretch under the finger when
+  it lands on the day's track, and so do the break ends printed on the rim;
+  the window above six is the cog. On a
   phone it keeps the light's own reach clear above the case, so the halo is
   whole rather than cut flat where the screen begins. Behind the case is the backlight — the
   glow that says the day is being counted, in the colour, beat and strength
@@ -445,6 +452,7 @@ regression.
 | A change to what a button on Today does            | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                                                                                                                                                                            |
 | A change to how the clock draws                    | `src/app/clock.ts` (geometry, tested), `sheen.ts` (what the light does to the metal, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)                                                                                            |
 | A change to where the day sits on the dial         | `src/app/clock.ts` (`DAY_TRACK` and `FACE_R`, walked by `tests/clock_test.ts` for every dial) — never a second set of radii in `Dial.tsx`, and never back onto the dial's own ring                                                                                                     |
+| A dial option that only makes sense with another   | `src/app/clock.ts` (let the geometry decide, the way `placementOf` does) + `DialPicker.tsx` (drop the control rather than offer a choice that cannot look right) — never a preset that quietly differs from what its settings say                                                      |
 | A change to what a break counts for                | `src/app/types.ts` (`BreakCredit`) + `project.ts` (`creditSeconds` / `storedCredit`) + `day.ts` (what it counts for) + the validation in `migrations.ts` + `BreakCreditField.tsx` — one control for both forms, never a second table                                                   |
 | A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there; anything else on the dial that has to move with them is cut at `windMoment` and written from that loop too                                              |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
@@ -554,10 +562,13 @@ with `[Learn more](feature:<slug>)`.
   carries its maker and its date, and the bar goes without them; on the
   phone it goes altogether when nothing else is on it. A new _action_ is a
   top-bar button, not a tab.
-- **The face is the switch.** Starting and stopping the day is a press on
-  the dial, and nothing else on Today starts or stops it. A stretch of the
-  ring opens the stretches; the line under the dial opens the arrival. Do
-  not add a start button back.
+- **The face is the switch, and only the face.** Starting and stopping the
+  day is a press on the dial _inside its own ring_, and nothing else on Today
+  starts or stops it. Everything outside that — the printed ring, the rim and
+  the day's track under the bezel — opens the day stretch by stretch, because
+  out there the watch is carrying a record and a record is corrected rather
+  than switched. The line under the dial opens the arrival. Do not add a start
+  button back, and do not give the switch the ring again.
 - **No timer.** The day's progress is the bezel and the state is the light
   and the one line under the dial. A figure ticking up is the thing this
   screen was rid of.

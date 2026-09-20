@@ -104,11 +104,18 @@ is lit by the light its face comes with.
 - **Hour size.** Eight steps. A numeral that would not fit where it is placed
   is set as large as does fit, so no step ever runs a numeral off the face or
   into the ring.
-- **Markers sit.** Outside the ring, between it and the bezel; over it, the
-  way a chapter ring lies on a dial; or inside it, with the ring round them.
-  The ring moves in to make room when it has to.
-- **The day's ring.** What the day is drawn on. **A groove** is the faint
-  track the bands lie in, so an empty morning shows where they will go. The
+- **Markers sit.** Outside the ring, between it and the day's track; over it,
+  the way applied hours lie on a dial; or inside it, with the ring round them.
+  The ring moves in to make room when it has to. Not offered with the minute
+  ring: printed minutes are the scale the hours are read against, and a scale
+  is read from the outside in, so the hours go inside it. Put them over it and
+  every hour lands on one of the numerals; put them outside it and the watch
+  reads inside out. The setting is kept rather than cleared, so a dial that
+  goes to the minute ring and back is the dial it was.
+- **The dial's ring.** The track the hours are placed against and the hands
+  are read to. The day is not on it — the day has a track of its own, just
+  inside the bezel (see [`today.md`](today.md)). **A groove** is a faint
+  sunken track, and little more than that. The
   **minute ring** is the chapter ring a sixties dress dial wears at its rim —
   a deep blue, printed in white with a numeral every five, 05 round to 60,
   and a tick a minute standing on the ring's _inner_ edge with the numerals
@@ -126,9 +133,7 @@ is lit by the light its face comes with.
   ring itself and stops the width of a print onto the near end of its ticks,
   where a dark hair over a white one is the contrast that makes it readable.
   Onto them and barely: a second hand running the length of the marks it is
-  read against would cover the very thing it is pointing at. The day _fills_ the ring: a stretch at work paints it
-  the accent, a kind of work its hue, a break the flag colour, and the
-  minutes stay printed over whatever the day put under them. The numerals
+  read against would cover the very thing it is pointing at. The numerals
   are set in the Numerals face, whatever the hours wear.
 - **Hands.** Two shapes — what they are made of is not a choice, because a
   hand is steel on every wrist watch there is. **Bars** are the same width

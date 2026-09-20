@@ -394,7 +394,7 @@ export const en = {
     themeSystem: "Device",
     clock: "The clock",
     clockHint:
-      "The dial on Today, as a wrist watch. Each one comes with the light that suits it. Pick one of the presets, or Custom and put one together: the face, the markers, the numerals and their size, where they sit against the day's ring, what the ring is, what the hands are, how the second hand moves, and the light behind the case.",
+      "The dial on Today, as a wrist watch. Each one comes with the light that suits it. Pick one of the presets, or Custom and put one together: the face, the markers, the numerals and their size, where they sit against the dial's ring, what that ring is, what the hands are, how the second hand moves, and the light behind the case.",
     clockPreset: "Dial",
     clockCustom: "Custom",
     clockCustomHint: "Your own dial and its light, piece by piece.",
@@ -464,15 +464,17 @@ export const en = {
       over: "Over the ring",
       inside: "Inside the ring",
     },
-    clockRing: "The day's ring",
+    // The dial's own ring — the track the hours are placed against. Not the
+    // day's: the day has a track of its own, out under the bezel.
+    clockRing: "The dial's ring",
     ring: {
       groove: "A groove",
       chapter: "Minute ring",
     },
     ringHint: {
-      groove: "A faint track the day is drawn into.",
+      groove: "A faint sunken track for the hours to stand against.",
       chapter:
-        "A blue ring printed with the minutes, which the day fills — work, breaks and kinds of work — with the minutes printed over them.",
+        "A blue ring printed with the minutes, the way a sixties dress watch wears one. It takes the outside of the dial, so the hours sit inside it.",
     },
     clockHands: "Hands",
     hands: {

@@ -77,22 +77,25 @@ export const ROMAN_HOURS = [
  */
 export const DAY_BAND = 3.2;
 export const DAY_EDGE = 1.2;
-/** Air between the face's own edge — where it steps up to the bezel — and
- *  the day's track, and between that track and whatever is under it. */
-const DAY_CLEAR = 0.4;
-const DAY_GAP = 0.4;
 
-/** Where the day's track sits, as radii from the centre: the thin line
- *  outside, the band under it. */
+/**
+ * Where the day's track sits, as radii from the centre: the thin line
+ * outside, the band under it, and no air either side of the pair.
+ *
+ * It runs from the case to whatever the dial puts under it, touching both,
+ * because air between two rings on a watch is a gap rather than a margin —
+ * there is nothing in it to see, and an empty band of face reads as a mistake
+ * however narrow it is.
+ */
 export const DAY_TRACK = {
-  outer: DIAL_R - DAY_CLEAR,
-  edgeR: DIAL_R - DAY_CLEAR - DAY_EDGE / 2,
-  bandR: DIAL_R - DAY_CLEAR - DAY_EDGE - DAY_BAND / 2,
-  inner: DIAL_R - DAY_CLEAR - DAY_EDGE - DAY_BAND,
+  outer: DIAL_R,
+  edgeR: DIAL_R - DAY_EDGE / 2,
+  bandR: DIAL_R - DAY_EDGE - DAY_BAND / 2,
+  inner: DIAL_R - DAY_EDGE - DAY_BAND,
 } as const;
 
 /** How much of the face's outer edge the day has taken. */
-export const DAY_RESERVE = DAY_CLEAR + DAY_EDGE + DAY_BAND + DAY_GAP;
+export const DAY_RESERVE = DAY_EDGE + DAY_BAND;
 
 /** The radius the watch itself is laid out inside — the face less the day's
  *  track. Every number below is measured from this rather than from `DIAL_R`,
@@ -105,17 +108,33 @@ export const FACE_R = DIAL_R - DAY_RESERVE;
  *  now is the minutes — or, on a groove, nothing but the track itself. */
 export const RING_BAND = 12;
 export const RING_EDGE = 2.5;
-/** The rim, between the ring's outer edge and the watch's: where the minute
- *  track's ticks are. */
+/**
+ * The rim, between the ring's outer edge and the day's track: where the
+ * minute track's ticks are — on the styles that print one.
+ *
+ * On a dial that prints nothing there *and* keeps its markers inside the
+ * ring, there is no rim at all: the ring comes right out to meet the day. A
+ * rim is room left for something, and a dial with nothing to put in it wore a
+ * band of bare face between its ring and its day, which reads as a gap rather
+ * than as a margin.
+ *
+ * Markers placed outside or over the ring are the exception, because then
+ * they are the outermost thing on the watch and the rim is their margin off
+ * the day's track — give it back and an hour marker ends up against the
+ * case. So the rim a dial gets is the room whatever reaches furthest out
+ * actually needs.
+ */
 const RIM = 5;
+const RIM_BARE = 0;
 /** The ticks' outer end. */
 export const TRACK_R = FACE_R - 1;
 /** Air between the ring and a marker beside it. */
 const MARKER_GAP = 4;
-/** The day's track is painted a little wider than it measures, so nothing
- *  shows through where it meets the bezel. Outward only, into the air
- *  `DAY_CLEAR` leaves: on the inside it is painted to `DAY_TRACK.inner`
- *  exactly, because that is the edge the rest of the dial is cleared to.
+/** The day's groove is painted a little wider than it measures, so no seam
+ *  of bare face shows where it meets the ring under it. Inward only — the
+ *  groove is the faintest thing on the dial and laps harmlessly onto the ring,
+ *  where outward it would lap onto the case. The bands themselves are painted
+ *  to the track exactly, since they are opaque and would eat the ring.
  *  `Dial.tsx` paints with this number. */
 export const RING_BLEED = 0.5;
 /** The dial's printing, as radii from the centre: the name under twelve,
@@ -161,6 +180,9 @@ export const SIGNATURE_REACH = Math.max(
  * the two cases are the one number rather than two that nearly agree.
  */
 const SIGNATURE_CLEAR = 2;
+// Reckoned on the full rim, which is the tighter case: a style that gives its
+// rim back moves its ring and its markers outward, away from the printing.
+
 const PLACEMENT_REACH =
   (FACE_R -
     RIM -
@@ -271,9 +293,32 @@ export type DialLayout = {
  * using — standing on the same track as the ticks, a shade shorter than one
  * and more than twice as wide.
  */
+/**
+ * Where a dial's hours actually sit, which is not always where the setting
+ * says.
+ *
+ * A printed ring is the outermost track on the watch by definition: its
+ * minutes are the scale the hours are read against, and a scale is read from
+ * the outside in. So the hours go *inside* it whatever the placement says.
+ * Put them over it and every hour lands on a numeral — the twelve hours and
+ * the twelve numerals are the same twelve positions — and put them outside it
+ * and the watch reads inside out, with the hours further from the centre than
+ * the minutes they are measured against.
+ *
+ * A groove is only a track, so it takes the hours wherever they were put. The
+ * setting is kept rather than corrected either way, so a dial that goes to
+ * the minute ring and back is the dial it was.
+ */
+export function placementOf(
+  dial: Pick<DialConfig, "placement" | "ring">,
+): DialPlacement {
+  return DIAL_RING[dial.ring].printed ? "inside" : dial.placement;
+}
+
 export function dialLayout(
   dial: Pick<DialConfig, "placement" | "markers" | "font" | "scale" | "ring">,
 ): DialLayout {
+  const placement = placementOf(dial);
   const style = DIAL_MARKERS[dial.markers];
   const font = DIAL_FONT[dial.font];
   const kinds = DIAL_HOURS.map((h) => style.at(h % 12));
@@ -284,23 +329,30 @@ export function dialLayout(
     ? font.widthFactor * (roman ? ROMAN_WIDTH : 1)
     : MARKER_SHARE / 2;
   const wanted = DIAL_SCALE[dial.scale] * font.scale;
-  const size = Math.min(wanted, MAX_REACH[dial.placement] / share);
+  const size = Math.min(wanted, MAX_REACH[placement] / share);
   const reach = size * share;
 
-  const markerOuter = FACE_R - RIM - 1;
+  // The rim this dial asks for. Room for the marks where the style prints a
+  // track on it; a margin off the day's track where the markers themselves
+  // are out here, which is every placement but `inside`; and nothing at all
+  // where the ring is the outermost thing on the watch — there is then
+  // nothing to leave room for, and an empty band of face is a gap rather
+  // than a margin.
+  const rim = style.minuteTrack || placement !== "inside" ? RIM : RIM_BARE;
+  const markerOuter = FACE_R - rim - 1;
   let ringOuter: number;
   let markerR: number;
-  if (dial.placement === "outside") {
+  if (placement === "outside") {
     markerR = markerOuter - reach;
     ringOuter = markerR - reach - MARKER_GAP;
-  } else if (dial.placement === "over") {
+  } else if (placement === "over") {
     ringOuter = Math.min(
-      FACE_R - RIM,
+      FACE_R - rim,
       markerOuter - reach + RING_EDGE + RING_BAND / 2,
     );
     markerR = ringOuter - RING_EDGE - RING_BAND / 2;
   } else {
-    ringOuter = FACE_R - RIM;
+    ringOuter = FACE_R - rim;
     markerR = ringOuter - RING_EDGE - RING_BAND - MARKER_GAP - reach;
   }
   const edgeR = ringOuter - RING_EDGE / 2;
@@ -311,7 +363,7 @@ export function dialLayout(
 
   let markerLength = size * MARKER_SHARE;
   let pip: DialLayout["pip"] = null;
-  if (style.reachesRing && dial.placement === "inside") {
+  if (style.reachesRing && placement === "inside") {
     const innerEnd = markerR - markerLength / 2;
     markerLength = (ringInner - innerEnd) * BLOCK_LENGTH;
     markerR = ringInner - markerLength / 2;
@@ -523,6 +575,23 @@ export function ringHit(
   }
   const angle = (Math.atan2(dx, -dy) * 180) / Math.PI;
   return (angle + 360) % 360;
+}
+
+/**
+ * Whether a point, in the dial's own coordinates, is on the face itself —
+ * inside the dial's own ring — rather than out on the ring, the rim, the
+ * day's track or the bezel.
+ *
+ * This is the switch's edge. The face is what starts and stops the day, and
+ * everything the day is *drawn* on opens the day instead: the ring is a
+ * record, and a record is a thing you correct rather than a thing you press.
+ */
+export function faceHit(
+  x: number,
+  y: number,
+  layout: Pick<DialLayout, "ringInner">,
+): boolean {
+  return Math.hypot(x - DIAL_R, y - DIAL_R) < layout.ringInner;
 }
 
 /** The angles of the three hands for a moment. */
