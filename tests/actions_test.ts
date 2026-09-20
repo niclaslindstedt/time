@@ -17,7 +17,11 @@ import {
   updateSpan,
 } from "../src/app/actions.ts";
 import { dayTotals } from "../src/app/day.ts";
-import { STAMP, ctx, day, h } from "./fixtures/helpers.ts";
+import { STAMP, ctx, day, h, project } from "./fixtures/helpers.ts";
+
+/** The project the totals here are read against — no break of it counts as
+ *  work, which is what a break has always counted for. */
+const acme = project();
 
 const empty = () =>
   day("2026-03-02", { updatedAt: "2020-01-01T00:00:00.000Z" });
@@ -34,7 +38,7 @@ describe("a day as it happens", () => {
     d = setCategory(d, "meet", h(14), c);
     d = clockOut(d, h(17), c);
 
-    const t = dayTotals(d, h(23));
+    const t = dayTotals(d, acme, h(23));
     expect(t.worked).toBe(h(8, 30));
     expect(t.breaks).toEqual({ lunch: h(0, 30) });
     expect(t.categories).toEqual({ code: h(5, 30), meet: h(3) });
@@ -112,7 +116,7 @@ describe("a minute either side of the face", () => {
     expect(d.activities).toEqual([
       { id: "id2", categoryId: "code", start: h(8), end: null },
     ]);
-    expect(dayTotals(d, h(12) + 30).worked).toBe(h(4) + 30);
+    expect(dayTotals(d, acme, h(12) + 30).worked).toBe(h(4) + 30);
   });
 
   it("opens a second session when a minute has gone by", () => {
@@ -255,7 +259,7 @@ describe("taking a break", () => {
     ]);
     // Ten minutes in, the day knows it is on a break — and knows when it is
     // meant to be over.
-    const t = dayTotals(d, h(12, 10));
+    const t = dayTotals(d, acme, h(12, 10));
     expect(t.state).toBe("break");
     expect(t.currentBreak?.end).toBe(h(12, 30));
     // …and the ten minutes taken so far are the only ten it has taken.
@@ -268,7 +272,7 @@ describe("taking a break", () => {
     d = takeBreak(d, "lunch", h(12), 30 * 60, c);
     d = endBreak(d, h(12, 12), c);
     expect(d.breaks[0]!.end).toBe(h(12, 12));
-    expect(dayTotals(d, h(13)).state).toBe("working");
+    expect(dayTotals(d, acme, h(13)).state).toBe("working");
   });
 
   it("drops a break ended in the second it started", () => {
@@ -323,14 +327,14 @@ describe("moving an edge of the day", () => {
     expect(d.activities[1]!.start).toBe(h(12, 40));
     // Ten minutes of work became ten minutes of lunch; nothing else moved.
     expect(d.activities[0]).toEqual(lunchDay().activities[0]);
-    expect(dayTotals(d, h(23)).worked).toBe(h(8, 20));
+    expect(dayTotals(d, acme, h(23)).worked).toBe(h(8, 20));
   });
 
   it("pulls an end back the same way", () => {
     const d = moveBoundary(lunchDay(), h(12, 30), h(12, 10), ctx());
     expect(d.breaks[0]!.end).toBe(h(12, 10));
     expect(d.activities[1]!.start).toBe(h(12, 10));
-    expect(dayTotals(d, h(23)).worked).toBe(h(8, 50));
+    expect(dayTotals(d, acme, h(23)).worked).toBe(h(8, 50));
   });
 
   it("swallows a stretch the edge is pushed clean over", () => {
@@ -361,7 +365,7 @@ describe("correcting the arrival", () => {
     const session = latestSession(d)!;
     d = setSessionStart(d, session.id, h(8, 20), c);
     expect(d.sessions[0]!.start).toBe(h(8, 20));
-    expect(dayTotals(d, h(10)).worked).toBe(h(1, 40));
+    expect(dayTotals(d, acme, h(10)).worked).toBe(h(1, 40));
   });
 
   it("refuses an arrival that reaches back over the session before it", () => {

@@ -81,8 +81,8 @@ export function LogScreen({ store, project, onNotice }: Props) {
   );
   const upTo = date === now.today ? now.seconds : END_OF_DAY;
   const totals = useMemo(
-    () => (day ? dayTotals(day, upTo) : null),
-    [day, upTo],
+    () => (day && project ? dayTotals(day, project, upTo) : null),
+    [day, project, upTo],
   );
 
   if (!project || !day || !totals) {

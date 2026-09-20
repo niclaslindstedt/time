@@ -77,7 +77,7 @@ export function summarizeDay(
 ): DaySummary {
   const expected = isWorkDay(project, date);
   const target = expected ? targetSeconds(project) : 0;
-  const totals = day ? dayTotals(day, upTo) : null;
+  const totals = day ? dayTotals(day, project, upTo) : null;
   const worked = totals?.worked ?? 0;
   return {
     date,

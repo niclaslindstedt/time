@@ -110,7 +110,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 ### The app owns the domain ("store stays in the app")
 
 - `src/app/types.ts` — the model. A `Project` (name, working days, hours per
-  day, break types with default lengths, kinds of work) and a `WorkDay` per
+  day, break types with default lengths and how much of one still counts as
+  work, kinds of work) and a `WorkDay` per
   project per calendar day: three lists of spans — `sessions` (presence),
   `breaks` (pauses inside presence, each of a type), `activities` (a kind of
   work over presence). Times are **seconds since the day's local midnight**,
@@ -119,9 +120,18 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/intervals.ts` — union / intersect / subtract over `[start, end)`
   stretches. Pure.
 - `src/app/day.ts` — the derivation: presence = the sessions; worked =
-  presence − breaks; a category's time = its activities ∩ worked. Breaks carve
+  presence − breaks + the part of those breaks the project counts as work; a
+  category's time = its activities ∩ worked. Breaks carve
   time out, activities only label it, and anything outside a session counts
-  for nothing. **Pure and clock-free** — `now` is a parameter.
+  for nothing. The credit reaches the _totals_ and not the intervals — a break
+  is a break wherever it is drawn — which is why `dayTotals` takes the project
+  and why `worked` is longer than `workedIntervals` by exactly
+  `breakCreditTotal`, and why `breakTotal` goes on reporting the whole of the
+  break time. `workdayEnd` is the one figure here about a moment that has not
+  happened: when the target is met if the work carries on unbroken, walked
+  stretch by stretch rather than divided, because a counted break counts while
+  you are on it and an uncounted one counts for nothing. **Pure and
+  clock-free** — `now` is a parameter.
 - `src/app/actions.ts` — the edits, as pure functions from a day to a new
   day: clock in / out, start / end a break, set the category, add a span after
   the fact, edit or remove one. The invariants (one open session, one open
@@ -148,27 +158,37 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   day's box is filled from — a _scale_ rather than `labels.ts`'s table, mixed
   from the theme's own tokens. Pure and clock-free.
 - `src/app/project.ts` — the project template (Mon–Fri, 8 h, lunch 30 min,
-  coffee 15 min, toilet 5 min), whether a date is a working day, the day's
-  target, the clamps.
+  coffee 15 min, toilet 5 min, and no break counting as work), whether a date
+  is a working day, the day's target, the clamps, and `creditSeconds` — the
+  one place a stored `BreakCredit` is read, so no screen and no derivation has
+  to know what an absent one means. `storedCredit` is the other half: an
+  answer of "none" is stored as nothing at all, the way a kind of work's
+  "automatic" colour is, so a project that counts no break is byte for byte
+  the document it always was.
 - `src/app/clock.ts` — the twelve-hour dial's geometry: angles, hand
-  rotations, arc paths, `dialLayout` — where the day's ring, the hour markers
+  rotations, arc paths, `DAY_TRACK` — the day's own track, fixed just inside
+  the bezel on every dial the way the printing is fixed, so the two rings
+  under the case are the day's target and the day's shape — `FACE_R`, the
+  radius the watch itself is laid out inside once the day has taken that
+  much, `dialLayout` — where the dial's ring, the hour markers
   and the hands sit for a given placement and marker size — `chapterTracks`,
   the two halves of the minute track a printed ring is read against (its own
   ticks on its inner edge, and the same length again on the face under it,
   with two finer marks between each minute) — and `ringHit` /
-  `timesAt`, which read a point on the ring back as a moment. Also how the
+  `timesAt`, which read a point on the day's track back as a moment. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
   stepper lands it with; and the **wind**, `windPlan` / `windMoment` /
   `windTurns`, the motion that sets the watch after the tab has been asleep —
   the minute hand a turn an hour, the hour hand a twelfth of it, the second
   hand hacked until the two are right, all on a sine's ease. `windMoment` is
   where the _dial_ stands part way through that, which is the day's as much as
-  the hands': the ring is filled in up to there, so the hours slept through
+  the hands': the track is filled in up to there, so the hours slept through
   arrive under the hands rather than before them. Pure.
 - `src/app/look.ts` — the app's two themes, and the dial's vocabulary: the
   eight faces, nine typefaces, nine marker styles, eight hour sizes, the
-  three placements against the ring, the two rings the day is drawn on (a
-  groove, or the printed chapter ring the day fills), the two shapes of hand
+  three placements against the ring, the two rings the markers are placed
+  against (a faint groove, or the printed chapter ring — the day is not on
+  either of them any more, see `DAY_TRACK`), the two shapes of hand
   (a half-round bar, or the ridged taper of a dress watch, both of them
   steel), the three movements, and the nine presets they combine into. Also
   `STEEL`, the one metal every applied part is made of, and `markerProfile`,
@@ -240,9 +260,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   is _filed_; Log is where it is _corrected_, because a list is where a wrong
   time is visible.
 - `src/app/Dial.tsx` — the watch face, drawn: bezel, face, minute track,
-  the ring the day is drawn on (a groove, or a chapter ring printed with the
-  minutes, which the day fills and the print lies back over), markers, the
-  printing, hands, and the day as coloured bands it is handed. The bezel is
+  the dial's own ring (a groove, or a chapter ring printed with the minutes),
+  the day's track just inside the bezel and the day on it as the coloured
+  bands it is handed, markers, the printing and hands. The bezel is
   also the day's progress: clockwise from twelve, closing at the target and
   going round again in the flag colour past it — the one number the Today
   screen draws rather than prints. The printing is what a dial carries
@@ -262,12 +282,20 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   (`reached`) and its arcs written from the same loop, so the ring fills in
   under the hands instead of the whole day being on it before they arrive. A
   band marked `ahead` is the other side of that cut — the assumed tail of a
-  break, drawn from the moment rather than up to it.
-- `src/app/ClockFace.tsx` — the day on the dial, and the switch. One ring:
-  presence as the accent band and its thin outer line, a kind of work in its
+  break, drawn from the moment rather than up to it. Behind the `pulse` prop
+  is the light that goes round the day's track while the day is being
+  counted: a dash travelling round a full circle, masked to the bands by a
+  `use` of the group they are in — so it follows the ones the wind loop is
+  writing for nothing, and shows only where the day has been drawn. The
+  motion is CSS's (`.app-day-pulse`), because it is a light and a light is
+  not a hand.
+- `src/app/ClockFace.tsx` — the day on the dial, and the switch. One track,
+  just inside the bezel: presence as the accent band and its thin outer line,
+  a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
-  both. Reads `day.ts` only. The face is the button that starts and stops
-  the day; a stretch on the ring, and the break ends printed on the rim,
+  both, and the light going round them while the day is being counted.
+  Reads `day.ts` only. The face is the button that starts and stops
+  the day; a stretch on the track, and the break ends printed on the rim,
   open the day's stretches instead; the window above six is the cog. On a
   phone it keeps the light's own reach clear above the case, so the halo is
   whole rather than cut flat where the screen begins. Behind the case is the backlight — the
@@ -416,6 +444,8 @@ regression.
 | A new derived number                               | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                                                                                                                                                                      |
 | A change to what a button on Today does            | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                                                                                                                                                                            |
 | A change to how the clock draws                    | `src/app/clock.ts` (geometry, tested), `sheen.ts` (what the light does to the metal, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)                                                                                            |
+| A change to where the day sits on the dial         | `src/app/clock.ts` (`DAY_TRACK` and `FACE_R`, walked by `tests/clock_test.ts` for every dial) — never a second set of radii in `Dial.tsx`, and never back onto the dial's own ring                                                                                                     |
+| A change to what a break counts for                | `src/app/types.ts` (`BreakCredit`) + `project.ts` (`creditSeconds` / `storedCredit`) + `day.ts` (what it counts for) + the validation in `migrations.ts` + `BreakCreditField.tsx` — one control for both forms, never a second table                                                   |
 | A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there; anything else on the dial that has to move with them is cut at `windMoment` and written from that loop too                                              |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
 | Something only the desk does                       | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                                                                                                                                  |
@@ -428,6 +458,7 @@ regression.
 | A change to what a project holds                   | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                                                                                                                                                                           |
 | A new glyph, or a colour a kind can wear           | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                                                                                                                                                               |
 | A new control on the span editor                   | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                                                                                                                                                                 |
+| A new figure about a moment yet to come            | `src/app/day.ts` (`workdayEnd` is the only one, and it says nothing rather than guessing) — with a test at real times in `tests/day_test.ts`                                                                                                                                           |
 | A change to what a kind of break or work wears     | `src/app/KindModal.tsx` (the form, opened by "Custom" or by holding a pill) — the mark and the hue tables stay in `kinds.ts`                                                                                                                                                           |
 | A control that answers being held                  | `src/app/useLongPress.ts` — spread its handlers on the button; never a second timer in a screen                                                                                                                                                                                        |
 | A modal's save / cancel                            | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's                                                                                                                                                |
@@ -455,7 +486,9 @@ fixtures (a project, a day, a named-id `ctx`).
 Run one file with `npx vitest run tests/day_test.ts`.
 
 A change to the derivation without a test that pins the new behaviour to real
-times is not finished. UI changes should keep the boot smoke path working:
+times is not finished. `dayTotals` takes the project as well as the day, because
+what a break counts for belongs to the project; `tests/fixtures/helpers.ts`'s
+`project()` counts no break, so a test that cares must say so. UI changes should keep the boot smoke path working:
 `npm run build && npm run preview`, add a project, start working, and
 check that the light comes up and the Log shows the session.
 
@@ -486,6 +519,7 @@ with `[Learn more](feature:<slug>)`.
 | `report.ts` or `monthChart.ts`   | `docs/day-model.md` (the report section) and `docs/features/report.md`                                                                                                  |
 | `actions.ts`                     | `docs/features/today.md` and `docs/features/log.md`                                                                                                                     |
 | The `Project` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/projects.md`, and a `migrations.ts` step — a purely additive optional field needs the validation rather than a step |
+| Where the day sits on the dial   | `docs/features/today.md` and the README's Usage table — both describe the ring a reader is looking at                                                                   |
 | The sync engine or the merge     | `docs/sync.md`                                                                                                                                                          |
 | A `VITE_*` variable              | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it                                                          |
 | A screen's behaviour             | The matching `docs/features/*.md` and the README's Usage table                                                                                                          |

@@ -54,6 +54,13 @@ export const en = {
     breakSince: "{name} since {time}",
     breakUntil: "{name} until {time}",
     doneAt: "Stopped at {time}",
+    // The third thing on the state line: the moment today's hours are done,
+    // worked out from what the day holds and what its breaks count for. A
+    // glyph and a time, because the line is read at a glance and "you can
+    // leave at" is a sentence nobody needs twice a day — the long form is
+    // there for a screen reader and for the tooltip.
+    endsAt: "Today's hours are done at {time}",
+    endedAt: "Today's hours were done at {time}",
     clockIn: "Start working",
     clockOut: "Stop working",
     endBreak: "End {name}",
@@ -159,6 +166,9 @@ export const en = {
     dialDesc: "Started at {start}, stopped at {end}.",
     splitLabel: "Worked and breaks",
     splitDesc: "{worked} worked and {breaks} of breaks.",
+    splitDescCredited:
+      "{worked} worked — {credited} of it break time the project counts — and {breaks} of breaks.",
+    breakCredit: "Counted",
     dayMenu: "This day",
     unknownType: "Deleted type",
     worked: "Worked",
@@ -286,6 +296,23 @@ export const en = {
     markOf: "Mark for {name}",
     colour: "Colour",
     colourAuto: "Automatic",
+    // How much of a break of this kind still counts as work. A trip down the
+    // corridor usually does, an hour's lunch usually does not, and the common
+    // middle case is a lunch of which the first half hour is paid — so three
+    // answers rather than a switch.
+    credit: {
+      label: "Counts as work",
+      none: "No",
+      all: "All of it",
+      partial: "The first…",
+      minutes: "Minutes counted",
+      hint: "Time a break of this kind gives back to the day. Counted over the whole day, so half an hour of lunch is half an hour whether it was taken at once or in three sittings.",
+      // What the row says it is doing now, under the buttons.
+      saysNone: "A break of this kind comes off the day.",
+      saysAll: "A break of this kind still counts as work.",
+      saysPartial:
+        "The first {minutes} min of this kind counts as work each day; the rest comes off it.",
+    },
     group: {
       work: "Work",
       break: "Breaks",

@@ -11,9 +11,10 @@ or several; most people have one.
 - **Hours per working day** — the target, and what the Today screen's
   percentage measures against. Fractions allowed (7.5).
 - **Break types** — one button each on the Today screen, with the minutes a
-  break added afterwards is assumed to have taken, and a mark. A new project
-  starts with Lunch (30 min), Coffee (15 min) and Toilet (5 min); rename them,
-  change the minutes, remove them, add a walk.
+  break added afterwards is assumed to have taken, a mark, and how much of one
+  still counts as work (below). A new project
+  starts with Lunch (30 min), Coffee (15 min) and Toilet (5 min), none of them
+  counting as work; rename them, change the minutes, remove them, add a walk.
 - **Kinds of work** — optional labels for what you are doing, so the report
   can say where the hours went, each with a mark and a colour. A new project
   starts with Meetings, Planning, Retro and Admin.
@@ -31,6 +32,36 @@ beyond that is the editor's business: a card counts nothing.
 
 Editing and deleting are two glyphs in the card's top right — a pen and a
 bin. Deleting still asks first.
+
+## What a break counts for
+
+A break carves time out of the day — that is what a break is — but not every
+employer counts every one of them. A trip down the corridor is usually still
+paid; an hour's lunch usually is not; and the common middle case is a lunch of
+which the first half hour counts and the rest is your own. So each break type
+carries one of three answers, under its name in the project form and in the
+form a break button opens when it is held:
+
+| Answer                 | What a break of the kind counts for                        |
+| ---------------------- | ---------------------------------------------------------- |
+| **No** _(the default)_ | Nothing. The whole of it comes off the day.                |
+| **All of it**          | All of it. The day is as long as if it had not been taken. |
+| **The first…**         | The minutes you give, and no more.                         |
+
+The minutes of a partial answer are counted **over the whole day, not per
+break**: a project that counts half an hour of lunch counts half an hour of
+lunch whether it was taken in one sitting or three.
+
+What counts reaches every number the app draws — the bezel on Today, the
+figures on the Log, the balance on the Report, and when today's hours are done
+— but it changes nothing about the break itself: it is still a break in the
+lists, still the flag colour on the clock, and the Log still shows the whole
+of the time spent on breaks.
+
+Every break starts out counting for nothing, which is what a break has always
+counted for, so updating the app changes no day already logged. Turning one on
+changes every day it has ever been taken on, because nothing about a total is
+stored — see [`../day-model.md`](../day-model.md).
 
 ## Marks and colours
 

@@ -53,26 +53,71 @@ export const ROMAN_HOURS = [
   "XI",
 ] as const;
 
-// ── The day's ring, and where the markers sit against it ──
+// ── The day's track, the dial's ring, and where the markers sit ──
 
-/** The ring the day is drawn as: a band, and a thin line along its outer
- *  edge. Time at work is the accent on both; a kind of work colours the band
- *  and leaves the line the accent; a break is the flag colour on both. */
+/**
+ * The day's own track: a band just inside the bezel, with a thin line along
+ * its outer edge. Time at work is the accent on both; a kind of work colours
+ * the band and leaves the line the accent; a break is the flag colour on
+ * both.
+ *
+ * It is the outermost thing on the face, immediately under the bezel that
+ * draws the day's progress, because the day is the one thing on this dial
+ * that is not the watch — and a dial reads as a watch for exactly as long as
+ * its own furniture is left alone. Laid over the chapter ring it fought the
+ * minutes printed on it and covered the very marks the hands are read
+ * against; out here the ring keeps its print and the day keeps its own
+ * track, and the two rings under the bezel are the day's target and the
+ * day's shape, one outside the other.
+ *
+ * Fixed rather than laid out per dial, the way the printing is: the day sits
+ * where the day sits on every face, and it is the markers and the ring that
+ * move. What has to hold is that nothing else reaches it, which is what
+ * `FACE_R` is for and what `tests/clock_test.ts` walks every dial to say.
+ */
+export const DAY_BAND = 3.2;
+export const DAY_EDGE = 1.2;
+/** Air between the face's own edge — where it steps up to the bezel — and
+ *  the day's track, and between that track and whatever is under it. */
+const DAY_CLEAR = 0.4;
+const DAY_GAP = 0.4;
+
+/** Where the day's track sits, as radii from the centre: the thin line
+ *  outside, the band under it. */
+export const DAY_TRACK = {
+  outer: DIAL_R - DAY_CLEAR,
+  edgeR: DIAL_R - DAY_CLEAR - DAY_EDGE / 2,
+  bandR: DIAL_R - DAY_CLEAR - DAY_EDGE - DAY_BAND / 2,
+  inner: DIAL_R - DAY_CLEAR - DAY_EDGE - DAY_BAND,
+} as const;
+
+/** How much of the face's outer edge the day has taken. */
+export const DAY_RESERVE = DAY_CLEAR + DAY_EDGE + DAY_BAND + DAY_GAP;
+
+/** The radius the watch itself is laid out inside — the face less the day's
+ *  track. Every number below is measured from this rather than from `DIAL_R`,
+ *  so the dial keeps its proportions and simply sits a little further in. */
+export const FACE_R = DIAL_R - DAY_RESERVE;
+
+/** The dial's own ring, which the markers are placed against and the hands
+ *  are read to: a faint groove, or the printed chapter ring. The day used to
+ *  be drawn on it and is not any more (see `DAY_TRACK`), so what it carries
+ *  now is the minutes — or, on a groove, nothing but the track itself. */
 export const RING_BAND = 12;
 export const RING_EDGE = 2.5;
-/** The rim, between the ring's outer edge and the face's: where the minute
+/** The rim, between the ring's outer edge and the watch's: where the minute
  *  track's ticks are. */
 const RIM = 5;
 /** The ticks' outer end. */
-export const TRACK_R = 116;
+export const TRACK_R = FACE_R - 1;
 /** Air between the ring and a marker beside it. */
 const MARKER_GAP = 4;
-/** The day's ring is painted a little wider than it measures, so nothing
- *  shows through where it meets the bezel. Outward only: on the inside it is
- *  painted to `ringInner` exactly, because that is where an hour that runs
- *  out to the ring ends, and a ring painted past it would have the hour
- *  lapping onto the blue. `Dial.tsx` paints with this number. */
-export const RING_BLEED = 1;
+/** The day's track is painted a little wider than it measures, so nothing
+ *  shows through where it meets the bezel. Outward only, into the air
+ *  `DAY_CLEAR` leaves: on the inside it is painted to `DAY_TRACK.inner`
+ *  exactly, because that is the edge the rest of the dial is cleared to.
+ *  `Dial.tsx` paints with this number. */
+export const RING_BLEED = 0.5;
 /** The dial's printing, as radii from the centre: the name under twelve,
  *  the movement's word under the name, and the window above six — the
  *  Settings cog, where a date would be. Fixed rather than laid out per
@@ -99,17 +144,37 @@ export const SIGNATURE_REACH = Math.max(
   SIGNATURE.window + SIGNATURE.windowHeight / 2,
 );
 
-/** How far a marker may extend either side of its own radius, per placement
- *  — outside, it has to fit between the ring and the rim; over the ring, it
- *  has to stay off the bezel; inside, it has to stop short of the printing,
- *  which is what leaves a dial for the hands. A numeral that would reach
- *  further is set smaller. */
+/**
+ * How far a marker may extend either side of its own radius, per placement.
+ * A numeral that would reach further is set smaller.
+ *
+ * Inside and outside answer to the same number, from the two ends: inside,
+ * the marker sits under the ring and has to stop short of the printing;
+ * outside, it takes the rim and pushes the ring down onto the printing
+ * instead. Either way what is left after the rim, the ring and the air
+ * beside it has to hold twice the reach and still clear the app's name —
+ * which is the arithmetic below, and the reason the day's own track coming
+ * out of `FACE_R` sets the largest hours a step smaller rather than running
+ * the ring over the printing. Over the ring a marker is centred on the band
+ * itself and starts far enough in that only the bezel is in its way.
+ * `SIGNATURE_CLEAR` is the air left over either way, a unit at each end, so
+ * the two cases are the one number rather than two that nearly agree.
+ */
+const SIGNATURE_CLEAR = 2;
+const PLACEMENT_REACH =
+  (FACE_R -
+    RIM -
+    RING_EDGE -
+    RING_BAND -
+    MARKER_GAP -
+    SIGNATURE_REACH -
+    SIGNATURE_CLEAR) /
+  2;
+
 const MAX_REACH: Record<DialPlacement, number> = {
-  outside: 14,
+  outside: PLACEMENT_REACH,
   over: 20,
-  inside:
-    (DIAL_R - RIM - RING_EDGE - RING_BAND - MARKER_GAP - SIGNATURE_REACH - 1) /
-    2,
+  inside: PLACEMENT_REACH,
 };
 
 /** An applied marker's length as a share of the numeral size it stands in
@@ -145,8 +210,10 @@ export const HANDS = {
 } as const;
 
 export type DialLayout = {
-  /** The band's centre line and its inner and outer edges, and the thin
-   *  line's centre. */
+  /** The dial's ring: the band's centre line, its inner and outer edges, and
+   *  the thin line's centre. The day is not drawn here any more — that is
+   *  `DAY_TRACK`, out under the bezel — but the markers are still placed
+   *  against this ring and the hands are still read to it. */
   bandR: number;
   ringInner: number;
   ringOuter: number;
@@ -220,7 +287,7 @@ export function dialLayout(
   const size = Math.min(wanted, MAX_REACH[dial.placement] / share);
   const reach = size * share;
 
-  const markerOuter = DIAL_R - RIM - 1;
+  const markerOuter = FACE_R - RIM - 1;
   let ringOuter: number;
   let markerR: number;
   if (dial.placement === "outside") {
@@ -228,12 +295,12 @@ export function dialLayout(
     ringOuter = markerR - reach - MARKER_GAP;
   } else if (dial.placement === "over") {
     ringOuter = Math.min(
-      DIAL_R - RIM,
+      FACE_R - RIM,
       markerOuter - reach + RING_EDGE + RING_BAND / 2,
     );
     markerR = ringOuter - RING_EDGE - RING_BAND / 2;
   } else {
-    ringOuter = DIAL_R - RIM;
+    ringOuter = FACE_R - RIM;
     markerR = ringOuter - RING_EDGE - RING_BAND - MARKER_GAP - reach;
   }
   const edgeR = ringOuter - RING_EDGE / 2;
@@ -433,21 +500,25 @@ export function timesAt(angle: number): Seconds[] {
 }
 
 /**
- * Whether a point, in the dial's own coordinates, is on the day's ring —
- * and if so, at what angle. `slack` widens the band a little either side,
+ * Whether a point, in the dial's own coordinates, is on the day's track —
+ * and if so, at what angle. `slack` widens the track a little either side,
  * because a pointer that is a pixel off the edge of a stroke is still
- * pointing at it. Null off the ring, including the centre and the bezel.
+ * pointing at it, and this track is a thin one. Null off it, including the
+ * centre, the rest of the face and the bezel.
+ *
+ * The track comes in rather than being read off `DAY_TRACK` directly so a
+ * test can point at one it chose; every caller hands it the day's.
  */
 export function ringHit(
   x: number,
   y: number,
-  layout: Pick<DialLayout, "ringInner" | "ringOuter">,
+  track: { inner: number; outer: number },
   slack = 0,
 ): number | null {
   const dx = x - DIAL_R;
   const dy = y - DIAL_R;
   const r = Math.hypot(dx, dy);
-  if (r < layout.ringInner - slack || r > layout.ringOuter + slack) {
+  if (r < track.inner - slack || r > track.outer + slack) {
     return null;
   }
   const angle = (Math.atan2(dx, -dy) * 180) / Math.PI;

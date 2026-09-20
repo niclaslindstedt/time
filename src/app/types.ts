@@ -33,6 +33,29 @@ export const DAY_SECONDS = 86_400;
 /** A weekday, `Date.getDay()` numbering: 0 = Sunday … 6 = Saturday. */
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
+/**
+ * How much of a kind of break still counts as work time.
+ *
+ * A break carves time out of presence — that is what a break is — but not
+ * every employer counts every one of them. A trip down the corridor is
+ * usually still paid; an hour's lunch usually is not; and the common middle
+ * case is a lunch of which the first half hour is paid and the rest is your
+ * own. So: none of it, all of it, or the first `minutes` of it.
+ *
+ * The minutes are counted over the whole day rather than per break, which is
+ * what makes them a rule rather than a loophole: a project that pays half an
+ * hour of lunch pays half an hour of lunch whether it was taken in one
+ * sitting or three.
+ */
+export type BreakCredit =
+  { mode: "none" } | { mode: "all" } | { mode: "partial"; minutes: number };
+
+/** What a kind of break counts for when nobody has said: nothing. Every
+ *  break the app has ever subtracted goes on being subtracted, so turning a
+ *  project's history into something else is a choice rather than an
+ *  upgrade. */
+export const DEFAULT_BREAK_CREDIT: BreakCredit = { mode: "none" };
+
 /** A kind of break the project's day allows for, with the length it is
  *  assumed to take when one is added after the fact without a stated end. */
 export type BreakType = {
@@ -43,6 +66,11 @@ export type BreakType = {
    *  Absent on a type from before there were glyphs, and on one nobody has
    *  chosen a mark for — the cup stands in. */
   glyph?: GlyphId;
+  /** How much of a break of this kind still counts as work time. Absent on
+   *  every document written before there was an answer, and absent means
+   *  `DEFAULT_BREAK_CREDIT` — none of it, which is what a break has always
+   *  counted for. */
+  credit?: BreakCredit;
 };
 
 /** A kind of work — meetings, coding, support — used to label an activity

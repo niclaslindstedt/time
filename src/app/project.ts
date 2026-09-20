@@ -14,12 +14,14 @@ import {
 } from "@niclaslindstedt/oss-framework/calendar";
 
 import type { GlyphId, KindSort } from "./kinds.ts";
-import type {
-  BreakType,
-  Project,
-  Seconds,
-  Weekday,
-  WorkCategory,
+import {
+  DEFAULT_BREAK_CREDIT,
+  type BreakCredit,
+  type BreakType,
+  type Project,
+  type Seconds,
+  type Weekday,
+  type WorkCategory,
 } from "./types.ts";
 
 /** Monday to Friday. */
@@ -42,6 +44,44 @@ export const MAX_HOURS_PER_DAY = 16;
 /** The bounds a break's default length may be set to, in minutes. */
 export const MIN_BREAK_MINUTES = 1;
 export const MAX_BREAK_MINUTES = 240;
+
+/** How much of a break of this kind counts as work time, in seconds:
+ *  nothing, all of it — `Infinity`, because a break of any length is
+ *  counted whole — or the stated minutes. A kind the project has since
+ *  deleted counts for nothing, the way a break of it always did.
+ *
+ *  The one place the stored `credit` is read, so no screen and no derivation
+ *  has to know what an absent one means. */
+export function creditSeconds(project: Project, typeId: string): Seconds {
+  return creditAllowance(breakTypeOf(project, typeId)?.credit);
+}
+
+/** The same, for a credit in the hand rather than one looked up — what a
+ *  form previews while it is being edited. */
+export function creditAllowance(credit: BreakCredit | undefined): Seconds {
+  const c = credit ?? DEFAULT_BREAK_CREDIT;
+  if (c.mode === "none") return 0;
+  if (c.mode === "all") return Infinity;
+  return c.minutes * 60;
+}
+
+/** Clamp the minutes of a partial credit. A credit longer than a break is
+ *  allowed to be is only a slower way of saying "all of it", and the bounds
+ *  are a break's own so the two fields on the form read alike. */
+export function clampCreditMinutes(value: unknown, fallback: number): number {
+  return clampBreakMinutes(value, fallback);
+}
+
+/** A credit as a break type carries it: spread into the kind, and nothing at
+ *  all when it counts for nothing. Absent is what every document written
+ *  before there was an answer says, so a project that counts no break stays
+ *  byte for byte the document it was — the discipline a kind of work's
+ *  "automatic" colour is stored under. */
+export function storedCredit(
+  credit: BreakCredit,
+): { credit: BreakCredit } | Record<string, never> {
+  return credit.mode === "none" ? {} : { credit };
+}
 
 /** The translated names the template stamps into a new project. */
 export type ProjectTemplateLabels = {

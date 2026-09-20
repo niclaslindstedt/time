@@ -22,8 +22,8 @@ import {
 import { ArrivalModal } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
-import { dayTotals, progress } from "./day.ts";
-import { breakTypeOf, categoryOf, isWorkDay } from "./project.ts";
+import { dayTotals, progress, workdayEnd } from "./day.ts";
+import { breakTypeOf, categoryOf, isWorkDay, storedCredit } from "./project.ts";
 import { formatDuration, formatPercent, formatTimeOfDay } from "./format.ts";
 import {
   CLOCK_SIZE,
@@ -39,6 +39,7 @@ import { autoCategoryColor, breakName, categoryColor } from "./labels.ts";
 import { KindModal, type NewKind } from "./KindModal.tsx";
 import { KEY_HINT, type Command } from "./shortcuts.ts";
 import {
+  DEFAULT_BREAK_CREDIT,
   blankDay,
   dayFor,
   type Project,
@@ -144,8 +145,8 @@ export function TodayScreen({
   }, [store.data, project, now.today]);
 
   const totals = useMemo(
-    () => (day ? dayTotals(day, now.seconds) : null),
-    [day, now.seconds],
+    () => (day && project ? dayTotals(day, project, now.seconds) : null),
+    [day, project, now.seconds],
   );
 
   const ctx = (): EditContext => ({
@@ -260,6 +261,16 @@ export function TodayScreen({
   const out = state === "out";
   const session = latestSession(day);
   const fraction = progress(totals.worked, project);
+  /** When today's hours are done, if the work goes on from here unbroken.
+   *  Null on a day the project expects nothing of and before the day has
+   *  started — `workdayEnd` decides both, so the line does not have to. */
+  const endsAt = workdayEnd(day, project, now.seconds);
+  const endsLabel =
+    endsAt === null
+      ? null
+      : t(endsAt <= now.seconds ? "today.endedAt" : "today.endsAt", {
+          time: formatTimeOfDay(endsAt),
+        });
 
   const stateLine =
     state === "working" && totals.openSession
@@ -401,6 +412,19 @@ export function TodayScreen({
           }`}
         >
           {stateLine}
+          {/* And when the day is done. A mark and a time rather than a
+              sentence: the line is read at a glance, and a door with an
+              arrow out of it is the same mark the menu puts on stopping
+              work. The sentence is there for a screen reader and for
+              whoever rests on it. */}
+          {endsAt !== null && endsLabel !== null && (
+            <span className="ml-1.5 whitespace-nowrap" title={endsLabel}>
+              {"· "}
+              <LeaveIcon className="inline-block h-3.5 w-3.5 align-[-0.15em]" />{" "}
+              <span className="tabular-nums">{formatTimeOfDay(endsAt)}</span>
+              <span className="sr-only">{` (${endsLabel})`}</span>
+            </span>
+          )}
           <span className="sr-only">
             {" · "}
             {t("today.percentOfTarget", { percent: formatPercent(fraction) })}
@@ -565,6 +589,7 @@ export function TodayScreen({
           workedAt={(start) =>
             dayTotals(
               setSessionStart(day, session.id, start, ctx()),
+              project,
               now.seconds,
             ).worked
           }
@@ -609,7 +634,7 @@ export function TodayScreen({
           // the slot after the last for one being invented, which is what an
           // id the project does not have yet asks for.
           autoColor={autoCategoryColor(project, asking.id ?? "")}
-          onSave={({ name, minutes, glyph, color }) => {
+          onSave={({ name, minutes, glyph, color, credit }) => {
             // A kind that already exists keeps its id, so nothing logged
             // under it moves; only what it is called and what it wears
             // change, and every screen that reads `labels.ts` follows.
@@ -617,11 +642,14 @@ export function TodayScreen({
             if (at !== null) {
               if (asking.kind === "break") {
                 stampProject({
-                  breakTypes: project.breakTypes.map((b) =>
-                    b.id === at
-                      ? { ...b, name, defaultMinutes: minutes, glyph }
-                      : b,
-                  ),
+                  breakTypes: project.breakTypes.map((b) => {
+                    if (b.id !== at) return b;
+                    // "No" is stored as no credit at all, the way
+                    // "automatic" is stored as no colour.
+                    const rest = { ...b, name, defaultMinutes: minutes, glyph };
+                    delete rest.credit;
+                    return { ...rest, ...storedCredit(credit) };
+                  }),
                 });
               } else {
                 stampProject({
@@ -644,7 +672,13 @@ export function TodayScreen({
               stampProject({
                 breakTypes: [
                   ...project.breakTypes,
-                  { id, name, defaultMinutes: minutes, glyph },
+                  {
+                    id,
+                    name,
+                    defaultMinutes: minutes,
+                    glyph,
+                    ...storedCredit(credit),
+                  },
                 ],
               });
               apply(takeBreak(day, id, now.seconds, minutes * 60, ctx()));
@@ -680,17 +714,20 @@ function kindAsked(project: Project, asking: Asking): NewKind | null {
           minutes: b.defaultMinutes,
           glyph: glyphFor(b.glyph, "break"),
           color: null,
+          credit: b.credit ?? DEFAULT_BREAK_CREDIT,
         }
       : null;
   }
   const c = categoryOf(project, asking.id);
   return c
     ? {
-        // A kind of work has no assumed length; the form does not ask for one.
+        // A kind of work has no assumed length and nothing to count back;
+        // the form asks for neither.
         name: c.name,
         minutes: 0,
         glyph: glyphFor(c.glyph, "category"),
         color: c.color ?? null,
+        credit: DEFAULT_BREAK_CREDIT,
       }
     : null;
 }

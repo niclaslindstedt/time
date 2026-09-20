@@ -614,3 +614,35 @@ input:not(
 .app-clock [data-winding] [data-hand] {
   will-change: transform;
 }
+
+/* ── The day at work ─────────────────────────────────────────────────────────
+   The light that goes round the day's track while the day is being counted
+   (`Dial.tsx`, the `pulse` prop). A short dash travelling round a circle the
+   day's own bands are masked out of, so what you see is a shine crossing the
+   hours logged so far and nothing at all over an empty stretch.
+
+   Once round every five seconds. A working day covers a third of a twelve-
+   hour dial at most, so the shine passes over it for a second or so and then
+   is gone — which is the point: it says the hours are still being added to,
+   the way the backlight behind the case says the day is on. The motion is
+   here rather than in a frame loop for the same reason the backlight's beat
+   is: it is a light, and a light is not a hand. */
+.app-day-pulse {
+  animation: day-pulse 5s linear infinite;
+}
+
+@keyframes day-pulse {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-day-pulse {
+    animation: none;
+    opacity: 0;
+  }
+}

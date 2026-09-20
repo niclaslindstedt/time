@@ -18,6 +18,13 @@ import type { Seconds, WorkDay } from "./types.ts";
 // between them. Worked and breaks are two *lengths* that add up to that
 // presence, and the shape of a pair that adds up is a ring split in two.
 //
+// Split in three where a kind of break counts as work (see `BreakCredit`):
+// the ring still adds up to presence, and the slice between the two is the
+// break time that counted — drawn between their colours, because that is
+// what it is. The two figures under it go on being the day's two numbers:
+// everything worked, and everything spent on breaks, whichever side of the
+// ring a minute of it landed on.
+//
 // Paint only: every number here is the `dayTotals` the timer and the report
 // read, and the ring's arcs are the same `presenceIntervals` the Today screen
 // draws. Nothing on this screen derives a figure of its own.
@@ -45,7 +52,14 @@ export function DayGlance({ day, totals, upTo }: Props) {
   const t = useT();
   const time = (at: Seconds | null) =>
     at === null ? "—" : formatTimeOfDay(at);
-  const counted = totals.worked + totals.breakTotal;
+  // The split ring is presence divided up, so it has to add to presence: the
+  // work, the break time the project counted as work, and the break time that
+  // came off the day. The middle slice is both things at once and is drawn as
+  // both — the accent mixed towards the flag — because a lunch that is half
+  // paid is not a third kind of time, it is a break that counted.
+  const credited = totals.breakCreditTotal;
+  const unpaid = Math.max(0, totals.breakTotal - credited);
+  const worked = Math.max(0, totals.worked - credited);
 
   return (
     <div className="grid grid-cols-2 gap-2">
@@ -70,13 +84,18 @@ export function DayGlance({ day, totals, upTo }: Props) {
           size={RING_PX}
           thickness={RING_WIDTH}
           segments={
-            counted === 0
+            totals.presence === 0
               ? // Nothing counted yet: an empty groove, so the card reads as
                 // a ring waiting to be filled rather than as a missing chart.
                 [{ value: 1, color: "var(--color-surface-2)" }]
               : [
-                  { value: totals.worked, color: "var(--color-accent)" },
-                  { value: totals.breakTotal, color: "var(--color-flag)" },
+                  { value: worked, color: "var(--color-accent)" },
+                  {
+                    value: credited,
+                    color:
+                      "color-mix(in oklab, var(--color-accent) 55%, var(--color-flag))",
+                  },
+                  { value: unpaid, color: "var(--color-flag)" },
                 ]
           }
           formatValue={formatDuration}
@@ -86,10 +105,18 @@ export function DayGlance({ day, totals, upTo }: Props) {
             </span>
           }
           ariaLabel={t("log.splitLabel")}
-          desc={t("log.splitDesc", {
-            worked: formatDuration(totals.worked),
-            breaks: formatDuration(totals.breakTotal),
-          })}
+          desc={
+            credited > 0
+              ? t("log.splitDescCredited", {
+                  worked: formatDuration(totals.worked),
+                  credited: formatDuration(credited),
+                  breaks: formatDuration(totals.breakTotal),
+                })
+              : t("log.splitDesc", {
+                  worked: formatDuration(totals.worked),
+                  breaks: formatDuration(totals.breakTotal),
+                })
+          }
         />
         <Figures>
           <Figure
