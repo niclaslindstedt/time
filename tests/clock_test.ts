@@ -372,7 +372,13 @@ describe("dialLayout", () => {
       expect(l.numeralSize).toBeGreaterThan(last);
       last = l.numeralSize;
     }
-    expect(last).toBe(DIAL_SCALE[8] * DIAL_FONT.grotesque.scale);
+    // The top of the scale asks for more than a dial with the day's own
+    // track outside the markers has to give, so what is drawn there is what
+    // the room allows — most of what was asked, and the same for every dial
+    // that reaches it.
+    const wanted = DIAL_SCALE[8] * DIAL_FONT.grotesque.scale;
+    expect(last).toBeLessThanOrEqual(wanted);
+    expect(last).toBeGreaterThan(wanted * 0.85);
   });
 
   it("sets a numeral smaller rather than let it run off the rim", () => {
@@ -612,33 +618,33 @@ describe("timesAt", () => {
 });
 
 describe("ringHit", () => {
-  const layout = { ringInner: 90, ringOuter: 110 };
+  const track = { inner: 90, outer: 110 };
 
   it("finds the angle of a point on the band", () => {
     // Three o'clock: due right of the centre, on the band's centre line.
-    expect(ringHit(DIAL_R + 100, DIAL_R, layout)).toBeCloseTo(90, 6);
+    expect(ringHit(DIAL_R + 100, DIAL_R, track)).toBeCloseTo(90, 6);
     // Six o'clock, and nine.
-    expect(ringHit(DIAL_R, DIAL_R + 100, layout)).toBeCloseTo(180, 6);
-    expect(ringHit(DIAL_R - 100, DIAL_R, layout)).toBeCloseTo(270, 6);
+    expect(ringHit(DIAL_R, DIAL_R + 100, track)).toBeCloseTo(180, 6);
+    expect(ringHit(DIAL_R - 100, DIAL_R, track)).toBeCloseTo(270, 6);
     // Twelve is zero, not 360.
-    expect(ringHit(DIAL_R, DIAL_R - 100, layout)).toBeCloseTo(0, 6);
+    expect(ringHit(DIAL_R, DIAL_R - 100, track)).toBeCloseTo(0, 6);
   });
 
   it("agrees with polar about where a moment is drawn", () => {
     const at = h(14) + 20 * 60;
     const [x, y] = polar(DIAL_R, DIAL_R, 100, angleOf(at));
-    expect(ringHit(x, y, layout)).toBeCloseTo(angleOf(at), 6);
+    expect(ringHit(x, y, track)).toBeCloseTo(angleOf(at), 6);
   });
 
   it("is null at the centre, inside the ring and out on the bezel", () => {
-    expect(ringHit(DIAL_R, DIAL_R, layout)).toBeNull();
-    expect(ringHit(DIAL_R + 80, DIAL_R, layout)).toBeNull();
-    expect(ringHit(DIAL_R + 116, DIAL_R, layout)).toBeNull();
+    expect(ringHit(DIAL_R, DIAL_R, track)).toBeNull();
+    expect(ringHit(DIAL_R + 80, DIAL_R, track)).toBeNull();
+    expect(ringHit(DIAL_R + 116, DIAL_R, track)).toBeNull();
   });
 
   it("gives a stroke's edge the slack it is asked for", () => {
-    expect(ringHit(DIAL_R + 112, DIAL_R, layout)).toBeNull();
-    expect(ringHit(DIAL_R + 112, DIAL_R, layout, 4)).toBeCloseTo(90, 6);
+    expect(ringHit(DIAL_R + 112, DIAL_R, track)).toBeNull();
+    expect(ringHit(DIAL_R + 112, DIAL_R, track, 4)).toBeCloseTo(90, 6);
   });
 });
 

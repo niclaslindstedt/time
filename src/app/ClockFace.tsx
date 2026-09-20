@@ -9,9 +9,9 @@ import {
 
 import { daySegments, type DaySegment } from "./day.ts";
 import {
+  DAY_TRACK,
   SIGNATURE,
   angleOf,
-  dialLayout,
   polar,
   ringHit,
   timesAt,
@@ -94,9 +94,11 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
  *  is a tap target and wants a real button under the finger. */
 const LABEL_R = 118;
 
-/** How far off the ring's edge a pointer may rest and still be on it, in
- *  dial units. A stroke is easier to point at than to hit. */
-const RING_SLACK = 3;
+/** How far off the day's track a pointer may rest and still be on it, in
+ *  dial units. A stroke is easier to point at than to hit, and this one is
+ *  thin — it is the outermost track on the face rather than the chapter ring
+ *  it used to share. */
+const RING_SLACK = 4;
 
 type Props = {
   day: WorkDay;
@@ -146,7 +148,6 @@ export function ClockFace({
   const t = useT();
   const sizing = CLOCK_SIZE[size];
   const segments = useMemo(() => daySegments(day, now), [day, now]);
-  const layout = useMemo(() => dialLayout(dial), [dial]);
   const box = useRef<HTMLDivElement>(null);
   const [reading, setReading] = useState<Reading | null>(null);
 
@@ -221,7 +222,7 @@ export function ClockFace({
     const left = clientX - rect.left;
     const top = clientY - rect.top;
     const scale = DIAL_BOX / rect.width;
-    const angle = ringHit(left * scale, top * scale, layout, RING_SLACK);
+    const angle = ringHit(left * scale, top * scale, DAY_TRACK, RING_SLACK);
     if (angle === null) return null;
     const segment = segments.find((s) =>
       timesAt(angle).some((at) => at >= s.start && at < s.end),
@@ -317,6 +318,10 @@ export function ClockFace({
           now={now}
           bands={bands}
           progress={progress}
+          // The light goes round the day while the day is being counted —
+          // the backlight's argument, on the ring rather than behind the
+          // case. Nothing is being counted once you are out, so it stops.
+          pulse={state !== "out"}
           light={light}
           live
           className="app-clock relative block h-auto w-full"

@@ -17,7 +17,12 @@ Under it, the day's four figures, drawn as two rings:
   are the two hands. A day still running has one hand and an arc that reaches
   the moment you are reading it at.
 - **Worked and breaks** as a ring split between them — worked in the accent,
-  breaks in the flag colour, the day's worked total in the middle.
+  breaks in the flag colour, the day's worked total in the middle. Where a
+  kind of break counts as work ([`projects.md`](projects.md)) the ring is
+  split in three, with that time drawn between the two colours, because that
+  is what it is; the ring still adds up to the time you were there, and the
+  two figures under it are still everything worked and everything spent on
+  breaks.
 
 Both are drawn from the same `dayTotals` and `presenceIntervals` the Today
 screen and the Report read; neither counts anything of its own.

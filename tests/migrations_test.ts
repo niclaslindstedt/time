@@ -313,3 +313,55 @@ describe("serializeDoc", () => {
     expect(serializeDoc(a)).toBe(serializeDoc(b));
   });
 });
+
+describe("what a break counts for, through the pipeline", () => {
+  const withCredit = (credit: unknown) =>
+    normalizeDoc({
+      version: DOC_VERSION,
+      projects: {
+        acme: {
+          id: "acme",
+          name: "Acme",
+          breakTypes: [
+            { id: "lunch", name: "Lunch", defaultMinutes: 30, credit },
+          ],
+          categories: [],
+        },
+      },
+      days: {},
+    }).projects.acme!.breakTypes[0]!;
+
+  it("keeps an answer this build understands", () => {
+    expect(withCredit({ mode: "all" }).credit).toEqual({ mode: "all" });
+    expect(withCredit({ mode: "partial", minutes: 30 }).credit).toEqual({
+      mode: "partial",
+      minutes: 30,
+    });
+  });
+
+  it("reads an answer of none back as no answer, so the bytes agree", () => {
+    expect(withCredit({ mode: "none" }).credit).toBeUndefined();
+    expect(withCredit(undefined).credit).toBeUndefined();
+  });
+
+  it("drops an answer it cannot make sense of", () => {
+    expect(withCredit("all").credit).toBeUndefined();
+    expect(withCredit({ mode: "half" }).credit).toBeUndefined();
+    // Partial with nothing to count is not a credit.
+    expect(withCredit({ mode: "partial" }).credit).toBeUndefined();
+    expect(
+      withCredit({ mode: "partial", minutes: "soon" }).credit,
+    ).toBeUndefined();
+  });
+
+  it("clamps a partial credit into the range a break may be", () => {
+    expect(withCredit({ mode: "partial", minutes: 0 }).credit).toEqual({
+      mode: "partial",
+      minutes: 1,
+    });
+    expect(withCredit({ mode: "partial", minutes: 9999 }).credit).toEqual({
+      mode: "partial",
+      minutes: 240,
+    });
+  });
+});

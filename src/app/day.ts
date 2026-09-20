@@ -8,15 +8,27 @@
 //
 //   presence  = the union of the sessions
 //   breaks    = the union of the break spans, inside presence
-//   worked    = presence − breaks
+//   credit    = the part of those breaks the project still counts as work
+//   worked    = presence − breaks + credit
 //   category  = its activity spans ∩ worked
 //
 // Breaks carve time out; activities only label what is left. A break logged
 // outside any session counts for nothing, and an activity outside any session
 // counts for nothing — presence is the one claim of time, and the other two
 // lists can only describe it.
+//
+// The credit is the one place a *project* reaches into a day's arithmetic. A
+// kind of break says how much of it still counts as work — none of it, all of
+// it, or the first so many minutes of it in a day (see `BreakCredit`) — and
+// that much of the time it carved out is handed back. It is handed back to
+// the total and not to the intervals: a break is a break wherever it is drawn,
+// so the clock still shows it in the flag colour and the Log still lists it.
+// What changes is only what it counted for, which is why `worked` can be
+// longer than the stretches `workedIntervals` returns. Nothing counts twice:
+// the credit comes out of `breakTotal`, which goes on reporting the whole of
+// the time spent on breaks.
 
-import { targetSeconds } from "./project.ts";
+import { creditSeconds, isWorkDay, targetSeconds } from "./project.ts";
 import {
   contains,
   intersect,
@@ -40,14 +52,26 @@ export type DayState = "out" | "working" | "break";
 export type DayTotals = {
   /** Seconds inside a session. */
   presence: Seconds;
-  /** Presence minus breaks — the number the timer shows. */
+  /** Presence, minus the breaks, plus what those breaks still counted as
+   *  work — the number the bezel, the Log and the report all read. Longer
+   *  than the stretches `workedIntervals` returns by exactly
+   *  `breakCreditTotal`. */
   worked: Seconds;
-  /** Break time inside presence, by break type id. */
+  /** Break time inside presence, by break type id. The whole of it —
+   *  what a break counted as work is `breakCredit`, not a deduction from
+   *  here. */
   breaks: Record<string, Seconds>;
   breakTotal: Seconds;
+  /** The part of that break time the project still counts as work, by break
+   *  type id, and its total. Already inside `worked`. Empty on a project
+   *  whose breaks all count for nothing, which is every project until
+   *  somebody says otherwise. */
+  breakCredit: Record<string, Seconds>;
+  breakCreditTotal: Seconds;
   /** Worked time by category id. */
   categories: Record<string, Seconds>;
-  /** Worked time no activity labelled. */
+  /** Worked time no activity labelled — which is where a counted break
+   *  lands, since a break is not a kind of work. */
   uncategorised: Seconds;
   state: DayState;
   /** The running session, break and activity, if any. */
@@ -128,8 +152,35 @@ export function activityIntervals(
   return out;
 }
 
-/** Every number about a day, read up to `now`. */
-export function dayTotals(day: WorkDay, now: Seconds): DayTotals {
+/**
+ * How much of a day's break time the project still counts as work, by break
+ * type.
+ *
+ * Counted over the whole day rather than per break, which is what makes a
+ * partial credit a rule rather than a loophole: a project that counts half an
+ * hour of lunch counts half an hour of lunch whether it was taken in one
+ * sitting or three. `breaks` is a day's break time by type, as `dayTotals`
+ * has already added it up.
+ */
+export function creditFor(
+  breaks: Record<string, Seconds>,
+  project: Project,
+): Record<string, Seconds> {
+  const out: Record<string, Seconds> = {};
+  for (const [typeId, seconds] of Object.entries(breaks)) {
+    const credit = Math.min(seconds, creditSeconds(project, typeId));
+    if (credit > 0) out[typeId] = credit;
+  }
+  return out;
+}
+
+/** Every number about a day, read up to `now`, against the project whose
+ *  breaks say how much of a pause still counts as work. */
+export function dayTotals(
+  day: WorkDay,
+  project: Project,
+  now: Seconds,
+): DayTotals {
   const presence = presenceIntervals(day, now);
   const worked = workedIntervals(day, now);
 
@@ -138,6 +189,11 @@ export function dayTotals(day: WorkDay, now: Seconds): DayTotals {
     breaks[b.typeId] = (breaks[b.typeId] ?? 0) + (b.end - b.start);
   }
   const breakTotal = Object.values(breaks).reduce((a, b) => a + b, 0);
+  const breakCredit = creditFor(breaks, project);
+  const breakCreditTotal = Object.values(breakCredit).reduce(
+    (a, b) => a + b,
+    0,
+  );
 
   const categories: Record<string, Seconds> = {};
   for (const a of activityIntervals(day, now)) {
@@ -145,7 +201,7 @@ export function dayTotals(day: WorkDay, now: Seconds): DayTotals {
       (categories[a.categoryId] ?? 0) + (a.end - a.start);
   }
   const labelled = Object.values(categories).reduce((a, b) => a + b, 0);
-  const workedTotal = total(worked);
+  const workedTotal = total(worked) + breakCreditTotal;
 
   const openSession = day.sessions.find((s) => s.end === null) ?? null;
   const openBreak = day.breaks.find((b) => b.end === null) ?? null;
@@ -172,6 +228,8 @@ export function dayTotals(day: WorkDay, now: Seconds): DayTotals {
     worked: workedTotal,
     breaks,
     breakTotal,
+    breakCredit,
+    breakCreditTotal,
     categories,
     uncategorised: Math.max(0, workedTotal - labelled),
     state,
@@ -326,4 +384,70 @@ export function isPresentAt(day: WorkDay, at: Seconds, now: Seconds) {
 export function progress(worked: Seconds, project: Project): number {
   const target = targetSeconds(project);
   return target > 0 ? worked / target : 0;
+}
+
+/**
+ * When the day's hours are done — the moment the project's target is met, on
+ * the assumption that the work carries on from here without another break.
+ *
+ * The one figure on the Today screen that is about a moment which has not
+ * happened, and it is a projection rather than a promise: it moves every time
+ * a break is taken, and it is only ever as good as the assumption under it.
+ * That assumption is deliberately the plain one — no more breaks — because
+ * the alternative is guessing what the rest of the day holds, and a leaving
+ * time that guesses is worse than no leaving time at all.
+ *
+ * It walks the day's stretches rather than dividing what is left by one,
+ * because the rate the target is worked towards is not one all day: a break
+ * the project counts as work counts while you are on it, and a break it does
+ * not counts for nothing. The walk carries the credit each kind has left, so
+ * a lunch of which the first half hour counts crosses the target half an hour
+ * into itself and not a second later. Past the end of what the day already
+ * knows — a break written down with an assumed end reaches into the future —
+ * the work simply goes on.
+ *
+ * Null when there is nothing to project from: a day the project expects no
+ * work on, a project with no target, or a day with no session running. A
+ * moment in the past is a real answer and not an error — it is the moment the
+ * hours were done, on a day that carried on past them.
+ */
+export function workdayEnd(
+  day: WorkDay,
+  project: Project,
+  now: Seconds,
+): Seconds | null {
+  const target = targetSeconds(project);
+  if (target <= 0 || !isWorkDay(project, day.date)) return null;
+  if (!day.sessions.some((s) => s.end === null)) return null;
+
+  /** How much of each kind of break the day has taken so far, so a partial
+   *  credit is spent once rather than once per break. */
+  const taken: Record<string, Seconds> = {};
+  let counted = 0;
+  let reached = now;
+
+  for (const segment of daySegments(day, now)) {
+    reached = segment.end;
+    const length = segment.end - segment.start;
+    if (segment.kind === "work") {
+      if (counted + length >= target) return segment.start + (target - counted);
+      counted += length;
+      continue;
+    }
+    // A break: worth whatever its kind has credit left for, spent from the
+    // start of the break, so the crossing — if it falls in here — is that
+    // many seconds in.
+    const typeId = segment.typeId;
+    const allowance = typeId === null ? 0 : creditSeconds(project, typeId);
+    const before = typeId === null ? 0 : (taken[typeId] ?? 0);
+    const credit =
+      Math.min(before + length, allowance) - Math.min(before, allowance);
+    if (credit > 0 && counted + credit >= target) {
+      return segment.start + (target - counted);
+    }
+    counted += credit;
+    if (typeId !== null) taken[typeId] = before + length;
+  }
+
+  return Math.max(reached, now) + (target - counted);
 }

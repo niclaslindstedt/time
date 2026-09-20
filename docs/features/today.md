@@ -5,12 +5,19 @@ The main screen, and the whole app for most of a day.
 ## What it shows
 
 - **The clock.** A wrist watch's dial with the hands at now, and the day
-  drawn on it as one ring. Time worked is the accent — a band with a thin
+  drawn on a track of its own just inside the bezel — the outermost thing on
+  the face, so the two rings under the case are the day's target and the
+  day's shape, one outside the other, and the watch's own minute ring keeps
+  its printing. Time worked is the accent — a band with a thin
   line along its outer edge. A kind of work takes the band in its own hue
   (the same hue the chips and the report use) and leaves the thin line the
   accent; a break is the flag colour, band and line both. The legend under
   the clock names them on a phone. The part of a break that has not happened
-  yet is drawn at half strength: it is a plan, not a record. The watch itself
+  yet is drawn at half strength: it is a plan, not a record. While the day is
+  being counted a light goes round the track every few seconds, showing only
+  where the day has been drawn — so the hours logged so far shimmer as it
+  passes and an empty stretch stays empty. It stops when you do, and reduced
+  motion turns it off. The watch itself
   — its face, its markers, its numerals, how its second hand moves, and how
   much of the screen it takes — is yours to pick under **Settings → The
   clock** (see [`themes.md`](themes.md)).
@@ -49,7 +56,15 @@ The main screen, and the whole app for most of a day.
   On a phone the face keeps that reach clear above the case, so the halo is
   whole rather than cut flat where the screen begins.
 - **The line under the dial.** The day's state in words — "Working · since
-  08:02", "On a break · Lunch until 12:30", "Not working · Stopped at 17:10".
+  08:02", "On a break · Lunch until 12:30", "Not working · Stopped at 17:10"
+  — and, on a day the project expects work on, when today's hours are done:
+  a door with an arrow out of it and a time. That time is worked out from
+  what the day already holds and what its breaks count for
+  ([`projects.md`](projects.md)), on the assumption that the work carries on
+  from here without another break — so it moves out every time a break is
+  taken that the project does not count, and stays put for one it does. It is
+  a projection rather than a promise, and once the day has run past it, it is
+  simply the moment the hours were done.
 - **The buttons.** A row of break buttons, one per break type the project
   defines, each showing its mark and the length it is assumed to take; tapping
   one takes it now — written down as the length its kind usually takes, to be

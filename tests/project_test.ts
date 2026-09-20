@@ -5,8 +5,10 @@ import {
   DEFAULT_KINDS,
   breakTypeOf,
   clampHours,
+  creditSeconds,
   projectTemplate,
   isWorkDay,
+  storedCredit,
   suggestedGlyph,
   targetSeconds,
   weekdayOf,
@@ -150,5 +152,51 @@ describe("lookups and clamps", () => {
     expect(clampHours(0)).toBe(0.5);
     expect(clampHours(40)).toBe(16);
     expect(clampHours(7.5)).toBe(7.5);
+  });
+});
+
+describe("what a break counts for", () => {
+  const acme = project({
+    breakTypes: [
+      { id: "lunch", name: "Lunch", defaultMinutes: 30 },
+      {
+        id: "coffee",
+        name: "Coffee",
+        defaultMinutes: 15,
+        credit: { mode: "all" },
+      },
+      {
+        id: "toilet",
+        name: "Toilet",
+        defaultMinutes: 5,
+        credit: { mode: "partial", minutes: 20 },
+      },
+    ],
+  });
+
+  it("counts nothing of a kind nobody has answered for", () => {
+    expect(creditSeconds(acme, "lunch")).toBe(0);
+  });
+
+  it("counts the whole of a kind that is counted in full", () => {
+    expect(creditSeconds(acme, "coffee")).toBe(Infinity);
+  });
+
+  it("counts the stated minutes of a partial one", () => {
+    expect(creditSeconds(acme, "toilet")).toBe(20 * 60);
+  });
+
+  it("counts nothing of a kind the project has lost", () => {
+    expect(creditSeconds(acme, "gone")).toBe(0);
+  });
+
+  it("stores an answer of none as no answer at all", () => {
+    // So a project that counts no break is byte for byte the document it was
+    // before there was anything to answer.
+    expect(storedCredit({ mode: "none" })).toEqual({});
+    expect(storedCredit({ mode: "all" })).toEqual({ credit: { mode: "all" } });
+    expect(storedCredit({ mode: "partial", minutes: 30 })).toEqual({
+      credit: { mode: "partial", minutes: 30 },
+    });
   });
 });

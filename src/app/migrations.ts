@@ -11,8 +11,9 @@
 // through it.
 //
 // A *purely additive optional* field is the one change that needs no step: a
-// kind of work's glyph and colour are absent on every document written before
-// them, and absent is a thing this module can read — it is the validation
+// kind of work's glyph and colour, and how much of a kind of break still
+// counts as work, are absent on every document written before them, and
+// absent is a thing this module can read — it is the validation
 // below, rather than a step, that says what such a kind looks like. The value
 // is an id into `kinds.ts`, so an id this build has no entry for is dropped
 // like any other unknown field, and a break or a kind of work left with no
@@ -30,6 +31,7 @@ import {
   DEFAULT_HOURS_PER_DAY,
   DEFAULT_WORK_DAYS,
   clampBreakMinutes,
+  clampCreditMinutes,
   clampHours,
   suggestedGlyph,
 } from "./project.ts";
@@ -39,6 +41,7 @@ import {
   emptyDoc,
   type ActivitySpan,
   type AppData,
+  type BreakCredit,
   type BreakSpan,
   type BreakType,
   type Project,
@@ -175,17 +178,45 @@ function parseGlyph(
   return suggested ? { glyph: suggested } : {};
 }
 
+/**
+ * How much of a kind of break still counts as work, when the stored value
+ * says something this build understands.
+ *
+ * Absent means none of it, so "none" is read back as absent rather than as a
+ * mode: two documents that say a break counts for nothing then serialize to
+ * the same bytes, which is what keeps two devices from churning cloud
+ * revisions over a difference that is not one. The same discipline a kind of
+ * work's "automatic" colour is stored under.
+ *
+ * A partial credit with no length is not a credit — there is nothing to
+ * count — so it is dropped rather than guessed at.
+ */
+function parseCredit(value: unknown): BreakCredit | undefined {
+  if (!isRecord(value)) return undefined;
+  if (value.mode === "all") return { mode: "all" };
+  if (value.mode === "partial") {
+    const minutes = Number(value.minutes);
+    if (!Number.isFinite(minutes)) return undefined;
+    return { mode: "partial", minutes: clampCreditMinutes(minutes, minutes) };
+  }
+  return undefined;
+}
+
 /** Coerce one stored project, or drop it when it has no id or name. */
 function parseProject(key: string, value: unknown): Project | null {
   if (!isRecord(value)) return null;
   const id = str(value.id, key);
   const name = str(value.name).trim();
   if (!id || !name) return null;
-  const breakTypes = parseNamed<BreakType>(value.breakTypes, (base, raw) => ({
-    ...base,
-    defaultMinutes: clampBreakMinutes(raw.defaultMinutes, 15),
-    ...parseGlyph(raw, base, "break"),
-  }));
+  const breakTypes = parseNamed<BreakType>(value.breakTypes, (base, raw) => {
+    const credit = parseCredit(raw.credit);
+    return {
+      ...base,
+      defaultMinutes: clampBreakMinutes(raw.defaultMinutes, 15),
+      ...parseGlyph(raw, base, "break"),
+      ...(credit ? { credit } : {}),
+    };
+  });
   const categories = parseNamed<WorkCategory>(
     value.categories,
     (base, raw) => ({

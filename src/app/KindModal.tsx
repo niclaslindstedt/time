@@ -17,6 +17,8 @@ import {
 import { KindPicker, MarkButton } from "./KindPicker.tsx";
 import { clampBreakMinutes } from "./project.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
+import { BreakCreditField } from "./BreakCreditField.tsx";
+import { DEFAULT_BREAK_CREDIT, type BreakCredit } from "./types.ts";
 
 // The Today screen's kind form: a kind of break, or a kind of work — invented
 // on the spot from the "Custom" pill, or corrected in place by holding the
@@ -30,7 +32,12 @@ import { ModalHeader } from "./ModalHeader.tsx";
 // like any other, so it is given its look here rather than being sent to the
 // project form to be finished.
 //
-// One form for both, because they are the same four questions. Held open on a
+// A kind of break is asked one thing more: how much of one still counts as
+// work (see `BreakCreditField`). It belongs here rather than in the project
+// form alone because it is the answer that decides when the day is done, and
+// the day being done is what this screen is about.
+//
+// One form for both, because they are the same few questions. Held open on a
 // kind that exists, it starts on the grid rather than the name: the mark and
 // the hue are what you are looking at when you hold a pill, and the name is
 // already right. Removing a kind is still the project form's job — this is
@@ -43,12 +50,14 @@ const DEFAULT_MINUTES = 15;
 /** A kind as this form holds it. `color` is null for "automatic" — the hue
  *  the kind's place in the list gives it — and is always null for a break,
  *  which is the flag colour like every break. `minutes` is a break's assumed
- *  length and is not read for a kind of work. */
+ *  length and `credit` how much of one still counts as work; neither is read
+ *  for a kind of work. */
 export type NewKind = {
   name: string;
   minutes: number;
   glyph: GlyphId;
   color: CategoryColor | null;
+  credit: BreakCredit;
 };
 
 type Props = {
@@ -81,6 +90,9 @@ export function KindModal({
   const [glyph, setGlyph] = useState<GlyphId>(glyphFor(existing?.glyph, sort));
   const [color, setColor] = useState<CategoryColor | null>(
     existing?.color ?? null,
+  );
+  const [credit, setCredit] = useState<BreakCredit>(
+    existing?.credit ?? DEFAULT_BREAK_CREDIT,
   );
   /** A kind opened by holding its pill was opened to be looked at, so the
    *  grid is already unfolded; an invented one is a name first. */
@@ -115,7 +127,7 @@ export function KindModal({
               : t("today.newCategory")
         }
         onCancel={onClose}
-        onSave={() => onSave({ name: trimmed, minutes, glyph, color })}
+        onSave={() => onSave({ name: trimmed, minutes, glyph, color, credit })}
         saveDisabled={trimmed === ""}
       />
 
@@ -172,18 +184,27 @@ export function KindModal({
           />
         )}
         {isBreak && (
-          <label className="flex min-w-0 flex-col gap-1">
-            <span className="text-xs text-muted">{t("today.kindMinutes")}</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={String(minutes)}
-              onInput={(e) =>
-                setMinutes(clampBreakMinutes(e.currentTarget.value, minutes))
-              }
-              className={LABELED_FIELD_CLASS}
+          <>
+            <label className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs text-muted">
+                {t("today.kindMinutes")}
+              </span>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={String(minutes)}
+                onInput={(e) =>
+                  setMinutes(clampBreakMinutes(e.currentTarget.value, minutes))
+                }
+                className={LABELED_FIELD_CLASS}
+              />
+            </label>
+            <BreakCreditField
+              credit={credit}
+              defaultMinutes={minutes}
+              onChange={setCredit}
             />
-          </label>
+          </>
         )}
       </div>
     </Modal>

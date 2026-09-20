@@ -10,9 +10,17 @@ import {
   dayTotals,
   horizon,
   progress,
+  workdayEnd,
   workedIntervals,
 } from "../src/app/day.ts";
+import { total } from "../src/app/intervals.ts";
+import type { BreakCredit, Project } from "../src/app/types.ts";
 import { day, project, h } from "./fixtures/helpers.ts";
+
+/** The project every day here is read against: Mon–Fri, eight hours, a
+ *  lunch and a coffee, and — until a test says otherwise — no break that
+ *  counts as work. */
+const acme = project();
 
 // A typical Monday: in at 08:00, lunch 12:00–12:30, coffee 15:00–15:15, out
 // at 17:00. Meetings 09:00–10:00, coding from 10:00 until leaving.
@@ -43,7 +51,7 @@ describe("clip", () => {
 });
 
 describe("dayTotals on a finished day", () => {
-  const t = dayTotals(monday, h(23));
+  const t = dayTotals(monday, acme, h(23));
 
   it("subtracts breaks from presence", () => {
     expect(t.presence).toBe(h(9));
@@ -78,7 +86,7 @@ describe("dayTotals on a running day", () => {
   });
 
   it("counts up to now and reports the break as the state", () => {
-    const t = dayTotals(running, h(12, 10));
+    const t = dayTotals(running, acme, h(12, 10));
     expect(t.state).toBe("break");
     expect(t.worked).toBe(h(4));
     expect(t.breaks).toEqual({ lunch: h(0, 10) });
@@ -90,8 +98,8 @@ describe("dayTotals on a running day", () => {
     const fresh = day("2026-03-02", {
       sessions: [{ id: "s1", start: h(8), end: null }],
     });
-    expect(dayTotals(fresh, h(8)).state).toBe("working");
-    expect(dayTotals(fresh, h(8)).worked).toBe(0);
+    expect(dayTotals(fresh, acme, h(8)).state).toBe("working");
+    expect(dayTotals(fresh, acme, h(8)).worked).toBe(0);
   });
 });
 
@@ -101,7 +109,7 @@ describe("what lies outside presence counts for nothing", () => {
       sessions: [{ id: "s1", start: h(8), end: h(12) }],
       breaks: [{ id: "b1", typeId: "lunch", start: h(12, 30), end: h(13) }],
     });
-    expect(dayTotals(d, h(23)).breakTotal).toBe(0);
+    expect(dayTotals(d, acme, h(23)).breakTotal).toBe(0);
     expect(breakIntervals(d, h(23))).toEqual([]);
   });
 
@@ -110,7 +118,7 @@ describe("what lies outside presence counts for nothing", () => {
       sessions: [{ id: "s1", start: h(8), end: h(12, 15) }],
       breaks: [{ id: "b1", typeId: "lunch", start: h(12), end: h(13) }],
     });
-    expect(dayTotals(d, h(23)).breaks).toEqual({ lunch: h(0, 15) });
+    expect(dayTotals(d, acme, h(23)).breaks).toEqual({ lunch: h(0, 15) });
     expect(workedIntervals(d, h(23))).toEqual([{ start: h(8), end: h(12) }]);
   });
 
@@ -133,7 +141,7 @@ describe("two sessions in a day", () => {
         { id: "s2", start: h(13), end: h(17) },
       ],
     });
-    const t = dayTotals(d, h(23));
+    const t = dayTotals(d, acme, h(23));
     expect(t.worked).toBe(h(8));
     expect(t.firstIn).toBe(h(8));
     expect(t.lastOut).toBe(h(17));
@@ -196,7 +204,7 @@ describe("the day as stretches", () => {
     ]);
     expect(during[1]!.current).toBe(true);
     // …but the totals still stop at the moment they are read.
-    expect(dayTotals(d, h(12, 10)).worked).toBe(h(4));
+    expect(dayTotals(d, acme, h(12, 10)).worked).toBe(h(4));
 
     // Once it is over, the stretch after it is the one still running.
     const after = daySegments(d, h(13));
@@ -215,17 +223,17 @@ describe("the day as stretches", () => {
       sessions: [{ id: "s1", start: h(8), end: null }],
       breaks: [{ id: "b1", typeId: "lunch", start: h(12), end: h(12, 30) }],
     });
-    expect(dayTotals(assumed, h(12, 10)).currentBreak?.id).toBe("b1");
-    expect(dayTotals(assumed, h(12, 10)).openBreak).toBeNull();
-    expect(dayTotals(assumed, h(12, 40)).currentBreak).toBeNull();
-    expect(dayTotals(assumed, h(12, 40)).state).toBe("working");
+    expect(dayTotals(assumed, acme, h(12, 10)).currentBreak?.id).toBe("b1");
+    expect(dayTotals(assumed, acme, h(12, 10)).openBreak).toBeNull();
+    expect(dayTotals(assumed, acme, h(12, 40)).currentBreak).toBeNull();
+    expect(dayTotals(assumed, acme, h(12, 40)).state).toBe("working");
 
     const open = day("2026-03-02", {
       sessions: [{ id: "s1", start: h(8), end: null }],
       breaks: [{ id: "b1", typeId: "lunch", start: h(12), end: null }],
     });
-    expect(dayTotals(open, h(14)).currentBreak?.id).toBe("b1");
-    expect(dayTotals(open, h(14)).state).toBe("break");
+    expect(dayTotals(open, acme, h(14)).currentBreak?.id).toBe("b1");
+    expect(dayTotals(open, acme, h(14)).state).toBe("break");
   });
 
   it("gives an edge the room between its neighbours, a minute clear", () => {
@@ -237,5 +245,191 @@ describe("the day as stretches", () => {
     expect(boundaryRange(monday, h(8), h(23))?.min).toBe(0);
     expect(boundaryRange(monday, h(17), h(23))?.max).toBe(2 * 86_400);
     expect(boundaryRange(monday, h(9, 17), h(23))).toBeNull();
+  });
+});
+
+// ── What a break counts for ──
+//
+// A break carves time out of presence; a kind of break can say that some or
+// all of it still counts as work (see `BreakCredit`). The credit reaches the
+// totals and not the intervals — a break is a break wherever it is drawn.
+
+describe("breaks that count as work", () => {
+  /** The Monday above, with lunch (30 min) and coffee (15 min) taken. */
+  const counts = (credit: Parameters<typeof project>[0]) =>
+    dayTotals(monday, project(credit), h(23));
+
+  const withLunch = (lunch: BreakCredit): Partial<Project> => ({
+    breakTypes: [
+      { id: "lunch", name: "Lunch", defaultMinutes: 30, credit: lunch },
+      { id: "coffee", name: "Coffee", defaultMinutes: 15 },
+    ],
+  });
+
+  it("counts none of them until a project says otherwise", () => {
+    const t = counts({});
+    expect(t.breakCredit).toEqual({});
+    expect(t.breakCreditTotal).toBe(0);
+    expect(t.worked).toBe(h(8, 15));
+  });
+
+  it("hands a fully counted break back to the day", () => {
+    const t = counts(withLunch({ mode: "all" }));
+    expect(t.breakCredit).toEqual({ lunch: h(0, 30) });
+    // 9h present, 45 min of breaks, half an hour of it counted.
+    expect(t.worked).toBe(h(8, 45));
+  });
+
+  it("hands back only the first minutes of a partial one", () => {
+    const t = counts(withLunch({ mode: "partial", minutes: 20 }));
+    expect(t.breakCredit).toEqual({ lunch: h(0, 20) });
+    expect(t.worked).toBe(h(8, 35));
+  });
+
+  it("never hands back more of a break than was taken", () => {
+    const t = counts(withLunch({ mode: "partial", minutes: 90 }));
+    expect(t.breakCredit).toEqual({ lunch: h(0, 30) });
+    expect(t.worked).toBe(h(8, 45));
+  });
+
+  it("spends a partial credit over the day rather than per break", () => {
+    // Two coffees of a quarter of an hour each, of which twenty minutes in
+    // all counts — not twenty minutes apiece.
+    const d = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: h(17) }],
+      breaks: [
+        { id: "b1", typeId: "coffee", start: h(10), end: h(10, 15) },
+        { id: "b2", typeId: "coffee", start: h(14), end: h(14, 15) },
+      ],
+    });
+    const p = project({
+      breakTypes: [
+        {
+          id: "coffee",
+          name: "Coffee",
+          defaultMinutes: 15,
+          credit: { mode: "partial", minutes: 20 },
+        },
+      ],
+    });
+    const t = dayTotals(d, p, h(23));
+    expect(t.breakTotal).toBe(h(0, 30));
+    expect(t.breakCredit).toEqual({ coffee: h(0, 20) });
+    expect(t.worked).toBe(h(8, 50));
+  });
+
+  it("leaves the break's own total and the intervals alone", () => {
+    const t = counts(withLunch({ mode: "all" }));
+    // The whole of the break is still break time, and still drawn as one.
+    expect(t.breakTotal).toBe(h(0, 45));
+    expect(t.breaks).toEqual({ lunch: h(0, 30), coffee: h(0, 15) });
+    expect(total(workedIntervals(monday, h(23)))).toBe(h(8, 15));
+  });
+
+  it("counts a break of a kind the project has lost for nothing", () => {
+    const t = dayTotals(monday, project({ breakTypes: [] }), h(23));
+    expect(t.breakCredit).toEqual({});
+    expect(t.worked).toBe(h(8, 15));
+  });
+});
+
+// ── When the day is done ──
+
+describe("workdayEnd", () => {
+  /** In at eight and still going, read at ten. Eight hours to do. */
+  const morning = day("2026-03-02", {
+    sessions: [{ id: "s1", start: h(8), end: null }],
+  });
+
+  it("is the target away from now on a day with nothing in it yet", () => {
+    expect(workdayEnd(morning, acme, h(10))).toBe(h(16));
+  });
+
+  /** In at eight, half an hour of lunch, read at one. */
+  const lunched = day("2026-03-02", {
+    sessions: [{ id: "s1", start: h(8), end: null }],
+    breaks: [{ id: "b1", typeId: "lunch", start: h(12), end: h(12, 30) }],
+  });
+
+  it("pushes the end out by a break that counts for nothing", () => {
+    expect(workdayEnd(lunched, acme, h(13))).toBe(h(16, 30));
+  });
+
+  it("leaves it where it was when the break counts in full", () => {
+    const p = project({
+      breakTypes: [
+        {
+          id: "lunch",
+          name: "Lunch",
+          defaultMinutes: 30,
+          credit: { mode: "all" },
+        },
+      ],
+    });
+    expect(workdayEnd(lunched, p, h(13))).toBe(h(16));
+  });
+
+  it("pushes it out by whatever of the break did not count", () => {
+    const p = project({
+      breakTypes: [
+        {
+          id: "lunch",
+          name: "Lunch",
+          defaultMinutes: 30,
+          credit: { mode: "partial", minutes: 10 },
+        },
+      ],
+    });
+    expect(workdayEnd(lunched, p, h(13))).toBe(h(16, 20));
+  });
+
+  it("reads a break's assumed end as time that has been spent", () => {
+    // Ten past twelve, of a lunch written down as ending at half past: the
+    // twenty minutes still to come are already on the day.
+    expect(workdayEnd(lunched, acme, h(12, 10))).toBe(h(16, 30));
+  });
+
+  it("crosses the target inside a break that counts", () => {
+    const p = project({
+      hoursPerDay: 4.25,
+      breakTypes: [
+        {
+          id: "lunch",
+          name: "Lunch",
+          defaultMinutes: 30,
+          credit: { mode: "all" },
+        },
+      ],
+    });
+    // Four hours done by noon, and the quarter hour that finishes the day is
+    // the first quarter of the lunch.
+    expect(workdayEnd(lunched, p, h(13))).toBe(h(12, 15));
+  });
+
+  it("gives the moment the hours were done on a day that ran past them", () => {
+    expect(workdayEnd(morning, acme, h(18))).toBe(h(16));
+  });
+
+  it("counts nothing towards the day while clocked out", () => {
+    // Out from ten to eleven, back until now: the hour away moves the end.
+    const split = day("2026-03-02", {
+      sessions: [
+        { id: "s1", start: h(8), end: h(10) },
+        { id: "s2", start: h(11), end: null },
+      ],
+    });
+    expect(workdayEnd(split, acme, h(12))).toBe(h(17));
+  });
+
+  it("is nothing to say before the day has started, or once it is over", () => {
+    expect(workdayEnd(day("2026-03-02"), acme, h(10))).toBeNull();
+    expect(workdayEnd(monday, acme, h(23))).toBeNull();
+  });
+
+  it("is nothing to say on a day the project expects no work on", () => {
+    const saturday = day("2026-03-07", {
+      sessions: [{ id: "s1", start: h(10), end: null }],
+    });
+    expect(workdayEnd(saturday, acme, h(12))).toBeNull();
   });
 });

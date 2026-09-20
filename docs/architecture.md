@@ -19,12 +19,12 @@ index.html
 src/app/
   types.ts          the model: Project, WorkDay (sessions, breaks, activities)
   intervals.ts      union / intersect / subtract over stretches   (pure)
-  day.ts            a day's spans → its totals, state, stretches  (pure, clock-free)
+  day.ts            a day's spans → its totals, state, stretches, and when the day is done (pure, clock-free)
   actions.ts        the edits a day can take                       (pure, clock-free)
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   monthChart.ts     a month → week rows of day boxes, and their colour (pure, clock-free)
   dayBars.ts        a range → a bar a day: the target's track and the hours in it (pure, clock-free)
-  project.ts       the template, working days, the day's target   (pure)
+  project.ts       the template, working days, the day's target, what a break counts for (pure)
   kinds.ts          the marks a kind wears, and a kind of work's hues (pure)
   clock.ts          the dial's layout, hands, arcs, the frame's path, the wind  (pure)
   look.ts           the theme, and the dial's faces, fonts, markers, rings, presets
@@ -55,6 +55,7 @@ src/app/
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you started, corrected from the timer
   KindModal.tsx     a kind of break or work — invented, or held open to correct
+  BreakCreditField.tsx  how much of a kind of break counts as work — one control, both forms
   SpanEditModal.tsx the one editor behind every span
   ProjectEditModal.tsx  name, working days, breaks, kinds of work
   dev/              the demo-data switch: an in-memory DocBackend
@@ -97,6 +98,8 @@ type Project = {
     name: string;
     defaultMinutes: number;
     glyph?: GlyphId; // its mark; absent takes the cup
+    // how much of one still counts as work; absent counts none of it
+    credit?: { mode: "all" } | { mode: "partial"; minutes: number };
   }[];
   categories: {
     id: string;

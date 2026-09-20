@@ -29,7 +29,8 @@ Read up to a moment `now`:
 ```
 presence  = union(sessions)                       clipped to now
 breaks    = union(break spans) ∩ presence
-worked    = presence − breaks
+credit    = the part of those breaks the project counts as work
+worked    = presence − breaks + credit
 category  = its activity spans ∩ worked
 ```
 
@@ -37,6 +38,13 @@ So:
 
 - **Breaks carve time out.** A 30-minute lunch inside a nine-hour session is
   eight and a half hours worked.
+- **Unless the project counts them.** A kind of break says how much of one
+  still counts as work — none of it, all of it, or the first so many minutes
+  of it in a day — and that much is handed back (see
+  [What a break counts for](#what-a-break-counts-for)). Nothing else about it
+  changes: it is still a break in the lists, still the flag colour on the
+  clock, and `breakTotal` still reports the whole of the time spent on
+  breaks.
 - **Activities only label.** A meeting from 09:00 to 10:00 makes an hour of
   the worked time "Meetings"; the rest is uncategorised. An activity that runs
   through a break loses the break's minutes, because they were not worked.
@@ -71,6 +79,53 @@ Ending a break early is "I'm back": its end moves to now. A break with less
 than a minute left of it after that is dropped rather than kept, because it is
 the wrong pill corrected a second later, not a minute of lunch.
 
+### What a break counts for
+
+A break carves time out of presence — that is what a break is — but not every
+employer counts every one of them. So each kind of break carries an answer:
+
+| Answer               | What a break of the kind counts for                         |
+| -------------------- | ----------------------------------------------------------- |
+| none _(the default)_ | Nothing. The whole of it comes off the day.                 |
+| all of it            | All of it. The day is as long as if it had not been taken.  |
+| the first _n_ min    | The first _n_ minutes of that kind in the day, and no more. |
+
+The minutes of a partial answer are counted **over the whole day rather than
+per break**, which is what makes them a rule rather than a loophole: a project
+that counts half an hour of lunch counts half an hour of lunch whether it was
+taken in one sitting or three.
+
+The credit reaches the _totals_ and not the _intervals_. `workedIntervals` is
+still the stretches actually spent working, so the clock still draws a counted
+break as a break and the Log still lists it; what changes is only what it
+counted for. `dayTotals` reports both — `breakTotal` is all the break time,
+`breakCreditTotal` the part of it that counted — so nothing is counted twice,
+and `worked` is longer than the stretches by exactly that much.
+
+Absent means none, so every project counts no break until somebody says
+otherwise, and no day already logged changes when the app is updated. Because
+the answer belongs to the _project_, `dayTotals` takes the project as well as
+the day.
+
+### When the day is done
+
+`workdayEnd` is the one figure the app draws about a moment that has not
+happened: when the day's target will be met, if the work carries on from here
+without another break. It is a projection, not a promise, and the assumption
+under it is deliberately the plain one — guessing what the rest of the day
+holds would make a leaving time worse than no leaving time.
+
+It walks the day's stretches rather than dividing what is left by one, because
+the rate the target is worked towards is not one all day: a break the project
+counts as work counts while you are on it, and a break it does not counts for
+nothing. Past the end of what the day already knows — a break written down
+with an assumed end reaches into the future — the work simply goes on.
+
+It says nothing at all on a day the project expects no work on, on a project
+with no target, or before the day has started. A moment in the _past_ is a
+real answer: it is when the hours were done, on a day that carried on past
+them.
+
 ### The day as stretches
 
 `daySegments` reads the same intervals as one ordered list of the stretches
@@ -84,10 +139,10 @@ This is the derivation behind the clock face's break times and the stretch
 list they open, and it is derived from the spans like everything else: there
 is no second copy of the day to keep in step.
 
-`dayTotals` returns all of it at once — presence, worked, breaks by type, time
-by category, uncategorised, the state, the open spans, the first start and the
-last stop —
-and the three screens read the same object. **Progress** is worked over the
+`dayTotals` returns all of it at once — presence, worked, breaks by type, what
+those breaks counted as work, time by category, uncategorised, the state, the
+open spans, the first start and the last stop — and the three screens read the
+same object. **Progress** is worked over the
 project's target for the day, unclamped: 112% is overtime, not an error.
 
 ## The edits

@@ -16,6 +16,7 @@ import {
   clampBreakMinutes,
   clampHours,
   projectTemplate,
+  storedCredit,
 } from "./project.ts";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
@@ -30,7 +31,13 @@ import {
 import { KindPicker, MarkButton } from "./KindPicker.tsx";
 import { CATEGORY_COLORS, WEEK, weekdayLabel } from "./labels.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
-import type { Project, Weekday } from "./types.ts";
+import { BreakCreditField } from "./BreakCreditField.tsx";
+import {
+  DEFAULT_BREAK_CREDIT,
+  type BreakCredit,
+  type Project,
+  type Weekday,
+} from "./types.ts";
 
 // The project editor: name, working days, the day's length, the break types
 // and the kinds of work. One sheet, edited as a draft and saved whole, so a
@@ -92,6 +99,20 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
     setDraft((d) => ({
       ...d,
       [list]: d[list].map((x) => (x.id === id ? { ...x, glyph } : x)),
+    }));
+
+  /** How much of a kind of break counts as work. Stored as nothing at all
+   *  when the answer is "none", so a project that counts no break is the
+   *  document it always was (see `storedCredit`). */
+  const setCredit = (id: string, credit: BreakCredit) =>
+    setDraft((d) => ({
+      ...d,
+      breakTypes: d.breakTypes.map((x) => {
+        if (x.id !== id) return x;
+        const rest = { ...x };
+        delete rest.credit;
+        return { ...rest, ...storedCredit(credit) };
+      }),
     }));
 
   /** A colour, or null for "automatic" — which is stored as no colour at all,
@@ -203,7 +224,10 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
           {draft.breakTypes.map((b) => {
             const glyph = glyphFor(b.glyph, "break");
             return (
-              <div key={b.id} className="flex flex-col gap-2">
+              <div
+                key={b.id}
+                className="flex flex-col gap-2 rounded-xl border border-line/60 p-2"
+              >
                 <div className="flex items-end gap-2">
                   {/* A break is the flag colour wherever it is drawn — on the
                       clock's ring, on the Today button, in the Log — so its
@@ -273,6 +297,11 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
                     <TrashIcon className="h-4 w-4" />
                   </button>
                 </div>
+                <BreakCreditField
+                  credit={b.credit ?? DEFAULT_BREAK_CREDIT}
+                  defaultMinutes={b.defaultMinutes}
+                  onChange={(next) => setCredit(b.id, next)}
+                />
                 {picking === b.id && (
                   <KindPicker
                     kind="break"

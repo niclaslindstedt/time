@@ -4,6 +4,9 @@ import { useRef, type MutableRefObject, type ReactNode } from "react";
 import {
   BEZEL_R,
   BEZEL_WIDTH,
+  DAY_BAND,
+  DAY_EDGE,
+  DAY_TRACK,
   DIAL_HOURS,
   DIAL_R,
   DIAL_SECONDS,
@@ -58,13 +61,19 @@ import { useHands } from "./useHands.ts";
 // `clock.ts`, where it is tested.
 //
 // From the back forward: the bezel, the face (a radial gradient, because a
-// sunburst finish is one), the minute track on the rim, the ring the day is
-// drawn on — a faint groove, or the printed chapter ring the day fills, with
-// its minutes printed back over the day — the day itself, the lume the hours
-// of a dial whose blocks run out to the ring are finished with, the hour
-// markers,
+// sunburst finish is one), the minute track on the rim, the dial's own ring
+// — a faint groove, or the printed chapter ring — the day's track just under
+// the bezel and the day drawn on it, the lume the hours of a dial whose
+// blocks run out to the ring are finished with, the hour markers,
 // the printing, and the hands over everything with a shadow under them — the
 // one thing that makes a flat drawing read as a watch rather than a chart.
+//
+// The day is the outermost thing on the face, immediately inside the bezel
+// that draws its progress, and nothing else of the watch reaches it (see
+// `DAY_TRACK`). It used to be laid over the chapter ring, where it covered
+// the minutes the hands are read against; out here the ring keeps its print
+// and the two rings under the bezel are the day's target and the day's
+// shape, one outside the other.
 // The markers are drawn once at twelve o'clock and rotated into place, which
 // is how they are made too.
 //
@@ -105,6 +114,17 @@ import { useHands } from "./useHands.ts";
 
 export const DIAL_BOX = 240;
 const C = DIAL_BOX / 2;
+
+/** The light that goes round the day's track while the day is being counted
+ *  (see the `pulse` prop): how much of the dial it covers, how bright its
+ *  core is, and how far its edges are softened, in dial units. How *often*
+ *  it goes round is CSS's — `.app-day-pulse` in `styles.css` — because the
+ *  motion is. Short and faint on purpose: it is a shine passing over the
+ *  hours, and a day that flashed at you would be a day you stopped looking
+ *  at. */
+const PULSE_DASH = 7;
+const PULSE_STRENGTH = 0.5;
+const PULSE_BLUR = 1.6;
 
 /** A stretch of the day on the ring, in the colours it is drawn in. `edge`
  *  is the thin line along the outside; a band without one leaves the line
@@ -179,6 +199,9 @@ type Props = {
   /** Worked over target, drawn on the bezel: 1 is the day done, above 1
    *  overtime. Left out, the bezel is only a bezel. */
   progress?: number;
+  /** Whether the day is being counted, which sets the light sweeping along
+   *  the day's track. Off on a dial that is only a picture. */
+  pulse?: boolean;
   /** Where the light on the metal comes from. Left out, the dial is lit the
    *  way a photographed watch is — over the left shoulder. */
   light?: Light;
@@ -196,6 +219,7 @@ export function Dial({
   live = false,
   id,
   progress,
+  pulse = false,
   light = AMBIENT,
   className,
   children,
@@ -224,8 +248,8 @@ export function Dial({
       const shape = shapes.current[i];
       if (!shape) return;
       const [from, to] = reached(b, at, now);
-      draw(shape.band, arcPath(C, C, layout.bandR, from, to));
-      if (b.edge) draw(shape.edge, arcPath(C, C, layout.edgeR, from, to));
+      draw(shape.band, arcPath(C, C, DAY_TRACK.bandR, from, to));
+      if (b.edge) draw(shape.edge, arcPath(C, C, DAY_TRACK.edgeR, from, to));
     });
   };
 
@@ -249,6 +273,9 @@ export function Dial({
   const faceId = `${id}-face`;
   const sheenId = `${id}-sheen`;
   const shadowId = `${id}-shadow`;
+  const dayId = `${id}-day`;
+  const dayMaskId = `${id}-day-mask`;
+  const pulseId = `${id}-pulse`;
 
   const ticks = style.minuteTrack
     ? Array.from({ length: 60 }, (_, i) => {
@@ -329,6 +356,29 @@ export function Dial({
             floodOpacity="0.35"
           />
         </filter>
+
+        {/* The day's own shape, to cut the sweeping light to. A `use` of the
+            group the bands are in rather than a second set of arcs, so the
+            mask follows them for nothing — including the ones the wind loop
+            is writing frame by frame, which React never re-renders. Cut on
+            alpha rather than on brightness, because the bands are coloured
+            and a mask that read their luminance would let more light onto a
+            green stretch than onto an orange one. */}
+        <mask
+          id={dayMaskId}
+          maskUnits="userSpaceOnUse"
+          style={{ maskType: "alpha" }}
+        >
+          <use href={`#${dayId}`} />
+        </mask>
+
+        {/* What makes it a light rather than a block: the ends of the
+            travelling dash are softened, and so is the light across the
+            track, so it has a core and falls away. The mask keeps whatever
+            bleeds past the track's edges. */}
+        <filter id={pulseId} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation={PULSE_BLUR} />
+        </filter>
       </defs>
 
       {/* The case: the bezel, and the step down onto the face. */}
@@ -383,17 +433,18 @@ export function Dial({
         />
       ))}
 
-      {/* The ring the day is drawn on: the printed chapter ring in its own
-          colour, or the groove the bands lie in, so an empty morning still
-          shows where they will go. */}
+      {/* The dial's own ring: the printed chapter ring in its own colour, or
+          the faint groove a plainer face wears in its place. The day is not
+          on it — that is the track under the bezel — so what this carries is
+          the minutes, and the markers are placed against it. */}
       {ring.printed ? (
         <circle
           cx={C}
           cy={C}
-          r={(layout.ringInner + layout.ringOuter + RING_BLEED) / 2}
+          r={(layout.ringInner + layout.ringOuter) / 2}
           fill="none"
           stroke={ring.fill ?? face.ink}
-          strokeWidth={layout.ringOuter - layout.ringInner + RING_BLEED}
+          strokeWidth={layout.ringOuter - layout.ringInner}
         />
       ) : (
         <>
@@ -440,38 +491,84 @@ export function Dial({
           />
         ))}
 
-      {bands.map((b, i) => {
-        // Every band that has any length at all gets its paths, even when
-        // the moment the dial has reached leaves them empty: a wind fills
-        // them in from the loop, and it can only write to a path that is
-        // there.
-        if (b.end <= b.start) return null;
-        const [from, to] = reached(b, reach, now);
-        const band = arcPath(C, C, layout.bandR, from, to);
-        const edge = b.edge ? arcPath(C, C, layout.edgeR, from, to) : null;
-        return (
-          <g key={`b${i}`} opacity={b.opacity}>
-            <path
-              ref={(el) => hold(shapes, i, "band", el)}
-              d={band ?? ""}
-              fill="none"
-              stroke={b.fill}
-              strokeWidth={RING_BAND}
-              strokeLinecap="butt"
-            />
-            {b.edge && (
+      {/* The day's own track, just under the bezel: the groove first, so an
+          empty morning still shows where the day will go, painted a hair
+          wider than it measures (`RING_BLEED`) so no seam shows where it
+          meets the case. */}
+      <circle
+        cx={C}
+        cy={C}
+        r={(DAY_TRACK.inner + DAY_TRACK.outer + RING_BLEED) / 2}
+        fill="none"
+        stroke={face.ink}
+        strokeWidth={DAY_TRACK.outer - DAY_TRACK.inner + RING_BLEED}
+        opacity={0.09}
+      />
+
+      <g id={dayId}>
+        {bands.map((b, i) => {
+          // Every band that has any length at all gets its paths, even when
+          // the moment the dial has reached leaves them empty: a wind fills
+          // them in from the loop, and it can only write to a path that is
+          // there.
+          if (b.end <= b.start) return null;
+          const [from, to] = reached(b, reach, now);
+          const band = arcPath(C, C, DAY_TRACK.bandR, from, to);
+          const edge = b.edge ? arcPath(C, C, DAY_TRACK.edgeR, from, to) : null;
+          return (
+            <g key={`b${i}`} opacity={b.opacity}>
               <path
-                ref={(el) => hold(shapes, i, "edge", el)}
-                d={edge ?? ""}
+                ref={(el) => hold(shapes, i, "band", el)}
+                d={band ?? ""}
                 fill="none"
-                stroke={b.edge}
-                strokeWidth={RING_EDGE}
+                stroke={b.fill}
+                strokeWidth={DAY_BAND}
                 strokeLinecap="butt"
               />
-            )}
-          </g>
-        );
-      })}
+              {b.edge && (
+                <path
+                  ref={(el) => hold(shapes, i, "edge", el)}
+                  d={edge ?? ""}
+                  fill="none"
+                  stroke={b.edge}
+                  strokeWidth={DAY_EDGE}
+                  strokeLinecap="butt"
+                />
+              )}
+            </g>
+          );
+        })}
+      </g>
+
+      {/* The day at work: a light that goes round the track and shows only
+          where the day has been drawn, so the hours logged so far shimmer
+          once every few seconds and an empty stretch stays empty. It is the
+          backlight's argument on the ring itself — the beat behind the case
+          says the day is being counted, and this says which of it.
+          A dash travelling round a full circle rather than a light per band:
+          one light crossing the whole day is one thing moving, where a light
+          in every stretch would be a row of things blinking. `pathLength`
+          normalises the circle to a hundred, so the dash is a share of the
+          dial and not a number of units that would mean something different
+          on a bigger one. CSS owns the motion (`styles.css`): it is a light,
+          like the glow behind the case, and neither of them is a hand. */}
+      {pulse && bands.length > 0 && (
+        <g mask={`url(#${dayMaskId})`} aria-hidden="true">
+          <circle
+            cx={C}
+            cy={C}
+            r={(DAY_TRACK.inner + DAY_TRACK.outer) / 2}
+            pathLength={100}
+            fill="none"
+            stroke="#fff"
+            strokeOpacity={PULSE_STRENGTH}
+            strokeWidth={DAY_TRACK.outer - DAY_TRACK.inner}
+            strokeDasharray={`${PULSE_DASH} ${100 - PULSE_DASH}`}
+            filter={`url(#${pulseId})`}
+            className="app-day-pulse"
+          />
+        </g>
+      )}
 
       {/* The minutes, printed over the day: a chapter ring keeps its
           numerals whatever the day has painted under them. Its ticks stand on
