@@ -20,6 +20,7 @@ import {
   RING_BLEED,
   handAngles,
   handTurns,
+  placementOf,
   polar,
   ringHit,
   timesAt,
@@ -207,7 +208,7 @@ describe("dialLayout", () => {
       expect(outer, `${where} runs off the face`).toBeLessThanOrEqual(
         DIAL_MARKERS[dial.markers].minuteTrack ? TRACK_R - 4 : DAY_TRACK.inner,
       );
-      if (dial.placement === "inside") {
+      if (placementOf(dial) === "inside") {
         if (DIAL_MARKERS[dial.markers].reachesRing) {
           // These hours are meant to meet the ring: on its inner edge, not
           // short of it and not over it.
@@ -221,7 +222,7 @@ describe("dialLayout", () => {
           );
         }
         expect(inner, `${where} leaves no dial`).toBeGreaterThan(40);
-      } else if (dial.placement === "outside") {
+      } else if (placementOf(dial) === "outside") {
         expect(inner, `${where} runs into the ring`).toBeGreaterThanOrEqual(
           l.ringOuter,
         );
@@ -252,7 +253,7 @@ describe("dialLayout", () => {
       );
       // Inside the ring the markers hang under it at twelve; the name has
       // to clear them too, on every size.
-      if (dial.placement === "inside") {
+      if (placementOf(dial) === "inside") {
         const reach = reachOf(dial, l);
         expect(
           l.markerR - reach,
@@ -305,7 +306,7 @@ describe("dialLayout", () => {
       // the exception — they cross the track, which is what puts them
       // against the ring rather than against a row of stray ticks.
       if (
-        dial.placement === "inside" &&
+        placementOf(dial) === "inside" &&
         !DIAL_MARKERS[dial.markers].reachesRing
       ) {
         expect(
@@ -343,6 +344,42 @@ describe("dialLayout", () => {
       expect(l.hands.hour, where).toBeLessThan(l.hands.minute);
       expect(l.hands.hour, where).toBeGreaterThan(30);
     }
+  });
+
+  it("puts the hours inside a printed ring, whatever the placement says", () => {
+    // A chapter ring is the scale the hours are read against, and a scale is
+    // read from the outside in: over it, every hour would land on one of the
+    // numerals, and outside it the watch would read inside out.
+    const base = {
+      markers: "batons",
+      font: "grotesque",
+      scale: 4,
+    } as const;
+    const inside = dialLayout({
+      ...base,
+      placement: "inside",
+      ring: "chapter",
+    });
+    for (const placement of DIAL_PLACEMENTS) {
+      const dial = { ...base, placement, ring: "chapter" } as const;
+      expect(placementOf(dial), placement).toBe("inside");
+      // And the layout follows, rather than the override being cosmetic.
+      expect(dialLayout(dial)).toEqual(inside);
+    }
+    // A groove is only a track, so it takes the hours where they were put.
+    for (const placement of DIAL_PLACEMENTS) {
+      expect(placementOf({ placement, ring: "groove" })).toBe(placement);
+    }
+  });
+
+  it("keeps a placement it is not using, so a ring swapped back is the dial it was", () => {
+    // The override is read at layout time and nothing rewrites the setting.
+    const dial = {
+      ...{ markers: "batons", font: "grotesque", scale: 4 },
+      placement: "outside",
+    } as const;
+    expect(placementOf({ ...dial, ring: "chapter" })).toBe("inside");
+    expect(placementOf({ ...dial, ring: "groove" })).toBe("outside");
   });
 
   it("pulls the ring in to make room for markers outside it", () => {
@@ -476,7 +513,8 @@ describe("dialLayout", () => {
     for (const dial of every) {
       const l = dialLayout(dial);
       const reaches =
-        DIAL_MARKERS[dial.markers].reachesRing && dial.placement === "inside";
+        DIAL_MARKERS[dial.markers].reachesRing &&
+        placementOf(dial) === "inside";
       // Only a reaching style inside the ring has a plot; nothing else grows
       // one, and a block placed over or outside the ring has no gap to close.
       expect(l.pip === null, JSON.stringify(dial)).toBe(!reaches);

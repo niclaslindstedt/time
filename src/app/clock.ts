@@ -293,9 +293,32 @@ export type DialLayout = {
  * using — standing on the same track as the ticks, a shade shorter than one
  * and more than twice as wide.
  */
+/**
+ * Where a dial's hours actually sit, which is not always where the setting
+ * says.
+ *
+ * A printed ring is the outermost track on the watch by definition: its
+ * minutes are the scale the hours are read against, and a scale is read from
+ * the outside in. So the hours go *inside* it whatever the placement says.
+ * Put them over it and every hour lands on a numeral — the twelve hours and
+ * the twelve numerals are the same twelve positions — and put them outside it
+ * and the watch reads inside out, with the hours further from the centre than
+ * the minutes they are measured against.
+ *
+ * A groove is only a track, so it takes the hours wherever they were put. The
+ * setting is kept rather than corrected either way, so a dial that goes to
+ * the minute ring and back is the dial it was.
+ */
+export function placementOf(
+  dial: Pick<DialConfig, "placement" | "ring">,
+): DialPlacement {
+  return DIAL_RING[dial.ring].printed ? "inside" : dial.placement;
+}
+
 export function dialLayout(
   dial: Pick<DialConfig, "placement" | "markers" | "font" | "scale" | "ring">,
 ): DialLayout {
+  const placement = placementOf(dial);
   const style = DIAL_MARKERS[dial.markers];
   const font = DIAL_FONT[dial.font];
   const kinds = DIAL_HOURS.map((h) => style.at(h % 12));
@@ -306,7 +329,7 @@ export function dialLayout(
     ? font.widthFactor * (roman ? ROMAN_WIDTH : 1)
     : MARKER_SHARE / 2;
   const wanted = DIAL_SCALE[dial.scale] * font.scale;
-  const size = Math.min(wanted, MAX_REACH[dial.placement] / share);
+  const size = Math.min(wanted, MAX_REACH[placement] / share);
   const reach = size * share;
 
   // The rim this dial asks for. Room for the marks where the style prints a
@@ -315,14 +338,14 @@ export function dialLayout(
   // where the ring is the outermost thing on the watch — there is then
   // nothing to leave room for, and an empty band of face is a gap rather
   // than a margin.
-  const rim = style.minuteTrack || dial.placement !== "inside" ? RIM : RIM_BARE;
+  const rim = style.minuteTrack || placement !== "inside" ? RIM : RIM_BARE;
   const markerOuter = FACE_R - rim - 1;
   let ringOuter: number;
   let markerR: number;
-  if (dial.placement === "outside") {
+  if (placement === "outside") {
     markerR = markerOuter - reach;
     ringOuter = markerR - reach - MARKER_GAP;
-  } else if (dial.placement === "over") {
+  } else if (placement === "over") {
     ringOuter = Math.min(
       FACE_R - rim,
       markerOuter - reach + RING_EDGE + RING_BAND / 2,
@@ -340,7 +363,7 @@ export function dialLayout(
 
   let markerLength = size * MARKER_SHARE;
   let pip: DialLayout["pip"] = null;
-  if (style.reachesRing && dial.placement === "inside") {
+  if (style.reachesRing && placement === "inside") {
     const innerEnd = markerR - markerLength / 2;
     markerLength = (ringInner - innerEnd) * BLOCK_LENGTH;
     markerR = ringInner - markerLength / 2;

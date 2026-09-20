@@ -20,6 +20,7 @@ import {
   DIAL_PLACEMENTS,
   DIAL_PRESET,
   DIAL_PRESETS,
+  DIAL_RING,
   DIAL_RINGS,
   DIAL_SCALE,
   DIAL_SCALES,
@@ -236,18 +237,25 @@ export function DialPicker({
             />
           </Labelled>
 
-          <Labelled label={t("settings.clockPlacement")}>
-            <SegmentedControl<DialPlacement>
-              value={current.placement}
-              options={DIAL_PLACEMENTS.map((p) => ({
-                value: p,
-                label: t(`settings.placement.${p}`),
-              }))}
-              onChange={(p) => set("placement", p)}
-              ariaLabel={t("settings.clockPlacement")}
-              fullWidth
-            />
-          </Labelled>
+          {/* Where the hours sit — but only where there is a choice. A
+              printed ring is the outermost track on the watch, so the hours
+              go inside it and there is nothing to place (see
+              `placementOf`). The setting is kept rather than cleared, so
+              going to the minute ring and back brings it straight back. */}
+          {!DIAL_RING[current.ring].printed && (
+            <Labelled label={t("settings.clockPlacement")}>
+              <SegmentedControl<DialPlacement>
+                value={current.placement}
+                options={DIAL_PLACEMENTS.map((p) => ({
+                  value: p,
+                  label: t(`settings.placement.${p}`),
+                }))}
+                onChange={(p) => set("placement", p)}
+                ariaLabel={t("settings.clockPlacement")}
+                fullWidth
+              />
+            </Labelled>
+          )}
 
           <Labelled label={t("settings.clockRing")}>
             <SegmentedControl<DialRing>
