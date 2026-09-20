@@ -791,12 +791,16 @@ export type ClockSize = "small" | "medium" | "large";
 export const CLOCK_SIZES: ClockSize[] = ["small", "medium", "large"];
 
 export type ClockSizeSpec = {
-  /** The dial's width cap on a phone. The face is square, so this is its
-   *  height too. Lifted on a desk, where `share` sizes it instead. */
+  /** The dial's width cap on a phone held upright, where the screen is a
+   *  column and the dial is as wide as it is allowed to be. The face is
+   *  square, so this is its height too. Lifted wherever the dial stands in a
+   *  row instead — the desk, and the phone laid on its side — where `share`
+   *  sizes it. */
   maxWidth: string;
-  /** The share of the window's height the dial takes on a desk, 0 – 1. The
-   *  row it stands in may have less to spare than that in a short window, in
-   *  which case it gets what there is. */
+  /** The share of the window's height the dial takes in a row, 0 – 1. The row
+   *  it stands in may have less to spare than that in a short window, in
+   *  which case it gets what there is — which laid down is most of the time,
+   *  and is why the two larger sizes look alike there. */
   share: number;
   /** Two break-end chips closer together than this on the dial would overlap.
    *  A smaller dial needs a wider gap: the chips do not shrink with it. */

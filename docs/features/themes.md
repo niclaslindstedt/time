@@ -187,18 +187,20 @@ included.
 Small, medium or large, separately from the dial, because a size suits a
 screen rather than a watch. Large is the default.
 
-Which way round the size is measured depends on the screen it is on, because
-that is what runs out first. A phone is a column, so a size is a share of the
-width: small is the dial as it used to be, and large fills the column. The
-face is square, so that is its height as much as its width — a large dial
-pushes the break buttons down, a small one keeps the whole screen in one
-view.
+Which way round the size is measured depends on the shape of the screen it is
+on, because that is what runs out first. A phone held upright is a column, so
+a size is a share of the width: small is the dial as it used to be, and large
+fills the column. The face is square, so that is its height as much as its
+width — a large dial pushes the break buttons down, a small one keeps the
+whole screen in one view.
 
-A desk gives the dial a row of its own with room either side, so a size is a
-share of the window's **height** instead: about half of it for small, most of
-it for medium, and nearly all of it for large. A window with less than that
-to spare gives the dial the height there is, so a short window gets a smaller
-watch rather than a screen that scrolls.
+A desk — and the same phone laid on its side — gives the dial a row of its own
+with the day's controls either side, so a size is a share of the window's
+**height** instead: about half of it for small, most of it for medium, and
+nearly all of it for large. A window with less than that to spare gives the
+dial the height there is, so a short window gets a smaller watch rather than
+a screen that scrolls. Laid down, that is most of the time, which is why the
+two larger sizes look alike there.
 
 ### Backlight
 

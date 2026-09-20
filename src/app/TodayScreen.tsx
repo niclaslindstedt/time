@@ -77,17 +77,26 @@ import { useShortcuts } from "./useShortcuts.ts";
 // before the work starts rather than `disabled`: a disabled button is dead to
 // the pointer, and a hold is a pointer.
 //
-// On a desk the same controls stand round the dial — breaks to its left,
-// kinds of work to its right — and the dial takes the share of the window's
-// height its size asks for (`styles.css`, `.app-today`). The keyboard reaches
-// them too: S for the face, the digits for the kinds of work
+// Given the width the same controls stand round the dial — breaks to its
+// left, kinds of work to its right — and the dial takes the share of the
+// window's height its size asks for (`styles.css`, `.app-today`). That is the
+// desk, and it is also the phone laid on its side, which has the width and
+// has no height at all to stack in: the two are the `wide:` variant and
+// `useWide` (`shape.ts`). The keyboard reaches the controls too, wherever
+// they stand: S for the face, the digits for the kinds of work
 // (`shortcuts.ts`), and the right button on the dial opens the lot as a menu
 // where the pointer is.
+//
+// Laid down, the columns are the whole screen and a list longer than the
+// window is tall scrolls in its own column rather than pushing the watch off
+// the middle — which is also why the kinds stop wrapping there. A wrap in a
+// column is a second column, and it took the overflow off the edge of the
+// screen instead of down.
 //
 // The dial carries the app's name and the Settings cog, printed where a
 // watch prints its maker and its date, so on a phone this screen has no bar
 // over it unless there is a project to switch or a cloud to show: the watch
-// is the top of the screen.
+// is the top of the screen — and, laid down, the middle of it.
 //
 // The screen owns no state beyond the modals it opens. Every band is derived
 // from the day's spans up to `now`, once a second, through `day.ts`; every
@@ -456,7 +465,7 @@ export function TodayScreen({
         <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
           {t("today.breaks")}
         </h2>
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+        <div className="grid grid-cols-2 gap-2 wide:grid-cols-1">
           {project.breakTypes.map((b) => {
             const running = current?.typeId === b.id;
             return (
@@ -477,7 +486,7 @@ export function TodayScreen({
                         minutes: String(b.defaultMinutes),
                       })
                 } · ${t("today.holdToEdit")}`}
-                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors lg:justify-start ${
+                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors wide:justify-start ${
                   out ? "opacity-40" : ""
                 } ${
                   running
@@ -493,7 +502,7 @@ export function TodayScreen({
                   {running ? t("today.endBreak", { name: b.name }) : b.name}
                 </span>
                 {!running && (
-                  <span className="text-xs font-normal text-muted lg:ml-auto">
+                  <span className="text-xs font-normal text-muted wide:ml-auto">
                     {b.defaultMinutes}m
                   </span>
                 )}
@@ -504,7 +513,7 @@ export function TodayScreen({
             type="button"
             disabled={state === "out"}
             onClick={() => setAsking({ kind: "break", id: null })}
-            className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent px-3 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 lg:justify-start"
+            className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent px-3 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:justify-start"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
             <span className="truncate">{t("today.custom")}</span>
@@ -516,7 +525,13 @@ export function TodayScreen({
         <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
           {t("today.categories")}
         </h2>
-        <div className="flex flex-wrap gap-2 lg:flex-col">
+        {/* Pills on a phone, a column beside the dial when the controls
+            stand there. `flex-nowrap` with the column: wrapping is what makes
+            the pills a paragraph on the phone, and the same wrapping in a
+            column is a *second* column — a project with more kinds of work
+            than the window is tall spilled them off the right-hand edge of
+            the screen instead of scrolling the one it has (`styles.css`). */}
+        <div className="flex flex-wrap gap-2 wide:flex-col wide:flex-nowrap">
           {project.categories.map((c, i) => {
             const on = totals.currentCategoryId === c.id;
             const key = KEY_HINT.category(i);
@@ -531,7 +546,7 @@ export function TodayScreen({
                   hold: () => setAsking({ kind: "activity", id: c.id }),
                 })}
                 title={`${c.name}${key ? ` (${key})` : ""} · ${t("today.holdToEdit")}`}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors lg:min-h-12 lg:rounded-xl lg:font-semibold ${
+                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors wide:min-h-12 wide:rounded-xl wide:font-semibold ${
                   out ? "opacity-40" : ""
                 } ${categoryTone(on)}`}
               >
@@ -552,7 +567,7 @@ export function TodayScreen({
                   </span>
                 )}
                 {totals.categories[c.id] ? (
-                  <span className="text-xs font-normal text-muted tabular-nums lg:ml-auto">
+                  <span className="text-xs font-normal text-muted tabular-nums wide:ml-auto">
                     {formatDuration(totals.categories[c.id]!)}
                   </span>
                 ) : null}
@@ -563,7 +578,7 @@ export function TodayScreen({
             type="button"
             disabled={state === "out"}
             onClick={() => setAsking({ kind: "activity", id: null })}
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-line px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 lg:min-h-12 lg:rounded-xl lg:font-semibold"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-line px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:min-h-12 wide:rounded-xl wide:font-semibold"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
             {t("today.custom")}
