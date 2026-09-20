@@ -5,6 +5,7 @@ import {
   BACKLIGHT_COLOR,
   BACKLIGHT_COLORS,
   BACKLIGHT_HZ,
+  BACKLIGHT_CEILING,
   BACKLIGHT_INTENSITY,
   BACKLIGHT_SPREAD,
   CLOCK_SIZE,
@@ -29,6 +30,7 @@ import {
   DIAL_SCALE,
   DIAL_SCALES,
   FACE_BACKLIGHT,
+  glowAlpha,
   STEEL,
   glowGeometry,
   isApplied,
@@ -402,6 +404,43 @@ describe("the light each face is lit by", () => {
       FACE_BACKLIGHT[DIAL_PRESET[DEFAULT_DIAL_PRESET].face],
     );
     expect(DEFAULT_BACKLIGHT.color).toBe("white");
+  });
+});
+
+describe("how bright the light actually gets", () => {
+  it("keeps the whole scale under the ceiling", () => {
+    // A strength is a share of the ceiling, not of full opacity: the
+    // brightest the app can go is the ceiling and nothing reaches past it.
+    expect(glowAlpha(BACKLIGHT_INTENSITY.max)).toBeCloseTo(
+      BACKLIGHT_CEILING,
+      6,
+    );
+    expect(glowAlpha(BACKLIGHT_INTENSITY.min)).toBe(0);
+    expect(BACKLIGHT_CEILING).toBeLessThan(0.5);
+  });
+
+  it("puts every face's light under what the quietest of them used to be", () => {
+    // The faces ran 45 to 70 of full opacity before the ceiling; now the
+    // loudest of them is well under the quietest of those.
+    for (const face of DIAL_FACES) {
+      expect(glowAlpha(FACE_BACKLIGHT[face].intensity), face).toBeLessThan(
+        0.45,
+      );
+    }
+  });
+
+  it("leaves the faintest step barely there at all", () => {
+    // One step off nothing is a suggestion of a colour behind the case
+    // rather than a light — which is what makes the low end worth having.
+    expect(glowAlpha(BACKLIGHT_INTENSITY.step)).toBeLessThan(0.03);
+  });
+
+  it("keeps the faces in the order they were in", () => {
+    // The ceiling brings the level down; it does not flatten the eight into
+    // each other, because the numbers are what a face is worth relative to
+    // the rest.
+    const lit = DIAL_FACES.map((face) => FACE_BACKLIGHT[face].intensity);
+    expect(Math.max(...lit)).toBeGreaterThan(Math.min(...lit));
   });
 });
 

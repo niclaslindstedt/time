@@ -25,6 +25,7 @@ import { breakName, categoryColor, categoryName } from "./labels.ts";
 import {
   BACKLIGHT_COLOR,
   CLOCK_SIZE,
+  glowAlpha,
   glowGeometry,
   type Backlight,
   type ClockSize,
@@ -335,7 +336,7 @@ export function ClockFace({
           style={
             {
               "--glow-color": glow,
-              "--glow-alpha": backlight.intensity / 100,
+              "--glow-alpha": glowAlpha(backlight.intensity),
               "--glow-period": backlight.hz > 0 ? `${1 / backlight.hz}s` : "1s",
               "--glow-inset": `${halo.inset}%`,
               "--glow-hold": `${halo.hold}%`,
@@ -351,10 +352,6 @@ export function ClockFace({
           now={now}
           bands={bands}
           progress={progress}
-          // The light catches the day while the day is being counted — the
-          // backlight's argument, on the ring rather than behind the case.
-          // Nothing is being counted once you are out, so it stops.
-          glint={state !== "out"}
           light={light}
           live
           className="app-clock relative block h-auto w-full"

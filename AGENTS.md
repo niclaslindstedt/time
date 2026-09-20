@@ -201,7 +201,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   `STEEL`, the one metal every applied part is made of, and `markerProfile`,
   which says whether a marker is a roof, a dome or print — the difference
   between a part screwed to the dial and something written on it. And the
-  backlight: `FACE_BACKLIGHT`, the light each of the eight faces is lit by —
+  backlight: `BACKLIGHT_CEILING` and `glowAlpha`, which is what a strength
+  actually comes to on the screen — a share of the ceiling rather than of
+  full opacity, so the loudest the light can go is about what the quietest
+  face used to be, and `FACE_BACKLIGHT`'s numbers are what a face is worth
+  relative to the others rather than an opacity; `FACE_BACKLIGHT` itself, the
+  light each of the eight faces is lit by —
   warm behind the dark dials, quiet behind the pale ones, the theme's accent
   behind the neutral silver — which `resolveBacklight` looks a preset's light
   up in the way `resolveDial` looks its dial up, so a dial is one choice
@@ -289,24 +294,17 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   (`reached`) and its arcs written from the same loop, so the ring fills in
   under the hands instead of the whole day being on it before they arrive. A
   band marked `ahead` is the other side of that cut — the assumed tail of a
-  break, drawn from the moment rather than up to it. Behind the `glint` prop
-  is the light catching the day's track while the day is being counted: a
-  shade, a hot core barely a degree wide, and a shade again (`GLINT_STEPS`) —
-  because what makes metal read as metal is the contrast and not the
-  brightness, the way `sheen.ts`'s `domeSheen` gives a turned plot a crest
-  between two facet tones. It is masked to the bands by a `use` of the group
-  they are in, so it follows the ones the wind loop is writing for nothing
-  and shows only where the day has been drawn. The motion is CSS's
-  (`.app-day-glint`), because it is a light and a light is not a hand — a
-  quick run round and a longer rest, since a glint is something a surface
-  does when it catches the light, and anything that brightens slowly and
-  evenly is a lamp.
+  break, drawn from the moment rather than up to it. Nothing moves on the
+  day's track but the day: a light was run round it twice, as a travelling
+  dash and then as a specular glint, and neither earned its place — the
+  backlight behind the case already says the day is being counted, and a
+  second thing saying it on the ring was one animation too many for a screen
+  whose whole argument is quiet. Do not put it back.
 - `src/app/ClockFace.tsx` — the day on the dial, and the switch. One track,
   just inside the bezel: presence as the accent band and its thin outer line,
   a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
-  both, and the light catching them while the day is being counted.
-  Reads `day.ts` only. The face — what `faceHit` calls the face, inside the
+  both. Reads `day.ts` only. The face — what `faceHit` calls the face, inside the
   dial's own ring — is the button that starts and stops the day; every press
   outside it opens the day's stretches, at the stretch under the finger when
   it lands on the day's track, and so do the break ends printed on the rim;

@@ -25,6 +25,7 @@ import {
   DIAL_SCALE,
   DIAL_SCALES,
   FACE_BACKLIGHT,
+  glowAlpha,
   glowGeometry,
   resolveBacklight,
   resolveDial,
@@ -431,7 +432,7 @@ function PresetCard({
         style={
           {
             "--glow-color": BACKLIGHT_COLOR[glow.color],
-            "--glow-alpha": (glow.intensity / 100) * CARD_GLOW,
+            "--glow-alpha": glowAlpha(glow.intensity) * CARD_GLOW,
             "--glow-inset": `${halo.inset}%`,
             "--glow-hold": `${halo.hold}%`,
             "--glow-fade": `${halo.fade}%`,

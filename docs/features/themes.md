@@ -245,7 +245,11 @@ where a light started is to pick its face again.
   Custom's alone; no face is lit by either.)
 - **Beat.** How often it breathes, from steady to twice a second. With
   reduced motion on it never beats.
-- **Brightness.** From off to full. Off is a way to turn the whole thing off.
+- **Brightness.** From off to full — and full is quieter than it sounds. The
+  light is there to say the day is being counted, which it only has to do
+  once, so the whole scale sits low: the top of it is about what the quietest
+  of the eight faces used to glow at, and the bottom is a suggestion of
+  colour behind the case rather than a light. Off turns the whole thing off.
 - **Spread.** How far the light reaches past the case — a rim on the bezel at
   one end, a halo half the dial again at the other. It is not the same knob as
   brightness: a wide dim glow and a tight bright one are quiet in different
