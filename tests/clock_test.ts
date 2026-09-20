@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DAY_TRACK,
   DIAL_HOURS,
   DIAL_R,
   DIAL_SECONDS,
@@ -199,9 +200,12 @@ describe("dialLayout", () => {
       const where = JSON.stringify(dial);
       const outer = l.markerR + reach;
       const inner = l.markerR - reach;
-      // On the face, inside the minute track.
+      // On the face: inside the minute track where the style prints one on
+      // the rim, and inside the day's own track where it does not — a style
+      // with nothing to put in its rim has its ring out at the day's edge,
+      // and its markers out with it.
       expect(outer, `${where} runs off the face`).toBeLessThanOrEqual(
-        TRACK_R - 4,
+        DIAL_MARKERS[dial.markers].minuteTrack ? TRACK_R - 4 : DAY_TRACK.inner,
       );
       if (dial.placement === "inside") {
         if (DIAL_MARKERS[dial.markers].reachesRing) {
@@ -381,9 +385,11 @@ describe("dialLayout", () => {
     expect(last).toBeGreaterThan(wanted * 0.85);
   });
 
-  it("sets a numeral smaller rather than let it run off the rim", () => {
+  it("sets a numeral smaller rather than let it run off the face", () => {
     // VIII in the widest face, at the biggest step, over the ring: the size
-    // the step asks for cannot fit, and the one drawn is what does.
+    // the step asks for cannot fit, and the one drawn is what does. Roman
+    // prints no track on the rim, so what it has to stay clear of is the
+    // day's own track.
     const l = dialLayout({
       placement: "over",
       markers: "roman",
@@ -393,7 +399,7 @@ describe("dialLayout", () => {
     });
     expect(l.numeralSize).toBeLessThan(DIAL_SCALE[8]);
     const reach = reachOf({ markers: "roman", font: "inscribed" }, l);
-    expect(l.markerR + reach).toBeLessThanOrEqual(TRACK_R - 4);
+    expect(l.markerR + reach).toBeLessThanOrEqual(DAY_TRACK.inner);
   });
 
   it("runs a dress dial's blocks out to the ring, and finishes them with a plot on it", () => {
@@ -406,8 +412,12 @@ describe("dialLayout", () => {
         ring: "chapter",
       } as const;
       const l = dialLayout(dial);
-      const plain = dialLayout({ ...dial, markers: "batons" });
-      // The block ends on the ring's inner edge — where the plain baton of
+      // A plain marker of the same size to measure against: wedges rather
+      // than batons, because a style that prints a track on the rim is laid
+      // out against a rim and this one is not — the two would be measured
+      // from different rings.
+      const plain = dialLayout({ ...dial, markers: "wedges" });
+      // The block ends on the ring's inner edge — where the plain marker of
       // the same size stops short of it, by the air a marker is given. The
       // ring is painted to exactly that radius on its inner side, so the two
       // meet rather than the hour lapping onto the ring.

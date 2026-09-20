@@ -115,16 +115,30 @@ import { useHands } from "./useHands.ts";
 export const DIAL_BOX = 240;
 const C = DIAL_BOX / 2;
 
-/** The light that goes round the day's track while the day is being counted
- *  (see the `pulse` prop): how much of the dial it covers, how bright its
- *  core is, and how far its edges are softened, in dial units. How *often*
- *  it goes round is CSS's — `.app-day-pulse` in `styles.css` — because the
- *  motion is. Short and faint on purpose: it is a shine passing over the
- *  hours, and a day that flashed at you would be a day you stopped looking
- *  at. */
-const PULSE_DASH = 7;
-const PULSE_STRENGTH = 0.5;
-const PULSE_BLUR = 1.6;
+/**
+ * The light that goes round the day's track while the day is being counted
+ * (see the `pulse` prop): three arcs on the same centre line, the shortest
+ * and brightest inside the longest and faintest, so what adds up is a core
+ * that falls away at both ends. Short and faint on purpose — it is a shine
+ * passing over the hours, and a day that flashed at you would be a day you
+ * stopped looking at.
+ *
+ * Arcs rather than one blurred dash, because the dash was the wrong shape of
+ * work: `stroke-dashoffset` is re-rasterised every frame and a Gaussian blur
+ * over it re-runs the filter with it, which is a rate no compositor can keep.
+ * These are three static paths that a CSS rotation carries round, and a
+ * rotation is the one thing a compositor can do on its own. How *often* it
+ * goes round is CSS's too — `.app-day-pulse` in `styles.css`.
+ *
+ * Each step is how many degrees of the dial it spans and how much it adds.
+ */
+const PULSE_R = (DAY_TRACK.inner + DAY_TRACK.outer) / 2;
+const PULSE_STEPS: readonly { degrees: number; strength: number }[] = [
+  { degrees: 30, strength: 0.05 },
+  { degrees: 16, strength: 0.08 },
+  { degrees: 7, strength: 0.14 },
+  { degrees: 2.5, strength: 0.3 },
+];
 
 /** A stretch of the day on the ring, in the colours it is drawn in. `edge`
  *  is the thin line along the outside; a band without one leaves the line
@@ -275,7 +289,6 @@ export function Dial({
   const shadowId = `${id}-shadow`;
   const dayId = `${id}-day`;
   const dayMaskId = `${id}-day-mask`;
-  const pulseId = `${id}-pulse`;
 
   const ticks = style.minuteTrack
     ? Array.from({ length: 60 }, (_, i) => {
@@ -371,14 +384,6 @@ export function Dial({
         >
           <use href={`#${dayId}`} />
         </mask>
-
-        {/* What makes it a light rather than a block: the ends of the
-            travelling dash are softened, and so is the light across the
-            track, so it has a core and falls away. The mask keeps whatever
-            bleeds past the track's edges. */}
-        <filter id={pulseId} x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation={PULSE_BLUR} />
-        </filter>
       </defs>
 
       {/* The case: the bezel, and the step down onto the face. */}
@@ -541,32 +546,33 @@ export function Dial({
       </g>
 
       {/* The day at work: a light that goes round the track and shows only
-          where the day has been drawn, so the hours logged so far shimmer
-          once every few seconds and an empty stretch stays empty. It is the
-          backlight's argument on the ring itself — the beat behind the case
-          says the day is being counted, and this says which of it.
-          A dash travelling round a full circle rather than a light per band:
-          one light crossing the whole day is one thing moving, where a light
-          in every stretch would be a row of things blinking. `pathLength`
-          normalises the circle to a hundred, so the dash is a share of the
-          dial and not a number of units that would mean something different
-          on a bigger one. CSS owns the motion (`styles.css`): it is a light,
-          like the glow behind the case, and neither of them is a hand. */}
+          where the day has been drawn, so the hours logged so far shimmer as
+          it passes and an empty stretch stays empty. It is the backlight's
+          argument on the ring itself — the beat behind the case says the day
+          is being counted, and this says which of it.
+          One light crossing the whole day rather than a light per band: one
+          thing moving, where a light in every stretch would be a row of
+          things blinking. The mask is outside the turning group, so what
+          turns is only the light. */}
       {pulse && bands.length > 0 && (
         <g mask={`url(#${dayMaskId})`} aria-hidden="true">
-          <circle
-            cx={C}
-            cy={C}
-            r={(DAY_TRACK.inner + DAY_TRACK.outer) / 2}
-            pathLength={100}
-            fill="none"
-            stroke="#fff"
-            strokeOpacity={PULSE_STRENGTH}
-            strokeWidth={DAY_TRACK.outer - DAY_TRACK.inner}
-            strokeDasharray={`${PULSE_DASH} ${100 - PULSE_DASH}`}
-            filter={`url(#${pulseId})`}
-            className="app-day-pulse"
-          />
+          <g className="app-day-pulse">
+            {PULSE_STEPS.map((step) => {
+              const half = (step.degrees / 360) * (DIAL_SECONDS / 2);
+              const mid = DIAL_SECONDS / 4;
+              return (
+                <path
+                  key={step.degrees}
+                  d={arcPath(C, C, PULSE_R, mid - half, mid + half) ?? ""}
+                  fill="none"
+                  stroke="#fff"
+                  strokeOpacity={step.strength}
+                  strokeWidth={DAY_TRACK.outer - DAY_TRACK.inner}
+                  strokeLinecap="butt"
+                />
+              );
+            })}
+          </g>
         </g>
       )}
 

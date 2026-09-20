@@ -14,7 +14,7 @@ The main screen, and the whole app for most of a day.
   accent; a break is the flag colour, band and line both. The legend under
   the clock names them on a phone. The part of a break that has not happened
   yet is drawn at half strength: it is a plan, not a record. While the day is
-  being counted a light goes round the track every few seconds, showing only
+  being counted a light goes round the track every couple of seconds, showing only
   where the day has been drawn — so the hours logged so far shimmer as it
   passes and an empty stretch stays empty. It stops when you do, and reduced
   motion turns it off. The watch itself
@@ -81,6 +81,13 @@ The main screen, and the whole app for most of a day.
 There is no start button. **The face is the switch**: press it to start
 working, press it again to stop — the way a watch has one crown. The light
 comes up and the line under the dial says so.
+
+The face is exactly that, though — what lies inside the dial's own minute
+ring. Everything outside it is the watch carrying the day rather than the
+switch, so a press on the ring, the rim or the day's track opens the day
+stretch by stretch instead: at the stretch under your finger where the day has
+one, and at the top of the list where it does not. A record is something you
+correct, not something you press.
 
 A press and the press that takes it back are not a minute of work. Stop within
 a minute of having started and the session is dropped, along with any break or

@@ -105,9 +105,18 @@ export const FACE_R = DIAL_R - DAY_RESERVE;
  *  now is the minutes — or, on a groove, nothing but the track itself. */
 export const RING_BAND = 12;
 export const RING_EDGE = 2.5;
-/** The rim, between the ring's outer edge and the watch's: where the minute
- *  track's ticks are. */
+/**
+ * The rim, between the ring's outer edge and the day's track: where the
+ * minute track's ticks are — on the styles that print one.
+ *
+ * On the styles that do not, it is a hairline instead, and the ring comes out
+ * to meet the day. A rim is room left for something; a dial with nothing to
+ * put in it wore a band of bare face between its ring and its day, which read
+ * as a gap rather than as a margin. So the rim a style gets is the rim its
+ * ticks need, which is what `Dial.tsx` draws there and nothing else.
+ */
 const RIM = 5;
+const RIM_BARE = 0.6;
 /** The ticks' outer end. */
 export const TRACK_R = FACE_R - 1;
 /** Air between the ring and a marker beside it. */
@@ -161,6 +170,9 @@ export const SIGNATURE_REACH = Math.max(
  * the two cases are the one number rather than two that nearly agree.
  */
 const SIGNATURE_CLEAR = 2;
+// Reckoned on the full rim, which is the tighter case: a style that gives its
+// rim back moves its ring and its markers outward, away from the printing.
+
 const PLACEMENT_REACH =
   (FACE_R -
     RIM -
@@ -287,7 +299,9 @@ export function dialLayout(
   const size = Math.min(wanted, MAX_REACH[dial.placement] / share);
   const reach = size * share;
 
-  const markerOuter = FACE_R - RIM - 1;
+  // The rim this style asks for: the ticks' room, or a hairline.
+  const rim = style.minuteTrack ? RIM : RIM_BARE;
+  const markerOuter = FACE_R - rim - 1;
   let ringOuter: number;
   let markerR: number;
   if (dial.placement === "outside") {
@@ -295,12 +309,12 @@ export function dialLayout(
     ringOuter = markerR - reach - MARKER_GAP;
   } else if (dial.placement === "over") {
     ringOuter = Math.min(
-      FACE_R - RIM,
+      FACE_R - rim,
       markerOuter - reach + RING_EDGE + RING_BAND / 2,
     );
     markerR = ringOuter - RING_EDGE - RING_BAND / 2;
   } else {
-    ringOuter = FACE_R - RIM;
+    ringOuter = FACE_R - rim;
     markerR = ringOuter - RING_EDGE - RING_BAND - MARKER_GAP - reach;
   }
   const edgeR = ringOuter - RING_EDGE / 2;
@@ -523,6 +537,23 @@ export function ringHit(
   }
   const angle = (Math.atan2(dx, -dy) * 180) / Math.PI;
   return (angle + 360) % 360;
+}
+
+/**
+ * Whether a point, in the dial's own coordinates, is on the face itself —
+ * inside the dial's own ring — rather than out on the ring, the rim, the
+ * day's track or the bezel.
+ *
+ * This is the switch's edge. The face is what starts and stops the day, and
+ * everything the day is *drawn* on opens the day instead: the ring is a
+ * record, and a record is a thing you correct rather than a thing you press.
+ */
+export function faceHit(
+  x: number,
+  y: number,
+  layout: Pick<DialLayout, "ringInner">,
+): boolean {
+  return Math.hypot(x - DIAL_R, y - DIAL_R) < layout.ringInner;
 }
 
 /** The angles of the three hands for a moment. */

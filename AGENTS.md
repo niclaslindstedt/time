@@ -175,7 +175,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the two halves of the minute track a printed ring is read against (its own
   ticks on its inner edge, and the same length again on the face under it,
   with two finer marks between each minute) — and `ringHit` /
-  `timesAt`, which read a point on the day's track back as a moment. Also how the
+  `timesAt`, which read a point on the day's track back as a moment, and
+  `faceHit`, which says whether a point is on the face — the switch's edge. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
   stepper lands it with; and the **wind**, `windPlan` / `windMoment` /
   `windTurns`, the motion that sets the watch after the tab has been asleep —
@@ -294,9 +295,11 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
   both, and the light going round them while the day is being counted.
-  Reads `day.ts` only. The face is the button that starts and stops
-  the day; a stretch on the track, and the break ends printed on the rim,
-  open the day's stretches instead; the window above six is the cog. On a
+  Reads `day.ts` only. The face — what `faceHit` calls the face, inside the
+  dial's own ring — is the button that starts and stops the day; every press
+  outside it opens the day's stretches, at the stretch under the finger when
+  it lands on the day's track, and so do the break ends printed on the rim;
+  the window above six is the cog. On a
   phone it keeps the light's own reach clear above the case, so the halo is
   whole rather than cut flat where the screen begins. Behind the case is the backlight — the
   glow that says the day is being counted, in the colour, beat and strength
@@ -554,10 +557,13 @@ with `[Learn more](feature:<slug>)`.
   carries its maker and its date, and the bar goes without them; on the
   phone it goes altogether when nothing else is on it. A new _action_ is a
   top-bar button, not a tab.
-- **The face is the switch.** Starting and stopping the day is a press on
-  the dial, and nothing else on Today starts or stops it. A stretch of the
-  ring opens the stretches; the line under the dial opens the arrival. Do
-  not add a start button back.
+- **The face is the switch, and only the face.** Starting and stopping the
+  day is a press on the dial _inside its own ring_, and nothing else on Today
+  starts or stops it. Everything outside that — the printed ring, the rim and
+  the day's track under the bezel — opens the day stretch by stretch, because
+  out there the watch is carrying a record and a record is corrected rather
+  than switched. The line under the dial opens the arrival. Do not add a start
+  button back, and do not give the switch the ring again.
 - **No timer.** The day's progress is the bezel and the state is the light
   and the one line under the dial. A figure ticking up is the thing this
   screen was rid of.

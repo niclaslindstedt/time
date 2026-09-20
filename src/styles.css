@@ -617,26 +617,40 @@ input:not(
 
 /* ── The day at work ─────────────────────────────────────────────────────────
    The light that goes round the day's track while the day is being counted
-   (`Dial.tsx`, the `pulse` prop). A short dash travelling round a circle the
-   day's own bands are masked out of, so what you see is a shine crossing the
-   hours logged so far and nothing at all over an empty stretch.
+   (`Dial.tsx`, the `pulse` prop). A short arc turning about the dial's centre,
+   masked to the day's own bands, so what you see is a shine crossing the hours
+   logged so far and nothing at all over an empty stretch.
 
-   Once round every five seconds. A working day covers a third of a twelve-
-   hour dial at most, so the shine passes over it for a second or so and then
-   is gone — which is the point: it says the hours are still being added to,
-   the way the backlight behind the case says the day is on. The motion is
-   here rather than in a frame loop for the same reason the backlight's beat
-   is: it is a light, and a light is not a hand. */
+   A rotation, and nothing but a rotation. The first version travelled a dash
+   round the circle and softened it with a Gaussian blur, which meant the
+   stroke was re-rasterised and the filter re-run on every frame — work on the
+   main thread at sixty hertz, which is not a rate a main thread keeps. A
+   transform is the one property a compositor can animate by itself, so the
+   light is drawn once as three static arcs (`PULSE_STEPS`) and only turned.
+
+   `transform-box: view-box` is what makes the origin the dial's centre rather
+   than the turning group's own bounding box — the arcs are off to one side of
+   it, and about their own box they would orbit rather than sweep.
+
+   Once round every two seconds. A working day covers a third of a twelve-hour
+   dial at most, so the shine passes over it for well under a second and is
+   gone — which is the point: it says the hours are still being added to, the
+   way the backlight behind the case says the day is on. The motion is here
+   rather than in a frame loop for the same reason the backlight's beat is: it
+   is a light, and a light is not a hand. */
 .app-day-pulse {
-  animation: day-pulse 5s linear infinite;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: day-pulse 2s linear infinite;
+  will-change: transform;
 }
 
 @keyframes day-pulse {
   from {
-    stroke-dashoffset: 0;
+    transform: rotate(0deg);
   }
   to {
-    stroke-dashoffset: -100;
+    transform: rotate(360deg);
   }
 }
 

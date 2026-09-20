@@ -12,6 +12,8 @@ import {
   DAY_TRACK,
   SIGNATURE,
   angleOf,
+  dialLayout,
+  faceHit,
   polar,
   ringHit,
   timesAt,
@@ -49,11 +51,15 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 //
 // The face is the button. Pressing it starts the day, and pressing it again
 // stops it — there is no other switch, the way a watch has no other crown.
-// The ring is the exception: a press on one of the day's stretches opens the
-// day stretch by stretch at that moment, because a stretch is a thing you
-// correct rather than a thing you switch. The break-end chips on the rim do
-// the same for the end they print, since a break is written down with the
-// end its kind is assumed to have (see `takeBreak`) and that end is a guess.
+// The face is exactly that, though: what lies inside the dial's own ring.
+// Everything outside it — the printed ring, the rim, and the day's own track
+// under the bezel — is the watch carrying the day, and a press out there
+// opens the day stretch by stretch instead: at the stretch under the finger
+// where the day has one, and simply at the top of the list where it does
+// not. A record is a thing you correct rather than a thing you switch, and
+// the ring is a record. The break-end chips on the rim do the same for the
+// end they print, since a break is written down with the end its kind is
+// assumed to have (see `takeBreak`) and that end is a guess.
 //
 // Everything is derived from the day's spans (see `day.ts`); the face holds
 // no state of its own and re-renders as the second ticks. The part of a
@@ -148,6 +154,7 @@ export function ClockFace({
   const t = useT();
   const sizing = CLOCK_SIZE[size];
   const segments = useMemo(() => daySegments(day, now), [day, now]);
+  const layout = useMemo(() => dialLayout(dial), [dial]);
   const box = useRef<HTMLDivElement>(null);
   const [reading, setReading] = useState<Reading | null>(null);
 
@@ -207,14 +214,10 @@ export function ClockFace({
     });
   }, [segments, sizing.labelGap]);
 
-  // A point in the window, to the stretch of the day drawn under it: into
-  // the dial's own coordinates, to the angle it is at on the ring, to the
-  // stretch the day has at one of the times that angle stands for. Nothing
-  // over the face or the bezel.
-  const stretchAt = (
-    clientX: number,
-    clientY: number,
-  ): { segment: DaySegment; left: number; top: number } | null => {
+  /** A point in the window, in the dial's own coordinates — and where it
+   *  fell inside the box, which is what a hover card is hung on. Null when
+   *  the dial has not been laid out yet. */
+  const pointAt = (clientX: number, clientY: number) => {
     const el = box.current;
     if (!el) return null;
     const rect = el.getBoundingClientRect();
@@ -222,12 +225,24 @@ export function ClockFace({
     const left = clientX - rect.left;
     const top = clientY - rect.top;
     const scale = DIAL_BOX / rect.width;
-    const angle = ringHit(left * scale, top * scale, DAY_TRACK, RING_SLACK);
+    return { x: left * scale, y: top * scale, left, top };
+  };
+
+  // A point in the window, to the stretch of the day drawn under it: to the
+  // angle it is at on the day's track, then to the stretch the day has at one
+  // of the times that angle stands for. Nothing over the face or the bezel.
+  const stretchAt = (
+    clientX: number,
+    clientY: number,
+  ): { segment: DaySegment; left: number; top: number } | null => {
+    const p = pointAt(clientX, clientY);
+    if (!p) return null;
+    const angle = ringHit(p.x, p.y, DAY_TRACK, RING_SLACK);
     if (angle === null) return null;
     const segment = segments.find((s) =>
       timesAt(angle).some((at) => at >= s.start && at < s.end),
     );
-    return segment ? { segment, left, top } : null;
+    return segment ? { segment, left: p.left, top: p.top } : null;
   };
 
   const read = (e: PointerEvent<HTMLElement>) => {
@@ -237,15 +252,33 @@ export function ClockFace({
     else if (reading) setReading(null);
   };
 
-  // The face, or a stretch on the ring. A keyboard's press has no point on
-  // the dial, and is the face.
+  /**
+   * The face, or the day round it.
+   *
+   * The face — everything inside the dial's own ring — is the switch, and
+   * nothing else on this screen starts or stops the day. Outside it the watch
+   * is carrying the day: the printed ring, the rim and the day's track are a
+   * record, and a record is a thing you correct, so a press out there opens
+   * the day stretch by stretch. On the day's own track it opens at the stretch
+   * under the finger; anywhere else outside the face it simply opens.
+   *
+   * A keyboard's press has no point on the dial (`detail` is 0), and is the
+   * switch — which is what the button's label says it is.
+   */
   const press = (e: MouseEvent<HTMLButtonElement>) => {
-    const hit = e.detail > 0 ? stretchAt(e.clientX, e.clientY) : null;
-    if (hit) {
-      onOpen(hit.segment.running ? hit.segment.start : hit.segment.end);
+    const p = e.detail > 0 ? pointAt(e.clientX, e.clientY) : null;
+    if (!p || faceHit(p.x, p.y, layout)) {
+      onToggle();
       return;
     }
-    onToggle();
+    const hit = stretchAt(e.clientX, e.clientY);
+    onOpen(
+      hit
+        ? hit.segment.running
+          ? hit.segment.start
+          : hit.segment.end
+        : undefined,
+    );
   };
 
   const readingLabel = (s: DaySegment) =>
