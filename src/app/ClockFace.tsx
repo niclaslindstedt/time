@@ -351,10 +351,10 @@ export function ClockFace({
           now={now}
           bands={bands}
           progress={progress}
-          // The light goes round the day while the day is being counted —
-          // the backlight's argument, on the ring rather than behind the
-          // case. Nothing is being counted once you are out, so it stops.
-          pulse={state !== "out"}
+          // The light catches the day while the day is being counted — the
+          // backlight's argument, on the ring rather than behind the case.
+          // Nothing is being counted once you are out, so it stops.
+          glint={state !== "out"}
           light={light}
           live
           className="app-clock relative block h-auto w-full"

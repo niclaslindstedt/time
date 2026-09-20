@@ -155,6 +155,28 @@ describe("lookups and clamps", () => {
   });
 });
 
+describe("the template's own answers", () => {
+  const made = () => {
+    let n = 0;
+    return projectTemplate("Acme", labels, () => `id${++n}`, "now");
+  };
+  const breakNamed = (name: string) =>
+    made().breakTypes.find((b) => b.name === name)!;
+
+  it("counts a toilet break as work, and only that one", () => {
+    expect(breakNamed("Toilet").credit).toEqual({ mode: "all" });
+    // The two people actually disagree about are left to them.
+    expect(breakNamed("Lunch").credit).toBeUndefined();
+    expect(breakNamed("Coffee").credit).toBeUndefined();
+  });
+
+  it("gives a new project a toilet break that costs it nothing", () => {
+    const project = made();
+    const toilet = breakNamed("Toilet");
+    expect(creditSeconds(project, toilet.id)).toBe(Infinity);
+  });
+});
+
 describe("what a break counts for", () => {
   const acme = project({
     breakTypes: [

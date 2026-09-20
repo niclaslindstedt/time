@@ -106,6 +106,10 @@ import { useHands } from "./useHands.ts";
 // loop, for the same reason: re-rendering a dial sixty times a second to move
 // two arcs is what would make the hands over them stutter.
 //
+// The glint is the one thing on the dial that is neither the watch nor the
+// day: the light catching the day's track while the day is being counted.
+// See `GLINT_STEPS` for what it is made of and `styles.css` for its timing.
+//
 // What they are *shaped* like is the set the settings chose: a bar printed in
 // the face's ink with a facet down it, or the tapered hand of a dress watch,
 // drawn as a shape rather than a stroke and split down its ridge into a lit
@@ -116,28 +120,55 @@ export const DIAL_BOX = 240;
 const C = DIAL_BOX / 2;
 
 /**
- * The light that goes round the day's track while the day is being counted
- * (see the `pulse` prop): three arcs on the same centre line, the shortest
- * and brightest inside the longest and faintest, so what adds up is a core
- * that falls away at both ends. Short and faint on purpose — it is a shine
- * passing over the hours, and a day that flashed at you would be a day you
- * stopped looking at.
+ * The glint that runs round the day's track while the day is being counted
+ * (see the `glint` prop): the light catching a polished ring, not a light
+ * shone on one.
  *
- * Arcs rather than one blurred dash, because the dash was the wrong shape of
- * work: `stroke-dashoffset` is re-rasterised every frame and a Gaussian blur
- * over it re-runs the filter with it, which is a rate no compositor can keep.
- * These are three static paths that a CSS rotation carries round, and a
- * rotation is the one thing a compositor can do on its own. How *often* it
- * goes round is CSS's too — `.app-day-pulse` in `styles.css`.
+ * What makes metal read as metal is the *contrast*, not the brightness. A
+ * polished curved surface does not brighten evenly under a light — it throws
+ * back a hard, narrow specular, and the surface either side of it goes
+ * slightly darker than it was, because that part is now turned away. So the
+ * shape here is a shade, a hot core barely a degree wide, and a shade again:
+ * a bright edge rising out of its own shadow, which is what `sheen.ts` does
+ * for a turned plot (`domeSheen`'s crest and its two facet tones) and what
+ * this does for the ring.
  *
- * Each step is how many degrees of the dial it spans and how much it adds.
+ * A wide, soft, evenly bright band was the thing this replaced. It read as a
+ * light being *pulsed* at the dial, because that is what it was: nothing on a
+ * watch glows, and anything that brightens slowly and evenly is a lamp.
+ *
+ * Arcs rather than a blurred travelling dash, because the dash was the wrong
+ * shape of work: `stroke-dashoffset` is re-rasterised every frame and a
+ * Gaussian blur over it re-runs the filter with it, which is a rate no
+ * compositor can keep. These are static paths that a CSS rotation carries
+ * round, and a rotation is the one thing a compositor can do on its own.
+ * How it is *timed* is CSS's too — `.app-day-glint` in `styles.css`, where
+ * the run and the rest between two of them are.
+ *
+ * Each step is an arc measured in degrees either side of the glint's centre,
+ * and how much of its tone it lays down.
  */
-const PULSE_R = (DAY_TRACK.inner + DAY_TRACK.outer) / 2;
-const PULSE_STEPS: readonly { degrees: number; strength: number }[] = [
-  { degrees: 30, strength: 0.05 },
-  { degrees: 16, strength: 0.08 },
-  { degrees: 7, strength: 0.14 },
-  { degrees: 2.5, strength: 0.3 },
+const GLINT_R = (DAY_TRACK.inner + DAY_TRACK.outer) / 2;
+const GLINT_STEPS: readonly {
+  from: number;
+  to: number;
+  tone: string;
+  strength: number;
+}[] = [
+  // The metal turning away, either side of the crest: a near shade and a
+  // fainter one beyond it, so it comes back to the band by degrees rather
+  // than in one step. Laid down first, for the crest to rise out of.
+  { from: -17, to: -9, tone: "#000", strength: 0.05 },
+  { from: 9, to: 17, tone: "#000", strength: 0.05 },
+  { from: -9, to: -2.5, tone: "#000", strength: 0.1 },
+  { from: 2.5, to: 9, tone: "#000", strength: 0.1 },
+  // And the crest itself, nested: a glow, two narrower ones on it, and the
+  // hot core — which is barely a degree of the dial, because a specular on
+  // something polished is a line and not a patch.
+  { from: -8, to: 8, tone: "#fff", strength: 0.05 },
+  { from: -4, to: 4, tone: "#fff", strength: 0.09 },
+  { from: -1.6, to: 1.6, tone: "#fff", strength: 0.18 },
+  { from: -0.6, to: 0.6, tone: "#fff", strength: 0.28 },
 ];
 
 /** A stretch of the day on the ring, in the colours it is drawn in. `edge`
@@ -213,9 +244,9 @@ type Props = {
   /** Worked over target, drawn on the bezel: 1 is the day done, above 1
    *  overtime. Left out, the bezel is only a bezel. */
   progress?: number;
-  /** Whether the day is being counted, which sets the light sweeping along
+  /** Whether the day is being counted, which sets the light running round
    *  the day's track. Off on a dial that is only a picture. */
-  pulse?: boolean;
+  glint?: boolean;
   /** Where the light on the metal comes from. Left out, the dial is lit the
    *  way a photographed watch is — over the left shoulder. */
   light?: Light;
@@ -233,7 +264,7 @@ export function Dial({
   live = false,
   id,
   progress,
-  pulse = false,
+  glint = false,
   light = AMBIENT,
   className,
   children,
@@ -545,27 +576,27 @@ export function Dial({
         })}
       </g>
 
-      {/* The day at work: a light that goes round the track and shows only
-          where the day has been drawn, so the hours logged so far shimmer as
-          it passes and an empty stretch stays empty. It is the backlight's
-          argument on the ring itself — the beat behind the case says the day
-          is being counted, and this says which of it.
-          One light crossing the whole day rather than a light per band: one
+      {/* The day at work: the light catching the track, and showing only
+          where the day has been drawn — so the hours logged so far glint as
+          it runs past and an empty stretch stays empty. It is the
+          backlight's argument on the ring itself: the beat behind the case
+          says the day is being counted, and this says which of it.
+          One glint crossing the whole day rather than one per band: one
           thing moving, where a light in every stretch would be a row of
           things blinking. The mask is outside the turning group, so what
           turns is only the light. */}
-      {pulse && bands.length > 0 && (
+      {glint && bands.length > 0 && (
         <g mask={`url(#${dayMaskId})`} aria-hidden="true">
-          <g className="app-day-pulse">
-            {PULSE_STEPS.map((step) => {
-              const half = (step.degrees / 360) * (DIAL_SECONDS / 2);
-              const mid = DIAL_SECONDS / 4;
+          <g className="app-day-glint">
+            {GLINT_STEPS.map((step, i) => {
+              const at = (deg: number) =>
+                DIAL_SECONDS / 4 + (deg / 360) * DIAL_SECONDS;
               return (
                 <path
-                  key={step.degrees}
-                  d={arcPath(C, C, PULSE_R, mid - half, mid + half) ?? ""}
+                  key={i}
+                  d={arcPath(C, C, GLINT_R, at(step.from), at(step.to)) ?? ""}
                   fill="none"
-                  stroke="#fff"
+                  stroke={step.tone}
                   strokeOpacity={step.strength}
                   strokeWidth={DAY_TRACK.outer - DAY_TRACK.inner}
                   strokeLinecap="butt"

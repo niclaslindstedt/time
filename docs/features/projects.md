@@ -13,8 +13,9 @@ or several; most people have one.
 - **Break types** — one button each on the Today screen, with the minutes a
   break added afterwards is assumed to have taken, a mark, and how much of one
   still counts as work (below). A new project
-  starts with Lunch (30 min), Coffee (15 min) and Toilet (5 min), none of them
-  counting as work; rename them, change the minutes, remove them, add a walk.
+  starts with Lunch (30 min), Coffee (15 min) and Toilet (5 min), of which only
+  the toilet counts as work; rename them, change the minutes, remove them, add
+  a walk.
 - **Kinds of work** — optional labels for what you are doing, so the report
   can say where the hours went, each with a mark and a colour. A new project
   starts with Meetings, Planning, Retro and Admin.
@@ -58,10 +59,16 @@ figures on the Log, the balance on the Report, and when today's hours are done
 lists, still the flag colour on the clock, and the Log still shows the whole
 of the time spent on breaks.
 
-Every break starts out counting for nothing, which is what a break has always
-counted for, so updating the app changes no day already logged. Turning one on
-changes every day it has ever been taken on, because nothing about a total is
-stored — see [`../day-model.md`](../day-model.md).
+A new project answers for one of its three: the toilet break counts as work,
+because a trip down the corridor is paid nearly everywhere there is a
+corridor. Lunch and coffee are the ones people actually disagree about, so
+they start out counting for nothing and the answer is left to you.
+
+A project you already have is untouched by any of that — the answer lives in
+the project rather than in the app — so updating changes no day already
+logged. Changing one afterwards changes every day it has ever been taken on,
+because nothing about a total is stored: see
+[`../day-model.md`](../day-model.md).
 
 ## Marks and colours
 

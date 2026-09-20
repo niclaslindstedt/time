@@ -84,11 +84,11 @@ the wrong pill corrected a second later, not a minute of lunch.
 A break carves time out of presence — that is what a break is — but not every
 employer counts every one of them. So each kind of break carries an answer:
 
-| Answer               | What a break of the kind counts for                         |
-| -------------------- | ----------------------------------------------------------- |
-| none _(the default)_ | Nothing. The whole of it comes off the day.                 |
-| all of it            | All of it. The day is as long as if it had not been taken.  |
-| the first _n_ min    | The first _n_ minutes of that kind in the day, and no more. |
+| Answer                                       | What a break of the kind counts for                         |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| none _(what an unanswered break counts for)_ | Nothing. The whole of it comes off the day.                 |
+| all of it                                    | All of it. The day is as long as if it had not been taken.  |
+| the first _n_ min                            | The first _n_ minutes of that kind in the day, and no more. |
 
 The minutes of a partial answer are counted **over the whole day rather than
 per break**, which is what makes them a rule rather than a loophole: a project
@@ -102,8 +102,10 @@ counted for. `dayTotals` reports both — `breakTotal` is all the break time,
 `breakCreditTotal` the part of it that counted — so nothing is counted twice,
 and `worked` is longer than the stretches by exactly that much.
 
-Absent means none, so every project counts no break until somebody says
-otherwise, and no day already logged changes when the app is updated. Because
+Absent means none, so a break counts for nothing until somebody says
+otherwise, and no day already logged changes when the app is updated. A _new_
+project is made with one answer of its own — the toilet break counts as work
+(`DEFAULT_TOILET_CREDIT`) — and the rest are yours. Because
 the answer belongs to the _project_, `dayTotals` takes the project as well as
 the day.
 
