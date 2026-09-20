@@ -37,6 +37,12 @@ export const DEFAULT_LUNCH_MINUTES = 30;
 export const DEFAULT_COFFEE_MINUTES = 15;
 export const DEFAULT_TOILET_MINUTES = 5;
 
+/** What a new project counts a toilet break as: work, all of it. The only
+ *  break the template answers for — see `projectTemplate`. It is a default
+ *  and not a rule: every project's answer is its own, and changing this
+ *  changes nothing about a project already made. */
+export const DEFAULT_TOILET_CREDIT: BreakCredit = { mode: "all" };
+
 /** The bounds a working day may be set to, in hours. */
 export const MIN_HOURS_PER_DAY = 0.5;
 export const MAX_HOURS_PER_DAY = 16;
@@ -175,6 +181,12 @@ export function projectTemplate(
       name: labels.toilet,
       defaultMinutes: DEFAULT_TOILET_MINUTES,
       glyph: DEFAULT_KINDS.toilet.glyph,
+      // The one break a new project counts as work. A trip down the corridor
+      // is paid nearly everywhere there is a corridor, and a project that
+      // docked you five minutes for it would be wrong more often than right.
+      // Lunch and coffee are the ones people actually disagree about, so the
+      // app leaves those to you.
+      credit: DEFAULT_TOILET_CREDIT,
     },
   ];
   // No colour on the kinds of work: a new project's four take the hues their

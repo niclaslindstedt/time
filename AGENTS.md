@@ -158,7 +158,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   day's box is filled from — a _scale_ rather than `labels.ts`'s table, mixed
   from the theme's own tokens. Pure and clock-free.
 - `src/app/project.ts` — the project template (Mon–Fri, 8 h, lunch 30 min,
-  coffee 15 min, toilet 5 min, and no break counting as work), whether a date
+  coffee 15 min, toilet 5 min — and of the three only the toilet counts as
+  work, because that one is paid nearly everywhere and the other two are what
+  people actually disagree about), whether a date
   is a working day, the day's target, the clamps, and `creditSeconds` — the
   one place a stored `BreakCredit` is read, so no screen and no derivation has
   to know what an absent one means. `storedCredit` is the other half: an
@@ -287,18 +289,23 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   (`reached`) and its arcs written from the same loop, so the ring fills in
   under the hands instead of the whole day being on it before they arrive. A
   band marked `ahead` is the other side of that cut — the assumed tail of a
-  break, drawn from the moment rather than up to it. Behind the `pulse` prop
-  is the light that goes round the day's track while the day is being
-  counted: a dash travelling round a full circle, masked to the bands by a
-  `use` of the group they are in — so it follows the ones the wind loop is
-  writing for nothing, and shows only where the day has been drawn. The
-  motion is CSS's (`.app-day-pulse`), because it is a light and a light is
-  not a hand.
+  break, drawn from the moment rather than up to it. Behind the `glint` prop
+  is the light catching the day's track while the day is being counted: a
+  shade, a hot core barely a degree wide, and a shade again (`GLINT_STEPS`) —
+  because what makes metal read as metal is the contrast and not the
+  brightness, the way `sheen.ts`'s `domeSheen` gives a turned plot a crest
+  between two facet tones. It is masked to the bands by a `use` of the group
+  they are in, so it follows the ones the wind loop is writing for nothing
+  and shows only where the day has been drawn. The motion is CSS's
+  (`.app-day-glint`), because it is a light and a light is not a hand — a
+  quick run round and a longer rest, since a glint is something a surface
+  does when it catches the light, and anything that brightens slowly and
+  evenly is a lamp.
 - `src/app/ClockFace.tsx` — the day on the dial, and the switch. One track,
   just inside the bezel: presence as the accent band and its thin outer line,
   a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
-  both, and the light going round them while the day is being counted.
+  both, and the light catching them while the day is being counted.
   Reads `day.ts` only. The face — what `faceHit` calls the face, inside the
   dial's own ring — is the button that starts and stops the day; every press
   outside it opens the day's stretches, at the stretch under the finger when

@@ -14,10 +14,13 @@ The main screen, and the whole app for most of a day.
   accent; a break is the flag colour, band and line both. The legend under
   the clock names them on a phone. The part of a break that has not happened
   yet is drawn at half strength: it is a plan, not a record. While the day is
-  being counted a light goes round the track every couple of seconds, showing only
-  where the day has been drawn — so the hours logged so far shimmer as it
-  passes and an empty stretch stays empty. It stops when you do, and reduced
-  motion turns it off. The watch itself
+  being counted the light catches the track every few seconds: a glint runs
+  round it, quickly, and only over where the day has been drawn — so the hours
+  logged so far flash the way a polished ring does when it turns under a lamp,
+  and an empty stretch stays dark. It is a hard, narrow highlight with the
+  band going slightly darker either side of it, because that is what polished
+  metal does and what tells it apart from something merely lit up. It stops
+  when you do, and reduced motion turns it off. The watch itself
   — its face, its markers, its numerals, how its second hand moves, and how
   much of the screen it takes — is yours to pick under **Settings → The
   clock** (see [`themes.md`](themes.md)).
