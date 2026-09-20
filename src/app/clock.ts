@@ -112,11 +112,17 @@ export const RING_EDGE = 2.5;
  * The rim, between the ring's outer edge and the day's track: where the
  * minute track's ticks are — on the styles that print one.
  *
- * On the styles that do not, there is no rim at all, and the ring comes right
- * out to meet the day. A rim is room left for something; a dial with nothing
- * to put in it wore a band of bare face between its ring and its day, which
- * reads as a gap rather than as a margin. So the rim a style gets is the rim
- * its marks need, which is what `Dial.tsx` draws there and nothing else.
+ * On a dial that prints nothing there *and* keeps its markers inside the
+ * ring, there is no rim at all: the ring comes right out to meet the day. A
+ * rim is room left for something, and a dial with nothing to put in it wore a
+ * band of bare face between its ring and its day, which reads as a gap rather
+ * than as a margin.
+ *
+ * Markers placed outside or over the ring are the exception, because then
+ * they are the outermost thing on the watch and the rim is their margin off
+ * the day's track — give it back and an hour marker ends up against the
+ * case. So the rim a dial gets is the room whatever reaches furthest out
+ * actually needs.
  */
 const RIM = 5;
 const RIM_BARE = 0;
@@ -303,8 +309,13 @@ export function dialLayout(
   const size = Math.min(wanted, MAX_REACH[dial.placement] / share);
   const reach = size * share;
 
-  // The rim this style asks for: the ticks' room, or a hairline.
-  const rim = style.minuteTrack ? RIM : RIM_BARE;
+  // The rim this dial asks for. Room for the marks where the style prints a
+  // track on it; a margin off the day's track where the markers themselves
+  // are out here, which is every placement but `inside`; and nothing at all
+  // where the ring is the outermost thing on the watch — there is then
+  // nothing to leave room for, and an empty band of face is a gap rather
+  // than a margin.
+  const rim = style.minuteTrack || dial.placement !== "inside" ? RIM : RIM_BARE;
   const markerOuter = FACE_R - rim - 1;
   let ringOuter: number;
   let markerR: number;
