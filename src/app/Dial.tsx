@@ -496,14 +496,14 @@ export function Dial({
           />
         ))}
 
-      {/* The day's own track, just under the bezel: the groove first, so an
-          empty morning still shows where the day will go, painted a hair
-          wider than it measures (`RING_BLEED`) so no seam shows where it
-          meets the case. */}
+      {/* The day's own track, under the bezel: the groove first, so an empty
+          morning still shows where the day will go, painted a hair deeper
+          than it measures (`RING_BLEED`) so no seam of bare face shows where
+          it meets the ring under it. */}
       <circle
         cx={C}
         cy={C}
-        r={(DAY_TRACK.inner + DAY_TRACK.outer + RING_BLEED) / 2}
+        r={(DAY_TRACK.inner - RING_BLEED + DAY_TRACK.outer) / 2}
         fill="none"
         stroke={face.ink}
         strokeWidth={DAY_TRACK.outer - DAY_TRACK.inner + RING_BLEED}

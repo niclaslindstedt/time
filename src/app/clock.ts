@@ -77,22 +77,25 @@ export const ROMAN_HOURS = [
  */
 export const DAY_BAND = 3.2;
 export const DAY_EDGE = 1.2;
-/** Air between the face's own edge — where it steps up to the bezel — and
- *  the day's track, and between that track and whatever is under it. */
-const DAY_CLEAR = 0.4;
-const DAY_GAP = 0.4;
 
-/** Where the day's track sits, as radii from the centre: the thin line
- *  outside, the band under it. */
+/**
+ * Where the day's track sits, as radii from the centre: the thin line
+ * outside, the band under it, and no air either side of the pair.
+ *
+ * It runs from the case to whatever the dial puts under it, touching both,
+ * because air between two rings on a watch is a gap rather than a margin —
+ * there is nothing in it to see, and an empty band of face reads as a mistake
+ * however narrow it is.
+ */
 export const DAY_TRACK = {
-  outer: DIAL_R - DAY_CLEAR,
-  edgeR: DIAL_R - DAY_CLEAR - DAY_EDGE / 2,
-  bandR: DIAL_R - DAY_CLEAR - DAY_EDGE - DAY_BAND / 2,
-  inner: DIAL_R - DAY_CLEAR - DAY_EDGE - DAY_BAND,
+  outer: DIAL_R,
+  edgeR: DIAL_R - DAY_EDGE / 2,
+  bandR: DIAL_R - DAY_EDGE - DAY_BAND / 2,
+  inner: DIAL_R - DAY_EDGE - DAY_BAND,
 } as const;
 
 /** How much of the face's outer edge the day has taken. */
-export const DAY_RESERVE = DAY_CLEAR + DAY_EDGE + DAY_BAND + DAY_GAP;
+export const DAY_RESERVE = DAY_EDGE + DAY_BAND;
 
 /** The radius the watch itself is laid out inside — the face less the day's
  *  track. Every number below is measured from this rather than from `DIAL_R`,
@@ -109,22 +112,23 @@ export const RING_EDGE = 2.5;
  * The rim, between the ring's outer edge and the day's track: where the
  * minute track's ticks are — on the styles that print one.
  *
- * On the styles that do not, it is a hairline instead, and the ring comes out
- * to meet the day. A rim is room left for something; a dial with nothing to
- * put in it wore a band of bare face between its ring and its day, which read
- * as a gap rather than as a margin. So the rim a style gets is the rim its
- * ticks need, which is what `Dial.tsx` draws there and nothing else.
+ * On the styles that do not, there is no rim at all, and the ring comes right
+ * out to meet the day. A rim is room left for something; a dial with nothing
+ * to put in it wore a band of bare face between its ring and its day, which
+ * reads as a gap rather than as a margin. So the rim a style gets is the rim
+ * its marks need, which is what `Dial.tsx` draws there and nothing else.
  */
 const RIM = 5;
-const RIM_BARE = 0.6;
+const RIM_BARE = 0;
 /** The ticks' outer end. */
 export const TRACK_R = FACE_R - 1;
 /** Air between the ring and a marker beside it. */
 const MARKER_GAP = 4;
-/** The day's track is painted a little wider than it measures, so nothing
- *  shows through where it meets the bezel. Outward only, into the air
- *  `DAY_CLEAR` leaves: on the inside it is painted to `DAY_TRACK.inner`
- *  exactly, because that is the edge the rest of the dial is cleared to.
+/** The day's groove is painted a little wider than it measures, so no seam
+ *  of bare face shows where it meets the ring under it. Inward only — the
+ *  groove is the faintest thing on the dial and laps harmlessly onto the ring,
+ *  where outward it would lap onto the case. The bands themselves are painted
+ *  to the track exactly, since they are opaque and would eat the ring.
  *  `Dial.tsx` paints with this number. */
 export const RING_BLEED = 0.5;
 /** The dial's printing, as radii from the centre: the name under twelve,
