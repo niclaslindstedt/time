@@ -886,6 +886,30 @@ export const BACKLIGHT_HZ = { min: 0, max: 2, step: 0.05 };
 export const BACKLIGHT_INTENSITY = { min: 0, max: 100, step: 5 };
 export const BACKLIGHT_SPREAD = { min: 0, max: 100, step: 5 };
 
+/**
+ * How much of the colour the brightest setting is actually worth.
+ *
+ * A strength is a share of *this* rather than of full opacity, so the whole
+ * scale sits under it: the loudest light the app can make is now about what
+ * the quietest of the eight faces used to be, and the faintest step of the
+ * slider is a suggestion of a colour behind the case rather than a light.
+ *
+ * The light is the thing that says the day is being counted, and it only has
+ * to be noticed once. A halo that announces itself is a halo you end up
+ * turning off, which loses the one thing it was for — so the ceiling is low
+ * and the faces keep their differences under it. `FACE_BACKLIGHT`'s numbers
+ * are what a face is worth *relative to the others*; what any of them comes
+ * to on the screen is this.
+ */
+export const BACKLIGHT_CEILING = 0.45;
+
+/** What a strength comes to on the screen: its share of the ceiling, as the
+ *  alpha the halo is mixed at. The one place a strength becomes a colour, so
+ *  the dial on Today and the cards in Settings cannot drift apart. */
+export function glowAlpha(intensity: number): number {
+  return (intensity / 100) * BACKLIGHT_CEILING;
+}
+
 /** The light each face is lit by: a colour that belongs with the dial, and a
  *  beat, a brightness and a reach in the same spirit. Two rules run through
  *  it. The colour is the face's own character rather than a match of its

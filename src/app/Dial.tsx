@@ -105,10 +105,7 @@ import { useHands } from "./useHands.ts";
 // on the ring before them. They are written onto the paths from the same
 // loop, for the same reason: re-rendering a dial sixty times a second to move
 // two arcs is what would make the hands over them stutter.
-//
-// The glint is the one thing on the dial that is neither the watch nor the
-// day: the light catching the day's track while the day is being counted.
-// See `GLINT_STEPS` for what it is made of and `styles.css` for its timing.
+
 //
 // What they are *shaped* like is the set the settings chose: a bar printed in
 // the face's ink with a facet down it, or the tapered hand of a dress watch,
@@ -118,58 +115,6 @@ import { useHands } from "./useHands.ts";
 
 export const DIAL_BOX = 240;
 const C = DIAL_BOX / 2;
-
-/**
- * The glint that runs round the day's track while the day is being counted
- * (see the `glint` prop): the light catching a polished ring, not a light
- * shone on one.
- *
- * What makes metal read as metal is the *contrast*, not the brightness. A
- * polished curved surface does not brighten evenly under a light — it throws
- * back a hard, narrow specular, and the surface either side of it goes
- * slightly darker than it was, because that part is now turned away. So the
- * shape here is a shade, a hot core barely a degree wide, and a shade again:
- * a bright edge rising out of its own shadow, which is what `sheen.ts` does
- * for a turned plot (`domeSheen`'s crest and its two facet tones) and what
- * this does for the ring.
- *
- * A wide, soft, evenly bright band was the thing this replaced. It read as a
- * light being *pulsed* at the dial, because that is what it was: nothing on a
- * watch glows, and anything that brightens slowly and evenly is a lamp.
- *
- * Arcs rather than a blurred travelling dash, because the dash was the wrong
- * shape of work: `stroke-dashoffset` is re-rasterised every frame and a
- * Gaussian blur over it re-runs the filter with it, which is a rate no
- * compositor can keep. These are static paths that a CSS rotation carries
- * round, and a rotation is the one thing a compositor can do on its own.
- * How it is *timed* is CSS's too — `.app-day-glint` in `styles.css`, where
- * the run and the rest between two of them are.
- *
- * Each step is an arc measured in degrees either side of the glint's centre,
- * and how much of its tone it lays down.
- */
-const GLINT_R = (DAY_TRACK.inner + DAY_TRACK.outer) / 2;
-const GLINT_STEPS: readonly {
-  from: number;
-  to: number;
-  tone: string;
-  strength: number;
-}[] = [
-  // The metal turning away, either side of the crest: a near shade and a
-  // fainter one beyond it, so it comes back to the band by degrees rather
-  // than in one step. Laid down first, for the crest to rise out of.
-  { from: -17, to: -9, tone: "#000", strength: 0.05 },
-  { from: 9, to: 17, tone: "#000", strength: 0.05 },
-  { from: -9, to: -2.5, tone: "#000", strength: 0.1 },
-  { from: 2.5, to: 9, tone: "#000", strength: 0.1 },
-  // And the crest itself, nested: a glow, two narrower ones on it, and the
-  // hot core — which is barely a degree of the dial, because a specular on
-  // something polished is a line and not a patch.
-  { from: -8, to: 8, tone: "#fff", strength: 0.05 },
-  { from: -4, to: 4, tone: "#fff", strength: 0.09 },
-  { from: -1.6, to: 1.6, tone: "#fff", strength: 0.18 },
-  { from: -0.6, to: 0.6, tone: "#fff", strength: 0.28 },
-];
 
 /** A stretch of the day on the ring, in the colours it is drawn in. `edge`
  *  is the thin line along the outside; a band without one leaves the line
@@ -244,9 +189,6 @@ type Props = {
   /** Worked over target, drawn on the bezel: 1 is the day done, above 1
    *  overtime. Left out, the bezel is only a bezel. */
   progress?: number;
-  /** Whether the day is being counted, which sets the light running round
-   *  the day's track. Off on a dial that is only a picture. */
-  glint?: boolean;
   /** Where the light on the metal comes from. Left out, the dial is lit the
    *  way a photographed watch is — over the left shoulder. */
   light?: Light;
@@ -264,7 +206,6 @@ export function Dial({
   live = false,
   id,
   progress,
-  glint = false,
   light = AMBIENT,
   className,
   children,
@@ -318,8 +259,6 @@ export function Dial({
   const faceId = `${id}-face`;
   const sheenId = `${id}-sheen`;
   const shadowId = `${id}-shadow`;
-  const dayId = `${id}-day`;
-  const dayMaskId = `${id}-day-mask`;
 
   const ticks = style.minuteTrack
     ? Array.from({ length: 60 }, (_, i) => {
@@ -400,21 +339,6 @@ export function Dial({
             floodOpacity="0.35"
           />
         </filter>
-
-        {/* The day's own shape, to cut the sweeping light to. A `use` of the
-            group the bands are in rather than a second set of arcs, so the
-            mask follows them for nothing — including the ones the wind loop
-            is writing frame by frame, which React never re-renders. Cut on
-            alpha rather than on brightness, because the bands are coloured
-            and a mask that read their luminance would let more light onto a
-            green stretch than onto an orange one. */}
-        <mask
-          id={dayMaskId}
-          maskUnits="userSpaceOnUse"
-          style={{ maskType: "alpha" }}
-        >
-          <use href={`#${dayId}`} />
-        </mask>
       </defs>
 
       {/* The case: the bezel, and the step down onto the face. */}
@@ -541,71 +465,38 @@ export function Dial({
         opacity={0.09}
       />
 
-      <g id={dayId}>
-        {bands.map((b, i) => {
-          // Every band that has any length at all gets its paths, even when
-          // the moment the dial has reached leaves them empty: a wind fills
-          // them in from the loop, and it can only write to a path that is
-          // there.
-          if (b.end <= b.start) return null;
-          const [from, to] = reached(b, reach, now);
-          const band = arcPath(C, C, DAY_TRACK.bandR, from, to);
-          const edge = b.edge ? arcPath(C, C, DAY_TRACK.edgeR, from, to) : null;
-          return (
-            <g key={`b${i}`} opacity={b.opacity}>
+      {bands.map((b, i) => {
+        // Every band that has any length at all gets its paths, even when
+        // the moment the dial has reached leaves them empty: a wind fills
+        // them in from the loop, and it can only write to a path that is
+        // there.
+        if (b.end <= b.start) return null;
+        const [from, to] = reached(b, reach, now);
+        const band = arcPath(C, C, DAY_TRACK.bandR, from, to);
+        const edge = b.edge ? arcPath(C, C, DAY_TRACK.edgeR, from, to) : null;
+        return (
+          <g key={`b${i}`} opacity={b.opacity}>
+            <path
+              ref={(el) => hold(shapes, i, "band", el)}
+              d={band ?? ""}
+              fill="none"
+              stroke={b.fill}
+              strokeWidth={DAY_BAND}
+              strokeLinecap="butt"
+            />
+            {b.edge && (
               <path
-                ref={(el) => hold(shapes, i, "band", el)}
-                d={band ?? ""}
+                ref={(el) => hold(shapes, i, "edge", el)}
+                d={edge ?? ""}
                 fill="none"
-                stroke={b.fill}
-                strokeWidth={DAY_BAND}
+                stroke={b.edge}
+                strokeWidth={DAY_EDGE}
                 strokeLinecap="butt"
               />
-              {b.edge && (
-                <path
-                  ref={(el) => hold(shapes, i, "edge", el)}
-                  d={edge ?? ""}
-                  fill="none"
-                  stroke={b.edge}
-                  strokeWidth={DAY_EDGE}
-                  strokeLinecap="butt"
-                />
-              )}
-            </g>
-          );
-        })}
-      </g>
-
-      {/* The day at work: the light catching the track, and showing only
-          where the day has been drawn — so the hours logged so far glint as
-          it runs past and an empty stretch stays empty. It is the
-          backlight's argument on the ring itself: the beat behind the case
-          says the day is being counted, and this says which of it.
-          One glint crossing the whole day rather than one per band: one
-          thing moving, where a light in every stretch would be a row of
-          things blinking. The mask is outside the turning group, so what
-          turns is only the light. */}
-      {glint && bands.length > 0 && (
-        <g mask={`url(#${dayMaskId})`} aria-hidden="true">
-          <g className="app-day-glint">
-            {GLINT_STEPS.map((step, i) => {
-              const at = (deg: number) =>
-                DIAL_SECONDS / 4 + (deg / 360) * DIAL_SECONDS;
-              return (
-                <path
-                  key={i}
-                  d={arcPath(C, C, GLINT_R, at(step.from), at(step.to)) ?? ""}
-                  fill="none"
-                  stroke={step.tone}
-                  strokeOpacity={step.strength}
-                  strokeWidth={DAY_TRACK.outer - DAY_TRACK.inner}
-                  strokeLinecap="butt"
-                />
-              );
-            })}
+            )}
           </g>
-        </g>
-      )}
+        );
+      })}
 
       {/* The minutes, printed over the day: a chapter ring keeps its
           numerals whatever the day has painted under them. Its ticks stand on
