@@ -20,3 +20,7 @@ dist/
 
 # Pictures of the dial (scripts/dial-shots.mjs)
 shots/
+
+# The native wrapper keeps its own (native/.gitignore covers the rest); this
+# is the one entry a tool run from the repo root has to know about.
+native/node_modules/

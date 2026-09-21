@@ -21,6 +21,19 @@ Read by Vite at build time through `import.meta.env` (declared in
 Both OAuth identifiers are public by design: the flows are PKCE, so there is no
 client secret anywhere in the pipeline.
 
+## The native wrapper's variables
+
+`native/` is a separate project with a build of its own; these are read there,
+never by the web app. See
+[`../native/.env.example`](../native/.env.example) and
+[`../native/RELEASING.md`](../native/RELEASING.md).
+
+| Variable               | Effect                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_TIME_URL` | Point the wrapper's WebView at a deployed slot instead of the copy bundled inside it. **Debugging only** — never a store build. |
+| `EAS_PROJECT_ID`       | The EAS project a build runs under. `eas init` prints it but cannot write it into a dynamic config, so it is passed in.         |
+| `EXPO_TOKEN`           | An Expo access token, so CI can drive EAS with no interactive login. A repository secret; treat it as a password.               |
+
 ## Runtime settings
 
 Under the **⚙** on the top bar. Persisted per device in localStorage
@@ -41,14 +54,18 @@ setting, so it syncs and backs up with the days.
 
 ## Storage keys
 
-| Key                        | Holds                                                       |
-| -------------------------- | ----------------------------------------------------------- |
-| `time:doc`                 | The document: projects and days (see `docs/day-model.md`)   |
-| `time:doc:unreadable`      | A quarantined copy of a document this build could not parse |
-| `time:settings`            | The runtime settings above                                  |
-| `time:sync:backend`        | Which backend is active (`local`, `dropbox`, `gdrive`)      |
-| `time:sync:dropbox`        | Dropbox tokens                                              |
-| `time:sync:gdrive`         | Google Drive token                                          |
-| `time:logs`                | The in-app log buffer                                       |
-| `time:language`            | The language choice (English only today)                    |
-| `oss:cache:<backend>:time` | The framework's offline cache of the cloud copy             |
+| Key                        | Holds                                                            |
+| -------------------------- | ---------------------------------------------------------------- |
+| `time:doc`                 | The document: projects and days (see `docs/day-model.md`)        |
+| `time:doc:unreadable`      | A quarantined copy of a document this build could not parse      |
+| `time:settings`            | The runtime settings above                                       |
+| `time:sync:backend`        | Which backend is active (`local`, `icloud`, `dropbox`, `gdrive`) |
+| `time:sync:dropbox`        | Dropbox tokens                                                   |
+| `time:sync:gdrive`         | Google Drive token                                               |
+| `time:logs`                | The in-app log buffer                                            |
+| `time:language`            | The language choice (English only today)                         |
+| `oss:cache:<backend>:time` | The framework's offline cache of the cloud copy                  |
+
+iCloud has no key of its own beyond `time:sync:backend`: there is nothing to
+store. The container belongs to the device's iCloud account, so choosing the
+backend is the whole of connecting to it.

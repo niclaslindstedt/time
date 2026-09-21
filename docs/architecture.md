@@ -45,6 +45,7 @@ src/app/
   useModalSave.ts   Enter inside a modal's card, turned into its Save
   useLongPress.ts   a control held rather than tapped, and the right button
   backup.ts         export / restore a JSON file
+  cloudHost.ts      the seam a host fills to offer a document store of its own (iCloud)
   Dial.tsx          the watch face, drawn, with the day's progress on the bezel and the printing — shared by Today and Settings
   ClockFace.tsx     the day on the dial, the switch, the cog, the light, and the way into the stretches
   DialPicker.tsx    the presets and the custom pickers in Settings
@@ -62,6 +63,14 @@ src/app/
   ProjectEditModal.tsx  name, working days, breaks, kinds of work
   dev/              the demo-data switch: an in-memory DocBackend
   i18n/             the catalog and the runtime
+
+native/             the thin Expo wrapper — a separate npm project (see below)
+  App.tsx           a WebView over the bundled build, and nothing else
+  src/local-server.ts   unpacks the packed build and serves it on a fixed loopback port
+  src/injected.ts   the theme reporter, and the service-worker teardown
+  src/icloudBridge.ts   the store host it installs into the page   (pure)
+  src/icloud.ts     answers the page's store requests
+  modules/icloud-store/ list / read / write / remove in the app's iCloud container
 ```
 
 ## The framework's share
@@ -78,6 +87,22 @@ published subpaths.
 The renderer is **Preact** through `preact/compat`: the framework is built
 against React, and `@preact/preset-vite` plus `tsconfig.json`'s `paths` alias
 `react` onto Preact for the bundle and the type-checker alike.
+
+## The native wrapper's share
+
+`native/` ships the same web app to the App Store and Google Play. It is a
+**separate npm project** — its own `package.json`, lockfile and
+`node_modules`, reached with `--prefix native` — and it is thin on purpose: a
+loopback HTTP server serving the packed web build, a `WebView` over it, and
+one thing the browser cannot do, which is reach the device's **iCloud**.
+
+Nothing in `src/` knows it exists. iCloud reaches the app the same way any
+other capability would: `cloudHost.ts` looks for a document store on `window`
+and the wrapper installs one, so the browser shows no native-shaped hole and a
+second host would light the same backend up.
+
+See [`features/native-app.md`](features/native-app.md) and
+[`../native/README.md`](../native/README.md).
 
 ## The shape of the data
 
