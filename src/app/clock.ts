@@ -91,11 +91,22 @@ export const DAY_TRACK = {
   outer: DIAL_R,
   edgeR: DIAL_R - DAY_EDGE / 2,
   bandR: DIAL_R - DAY_EDGE - DAY_BAND / 2,
+  midR: DIAL_R - (DAY_EDGE + DAY_BAND) / 2,
   inner: DIAL_R - DAY_EDGE - DAY_BAND,
 } as const;
 
 /** How much of the face's outer edge the day has taken. */
 export const DAY_RESERVE = DAY_EDGE + DAY_BAND;
+
+/**
+ * The dot a moment still to come is marked with on the day's track, as a
+ * radius: half the track, so it fills the track from the case to the track's
+ * inner edge and reaches neither the bezel nor the face. A mark is
+ * something the day runs *into*, so it stands in the day's own lane rather
+ * than beside it — which is also why it is centred on `midR` and not on the
+ * band, whose centre line is a hair further out than the track's.
+ */
+export const DAY_MARK = DAY_RESERVE / 2;
 
 /** The radius the watch itself is laid out inside — the face less the day's
  *  track. Every number below is measured from this rather than from `DIAL_R`,
@@ -576,6 +587,28 @@ export function timesAt(angle: number): Seconds[] {
   const turn = ((angle % 360) + 360) % 360;
   const at = Math.round((turn / 360) * DIAL_SECONDS);
   return [at, at + DIAL_SECONDS, at + 2 * DIAL_SECONDS];
+}
+
+/**
+ * Whether a moment still to come has a place on the day's track.
+ *
+ * Two answers are no. One that has been passed is not a projection any more
+ * — the day ran on through it, the track is painted over it, and a mark
+ * left behind says the hours are still to be done when they are done. And
+ * one more than twelve hours off has nowhere to stand: the dial shows every
+ * angle twice, so a mark that far ahead lands back among the hours between
+ * here and there, where it reads as a moment already gone.
+ */
+export function aheadOnDial(at: Seconds, now: Seconds): boolean {
+  return at > now && at - now < DIAL_SECONDS;
+}
+
+/**
+ * Where that mark's centre sits — on the middle of the day's track, so a dot
+ * the width of the track is centred in it (see `DAY_MARK`).
+ */
+export function dayMark(cx: number, cy: number, at: Seconds): [number, number] {
+  return polar(cx, cy, DAY_TRACK.midR, angleOf(at));
 }
 
 /**

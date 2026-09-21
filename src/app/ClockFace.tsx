@@ -11,6 +11,7 @@ import { daySegments, type DaySegment } from "./day.ts";
 import {
   DAY_TRACK,
   SIGNATURE,
+  aheadOnDial,
   angleOf,
   dialLayout,
   faceHit,
@@ -18,7 +19,7 @@ import {
   ringHit,
   timesAt,
 } from "./clock.ts";
-import { DIAL_BOX, Dial, type Band } from "./Dial.tsx";
+import { DIAL_BOX, Dial, type Band, type Mark } from "./Dial.tsx";
 import { formatTimeOfDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor, categoryName } from "./labels.ts";
@@ -66,6 +67,12 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 // no state of its own and re-renders as the second ticks. The part of a
 // break that has not happened yet — the tail between now and its assumed
 // end — is drawn at half strength, because it is a plan rather than a record.
+//
+// One thing on the ring is not the record at all: the green dot where the
+// day's hours come out, if the work carries on unbroken from here
+// (`workdayEnd`). The day is walking towards it, so it is drawn while it is
+// ahead and gone once it is passed — a mark left behind would say the hours
+// are still to be done at a moment they were done at.
 //
 // Come back to a tab that has been asleep and the day is not on the ring
 // before the hands get there: the watch is wound, and the bands are filled in
@@ -121,6 +128,11 @@ type Props = {
   reflect: boolean;
   /** Worked over target, for the bezel. */
   progress: number;
+  /** When today's hours are done if the work carries on from here — the one
+   *  figure this screen draws about a moment that has not happened
+   *  (`workdayEnd`). Null on a day that has none, and marked on the day's
+   *  track only while it is still ahead. */
+  endsAt: Seconds | null;
   /** The face pressed: start the day, or stop it. */
   onToggle: () => void;
   /** Open the day's stretches, optionally at the moment that was pressed. */
@@ -147,6 +159,7 @@ export function ClockFace({
   backlight,
   reflect,
   progress,
+  endsAt,
   onToggle,
   onOpen,
   onMenu,
@@ -199,6 +212,23 @@ export function ClockFace({
     }
     return out;
   }, [segments, project, now]);
+
+  // Where the day is heading, as one green dot on its own track: the moment
+  // today's hours are done if the work carries on from here. It is a
+  // projection, so it only stands there while it is still ahead — the day
+  // runs into it, the bands are laid over where it was, and once it is
+  // passed the track says what happened rather than what was going to
+  // (`aheadOnDial`). The green is the theme's own pale one rather than its
+  // `success`, which in both of this app's themes is the accent to the byte —
+  // and the accent on this ring already means "at work", so a dot in it would
+  // read as a stray minute worked rather than as the hours coming out.
+  const marks = useMemo<Mark[]>(
+    () =>
+      endsAt !== null && aheadOnDial(endsAt, now)
+        ? [{ at: endsAt, color: "var(--color-positive)" }]
+        : [],
+    [endsAt, now],
+  );
 
   // One chip per break end, in the order of the dial, dropping any that would
   // land on top of the one before it.
@@ -352,6 +382,7 @@ export function ClockFace({
           dial={dial}
           now={now}
           bands={bands}
+          marks={marks}
           progress={progress}
           light={light}
           live
@@ -433,7 +464,7 @@ export function ClockFace({
               style={{ left: `${l.left}%`, top: `${l.top}%` }}
               aria-label={label}
               title={label}
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-flag/50 bg-surface-2 px-1.5 py-0.5 text-[0.625rem] leading-none font-bold text-flag tabular-nums shadow-sm"
+              className="app-dial-chip absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-flag/50 bg-surface-2 px-1.5 py-0.5 text-[0.625rem] leading-none font-bold text-flag tabular-nums shadow-sm"
             >
               {formatTimeOfDay(l.at)}
             </button>

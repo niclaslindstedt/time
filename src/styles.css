@@ -699,6 +699,68 @@ input:not(
   }
 }
 
+/* ── Focus mode, laid down ───────────────────────────────────────────────────
+   The phone propped against something and left alone. After a little while
+   untouched the app stops being an app and is a clock: the four tabs, the
+   breaks, the kinds of work and the line of words under the dial all fade
+   out, and the first touch anywhere brings them back (`useFocus.ts` sets
+   `data-focus` on the shell; it decides *when*, this decides what).
+
+   Only on the stand, and only over Today — the shell asks for both before it
+   sets the attribute, and the query here says the shape again because the
+   same phone stood back up is a screen being held and read.
+
+   Fade, never fold. Everything keeps its room: the columns still take their
+   share of the grid and the strip still stands where it stands, so the dial
+   is exactly the size and in exactly the place it was a moment ago. A watch
+   that grew when the tabs went away would be the one thing this screen was
+   built not to do.
+
+   The whole screen stops taking a press, the watch face included, and that
+   is the point rather than a side effect: the touch that wakes it is a touch
+   that wakes it and nothing else. A tap in the corner where a tab was would
+   otherwise open the Log, and a tap in the middle — which is where the tap
+   lands, because the middle is where the watch is — would stop the day. The
+   press goes through to the screen under it all, which is where `useFocus`
+   hears it; a second press, once everything is back, does what it says.
+
+   Nothing hides from a screen reader or from the keyboard: opacity is not
+   `display: none`, and a key counts as a touch, so a Tab towards a faded
+   control has already brought it back. */
+@media (max-width: 63.9375rem) and (orientation: landscape) and (max-height: 44rem) {
+  .app-today > :is([data-area="breaks"], [data-area="kinds"]),
+  .app-dial-note,
+  .app-dial-chip,
+  .app-bottom-nav,
+  .app-header {
+    transition: opacity 600ms ease;
+  }
+
+  [data-focus="on"] .app-today,
+  [data-focus="on"] .app-bottom-nav,
+  [data-focus="on"] .app-header {
+    pointer-events: none;
+  }
+
+  [data-focus="on"] .app-today > :is([data-area="breaks"], [data-area="kinds"]),
+  [data-focus="on"] .app-dial-note,
+  [data-focus="on"] .app-dial-chip,
+  [data-focus="on"] .app-bottom-nav,
+  [data-focus="on"] .app-header {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-today > :is([data-area="breaks"], [data-area="kinds"]),
+  .app-dial-note,
+  .app-dial-chip,
+  .app-bottom-nav,
+  .app-header {
+    transition: none;
+  }
+}
+
 /* ── The side panel ──────────────────────────────────────────────────────────
    Settings on the desk. It comes in from the edge it lives on, the way the
    screens do on the phone, and the scrim fades up with it. */

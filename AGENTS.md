@@ -184,8 +184,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the two halves of the minute track a printed ring is read against (its own
   ticks on its inner edge, and the same length again on the face under it,
   with two finer marks between each minute) — and `ringHit` /
-  `timesAt`, which read a point on the day's track back as a moment, and
-  `faceHit`, which says whether a point is on the face — the switch's edge.
+  `timesAt`, which read a point on the day's track back as a moment,
+  `faceHit`, which says whether a point is on the face — the switch's edge —
+  and the day's own mark: `DAY_MARK` and `dayMark`, the dot a moment is
+  marked with on that track and where its centre sits, with `aheadOnDial`
+  for whether a moment has a place there at all (passed, or more than a turn
+  of the dial away, and it has not).
   `handPoint` is the point at the end of a hand, which is an _angle_ rather
   than a share of the length — a hand is finished at the bevel it is
   finished at, so the broader hour hand carries the longer point and a fine
@@ -283,7 +287,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 - `src/app/Dial.tsx` — the watch face, drawn: bezel, face, minute track,
   the dial's own ring (a groove, or a chapter ring printed with the minutes),
   the day's track just inside the bezel and the day on it as the coloured
-  bands it is handed, markers, the printing and hands. The bezel is
+  bands it is handed, the marks over them — a moment the day is heading for,
+  as a dot the width of the track, outlined in the face's own ink so it reads
+  on a black dial and on a white one — markers, the printing and hands. The bezel is
   also the day's progress: clockwise from twelve, closing at the target and
   going round again in the flag colour past it — the one number the Today
   screen draws rather than prints. The printing is what a dial carries
@@ -313,7 +319,14 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   just inside the bezel: presence as the accent band and its thin outer line,
   a kind of work in its
   hue on the band with the line left the accent, a break the flag colour on
-  both. Reads `day.ts` only. The face — what `faceHit` calls the face, inside the
+  both — and, in the empty part of the track ahead of all that, one green dot
+  where the day's hours come out (`workdayEnd`, handed down from the screen
+  that prints it, so the ring and the line are one figure). It is a
+  projection rather than a record, so it stands there only while the day has
+  still to reach it and is gone the moment it is passed. Its green is the
+  theme's `positive` rather than its `success`, which in both of this app's
+  themes is the accent to the byte — and the accent on this ring already
+  means "at work". Reads `day.ts` only. The face — what `faceHit` calls the face, inside the
   dial's own ring — is the button that starts and stops the day; every press
   outside it opens the day's stretches, at the stretch under the finger when
   it lands on the day's track, and so do the break ends printed on the rim;
@@ -342,6 +355,15 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   and `useWide` for the pair of shapes that stand the day's controls beside
   the dial, which is the stylesheet's `wide:` variant read from JavaScript.
   Keep the numbers here and the numbers in `styles.css` the same.
+- `src/app/useFocus.ts` — focus mode, which is the stand's alone: the phone
+  propped up on the Today screen and left untouched, where everything but the
+  watch fades out and the first press brings it back. The hook only says
+  _when_; what goes is `[data-focus="on"]` in `styles.css`, which fades the
+  tabs, the two columns, the line under the dial and the break-end chips and
+  takes the press off the whole screen — so the press that wakes it is spent
+  on waking it, and the click it would have turned into is eaten here. A
+  watch that grew when the tabs went away would be the one thing this screen
+  is built not to do, so nothing is removed and nothing moves.
 - `src/app/SidePanel.tsx` — Settings on the desk: a panel over the
   right-hand edge of the content area, so the dial changes live as a face is
   picked. A dialog to assistive tech and to the shortcuts.
@@ -480,6 +502,7 @@ regression.
 | A change to the shape of a hand                    | `src/app/look.ts` (`DIAL_HANDS` — the widths, the bevel its sides close at, the tail) + `clock.ts` (`handPoint`, walked by `tests/clock_test.ts`) + `Dial.tsx` (paint) — the tip is an angle, never a share of the hand's length                                                       |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
 | Something only the desk does                       | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                                                                                                                                  |
+| Something the phone laid down does when left alone | `src/app/useFocus.ts` (when) + `[data-focus="on"]` in `styles.css` (what) — fade it and take the press off it, never `display: none` or a layout that moves the watch                                                                                                                  |
 | Something the desk and a phone on its side share   | Behind `useWide()`, or a `wide:` class / the paired `@media` list in `styles.css` — never `lg:` alone, which leaves a landscape phone on the layout it has no height for; the edges are `shape.ts`'s                                                                                   |
 | A change to the light behind the case              | `src/app/look.ts` (`FACE_BACKLIGHT`, the light a face is lit by, and `resolveBacklight` — walked by `tests/look_test.ts`) + `DialPicker.tsx`, which is the only screen the knobs are on; never a second backlight table                                                                |
 | A new face, marker, typeface, ring, hand or preset | Run the `add-watch-face` skill (`.agents/skills/add-watch-face/`): `src/app/look.ts` (id + spec, walked by `tests/look_test.ts`), a string in `en.ts`, `main.tsx` for a bundled `@fontsource` family, and `make shots` to look at it — named for what it looks like, never for a maker |
@@ -491,6 +514,7 @@ regression.
 | A new glyph, or a colour a kind can wear           | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                                                                                                                                                               |
 | A new control on the span editor                   | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                                                                                                                                                                 |
 | A new figure about a moment yet to come            | `src/app/day.ts` (`workdayEnd` is the only one, and it says nothing rather than guessing) — with a test at real times in `tests/day_test.ts`                                                                                                                                           |
+| A moment marked on the day's track                 | `src/app/clock.ts` (`DAY_MARK` / `dayMark`, and `aheadOnDial` — whether it has a place there at all, both walked by `tests/clock_test.ts`) + `ClockFace.tsx` (which moment, and its colour) + `Dial.tsx` (paint) — never the accent or the flag, which mean "at work" and "break" here |
 | A change to what a kind of break or work wears     | `src/app/KindModal.tsx` (the form, opened by "Custom" or by holding a pill) — the mark and the hue tables stay in `kinds.ts`                                                                                                                                                           |
 | A control that answers being held                  | `src/app/useLongPress.ts` — spread its handlers on the button; never a second timer in a screen                                                                                                                                                                                        |
 | A modal's save / cancel                            | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's                                                                                                                                                |
@@ -583,7 +607,10 @@ with `[Learn more](feature:<slug>)`.
   two tabs into the left corner and two into the right, the label beside
   the glyph, floating over the watch where there is no bar to sit above
   (`app-nav-floating`, from `bare` in `App.tsx`) and taking a row of its
-  own where there is; on the desk the same four, in the same order, are
+  own where there is — and fading out with everything else once that phone
+  has been left alone on the watch, which is focus mode rather than a drawer:
+  they are still the same four in the same corners, and the first press
+  anywhere brings them back (`useFocus.ts`); on the desk the same four, in the same order, are
   tabs on the top bar, and the bottom bar is not drawn. A phone on its
   side does not get a rail down its edge: that is the sidebar this rule
   refuses. What the corners buy is the height a bar across the foot of a
