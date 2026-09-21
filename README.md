@@ -109,9 +109,10 @@ npm run build && npm run preview
 
 ## Usage
 
-Four places to be. On a phone they are the bottom bar — swipe left or right
-to move between them, whichever way round the phone is held; on a desk (a
-window 1024px or wider) they are tabs on the top bar, Settings slides in over
+Four places to be. On a phone held upright they are the bottom bar — swipe
+left or right to move between them; laid on its side the same four go to the
+top, two in each corner, leaving the height to the watch; on a desk (a window
+1024px or wider) they are tabs on the top bar, Settings slides in over
 the right-hand edge, and the keyboard reaches the day (`S` starts or stops,
 `1`–`9` pick a kind of work, `,` opens Settings, `P` the projects; in a
 dialog, `Enter` saves and `Escape` cancels):

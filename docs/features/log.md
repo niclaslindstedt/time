@@ -58,6 +58,14 @@ row after a confirmation. The **+** in a section's corner adds a span of that
 kind after the fact; it is greyed out when the project has no kind to add one
 of yet.
 
+A span added this way ends now and starts however long it is assumed to have
+taken, because that is when it is written down: on the way back. For a break
+that is the length its kind is assumed to take — a lunch added at ten past
+one is the lunch that started at half past twelve — so switching from
+**Lunch** to **Coffee** moves the start with it, until you type a time of
+your own and the form stops guessing. An hour for everything else, which has
+no assumed length.
+
 The editor refuses an edit that would make the span invalid, or would open a
 second running span of the same kind, and says so.
 

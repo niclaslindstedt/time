@@ -140,8 +140,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   a `ctx` argument so nothing here touches chance or the clock.
 - `src/app/report.ts` — many days → the totals, the balance and the
   breakdowns: a day is summarised against the project's target for that
-  date, a range is the sum. A day that has not come yet is not a shortfall.
-  Pure and clock-free.
+  date, a range is the sum. A day that has not come yet is not a shortfall,
+  and neither is the part of today nobody has had the chance to work: a
+  summary carries both what the day was asked for (`target`, which is what
+  a chart's track is drawn at and what the share is read against) and how
+  much of that has come _due_ (`due`, which the balance is measured
+  against). They differ only on the day being worked, and only until it is
+  put away — see `summarizeDay`. Pure and clock-free.
 - `src/app/dayBars.ts` — a range laid out as a bar a day, and the one rule
   that makes it one bar rather than two: the target is the _track_, standing
   at the height the day was asked for, and the hours worked fill it from the
@@ -180,7 +185,11 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   ticks on its inner edge, and the same length again on the face under it,
   with two finer marks between each minute) — and `ringHit` /
   `timesAt`, which read a point on the day's track back as a moment, and
-  `faceHit`, which says whether a point is on the face — the switch's edge. Also how the
+  `faceHit`, which says whether a point is on the face — the switch's edge.
+  `handPoint` is the point at the end of a hand, which is an _angle_ rather
+  than a share of the length — a hand is finished at the bevel it is
+  finished at, so the broader hour hand carries the longer point and a fine
+  minute hand does not grow a spear. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
   stepper lands it with; and the **wind**, `windPlan` / `windMoment` /
   `windTurns`, the motion that sets the watch after the tab has been asleep —
@@ -461,12 +470,14 @@ regression.
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A new thing to log about a day                     | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds                                                                                                                                                  |
 | A new derived number                               | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                                                                                                                                                                      |
+| A change to what the balance counts                | `src/app/report.ts` (`summarizeDay`'s `due` — never the day's `target`, which the charts draw their track at and the share is read against), with tests at real times in `tests/report_test.ts`                                                                                        |
 | A change to what a button on Today does            | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                                                                                                                                                                            |
 | A change to how the clock draws                    | `src/app/clock.ts` (geometry, tested), `sheen.ts` (what the light does to the metal, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)                                                                                            |
 | A change to where the day sits on the dial         | `src/app/clock.ts` (`DAY_TRACK` and `FACE_R`, walked by `tests/clock_test.ts` for every dial) — never a second set of radii in `Dial.tsx`, and never back onto the dial's own ring                                                                                                     |
 | A dial option that only makes sense with another   | `src/app/clock.ts` (let the geometry decide, the way `placementOf` does) + `DialPicker.tsx` (drop the control rather than offer a choice that cannot look right) — never a preset that quietly differs from what its settings say                                                      |
 | A change to what a break counts for                | `src/app/types.ts` (`BreakCredit`) + `project.ts` (`creditSeconds` / `storedCredit`) + `day.ts` (what it counts for) + the validation in `migrations.ts` + `BreakCreditField.tsx` — one control for both forms, never a second table                                                   |
 | A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there; anything else on the dial that has to move with them is cut at `windMoment` and written from that loop too                                              |
+| A change to the shape of a hand                    | `src/app/look.ts` (`DIAL_HANDS` — the widths, the bevel its sides close at, the tail) + `clock.ts` (`handPoint`, walked by `tests/clock_test.ts`) + `Dial.tsx` (paint) — the tip is an angle, never a share of the hand's length                                                       |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
 | Something only the desk does                       | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                                                                                                                                  |
 | Something the desk and a phone on its side share   | Behind `useWide()`, or a `wide:` class / the paired `@media` list in `styles.css` — never `lg:` alone, which leaves a landscape phone on the layout it has no height for; the edges are `shape.ts`'s                                                                                   |
@@ -566,13 +577,18 @@ with `[Learn more](feature:<slug>)`.
   not a colour at all: `STEEL` is one metal for all eight faces, and what a
   marker or a hand looks like is `sheen.ts`'s reckoning of the light on it. A dial option that tinted
   a button or a card would be the palette gallery this rule exists to refuse.
-- **Four destinations, no sidebar, no drawer.** On the phone they are the
-  bottom bar, in a fixed left-to-right order a swipe moves along — laid down
-  as well as upright, where the bar only gets shorter and puts each label
-  beside its glyph; on the desk the same four, in the same order, are tabs on
-  the top bar, and the bottom bar is not drawn. A phone on its side does not
-  get a rail down its edge: that is the sidebar this rule refuses, and the
-  thumb is where it always was. Things you do and then leave belong on the top bar, which
+- **Four destinations, no sidebar, no drawer.** On the phone held upright
+  they are the bottom bar, in a fixed left-to-right order a swipe moves
+  along; laid down the same four, in the same order, go to the _top_ —
+  two tabs into the left corner and two into the right, the label beside
+  the glyph, floating over the watch where there is no bar to sit above
+  (`app-nav-floating`, from `bare` in `App.tsx`) and taking a row of its
+  own where there is; on the desk the same four, in the same order, are
+  tabs on the top bar, and the bottom bar is not drawn. A phone on its
+  side does not get a rail down its edge: that is the sidebar this rule
+  refuses. What the corners buy is the height a bar across the foot of a
+  393px window was taking off the dial — the middle of that strip is empty,
+  and the middle is where the watch stands. Things you do and then leave belong on the top bar, which
   is where Settings went — a screen on the phone, a side panel on the desk.
   Over Today the watch carries the name and the cog itself, the way a dial
   carries its maker and its date, and the bar goes without them; on the
@@ -588,6 +604,14 @@ with `[Learn more](feature:<slug>)`.
 - **No timer.** The day's progress is the bezel and the state is the light
   and the one line under the dial. A figure ticking up is the thing this
   screen was rid of.
+- **The watch is centred, and it does not move.** Where the dial is sized by
+  the height its row has left over — the desk and the stand — the words under
+  it keep their room whether there are two lines of them or one
+  (`.app-dial-note`), and the same room is left empty above the dial
+  (`--dial-gap` and the reserve on the dial's column, `styles.css`). A line
+  that comes and goes there is a watch that changes size when the day starts,
+  and a caption reserved on one side only is a watch half a caption above the
+  middle of the window.
 - **A category's colour is one table.** `labels.ts` maps a kind of work to a
   hue — the one the project picked, or the one its position in the list gives
   it — and the clock's inner ring, the category chips, the Log's rows, the

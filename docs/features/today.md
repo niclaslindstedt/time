@@ -72,7 +72,8 @@ The main screen, and the whole app for most of a day.
   corrected on the clock — and the button turns into **End lunch** for as long
   as you are on it. A row of chips, one per kind of work, each wearing its own mark in
   its own colour; tapping one says that is what you are doing from now, tapping
-  it again stops labelling. Both rows end in **Custom**. Breaks and chips take
+  it again stops labelling. Both rows end in a dashed **+**, which is Custom.
+  Breaks and chips take
   no tap until you have started working, and say so by going pale — but they
   still answer a hold, because what a kind looks like has nothing to do with
   being clocked in.
@@ -141,7 +142,11 @@ of the day, not a stopwatch.
 
 ## Custom
 
-The last pill in each row is **Custom**. It names a kind of break (with the
+The last pill in each row is a dashed **+** — Custom, which is the name it
+carries as a tooltip rather than beside the mark. Spelled out it was as wide
+as a break, and on a phone that was a whole row of the screen spent on the
+least-used control in it; as a square it sits at the end of the breaks with
+room to spare. It names a kind of break (with the
 minutes one is assumed to take) or a kind of work, gives it a mark from that
 kind's own vocabulary — the day's pauses for a break, work's for a kind of
 work, and the neutral marks to either — and a
@@ -191,10 +196,17 @@ past on a screen they only meant to glance at.
 So from there the app lays the Today screen out the way the desk does — the
 dial in the middle, sized by the height there is, breaks down the left and
 kinds of work down the right, the state of the day in a line under the watch.
-Everything else stays the phone's: the four places are still the bottom bar,
-a swipe still moves along it, Settings is still a screen. The bar only gets
-shorter, each label moving beside its glyph, and both bars keep clear of the
-notch, which sideways is down one edge of the screen.
+Everything else stays the phone's: the same four places, the same order, a
+swipe still moving along them, Settings still a screen. What changes is where
+they sit. The bar goes to the top and splits — Today and Log into the left
+corner, Report and Projects into the right, each label beside its glyph — and
+over the watch, where there is no bar above it, the four float rather than
+taking a row: the middle of that strip is empty, which is where the dial
+stands, so the watch is centred on the whole window instead of on what a bar
+across the foot of the screen left over. The thumb has further to go than it
+does upright; a phone propped against something is not being held by the
+thumb. Both bars keep clear of the notch, which sideways is down one edge of
+the screen.
 
 It is meant to be left like that — propped against something on the desk, a
 clock that is also the day's record, with every break and every kind of work

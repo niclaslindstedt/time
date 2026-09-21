@@ -385,7 +385,7 @@ export function App() {
         )}
       </div>
 
-      {!desk && <BottomNav active={tab} onSelect={show} />}
+      {!desk && <BottomNav active={tab} onSelect={show} bare={bare} />}
 
       <SyncDetailsModal
         open={syncDetailsOpen}

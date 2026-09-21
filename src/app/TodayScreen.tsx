@@ -64,12 +64,16 @@ import { useShortcuts } from "./useShortcuts.ts";
 //
 // Three corrections live here rather than on the Log, because they are the
 // three noticed here: the line under the dial opens the arrival, a stretch
-// on the ring opens the day stretch by stretch, and "Custom" invents the kind
-// of break or work that nobody thought to set up in advance. None of them
-// leave this screen.
+// on the ring opens the day stretch by stretch, and the square marked "+" at
+// the end of each row invents the kind of break or work that nobody thought
+// to set up in advance. None of them leave this screen. On a phone the
+// square carries its name in a tooltip rather than beside the mark: spelled
+// out it was as wide as a break, and that pushed it onto a row of its own.
+// Where the controls stand in a column beside the dial the row is the
+// column's width and there is nothing to save, so it spells it.
 //
 // A pill held rather than tapped is the fourth: it opens the kind itself, in
-// the same form "Custom" fills in, so the mark a kind wears and the hue a
+// the same form the "+" fills in, so the mark a kind wears and the hue a
 // kind of work is drawn in are changed where they are worn rather than in
 // the project form. Under a mouse the right button does it. A pill answers a
 // hold whether or not the day has started — a kind's look has nothing to do
@@ -423,42 +427,55 @@ export function TodayScreen({
             settingsOpen={settingsOpen}
           />
         </div>
-        <button
-          type="button"
-          disabled={!session}
-          onClick={() => setArriving(true)}
-          title={session ? t("today.arrival") : undefined}
-          className={`rounded-md px-2 py-1 text-xs font-bold tracking-wide uppercase transition-colors enabled:hover:bg-surface-2 disabled:cursor-default ${
-            onBreak
-              ? "text-flag"
-              : state === "working"
-                ? "text-accent"
-                : "text-muted"
-          }`}
-        >
-          {stateLine}
-          {/* And when the day is done. A mark and a time rather than a
+        {/* The words under the dial, in a block of their own with the room
+            for both of them held whatever is on: the hint is a line on the
+            screen before the first press and nothing at all after it, and
+            where the dial is sized by the height left over — the desk and
+            the stand — a sibling that comes and goes is a watch that changes
+            size when the day starts. */}
+        <div className="app-dial-note flex flex-col items-center gap-2">
+          <button
+            type="button"
+            disabled={!session}
+            onClick={() => setArriving(true)}
+            title={session ? t("today.arrival") : undefined}
+            className={`rounded-md px-2 py-1 text-xs font-bold tracking-wide uppercase transition-colors enabled:hover:bg-surface-2 disabled:cursor-default ${
+              onBreak
+                ? "text-flag"
+                : state === "working"
+                  ? "text-accent"
+                  : "text-muted"
+            }`}
+          >
+            {stateLine}
+            {/* And when the day is done. A mark and a time rather than a
               sentence: the line is read at a glance, and a door with an
               arrow out of it is the same mark the menu puts on stopping
               work. The sentence is there for a screen reader and for
-              whoever rests on it. */}
-          {endsAt !== null && endsLabel !== null && (
-            <span className="ml-1.5 whitespace-nowrap" title={endsLabel}>
-              {"· "}
-              <LeaveIcon className="inline-block h-3.5 w-3.5 align-[-0.15em]" />{" "}
-              <span className="tabular-nums">{formatTimeOfDay(endsAt)}</span>
-              <span className="sr-only">{` (${endsLabel})`}</span>
+              whoever rests on it.
+
+              No separator before the mark. The dots on this line divide
+              words from words — the state from since when — and a glyph is
+              already a break in the reading; a dot in front of it made
+              three marks in a row and a gap wide enough to read as two
+              spaces. The space is the margin, once. */}
+            {endsAt !== null && endsLabel !== null && (
+              <span className="ml-2 whitespace-nowrap" title={endsLabel}>
+                <LeaveIcon className="inline-block h-3.5 w-3.5 align-[-0.15em]" />{" "}
+                <span className="tabular-nums">{formatTimeOfDay(endsAt)}</span>
+                <span className="sr-only">{` (${endsLabel})`}</span>
+              </span>
+            )}
+            <span className="sr-only">
+              {" · "}
+              {t("today.percentOfTarget", { percent: formatPercent(fraction) })}
             </span>
+          </button>
+          {/* The first press of the day is the one nobody has been told about. */}
+          {state === "out" && totals.lastOut === null && (
+            <p className="text-xs text-muted">{t("today.outHint")}</p>
           )}
-          <span className="sr-only">
-            {" · "}
-            {t("today.percentOfTarget", { percent: formatPercent(fraction) })}
-          </span>
-        </button>
-        {/* The first press of the day is the one nobody has been told about. */}
-        {state === "out" && totals.lastOut === null && (
-          <p className="text-xs text-muted">{t("today.outHint")}</p>
-        )}
+        </div>
       </div>
 
       {/* The legend names the colours on the day's track, and only those. A
@@ -497,7 +514,13 @@ export function TodayScreen({
         <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
           {t("today.breaks")}
         </h2>
-        <div className="grid grid-cols-2 gap-2 wide:grid-cols-1">
+        {/* The breaks and the one square that invents another, on the same
+            row: a grid of equal columns put "Custom" on a line of its own
+            below two breaks, which is a whole row of a phone's screen spent
+            on the least-used control there is. So the breaks share what is
+            left after the square, wrapping when a project has more of them
+            than the row holds. */}
+        <div className="flex flex-wrap gap-2 wide:flex-col wide:flex-nowrap">
           {project.breakTypes.map((b) => {
             const running = current?.typeId === b.id;
             return (
@@ -518,7 +541,7 @@ export function TodayScreen({
                         minutes: String(b.defaultMinutes),
                       })
                 } · ${t("today.holdToEdit")}`}
-                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors wide:justify-start ${
+                className={`flex min-h-12 grow basis-32 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors wide:basis-auto wide:justify-start ${
                   out ? "opacity-40" : ""
                 } ${
                   running
@@ -545,10 +568,14 @@ export function TodayScreen({
             type="button"
             disabled={state === "out"}
             onClick={() => setAsking({ kind: "break", id: null })}
-            className="flex min-h-12 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent px-3 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:justify-start"
+            aria-label={t("today.custom")}
+            title={t("today.custom")}
+            className="flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:w-auto wide:justify-start wide:px-3"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
-            <span className="truncate">{t("today.custom")}</span>
+            <span className="hidden truncate wide:inline">
+              {t("today.custom")}
+            </span>
           </button>
         </div>
       </section>
@@ -578,7 +605,7 @@ export function TodayScreen({
                   hold: () => setAsking({ kind: "activity", id: c.id }),
                 })}
                 title={`${c.name}${key ? ` (${key})` : ""} · ${t("today.holdToEdit")}`}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors wide:min-h-12 wide:rounded-xl wide:font-semibold ${
+                className={`inline-flex min-h-12 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors wide:rounded-xl wide:font-semibold ${
                   out ? "opacity-40" : ""
                 } ${categoryTone(on)}`}
               >
@@ -610,10 +637,14 @@ export function TodayScreen({
             type="button"
             disabled={state === "out"}
             onClick={() => setAsking({ kind: "activity", id: null })}
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-line px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:min-h-12 wide:rounded-xl wide:font-semibold"
+            aria-label={t("today.custom")}
+            title={t("today.custom")}
+            className="inline-flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-full border border-dashed border-line text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:w-auto wide:justify-start wide:rounded-xl wide:px-3 wide:font-semibold"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
-            {t("today.custom")}
+            <span className="hidden truncate wide:inline">
+              {t("today.custom")}
+            </span>
           </button>
         </div>
         {onBreak && (

@@ -25,8 +25,16 @@ made of underneath.
   the green of time in hand, against the range's own target, so a week half a
   day behind is a ring a sixteenth red. The middle prints the balance. Under
   it:
-  - **Balance** — worked minus target for the range.
+  - **Balance** — worked against what the range has _come due_ for.
   - **Overall** — the same, from the first day ever logged to today.
+
+  The day you are standing in is where due parts company with target. Today
+  asks for its whole day — that is what the share is read against — but it
+  does not _owe_ it until you have had the chance to work it, so the balance
+  counts only the hours behind you. Nobody is eight hours behind at nine in
+  the morning. The moment you clock out for the day, the whole of it comes
+  due and a day stopped short says so; a break does not, and neither does
+  stepping out and clocking back in.
 
 ## The charts
 

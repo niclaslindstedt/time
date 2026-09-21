@@ -231,6 +231,33 @@ export const HANDS = {
   cap: 3,
 } as const;
 
+/**
+ * How long the point at the end of a hand is: the run from the shoulder,
+ * where the sides stop running straight, out to the flat the two bevels end
+ * on. `width` is the hand's own width and `set` says what it is finished
+ * like — `base` and `tip` as shares of that width, and `bevel` as the angle
+ * the sides close at, off the hand's axis (see `DIAL_HANDS` in `look.ts`).
+ *
+ * The angle is the thing that is fixed, not the length: a hand is finished
+ * at the bevel it is finished at, and the broader the hand the further back
+ * the shoulder has to sit to close at it. So the hour hand carries a longer
+ * point than the minute hand without either of them being told to, and a
+ * hand drawn three times as fine does not grow a needle three times as long.
+ *
+ * Zero for a set with no point at all, and never more than the hand has left
+ * to give: the point is capped at `length`, so nothing can put a shoulder
+ * behind the axle however wide the hand or however shallow the bevel.
+ */
+export function handPoint(
+  set: { base: number; tip: number; bevel: number },
+  width: number,
+  length: number,
+): number {
+  if (set.bevel <= 0) return 0;
+  const drop = (width * (set.base - set.tip)) / 2;
+  return Math.min(length, drop / Math.tan((set.bevel * Math.PI) / 180));
+}
+
 export type DialLayout = {
   /** The dial's ring: the band's centre line, its inner and outer edges, and
    *  the thin line's centre. The day is not drawn here any more — that is

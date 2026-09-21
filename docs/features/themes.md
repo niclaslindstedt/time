@@ -139,9 +139,13 @@ is lit by the light its face comes with.
   hand is steel on every wrist watch there is. **Bars** are the same width
   from the cap to the tip, a half-round bar with the light landing along it.
   **Tapered** are the hands of a dress watch: sides dead straight for the
-  bulk of their length and then closing on a point over the last of it — not
+  bulk of their length and then closing on the small flat they end on — not
   a wedge that narrows the whole way, which is the shape a drawn watch
-  usually gets instead — with a ridge down each that takes the light on one
+  usually gets instead. What is fixed is the angle the sides close at, off a
+  photograph of the watch they are drawn after, rather than a share of the
+  hand's length: a hand is finished at the bevel it is finished at, so the
+  broader hour hand carries the longer point of the two and neither ends on
+  a needle. Each has a ridge down it that takes the light on one
   side and lies in shade on the other, so a hand keeps catching and losing
   the light as it sweeps. The two sets part again past the axle: a bar's
   second hand balances itself with the disc of a sports hand on a stub of the

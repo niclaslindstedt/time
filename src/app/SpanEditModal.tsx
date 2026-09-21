@@ -14,6 +14,7 @@ import { isValidSpan, type SpanKind } from "./actions.ts";
 import { parseTimeOfDay, toTimeInput } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
+import { breakTypeOf } from "./project.ts";
 import type { Project, Seconds } from "./types.ts";
 
 // The one editor behind every row in the Log: a kind (for a break or an
@@ -46,6 +47,22 @@ type Props = {
   onClose: () => void;
 };
 
+/** How long a new span is assumed to have taken, which is what puts its
+ *  start where it does. A break has a length of its own — the project says
+ *  how long one is assumed to take, and the Today screen already takes one
+ *  that long — and a break is written down here on the way back from it, so
+ *  a lunch added at ten past one is the lunch that started at half past
+ *  twelve. Nothing else on the day has an assumed length, and an hour is
+ *  what a stretch of work or a session gets. */
+function assumed(
+  kind: SpanKind,
+  project: Project,
+  typeId: string | null | undefined,
+): Seconds {
+  const type = kind === "break" && typeId ? breakTypeOf(project, typeId) : null;
+  return type ? type.defaultMinutes * 60 : 3600;
+}
+
 export function SpanEditModal({
   kind,
   project,
@@ -67,12 +84,17 @@ export function SpanEditModal({
       initial ?? {
         id: null,
         typeId: options[0]?.value ?? null,
-        // A new span defaults to the last hour: most retroactive entries are
-        // the break that just ended.
-        start: Math.max(0, now - 3600),
+        // A new span ends now and starts however long it is assumed to have
+        // taken: most retroactive entries are the break that just ended.
+        start: Math.max(0, now - assumed(kind, project, options[0]?.value)),
         end: now,
       },
   );
+  /** Whether the times are still the ones the form put there. While they
+   *  are, picking a different kind of break moves the start to that break's
+   *  own length — the whole point of seeding it. Once a time has been typed
+   *  it is the user's, and nothing moves it. */
+  const [seeded, setSeeded] = useState(initial === null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const running = draft.end === null;
@@ -112,7 +134,20 @@ export function SpanEditModal({
               <SegmentedControl
                 value={draft.typeId ?? ""}
                 options={options}
-                onChange={(typeId) => setDraft((d) => ({ ...d, typeId }))}
+                onChange={(typeId) =>
+                  setDraft((d) =>
+                    seeded
+                      ? {
+                          ...d,
+                          typeId,
+                          start: Math.max(
+                            0,
+                            (d.end ?? now) - assumed(kind, project, typeId),
+                          ),
+                        }
+                      : { ...d, typeId },
+                  )
+                }
                 ariaLabel={
                   kind === "break" ? t("editor.type") : t("editor.category")
                 }
@@ -133,7 +168,9 @@ export function SpanEditModal({
               value={toTimeInput(draft.start)}
               onCommit={(text) => {
                 const s = parseTimeOfDay(text);
-                if (s !== null) setDraft((d) => ({ ...d, start: s }));
+                if (s === null) return;
+                setSeeded(false);
+                setDraft((d) => ({ ...d, start: s }));
               }}
             />
             <LabeledInput
@@ -145,6 +182,7 @@ export function SpanEditModal({
               onCommit={(text) => {
                 const s = parseTimeOfDay(text);
                 if (s === null) return;
+                setSeeded(false);
                 // An end typed before the start on the clock is the next
                 // day's — a night shift, or a lunch that ran past midnight.
                 setDraft((d) => ({
@@ -157,12 +195,13 @@ export function SpanEditModal({
           <ToggleRow
             label={t("editor.running")}
             checked={running}
-            onChange={(next) =>
+            onChange={(next) => {
+              setSeeded(false);
               setDraft((d) => ({
                 ...d,
                 end: next ? null : Math.max(d.start + 60, now),
-              }))
-            }
+              }));
+            }}
           />
           {!valid && (
             <p className="text-xs text-danger">{t("editor.invalid")}</p>

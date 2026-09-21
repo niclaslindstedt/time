@@ -164,21 +164,25 @@ describe("the dial's vocabulary", () => {
     // A stub past the axle, which the cap covers.
     expect(bar.boss).toBeGreaterThan(0);
 
-    // A bar is a bar the whole way: no point on the end of it.
-    expect(bar.point).toBe(0);
+    // A bar is a bar the whole way: no bevel on the end of it.
+    expect(bar.bevel).toBe(0);
 
     const tapered = DIAL_HANDS.tapered;
     expect(tapered.taper).toBe(true);
     // Straight sides a little broader than the width it is given, carried
-    // the whole way, and then a point over the last of its length rather
+    // the whole way, and then a point closing at the set's own bevel rather
     // than a wedge that narrows from the cap.
     expect(tapered.base).toBeGreaterThan(1);
-    expect(tapered.tip).toBeLessThan(0.2);
     expect(tapered.tip).toBeLessThan(tapered.base);
-    expect(tapered.point).toBeGreaterThan(0);
-    // A point, not most of the hand: the sides are straight for the bulk of
-    // it, which is what tells this shape from a wedge.
-    expect(tapered.point).toBeLessThan(0.25);
+    // The tip is a flat rather than nothing, which is the difference between
+    // a hand and a needle.
+    expect(tapered.tip).toBeGreaterThan(0.1);
+    // And the sides close steeply enough to read as an angled tip rather
+    // than a spear: the angle is off the hand's axis, so the bigger it is
+    // the blunter the hand. `handPoint` in `clock.ts` is what turns it into
+    // a length.
+    expect(tapered.bevel).toBeGreaterThan(15);
+    expect(tapered.bevel).toBeLessThan(45);
     // Nothing past the axle: the widest point is the hub, and a tail past it
     // would flare out from under the cap.
     expect(tapered.boss).toBe(0);
