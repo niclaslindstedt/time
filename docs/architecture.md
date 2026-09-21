@@ -24,10 +24,20 @@ src/app/
   report.ts         many days → totals, balance, breakdowns        (pure, clock-free)
   monthChart.ts     a month → week rows of day boxes, and their colour (pure, clock-free)
   dayBars.ts        a range → a bar a day: the target's track and the hours in it (pure, clock-free)
+  spec.ts           a range → the specification an invoice is sent with: billed days, decimal hours (pure, clock-free)
+  specStyle.ts      how a specification looks: typefaces, headings, colours, tables, the six styles
+  specLayout.ts     a specification + a style → pages of type and rules      (pure, clock-free)
+  specExport.ts     the file's name, the download, and the print
+  pdf/              the two renderers over those pages
+    metrics.ts        base-14 widths and the WinAnsi encoding             (pure)
+    page.ts           a page as text, rectangles and rules                (pure)
+    write.ts          those pages → the bytes of a PDF                    (pure)
+    svg.ts            the same pages → SVG attributes, for preview and print
   project.ts       the template, working days, the day's target, what a break counts for (pure)
   kinds.ts          the marks a kind wears, and a kind of work's hues (pure)
   clock.ts          the dial's layout, hands, arcs, the frame's path, the wind  (pure)
   look.ts           the theme, and the dial's faces, fonts, markers, rings, presets
+  edition.ts        which build this is — the free web one, or the App Store's
   format.ts         durations, timers, times of day
   labels.ts         domain value → label and colour
   merge.ts          two documents → one                            (pure)
@@ -52,6 +62,8 @@ src/app/
   MonthCalendar.tsx the month's rows and boxes, scaled into the plot
   DayBars.tsx       the range's day bars, scaled into the plot
   RangeGlance.tsx   the Report's header: the range's share of its target, and its balance
+  SpecExportModal.tsx  the export form: the six style cards, the pieces, the details, the preview
+  SpecPages.tsx     a specification's pages as SVG — the preview, and what the printer gets
   DayGlance.tsx     the Log's header: the day on a dial, and its worked / break ring
   KindPicker.tsx    a kind's mark, and a kind of work's colour
   ModalHeader.tsx   a dialog's top bar: cancel, the title, save — and Enter / Escape

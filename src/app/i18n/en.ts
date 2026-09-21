@@ -249,6 +249,180 @@ export const en = {
     breaksDesc: "Break time by kind over the range.",
     empty: "No time logged in this range yet.",
     total: "Total",
+    rangeMenu: "What else to do with this range",
+    exportPdf: "Export to PDF",
+  },
+
+  // The specification: the range as a document to send to whoever is paying
+  // for the hours. Two sorts of string live here — the labels on the export
+  // form, and the words printed on the document itself. The second sort is
+  // read by somebody who has never seen the app, so it says what it means in
+  // full: "Prepared by" rather than "From", "Kind of work" rather than
+  // "Kind".
+  spec: {
+    title: "Export to PDF",
+    intro:
+      "A specification of the hours in this range, to send with an invoice or file against a contract.",
+    style: "Style",
+    styleCustom: "Custom",
+    // The six the app ships. Named for what the document looks like, the way
+    // the dial's presets are — never for a firm that makes documents look
+    // that way.
+    preset: {
+      ledger: "Ledger",
+      ledgerHint: "Serif, centred, every row ruled.",
+      studio: "Studio",
+      studioHint: "A band of colour and a zebra under the figures.",
+      editorial: "Editorial",
+      editorialHint: "Serif headings, sans body, air between everything.",
+      plain: "Plain",
+      plainHint: "Nothing but the hours, in decimals.",
+      technical: "Technical",
+      technicalHint: "Every stretch of every day, monospaced and boxed.",
+      executive: "Executive",
+      executiveHint: "The totals only, set large, and a line to sign on.",
+    },
+    // The pieces Custom takes apart.
+    typeface: "Typeface",
+    typefaceOption: {
+      sans: "Sans",
+      roman: "Roman",
+      editorial: "Editorial",
+      technical: "Technical",
+      typewriter: "Typewriter",
+    },
+    header: "Heading",
+    headerOption: {
+      rule: "Rule",
+      band: "Band",
+      sidebar: "Side bar",
+      centred: "Centred",
+      plain: "Plain",
+    },
+    accent: "Colour",
+    accentOption: {
+      ink: "Ink",
+      navy: "Navy",
+      slate: "Slate",
+      teal: "Teal",
+      burgundy: "Burgundy",
+      forest: "Forest",
+      copper: "Copper",
+      plum: "Plum",
+    },
+    table: "Table",
+    tableOption: {
+      ruled: "Ruled",
+      zebra: "Zebra",
+      open: "Open",
+      boxed: "Boxed",
+    },
+    density: "Density",
+    densityOption: {
+      compact: "Compact",
+      normal: "Normal",
+      roomy: "Roomy",
+    },
+    paper: "Paper",
+    paperOption: {
+      a4: "A4",
+      letter: "Letter",
+    },
+    figures: "Figures",
+    figuresOption: {
+      hm: "Hours and minutes",
+      decimal: "Decimal hours",
+      both: "Both",
+    },
+    // How finely the hours are told — the one choice that decides how long
+    // the document is.
+    detail: "Detail",
+    detailOption: {
+      period: "The period's totals",
+      day: "A row per day",
+      entries: "Every stretch of every day",
+    },
+    detailHint:
+      "The same hours either way: the totals for the range, a line per day, or each spell of work and each break with the times they ran between.",
+    sections: "What else it contains",
+    section: {
+      summary: "The totals at the top",
+      categories: "Hours by kind of work",
+      breaks: "Break time",
+      balance: "Target and balance",
+      signature: "A line to sign on",
+    },
+    balanceHint:
+      "Target and balance are your own figures rather than the client's — they say how the hours stand against your contract, not what was worked.",
+    // Rounding is not part of a style: a document that billed different
+    // hours depending on the typeface it was set in would be a document
+    // nobody could trust.
+    rounding: "Rounding",
+    roundingNone: "None",
+    roundingMinutes: "Up to the next {minutes} min",
+    roundingHour: "Up to the next hour",
+    roundingHint:
+      "Each day's hours, rounded up. A day of 5h 17m is billed as 5h 30m at a quarter of an hour. The range is the sum of its rounded days, never the range rounded once.",
+    blanks: "List days nobody worked",
+    blanksHint:
+      "A working day with nothing logged appears as the empty row it was.",
+    footer: "Footer and page numbers",
+    // The details typed into the form and printed on the document. Kept per
+    // device rather than in the document: who you are does not belong to a
+    // project, and the next export starts where the last one left off.
+    details: "Details",
+    detailsHint: "Left empty, a line is simply not printed.",
+    saveCustom: "Save these as my custom style",
+    savedCustom: "Saved as Custom.",
+    preview: "Preview",
+    previewPages: "{count} pages",
+    previewPage: "1 page",
+    download: "Download PDF",
+    print: "Print",
+    printing: "The print dialog is open.",
+    failed: "The specification could not be written.",
+    empty: "There are no hours in this range to specify.",
+    // ── The words on the document itself ──
+    doc: {
+      title: "Time specification",
+      project: "Project",
+      period: "Period",
+      issued: "Issued",
+      preparedBy: "Prepared by",
+      client: "Client",
+      reference: "Reference",
+      note: "Note",
+      summary: "Summary",
+      hours: "Hours",
+      days: "Days",
+      target: "Target",
+      balance: "Balance",
+      categories: "Hours by kind of work",
+      breaks: "Breaks",
+      daily: "Day by day",
+      date: "Date",
+      start: "Start",
+      end: "End",
+      breakColumn: "Break",
+      decimal: "Decimal",
+      share: "Share",
+      kind: "Kind",
+      total: "Total",
+      running: "Running",
+      signature: "Signature",
+      signedDate: "Date",
+      rounding: "Rounding",
+      roundedNote: "Each day is billed up to the next {minutes} minutes.",
+      roundedNoteHour: "Each day is billed up to the next whole hour.",
+      page: "Page {page} of {pages}",
+      generated: "Made with Time",
+    },
+    // The free edition's notice. It is an advertisement on somebody else's
+    // document, so it says plainly what it is and how to be rid of it.
+    notice: {
+      title: "Made with Time",
+      body: "This specification was exported with the free web edition of Time. Buy Time on the App Store to export without this notice.",
+    },
   },
 
   projects: {

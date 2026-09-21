@@ -129,3 +129,16 @@ export function formatWeekday(day: DayKey): string {
 export function formatMonth(year: number, month: number): string {
   return formatMonthLabel(year, month);
 }
+
+/** "7.53" — a length of time as decimal hours to the hundredth, which is what
+ *  an invoice line is a rate times. Always two places, so a column of them
+ *  ranges right on the point. */
+export function formatDecimalHours(seconds: Seconds): string {
+  return (Math.max(0, seconds) / 3600).toFixed(2);
+}
+
+/** The same, for an amount already reduced to hours — the rounded figures a
+ *  specification's column adds up (see `spec.ts`). */
+export function formatHoursValue(hours: number): string {
+  return (Number.isFinite(hours) ? hours : 0).toFixed(2);
+}

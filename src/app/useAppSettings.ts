@@ -4,6 +4,14 @@ import { useCallback } from "react";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 import type { WeekStart } from "@niclaslindstedt/oss-framework/calendar";
 
+import { DEFAULT_ROUNDING, clampRounding, type SpecRounding } from "./spec.ts";
+import {
+  DEFAULT_SPEC_PRESET,
+  SPEC_PRESET,
+  clampSpecStyle,
+  type SpecPreset,
+  type SpecStyle,
+} from "./specStyle.ts";
 import {
   CLOCK_SIZE,
   DEFAULT_BACKLIGHT,
@@ -58,6 +66,21 @@ export type AppSettings = {
    *  what asks for it (`useTilt.ts`). Per device, like the size and the
    *  light behind the case. */
   reflect: boolean;
+  /** Which style an exported specification is set in: one of the six, or
+   *  the custom one below, piece by piece. Both are kept, the way the dial's
+   *  preset and custom dial are, so going back to Custom finds it as it was
+   *  left (see `specStyle.ts`). */
+  specPreset: SpecPreset | "custom";
+  spec: SpecStyle;
+  /** What the export form last had in it: who the specification is from, who
+   *  it is for, and what it refers to. Per device and never in the document —
+   *  your own name is not a fact about a project, and the next export starts
+   *  where the last one left off rather than from an empty form. */
+  specDetails: SpecDetails;
+  /** The minutes an exported day is billed up to. Not part of the style: a
+   *  document that billed different hours depending on which typeface it was
+   *  set in would be the one thing a specification may not do. */
+  specRounding: SpecRounding;
   /** The project the Today, Log and Report screens show. Null until one is
    *  chosen; `App` falls back to the first project by name. */
   activeProjectId: string | null;
@@ -67,6 +90,27 @@ export type AppSettings = {
   captureLogs: boolean;
 };
 
+/** The lines of the specification's details block, as the form last left
+ *  them. An empty string is a line the document does not print at all. */
+export type SpecDetails = {
+  preparedBy: string;
+  client: string;
+  reference: string;
+  note: string;
+};
+
+export const DEFAULT_SPEC_DETAILS: SpecDetails = {
+  preparedBy: "",
+  client: "",
+  reference: "",
+  note: "",
+};
+
+/** How much of a typed detail is kept. Long enough for a company name and a
+ *  sentence of terms, short enough that a document cannot be made of one. */
+const DETAIL_MAX = 200;
+const NOTE_MAX = 500;
+
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   weekStartsOn: 1,
@@ -75,6 +119,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   clockSize: "large",
   backlight: DEFAULT_BACKLIGHT,
   reflect: false,
+  specPreset: DEFAULT_SPEC_PRESET,
+  spec: SPEC_PRESET[DEFAULT_SPEC_PRESET],
+  specDetails: DEFAULT_SPEC_DETAILS,
+  specRounding: DEFAULT_ROUNDING,
   activeProjectId: null,
   devMode: false,
   captureLogs: false,
@@ -127,6 +175,23 @@ function parseDial(value: unknown): DialConfig {
   };
 }
 
+/** A stored detail line: a string, trimmed of nothing but its length. */
+function line(value: unknown, max: number): string {
+  return typeof value === "string" ? value.slice(0, max) : "";
+}
+
+function parseDetails(value: unknown): SpecDetails {
+  const raw = (
+    typeof value === "object" && value !== null ? value : {}
+  ) as Partial<Record<keyof SpecDetails, unknown>>;
+  return {
+    preparedBy: line(raw.preparedBy, DETAIL_MAX),
+    client: line(raw.client, DETAIL_MAX),
+    reference: line(raw.reference, DETAIL_MAX),
+    note: line(raw.note, NOTE_MAX),
+  };
+}
+
 /** Stored bytes → settings, every field clamped. Exported for the tests;
  *  the app reads it through `useAppSettings`. */
 export function parseSettings(raw: string): AppSettings {
@@ -163,6 +228,13 @@ export function parseSettings(raw: string): AppSettings {
     // A device that stored its settings before the light could be moved has
     // it off, which is what every device starts with anyway.
     reflect: merged.reflect === true,
+    specPreset:
+      merged.specPreset === "custom"
+        ? "custom"
+        : oneOf(SPEC_PRESET, merged.specPreset, DEFAULT_SPEC_PRESET),
+    spec: clampSpecStyle(merged.spec),
+    specDetails: parseDetails(merged.specDetails),
+    specRounding: clampRounding(merged.specRounding),
     activeProjectId,
     devMode: merged.devMode === true,
     captureLogs: merged.captureLogs === true,

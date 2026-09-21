@@ -251,7 +251,8 @@ export function App() {
     <ReportScreen
       data={store.data}
       project={project}
-      weekStartsOn={settings.weekStartsOn}
+      settings={settings}
+      update={update}
     />
   );
   const projectsScreen = (

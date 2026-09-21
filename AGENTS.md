@@ -245,6 +245,50 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   `formatWallTime` wraps into the day ("01:14"), because a moment being
   _pointed at_ rather than recorded — `workdayEnd` is the only one — is read
   off a clock, and whoever prints one says which day it falls on.
+- `src/app/spec.ts` — the **specification**: a range read as the document an
+  invoice is sent with. A reading of `report.ts` and `daySegments` and never a
+  second fold of the days, so a specification can never say seven and a half
+  hours about a day the app says seven of. What it adds is the shape an invoice
+  wants: decimal hours to the hundredth, a total that is the sum of the
+  _rounded_ rows so the column adds up under a calculator, the day's stretches
+  for the itemised version, and `roundUpTo` — the billing convention that a
+  quarter of an hour begun is a quarter billed, applied to the **day** and
+  never to the range, with what it added carried as a line of its own so the
+  breakdown still totals the hours billed. Pure and clock-free.
+- `src/app/specStyle.ts` — how a specification _looks_: five typefaces (four
+  roles each), five headings, eight accents, four tables, three densities, two
+  papers, and the six styles they combine into — id and spec, the way
+  `look.ts` holds the dial's. The colours are fixed hex rather than theme
+  tokens, which is the one place besides the watch face where that is right: a
+  printed document has a colour of its own, and it is going to be opened by
+  somebody who has never seen the app. Rounding is deliberately **not** in
+  here — a document that billed different hours depending on the typeface it
+  was set in is the one thing a specification may not do.
+- `src/app/specLayout.ts` — the whole design of the document: blocks that ask
+  the sheet for room and flow onto a new page when there is not enough, a
+  table that reprints its head on every page it runs onto, and the free
+  edition's notice on every page of a build that carries one. It knows no
+  words — every string arrives in `labels` and `names` — and no clock. One
+  layout because there are **two** renderers over it (see `pdf/`), and a
+  layout living in one of them is a second layout waiting to disagree.
+- `src/app/pdf/` — the two renderers. `metrics.ts` is Adobe's own widths for
+  the base-14 faces and the WinAnsi encoding: nothing is embedded and nothing
+  is fetched, which is why a specification is tens of kilobytes and why it
+  opens the same in a reader that has never seen this app — and the price is
+  that whoever writes the file has to know how wide a string comes out, since
+  a PDF places a string at a point and does not centre one. `page.ts` is the
+  three primitives a page is made of, in points from the top left; `write.ts`
+  turns them into bytes; `svg.ts` turns the same page into SVG attributes for
+  the modal's preview and for the printer, pinned to this module's widths with
+  `textLength` so a substituted face cannot change the layout.
+- `src/app/specExport.ts` — the way out: `specFilename`
+  (`<project>_<period>_specification.pdf`, lowercase and not a space in it),
+  the blob download, and the print, which shows the `.spec-print` copy of the
+  pages and hands the printer the document rather than a picture of the
+  preview.
+- `src/app/edition.ts` — which build this is (`VITE_EDITION`). The one thing
+  that differs is the notice on an exported specification, and it is a build
+  parameter because there is no server to ask and no account to check.
 - `src/app/merge.ts` — the per-record, last-edit-wins document merge that
   both cloud sync and backup restore run through.
 - `src/app/migrations.ts` — parse / normalise / serialize; the only module
@@ -659,6 +703,10 @@ job only type-checks. See `native/README.md` and `native/RELEASING.md`.
 | A change to the Report's month chart               | `src/app/monthChart.ts` (layout and colour, tested in `tests/monthChart_test.ts`) or `MonthCalendar.tsx` (paint)                                                                                                                                                                       |
 | A change to the Report's week chart                | `src/app/dayBars.ts` (how a day splits at its target, tested in `tests/dayBars_test.ts`) or `DayBars.tsx` (paint)                                                                                                                                                                      |
 | A change to the Report's two rings                 | `src/app/RangeGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `report.ts`, never a second fold of the days                                                                                                                                                  |
+| A new figure on the exported specification         | `src/app/spec.ts` (the reading, tested in `tests/spec_test.ts`) + `specLayout.ts` (where it goes) — never a second fold of the days, and never a figure the screens cannot also show                                                                                                   |
+| A new look a specification may have                | `src/app/specStyle.ts` (id + spec, walked by `tests/specStyle_test.ts`) + a string in `en.ts` + `SpecExportModal.tsx` (the control) — fixed hex, never a theme token, and never a billing rule dressed as a style                                                                      |
+| A change to how a specification is drawn           | `src/app/specLayout.ts` (the one layout, tested in `tests/specLayout_test.ts`) — never in `SpecPages.tsx` or `pdf/write.ts`, which are the two renderers over it and must stay interchangeable                                                                                         |
+| A change to what a day is billed at                | `src/app/spec.ts` (`roundUpTo`, applied per day and never to the range) + `useAppSettings.ts` (`specRounding`) — never `SpecStyle`, and never `day.ts`, which reports what was worked                                                                                                  |
 | A change to the Log's two rings                    | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day                                                                                                                                                |
 | A change to what a project holds                   | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                                                                                                                                                                           |
 | A new glyph, or a colour a kind can wear           | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                                                                                                                                                               |
