@@ -469,37 +469,40 @@ export function TodayScreen({
             }`}
           >
             {stateLine}
-            {/* And when the day is done. A mark and a time rather than a
-              sentence: the line is read at a glance, and a door with an
-              arrow out of it is the same mark the menu puts on stopping
-              work. The sentence is there for a screen reader and for
-              whoever rests on it.
+            {/* And when the day is done. A word and a time rather than a
+              sentence: the line is read at a glance, and "Ends 16:42" is
+              the whole of what it has to say. The sentence is there for a
+              screen reader and for whoever rests on it.
 
-              No separator before the mark. The dots on this line divide
-              words from words — the state from since when — and a glyph is
-              already a break in the reading; a dot in front of it made
-              three marks in a row and a gap wide enough to read as two
-              spaces. The space is the margin, once — and once is what it
-              has to measure: the glyph carries an eighth of its own box as
-              padding on each side, so a margin of a whole space lands at
-              three. It is set against what the line already spaces things
-              by, and the mark is held to the time it belongs to — a hair
-              after it, a space before it — so it reads as that time's mark
-              rather than the one before it's. */}
+              It was the door with an arrow out of it the menu puts on
+              stopping work, and a mark that has to be learnt is read as
+              decoration until it is — between the dot before it and the
+              two figures either side, it came out as punctuation. So the
+              third thing on the line is divided from the second the way the
+              second is divided from the first: a dot, and then a word. The
+              word is the one the moment deserves — it says "Ended" once the
+              hours are done, because a line that went on promising an end
+              already passed would be the one thing this figure may not
+              do. */}
             {endsAt !== null && endsLabel !== null && (
-              <span className="ml-0.5 whitespace-nowrap" title={endsLabel}>
-                <LeaveIcon className="mr-px inline-block h-3.5 w-3.5 align-[-0.15em]" />
-                <span className="tabular-nums">{formatWallTime(endsAt)}</span>
-                {/* The next day's, marked the way a timetable marks it. The
-                    sentence in the tooltip and under the screen reader says
-                    "tomorrow" in full; out here it is one mark, because the
-                    line is read at a glance. */}
-                {endsTomorrow && (
-                  <span aria-hidden="true" className="align-super text-[0.7em]">
-                    {t("today.nextDay")}
-                  </span>
-                )}
-                <span className="sr-only">{` (${endsLabel})`}</span>
+              <span className="whitespace-nowrap" title={endsLabel}>
+                <span aria-hidden="true">
+                  {" · "}
+                  {t(endsAt <= now.seconds ? "today.ended" : "today.ends")}{" "}
+                  <span className="tabular-nums">{formatWallTime(endsAt)}</span>
+                  {/* The next day's, marked the way a timetable marks it.
+                      The sentence in the tooltip and under the screen reader
+                      says "tomorrow" in full; out here it is one mark,
+                      because the line is read at a glance. */}
+                  {endsTomorrow && (
+                    <span className="align-super text-[0.7em]">
+                      {t("today.nextDay")}
+                    </span>
+                  )}
+                </span>
+                {/* The words out here are the short form of this sentence,
+                    so the reader is given the sentence and not both. */}
+                <span className="sr-only">{` · ${endsLabel}`}</span>
               </span>
             )}
             <span className="sr-only">

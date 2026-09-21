@@ -56,9 +56,16 @@ export const en = {
     doneAt: "Stopped at {time}",
     // The third thing on the state line: the moment today's hours are done,
     // worked out from what the day holds and what its breaks count for. A
-    // glyph and a time, because the line is read at a glance and "you can
+    // word and a time, because the line is read at a glance and "you can
     // leave at" is a sentence nobody needs twice a day — the long form is
     // there for a screen reader and for the tooltip.
+    //
+    // The word was a glyph, a door with an arrow out of it, and a mark that
+    // has to be learnt is read as decoration until it is: beside two figures
+    // and a dot it came out as punctuation rather than as a label. Four
+    // letters say it the first time and every time.
+    ends: "Ends",
+    ended: "Ended",
     endsAt: "Today's hours are done at {time}",
     // A day that started late runs out past midnight. The time is the one a
     // clock in the room will show, so the line has to say which day it falls

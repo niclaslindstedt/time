@@ -59,8 +59,9 @@ The main screen, and the whole app for most of a day.
 - **The line under the dial.** The day's state in words — "Working · since
   08:02", "On a break · Lunch until 12:30", "Not working · Stopped at 17:10"
   — and, on a day the project expects work on, when today's hours are done:
-  a door with an arrow out of it and a time. That time is worked out from
-  what the day already holds and what its breaks count for
+  "· Ends 16:42", divided from what comes before it the way the rest of the
+  line is, and reading "Ended" once that moment has passed. That time is
+  worked out from what the day already holds and what its breaks count for
   ([`projects.md`](projects.md)), on the assumption that the work carries on
   from here without another break — so it moves out every time a break is
   taken that the project does not count, and stays put for one it does. It is
