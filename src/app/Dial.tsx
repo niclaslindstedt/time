@@ -6,7 +6,9 @@ import {
   BEZEL_WIDTH,
   DAY_BAND,
   DAY_EDGE,
+  DAY_MARK,
   DAY_TRACK,
+  dayMark,
   DIAL_HOURS,
   DIAL_R,
   DIAL_SECONDS,
@@ -64,7 +66,8 @@ import { useHands } from "./useHands.ts";
 // From the back forward: the bezel, the face (a radial gradient, because a
 // sunburst finish is one), the minute track on the rim, the dial's own ring
 // — a faint groove, or the printed chapter ring — the day's track just under
-// the bezel and the day drawn on it, the lume the hours of a dial whose
+// the bezel and the day drawn on it, the marks over the day — where it is
+// heading, rather than where it has been — the lume the hours of a dial whose
 // blocks run out to the ring are finished with, the hour markers,
 // the printing, and the hands over everything with a shadow under them — the
 // one thing that makes a flat drawing read as a watch rather than a chart.
@@ -135,6 +138,16 @@ export type Band = {
   ahead?: boolean;
 };
 
+/** A moment marked on the day's track, as a dot in the track's own width:
+ *  where the day is heading rather than where it has been. Only one is drawn
+ *  today — when today's hours are done, in the green of a target — and
+ *  whether it belongs there at all is the caller's (see `aheadOnDial`); this
+ *  is the paint. */
+export type Mark = {
+  at: Seconds;
+  color: string;
+};
+
 /**
  * The part of a band the dial has reached: `at` is the moment it stands at
  * while it is being wound, and `null` the ordinary answer — at the time.
@@ -181,6 +194,9 @@ type Props = {
   dial: DialConfig;
   now: Seconds;
   bands: Band[];
+  /** Moments marked on the day's track — the projected end of the day, and
+   *  nothing else so far. Left out, the track carries only the day. */
+  marks?: Mark[];
   /** The hands move between renders — the Today screen's clock. A preview
    *  leaves it off and gets a still. */
   live?: boolean;
@@ -204,6 +220,7 @@ export function Dial({
   dial,
   now,
   bands,
+  marks = [],
   live = false,
   id,
   progress,
@@ -496,6 +513,32 @@ export function Dial({
               />
             )}
           </g>
+        );
+      })}
+
+      {/* And what the day is heading for, over it: a dot the width of the
+          track, in the colour it was handed. It is drawn after the bands
+          because the day catches up with it — the hours arrive underneath
+          and the mark stays legible until the moment it stands for is passed
+          and the caller stops sending it. It is outlined in the face's own
+          ink rather than in the shadow an applied part wears: a dot this
+          small mostly stands in the empty groove, which is a pale grey on a
+          white dial and nearly black on a black one, and the ink is the one
+          colour on this watch that is already the opposite of whichever it
+          is. */}
+      {marks.map((m) => {
+        const [x, y] = dayMark(C, C, m.at);
+        return (
+          <circle
+            key={`k${m.at}`}
+            cx={x}
+            cy={y}
+            r={DAY_MARK}
+            fill={m.color}
+            stroke={face.ink}
+            strokeWidth={0.7}
+            opacity={0.95}
+          />
         );
       })}
 

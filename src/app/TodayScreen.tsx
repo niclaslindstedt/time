@@ -284,7 +284,9 @@ export function TodayScreen({
   const fraction = progress(totals.worked, project);
   /** When today's hours are done, if the work goes on from here unbroken.
    *  Null on a day the project expects nothing of and before the day has
-   *  started — `workdayEnd` decides both, so the line does not have to. */
+   *  started — `workdayEnd` decides both, so neither the line nor the dial
+   *  has to. One figure, read twice: the line prints it and the clock marks
+   *  it on the day's track. */
   const endsAt = workdayEnd(day, project, now.seconds);
   const endsLabel =
     endsAt === null
@@ -420,6 +422,7 @@ export function TodayScreen({
             backlight={backlight}
             reflect={reflect}
             progress={fraction}
+            endsAt={endsAt}
             onToggle={toggleWork}
             onOpen={(at) => setTimeline({ at: at ?? null })}
             onMenu={(x, y) => setMenu({ x, y })}

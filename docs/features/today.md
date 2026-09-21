@@ -66,6 +66,14 @@ The main screen, and the whole app for most of a day.
   taken that the project does not count, and stays put for one it does. It is
   a projection rather than a promise, and once the day has run past it, it is
   simply the moment the hours were done.
+- **And that same moment on the dial**, as a small green dot in the day's own
+  track, at the hour it falls on. It stands in the empty part of the track,
+  ahead of the hours already coloured in, so the day walks towards it: the
+  bands grow, the gap closes, and when the dot is reached it goes — the track
+  behind the day is the record of what happened, and a mark left on it would
+  go on saying the hours were still to be done at a moment they were done at.
+  It is only there while the day is being counted, on a day the project asks
+  work of, and only for an end inside the twelve hours the dial can show.
 - **The buttons.** A row of break buttons, one per break type the project
   defines, each showing its mark and the length it is assumed to take; tapping
   one takes it now — written down as the length its kind usually takes, to be
@@ -211,6 +219,39 @@ the screen.
 It is meant to be left like that — propped against something on the desk, a
 clock that is also the day's record, with every break and every kind of work
 one press away and nothing to scroll.
+
+### Left alone, it is only a clock
+
+Which is what happens by itself. Leave that screen untouched for eight
+seconds and everything but the watch fades away: the four tabs in the
+corners, the breaks down the left, the kinds of work down the right, the line
+of words under the dial and the break ends printed on the rim. What is left
+is the watch — the hands, the day on its track, the bezel filling, the green
+dot where the hours come out, and the light behind the case saying the day is
+being counted. It is the same screen from across a room as it is from a foot
+away, and from across a room a list of buttons is not what you are reading.
+
+Touch the app anywhere and it all comes back — and stays for fifteen seconds
+after the last thing you do, rather than the eight it waited the first time:
+a touch is asking for the controls, and asking for them is asking for time to
+use them. It is the fifteen from then on, every time it is woken, until the
+phone is picked up or you go somewhere else. That first touch is spent on
+bringing it back and nothing else — it does not start a break, or open the Log, or stop
+the day, whatever it happens to land on. A tap on a screen showing nothing
+but a watch lands in the middle of the watch, and the middle of the watch is
+the switch; waking the screen to look at the day is not clocking out of it.
+Press again, now that you can see what you are pressing, and it does what it
+says.
+
+Nothing moves while this happens and nothing changes size. The controls keep
+their room and fade in place, so the dial is exactly as big and exactly where
+it was — a watch that grew when the tabs went away would be the one thing
+this layout exists to prevent. Nothing is hidden from a screen reader either,
+and a key counts as a touch, so tabbing towards a faded control has already
+brought it back before you get there.
+
+Only here. A phone held upright is a phone being held; a desk has room for
+everything at once. This is the shape that gets left standing somewhere.
 
 The switch is over from 44rem of height, so a browser window dragged short
 and wide gets the same layout for the same reason.

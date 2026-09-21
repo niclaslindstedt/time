@@ -39,7 +39,8 @@ import { TodayScreen } from "./app/TodayScreen.tsx";
 import { TopBar, topBarNeeded } from "./app/TopBar.tsx";
 import { projectList } from "./app/types.ts";
 import { useAppSettings } from "./app/useAppSettings.ts";
-import { useDesk, useWide } from "./app/useShape.ts";
+import { useFocus } from "./app/useFocus.ts";
+import { useDesk, useStand, useWide } from "./app/useShape.ts";
 import { localDocBackend, useDocStore } from "./app/useDocStore.ts";
 import { useShortcuts } from "./app/useShortcuts.ts";
 import { useSyncEngine } from "./app/useSyncEngine.ts";
@@ -66,6 +67,12 @@ import { status } from "./output.ts";
 // which has no height to stack in and stands its controls beside the dial
 // the way the desk does. `useWide` is that pair of shapes and nothing more;
 // everything it guards here is layout.
+//
+// That shape is also the one meant to be left alone, so it has a mode of its
+// own: propped up and untouched on the Today screen, everything but the watch
+// fades out and the first touch brings it back (`useFocus.ts`, and
+// `[data-focus="on"]` in `styles.css`). The shell says when; nothing under it
+// knows, and nothing moves.
 
 // Module-scoped so the identity stays stable across renders (the framework's
 // `useToasts` keys its subscription on the store object).
@@ -101,6 +108,7 @@ export function App() {
     null;
 
   const desk = useDesk();
+  const stand = useStand();
   // Whether the Today screen stands its controls beside the dial: the desk,
   // and a phone laid on its side (see `shape.ts`). Layout only — the stand
   // keeps every one of the phone shell's habits, bottom bar and swipe
@@ -118,6 +126,12 @@ export function App() {
   // The Today screen's onboarding button lands on Projects with the editor
   // already open.
   const [openNewProject, setOpenNewProject] = useState(false);
+  // Focus mode: the phone laid down on the watch and left alone, where
+  // everything but the dial fades out until the screen is touched again (see
+  // `useFocus.ts`). The stand and the Today screen together, because the
+  // thing left showing has to be worth leaving showing — the other three
+  // screens are lists, and a list nobody is reading is nothing to look at.
+  const focus = useFocus(stand && tab === "today");
 
   const show = useCallback(
     (next: Tab) => {
@@ -295,7 +309,10 @@ export function App() {
   const bare = !topBarNeeded(bar);
 
   return (
-    <div className="flex h-full flex-col bg-page text-fg">
+    <div
+      data-focus={focus ? "on" : undefined}
+      className="flex h-full flex-col bg-page text-fg"
+    >
       {!bare && (
         <TopBar
           active={tab}

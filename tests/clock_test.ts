@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DAY_MARK,
   DAY_TRACK,
   DIAL_HOURS,
   DIAL_R,
@@ -10,8 +11,10 @@ import {
   SIGNATURE,
   SIGNATURE_REACH,
   TRACK_R,
+  aheadOnDial,
   angleOf,
   arcPath,
+  dayMark,
   chapterMarks,
   chapterTracks,
   dialLayout,
@@ -725,6 +728,71 @@ describe("timesAt", () => {
   it("wraps an angle from either side round the dial", () => {
     expect(timesAt(-90)).toEqual(timesAt(270));
     expect(timesAt(450)).toEqual(timesAt(90));
+  });
+});
+
+describe("the day's mark", () => {
+  // The green dot the projected end of the day is marked with, on the day's
+  // own track. Two things have to hold: it stands in the track rather than
+  // beside it, and it is only there while the day still has to get to it.
+
+  it("sits in the middle of the track, so a dot the track's width fills it", () => {
+    expect(DAY_TRACK.midR).toBeCloseTo(
+      (DAY_TRACK.inner + DAY_TRACK.outer) / 2,
+      6,
+    );
+    expect(DAY_MARK).toBeCloseTo((DAY_TRACK.outer - DAY_TRACK.inner) / 2, 6);
+  });
+
+  it("reaches neither the case nor the face", () => {
+    expect(DAY_TRACK.midR + DAY_MARK).toBeLessThanOrEqual(DAY_TRACK.outer);
+    expect(DAY_TRACK.midR - DAY_MARK).toBeGreaterThanOrEqual(DAY_TRACK.inner);
+  });
+
+  it("marks a moment where the day's own track draws it", () => {
+    const at = h(16) + 45 * 60;
+    const [x, y] = dayMark(120, 120, at);
+    expect([x, y]).toEqual(polar(120, 120, DAY_TRACK.midR, angleOf(at)));
+    // Four forty-five in the afternoon is quarter to five on a twelve-hour
+    // dial, which is a little past half way down the right-hand side.
+    expect(x).toBeGreaterThan(120);
+    expect(y).toBeGreaterThan(120);
+  });
+
+  it("puts five o'clock's mark due right at three and straight down at six", () => {
+    expect(dayMark(120, 120, h(3))[0]).toBeCloseTo(120 + DAY_TRACK.midR, 6);
+    expect(dayMark(120, 120, h(3))[1]).toBeCloseTo(120, 6);
+    expect(dayMark(120, 120, h(18))[1]).toBeCloseTo(120 + DAY_TRACK.midR, 6);
+  });
+
+  it("wraps the way the hands do, so an evening end is drawn where its hour is", () => {
+    expect(dayMark(120, 120, h(17))).toEqual(dayMark(120, 120, h(5)));
+  });
+});
+
+describe("aheadOnDial", () => {
+  const now = h(13) + 20 * 60;
+
+  it("is a moment the day has still to reach", () => {
+    expect(aheadOnDial(now + 1, now)).toBe(true);
+    expect(aheadOnDial(h(17), now)).toBe(true);
+  });
+
+  it("is not one already passed — the day ran through it", () => {
+    expect(aheadOnDial(now, now)).toBe(false);
+    expect(aheadOnDial(now - 1, now)).toBe(false);
+    expect(aheadOnDial(h(9), now)).toBe(false);
+  });
+
+  it("is not one more than a turn of the dial away, which has nowhere to stand", () => {
+    expect(aheadOnDial(now + DIAL_SECONDS - 1, now)).toBe(true);
+    expect(aheadOnDial(now + DIAL_SECONDS, now)).toBe(false);
+    expect(aheadOnDial(now + 2 * DIAL_SECONDS, now)).toBe(false);
+  });
+
+  it("counts a night shift's end past midnight, since the day's seconds do", () => {
+    // 22:40, done at 01:00 — which `day.ts` counts as 25:00.
+    expect(aheadOnDial(h(25), h(22) + 40 * 60)).toBe(true);
   });
 });
 
