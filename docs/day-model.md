@@ -124,7 +124,10 @@ nothing. Past the end of what the day already knows — a break written down
 with an assumed end reaches into the future — the work simply goes on.
 
 It says nothing at all on a day the project expects no work on, on a project
-with no target, or before the day has started. A moment in the _past_ is a
+with no target, before the day has started, or while a break is on: the end a
+break is written down with is the length its kind is assumed to take rather
+than a plan anybody made, so from inside one the figure would be a guess about
+when you come back. It is there again the moment the break is over. A moment in the _past_ is a
 real answer: it is when the hours were done, on a day that carried on past
 them.
 

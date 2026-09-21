@@ -130,8 +130,9 @@ type Props = {
   progress: number;
   /** When today's hours are done if the work carries on from here — the one
    *  figure this screen draws about a moment that has not happened
-   *  (`workdayEnd`). Null on a day that has none, and marked on the day's
-   *  track only while it is still ahead. */
+   *  (`workdayEnd`). Null on a day that has none and while a break is on —
+   *  the figure would be about when the break ends rather than about the
+   *  work — and marked on the day's track only while it is still ahead. */
   endsAt: Seconds | null;
   /** The face pressed: start the day, or stop it. */
   onToggle: () => void;

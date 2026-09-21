@@ -66,7 +66,11 @@ The main screen, and the whole app for most of a day.
   from here without another break — so it moves out every time a break is
   taken that the project does not count, and stays put for one it does. It is
   a projection rather than a promise, and once the day has run past it, it is
-  simply the moment the hours were done. A day begun late runs out after
+  simply the moment the hours were done. **While a break is on it is not
+  there at all** — neither on the line nor on the dial — because from inside
+  a break the figure is about when you come back rather than about the work,
+  and the line already has the break's own end on it. It is back as soon as
+  the break is. A day begun late runs out after
   midnight, and that time is printed the way the clock in the room will show
   it — "01:14", with a **+1** after it, the way a timetable marks a train that
   arrives the next day — rather than as the 25th hour a _record_ of the day
