@@ -18,7 +18,9 @@ import {
   faceMarks,
   MINUTE_INK,
   RING_BLEED,
+  HANDS,
   handAngles,
+  handPoint,
   handTurns,
   placementOf,
   polar,
@@ -40,6 +42,8 @@ import {
   DIAL_MARKERS,
   DIAL_MARKER_STYLES,
   DIAL_PLACEMENTS,
+  DIAL_HANDS,
+  DIAL_HAND_SETS,
   DIAL_RING,
   DIAL_RINGS,
   DIAL_SCALE,
@@ -157,6 +161,65 @@ describe("handTurns", () => {
       expect(turns.hour % 360).toBeCloseTo(angles.hour, 6);
       expect(turns.minute % 360).toBeCloseTo(angles.minute, 6);
       expect(turns.second % 360).toBeCloseTo(angles.second, 6);
+    }
+  });
+});
+
+describe("handPoint", () => {
+  const tapered = DIAL_HANDS.tapered;
+  /** The hands of the dial the tapered set is on, at the lengths
+   *  `dialLayout` gives them there. */
+  const uptown = dialLayout({
+    markers: "blocks",
+    font: "light",
+    scale: 7,
+    placement: "inside",
+    ring: "chapter",
+  });
+
+  it("closes the sides at the set's own bevel, whatever the hand", () => {
+    for (const hand of ["hour", "minute"] as const) {
+      const width = HANDS[hand];
+      const run = handPoint(tapered, width, uptown.hands[hand]);
+      // The angle off the axis is what was measured, so it is what has to
+      // come back out: the sides drop from half the base to half the tip
+      // over the run, and the arctangent of that is the bevel.
+      const drop = (width * (tapered.base - tapered.tip)) / 2;
+      expect((Math.atan(drop / run) * 180) / Math.PI, hand).toBeCloseTo(
+        tapered.bevel,
+        6,
+      );
+    }
+  });
+
+  it("gives the broader hand the longer point, and neither a spear", () => {
+    const hour = handPoint(tapered, HANDS.hour, uptown.hands.hour);
+    const minute = handPoint(tapered, HANDS.minute, uptown.hands.minute);
+    // The hour hand is the broader of the two and the shorter, so it carries
+    // the longer point and much the greater share of itself.
+    expect(hour).toBeGreaterThan(minute);
+    expect(hour / uptown.hands.hour).toBeGreaterThan(
+      minute / uptown.hands.minute,
+    );
+    // And neither is the needle a share of the length gave them: the point
+    // that reads as a spear is the one that runs back a tenth of the hand.
+    expect(minute / uptown.hands.minute).toBeLessThan(0.1);
+    expect(hour / uptown.hands.hour).toBeLessThan(0.1);
+  });
+
+  it("leaves a flat at the tip rather than a needle", () => {
+    expect(tapered.tip).toBeGreaterThan(0);
+    expect(tapered.tip).toBeLessThan(tapered.base);
+  });
+
+  it("is nothing at all for a set with no bevel, and never past the hand", () => {
+    expect(handPoint(DIAL_HANDS.bar, HANDS.minute, 90)).toBe(0);
+    for (const id of DIAL_HAND_SETS) {
+      const set = DIAL_HANDS[id];
+      // A hand as wide as it is long, or a bevel laid nearly flat, cannot
+      // put the shoulder behind the axle.
+      expect(handPoint(set, 40, 6), id).toBeLessThanOrEqual(6);
+      expect(handPoint({ ...set, bevel: 1 }, 40, 6), id).toBeLessThanOrEqual(6);
     }
   });
 });

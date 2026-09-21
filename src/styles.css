@@ -482,6 +482,18 @@ input:not(
     display: none;
   }
 
+  /* The words under the dial keep their room whether or not there are two
+     lines of them. Here the dial is sized by the height its row has left
+     over, so a line that comes and goes takes it off the watch: the hint
+     under "NOT WORKING" is there until the first press of the day and never
+     again, and it made the watch visibly smaller for exactly as long. The
+     reserve is the two lines and the gap between them — the most that block
+     ever holds. */
+  .app-dial-note {
+    min-height: 3rem;
+    justify-content: flex-start;
+  }
+
   /* The size is a share of the window's height — `--dial-share`, set inline
      from `CLOCK_SIZE` (see `look.ts`). The slot grows into the row it stands
      in and stops at that share, so small, medium and large are half the

@@ -180,7 +180,11 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   ticks on its inner edge, and the same length again on the face under it,
   with two finer marks between each minute) — and `ringHit` /
   `timesAt`, which read a point on the day's track back as a moment, and
-  `faceHit`, which says whether a point is on the face — the switch's edge. Also how the
+  `faceHit`, which says whether a point is on the face — the switch's edge.
+  `handPoint` is the point at the end of a hand, which is an _angle_ rather
+  than a share of the length — a hand is finished at the bevel it is
+  finished at, so the broader hour hand carries the longer point and a fine
+  minute hand does not grow a spear. Also how the
   hands _move_: `beatTurns`, the movement's beat and the little overshoot a
   stepper lands it with; and the **wind**, `windPlan` / `windMoment` /
   `windTurns`, the motion that sets the watch after the tab has been asleep —
@@ -467,6 +471,7 @@ regression.
 | A dial option that only makes sense with another   | `src/app/clock.ts` (let the geometry decide, the way `placementOf` does) + `DialPicker.tsx` (drop the control rather than offer a choice that cannot look right) — never a preset that quietly differs from what its settings say                                                      |
 | A change to what a break counts for                | `src/app/types.ts` (`BreakCredit`) + `project.ts` (`creditSeconds` / `storedCredit`) + `day.ts` (what it counts for) + the validation in `migrations.ts` + `BreakCreditField.tsx` — one control for both forms, never a second table                                                   |
 | A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there; anything else on the dial that has to move with them is cut at `windMoment` and written from that loop too                                              |
+| A change to the shape of a hand                    | `src/app/look.ts` (`DIAL_HANDS` — the widths, the bevel its sides close at, the tail) + `clock.ts` (`handPoint`, walked by `tests/clock_test.ts`) + `Dial.tsx` (paint) — the tip is an angle, never a share of the hand's length                                                       |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |
 | Something only the desk does                       | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                                                                                                                                  |
 | Something the desk and a phone on its side share   | Behind `useWide()`, or a `wide:` class / the paired `@media` list in `styles.css` — never `lg:` alone, which leaves a landscape phone on the layout it has no height for; the edges are `shape.ts`'s                                                                                   |

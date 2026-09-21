@@ -12,6 +12,7 @@ import {
   DIAL_SECONDS,
   HANDS,
   handAngles,
+  handPoint,
   RING_BAND,
   RING_EDGE,
   ROMAN_HOURS,
@@ -936,10 +937,10 @@ function Steel({ id, dome }: { id: string; dome: Dome }) {
  *  Both sets are steel, because a hand is. A bar is one domed bar, lit across
  *  its width the way an applied marker is. A pointed hand is a shape with a
  *  ridge down it: sides dead straight from the cap up to its shoulder and
- *  then closing on the tip over the last of its length, drawn as the two flat
- *  facets either side of that ridge — so which half is the bright one depends
- *  on where the hand is pointing, and changes as it sweeps. Either way a
- *  hairline of shadow round it holds it on a pale face.
+ *  then closing at the set's own bevel onto the small flat it ends on, drawn
+ *  as the two flat facets either side of that ridge — so which half is the
+ *  bright one depends on where the hand is pointing, and changes as it
+ *  sweeps. Either way a hairline of shadow round it holds it on a pale face.
  */
 function Hand({
   set,
@@ -979,8 +980,11 @@ function Hand({
   }
   const base = (width * set.base) / 2;
   const tip = (width * set.tip) / 2;
-  // Where the sides stop running straight and start closing on the tip.
-  const shoulder = top + length * set.point;
+  // Where the sides stop running straight and start closing on the tip. The
+  // run is the bevel's, reckoned from how wide this hand is (`clock.ts`), so
+  // the hour and the minute hand are finished at the same angle rather than
+  // over the same share of two very different lengths.
+  const shoulder = top + handPoint(set, width, length);
   return (
     <Roof
       left={`${C - base},${bottom} ${C - base},${shoulder} ${C - tip},${top} ${C},${top} ${C},${bottom}`}

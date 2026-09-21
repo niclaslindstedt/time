@@ -537,11 +537,22 @@ export const DIAL_MOVEMENT: Record<DialMovement, { beats: number | null }> = {
 // because a hand is steel on every wrist watch there is (see `STEEL`). Two
 // sets: the plain bar, the same width from the cap to its tip and domed
 // across it, and the pointed hand of a sixties dress watch — sides dead
-// straight for most of its length and then closing on a point over the last
+// straight for most of its length and then closing on its tip over the last
 // of it, with a ridge down it that takes the light on one side and lies in
 // shade on the other. Straight and then sharp, measured off the dial: not a
 // wedge that narrows the whole way, which is the shape a drawn watch usually
 // gets instead.
+//
+// The tip is an *angle*, not a share of the length, because that is what it
+// is on the watch: the sides come off the hand at the bevel a hand is
+// finished at, and what that costs in length depends on how wide the hand
+// was — so an hour hand, being the broader of the two, carries a longer
+// point than a minute hand and both are finished the same way. Taken as a
+// share of the length instead, the minute hand — nearly three times as long
+// as it is wide — closed over a sixth of itself, which is a spear rather
+// than a watch hand. And the tip is not nothing: a hand ends on a small flat
+// where the two bevels stop short of meeting (`tip`), which is the
+// difference between a hand and a needle.
 //
 // The second hand is the exception either way: a hair that fine has no
 // surface to catch anything, so it stays the face's ink, which is also what
@@ -559,14 +570,15 @@ export type DialHandsSpec = {
    *  end at, as shares of the width `HANDS` in `clock.ts` gives them. A bar
    *  is one and one. A pointed hand is a little broader than the width it is
    *  given, because it carries that width the whole way rather than starting
-   *  wide and giving it back, and it ends on next to nothing — which is what
-   *  a point is. */
+   *  wide and giving it back, and it ends on the flat its two bevels stop
+   *  short of meeting at — small, and not nothing. */
   base: number;
   tip: number;
-  /** How much of a hand's length the point at the end of it takes, as a
-   *  share. Zero for a bar, which has no point; a fraction for a hand whose
-   *  sides run straight and then close on the tip. */
-  point: number;
+  /** How steeply the sides close on that flat, in degrees off the hand's own
+   *  axis, which is the bevel the hand is finished at. Zero for a bar, which
+   *  has no point at all; `clock.ts`'s `handPoint` is what turns it into a
+   *  length for a hand of a given width. */
+  bevel: number;
   /** How far the hand's tail reaches past the axle, in the dial's units. A
    *  bar gets a stub, which reads as a hand pivoted rather than hinged at the
    *  centre; a tapered hand gets none, because its widest point *is* the hub
@@ -597,17 +609,22 @@ export const DIAL_HANDS: Record<DialHands, DialHandsSpec> = {
   bar: {
     base: 1,
     tip: 1,
-    point: 0,
+    bevel: 0,
     boss: 5,
     taper: false,
     counterweight: "disc",
     tail: 1,
     tailWidth: 1,
   },
+  // The bevel and the flat are measured off a photograph of a sixties dress
+  // watch: its hour hand runs dead straight for five sixths of its length
+  // and then closes at about 22° off the axis onto a flat a seventh of the
+  // hand's width — which on a hand that broad is a long point, and on these
+  // much finer ones is the short angled tip the same bevel gives.
   tapered: {
     base: 1.35,
-    tip: 0.1,
-    point: 0.15,
+    tip: 0.2,
+    bevel: 22,
     boss: 0,
     taper: true,
     counterweight: "blade",

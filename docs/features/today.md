@@ -72,7 +72,8 @@ The main screen, and the whole app for most of a day.
   corrected on the clock — and the button turns into **End lunch** for as long
   as you are on it. A row of chips, one per kind of work, each wearing its own mark in
   its own colour; tapping one says that is what you are doing from now, tapping
-  it again stops labelling. Both rows end in **Custom**. Breaks and chips take
+  it again stops labelling. Both rows end in a dashed **+**, which is Custom.
+  Breaks and chips take
   no tap until you have started working, and say so by going pale — but they
   still answer a hold, because what a kind looks like has nothing to do with
   being clocked in.
@@ -141,7 +142,11 @@ of the day, not a stopwatch.
 
 ## Custom
 
-The last pill in each row is **Custom**. It names a kind of break (with the
+The last pill in each row is a dashed **+** — Custom, which is the name it
+carries as a tooltip rather than beside the mark. Spelled out it was as wide
+as a break, and on a phone that was a whole row of the screen spent on the
+least-used control in it; as a square it sits at the end of the breaks with
+room to spare. It names a kind of break (with the
 minutes one is assumed to take) or a kind of work, gives it a mark from that
 kind's own vocabulary — the day's pauses for a break, work's for a kind of
 work, and the neutral marks to either — and a
