@@ -357,7 +357,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   Keep the numbers here and the numbers in `styles.css` the same.
 - `src/app/useFocus.ts` — focus mode, which is the stand's alone: the phone
   propped up on the Today screen and left untouched, where everything but the
-  watch fades out and the first press brings it back. The hook only says
+  watch fades out and the first press brings it back. Two dwells, because
+  they answer different questions: `FOCUS_AFTER_MS` is how long a screen
+  nobody has touched waits, and `FOCUS_AGAIN_MS` — longer — is how long it
+  waits once somebody has asked for the controls back, since asking for them
+  is asking for time to use them. The second is the one in force from the
+  first wake until the screen or the shape is left. The hook only says
   _when_; what goes is `[data-focus="on"]` in `styles.css`, which fades the
   tabs, the two columns, the line under the dial and the break-end chips and
   takes the press off the whole screen — so the press that wakes it is spent

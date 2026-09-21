@@ -222,7 +222,7 @@ one press away and nothing to scroll.
 
 ### Left alone, it is only a clock
 
-Which is what happens by itself. Leave that screen untouched for a few
+Which is what happens by itself. Leave that screen untouched for eight
 seconds and everything but the watch fades away: the four tabs in the
 corners, the breaks down the left, the kinds of work down the right, the line
 of words under the dial and the break ends printed on the rim. What is left
@@ -231,9 +231,12 @@ dot where the hours come out, and the light behind the case saying the day is
 being counted. It is the same screen from across a room as it is from a foot
 away, and from across a room a list of buttons is not what you are reading.
 
-Touch the app anywhere and it all comes back, for another few seconds of
-quiet after the last thing you do. That first touch is spent on bringing it
-back and nothing else — it does not start a break, or open the Log, or stop
+Touch the app anywhere and it all comes back — and stays for fifteen seconds
+after the last thing you do, rather than the eight it waited the first time:
+a touch is asking for the controls, and asking for them is asking for time to
+use them. It is the fifteen from then on, every time it is woken, until the
+phone is picked up or you go somewhere else. That first touch is spent on
+bringing it back and nothing else — it does not start a break, or open the Log, or stop
 the day, whatever it happens to land on. A tap on a screen showing nothing
 but a watch lands in the middle of the watch, and the middle of the watch is
 the switch; waking the screen to look at the day is not clocking out of it.
