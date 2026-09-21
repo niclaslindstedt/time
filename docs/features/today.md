@@ -12,7 +12,9 @@ The main screen, and the whole app for most of a day.
   line along its outer edge. A kind of work takes the band in its own hue
   (the same hue the chips and the report use) and leaves the thin line the
   accent; a break is the flag colour, band and line both. The legend under
-  the clock names them on a phone. The part of a break that has not happened
+  the clock names them on a phone, once there is a day on the track to name —
+  before the first clock-in there is nothing to key and no legend is drawn.
+  The part of a break that has not happened
   yet is drawn at half strength: it is a plan, not a record. Nothing on the
   track moves but the day itself. The watch itself
   — its face, its markers, its numerals, how its second hand moves, and how

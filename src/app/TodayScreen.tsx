@@ -445,21 +445,28 @@ export function TodayScreen({
         )}
       </div>
 
-      <ul
-        data-area="legend"
-        className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted"
-      >
-        <Swatch color="var(--color-accent)" label={t("today.legend.work")} />
-        <Swatch color="var(--color-flag)" label={t("today.legend.break")} />
-        {project.categories.map((c) => (
-          <Swatch
-            key={c.id}
-            color={categoryColor(project, c.id)}
-            glyph={glyphFor(c.glyph, "category")}
-            label={c.name}
-          />
-        ))}
-      </ul>
+      {/* The legend names the colours on the day's track, so it waits until
+          there is a day on it. An empty dial has nothing to key, and a
+          screen whose first instruction is "press the clock to start the
+          day" should not be carrying a table of what the bands would have
+          meant. */}
+      {day.sessions.length > 0 && (
+        <ul
+          data-area="legend"
+          className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted"
+        >
+          <Swatch color="var(--color-accent)" label={t("today.legend.work")} />
+          <Swatch color="var(--color-flag)" label={t("today.legend.break")} />
+          {project.categories.map((c) => (
+            <Swatch
+              key={c.id}
+              color={categoryColor(project, c.id)}
+              glyph={glyphFor(c.glyph, "category")}
+              label={c.name}
+            />
+          ))}
+        </ul>
+      )}
 
       <section data-area="breaks" className="flex flex-col gap-1.5">
         <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
