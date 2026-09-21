@@ -191,16 +191,36 @@ never touches chance or the clock.
 `summarizeDay` measures one day against the project:
 
 - **expected** — whether the project's working days include the date;
-- **target** — the day's length on an expected day, zero otherwise;
-- **balance** — worked minus target: negative on a short day, positive on a
-  long one, and every second of a day off is positive.
+- **target** — the day's length on an expected day, zero otherwise: what the
+  day was asked for, and what a chart draws its track at;
+- **due** — how much of that target has come due, which is what the balance
+  is measured against;
+- **balance** — worked minus due: negative on a short day that is over,
+  positive on a long one, and every second of a day off is positive.
+
+The difference between **target** and **due** is the day you are standing in.
+A day that is over owes the whole of its target, worked or not — that is what
+makes an unlogged Tuesday a full day short. The day being worked owes only
+what there has been the _chance_ to work, which is what has been worked: at
+nine in the morning nobody is eight hours behind, and a balance that says so
+is a number you have to do arithmetic on before it means anything. So a
+running day's shortfall is nothing at all, while its overtime is real the
+moment the target is passed.
+
+Until the day is put away. Closing the last session is the moment a day stops
+being one that could still be worked and becomes one that was, so the whole
+target comes due then and a day stopped four hours short says four hours
+short. A break is not that moment, and neither is one session closed and
+another opened: what counts is being clocked out.
 
 `summarizeRange` folds a span of dates — a week or a month — into one summary:
-worked, target, balance, breaks by type, time by category, and how many days
-were worked out of how many were expected. Every date in the range gets a
+worked, target, due, balance, breaks by type, time by category, and how many
+days were worked out of how many were expected. Every date in the range gets a
 column, so a week's chart always has seven; but a date after today counts
-nothing against the balance, because a Friday not yet worked is not a
-shortfall on Wednesday.
+nothing at all, because a Friday not yet worked is not a shortfall on
+Wednesday. Today counts its whole target — that is the share the ring is read
+against, and a target that shrank as the day was worked would sit at 100% all
+day — and only its `due` against the balance.
 
 The **running balance** is `summarizeRange` from the first logged day to
 today. It is honest about gaps: an expected day with nothing logged is a full

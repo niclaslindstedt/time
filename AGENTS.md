@@ -140,8 +140,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   a `ctx` argument so nothing here touches chance or the clock.
 - `src/app/report.ts` — many days → the totals, the balance and the
   breakdowns: a day is summarised against the project's target for that
-  date, a range is the sum. A day that has not come yet is not a shortfall.
-  Pure and clock-free.
+  date, a range is the sum. A day that has not come yet is not a shortfall,
+  and neither is the part of today nobody has had the chance to work: a
+  summary carries both what the day was asked for (`target`, which is what
+  a chart's track is drawn at and what the share is read against) and how
+  much of that has come _due_ (`due`, which the balance is measured
+  against). They differ only on the day being worked, and only until it is
+  put away — see `summarizeDay`. Pure and clock-free.
 - `src/app/dayBars.ts` — a range laid out as a bar a day, and the one rule
   that makes it one bar rather than two: the target is the _track_, standing
   at the height the day was asked for, and the hours worked fill it from the
@@ -465,6 +470,7 @@ regression.
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A new thing to log about a day                     | `src/app/types.ts` (model) + `actions.ts` (the edit) + `day.ts` (what it counts for) + a `migrations.ts` step — and ask what it feeds                                                                                                                                                  |
 | A new derived number                               | `src/app/day.ts` (per day) or `report.ts` (over days), with tests in `tests/day_test.ts` / `tests/report_test.ts`                                                                                                                                                                      |
+| A change to what the balance counts                | `src/app/report.ts` (`summarizeDay`'s `due` — never the day's `target`, which the charts draw their track at and the share is read against), with tests at real times in `tests/report_test.ts`                                                                                        |
 | A change to what a button on Today does            | `src/app/actions.ts`, with tests in `tests/actions_test.ts`                                                                                                                                                                                                                            |
 | A change to how the clock draws                    | `src/app/clock.ts` (geometry, tested), `sheen.ts` (what the light does to the metal, tested), `Dial.tsx` (paint) or `ClockFace.tsx` (what the day means on it, and what a press on it does)                                                                                            |
 | A change to where the day sits on the dial         | `src/app/clock.ts` (`DAY_TRACK` and `FACE_R`, walked by `tests/clock_test.ts` for every dial) — never a second set of radii in `Dial.tsx`, and never back onto the dial's own ring                                                                                                     |
