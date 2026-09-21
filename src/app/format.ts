@@ -54,10 +54,19 @@ export function formatTimeOfDay(seconds: Seconds): string {
   return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}`;
 }
 
-/** "HH:MM" as a `<input type="time">` wants it — the same as above, wrapped
- *  into the day, since the control cannot show a 25th hour. */
-export function toTimeInput(seconds: Seconds): string {
+/** "01:10" — the same moment as the clock on the wall would show it, wrapped
+ *  into the day. The hour above keeps counting because a span that ends past
+ *  midnight belongs to the day before it; a moment the app is *pointing at*
+ *  rather than recording is read off a clock, and no clock has a 25th hour.
+ *  Whoever prints one says which day it falls on — see `today.endsAtTomorrow`. */
+export function formatWallTime(seconds: Seconds): string {
   return formatTimeOfDay(((seconds % DAY_SECONDS) + DAY_SECONDS) % DAY_SECONDS);
+}
+
+/** "HH:MM" as a `<input type="time">` wants it — the wall clock's reading,
+ *  since the control cannot show a 25th hour either. */
+export function toTimeInput(seconds: Seconds): string {
+  return formatWallTime(seconds);
 }
 
 /** "12:04" (or "12:04:30") → seconds since midnight, or null when it is not

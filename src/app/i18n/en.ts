@@ -60,6 +60,14 @@ export const en = {
     // leave at" is a sentence nobody needs twice a day — the long form is
     // there for a screen reader and for the tooltip.
     endsAt: "Today's hours are done at {time}",
+    // A day that started late runs out past midnight. The time is the one a
+    // clock in the room will show, so the line has to say which day it falls
+    // on: the sentence spells it, and the mark after the figure — a "+1", the
+    // way a timetable marks a train that arrives the next day — says it at a
+    // glance. A record keeps counting instead (see `formatTimeOfDay`); this
+    // is the one figure about a moment that has not happened.
+    endsAtTomorrow: "Today's hours are done at {time} tomorrow",
+    nextDay: "+1",
     endedAt: "Today's hours were done at {time}",
     clockIn: "Start working",
     clockOut: "Stop working",
