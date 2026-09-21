@@ -479,10 +479,16 @@ export function TodayScreen({
               words from words — the state from since when — and a glyph is
               already a break in the reading; a dot in front of it made
               three marks in a row and a gap wide enough to read as two
-              spaces. The space is the margin, once. */}
+              spaces. The space is the margin, once — and once is what it
+              has to measure: the glyph carries an eighth of its own box as
+              padding on each side, so a margin of a whole space lands at
+              three. It is set against what the line already spaces things
+              by, and the mark is held to the time it belongs to — a hair
+              after it, a space before it — so it reads as that time's mark
+              rather than the one before it's. */}
             {endsAt !== null && endsLabel !== null && (
-              <span className="ml-2 whitespace-nowrap" title={endsLabel}>
-                <LeaveIcon className="inline-block h-3.5 w-3.5 align-[-0.15em]" />{" "}
+              <span className="ml-0.5 whitespace-nowrap" title={endsLabel}>
+                <LeaveIcon className="mr-px inline-block h-3.5 w-3.5 align-[-0.15em]" />
                 <span className="tabular-nums">{formatWallTime(endsAt)}</span>
                 {/* The next day's, marked the way a timetable marks it. The
                     sentence in the tooltip and under the screen reader says
