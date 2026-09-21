@@ -571,13 +571,18 @@ with `[Learn more](feature:<slug>)`.
   not a colour at all: `STEEL` is one metal for all eight faces, and what a
   marker or a hand looks like is `sheen.ts`'s reckoning of the light on it. A dial option that tinted
   a button or a card would be the palette gallery this rule exists to refuse.
-- **Four destinations, no sidebar, no drawer.** On the phone they are the
-  bottom bar, in a fixed left-to-right order a swipe moves along — laid down
-  as well as upright, where the bar only gets shorter and puts each label
-  beside its glyph; on the desk the same four, in the same order, are tabs on
-  the top bar, and the bottom bar is not drawn. A phone on its side does not
-  get a rail down its edge: that is the sidebar this rule refuses, and the
-  thumb is where it always was. Things you do and then leave belong on the top bar, which
+- **Four destinations, no sidebar, no drawer.** On the phone held upright
+  they are the bottom bar, in a fixed left-to-right order a swipe moves
+  along; laid down the same four, in the same order, go to the _top_ —
+  two tabs into the left corner and two into the right, the label beside
+  the glyph, floating over the watch where there is no bar to sit above
+  (`app-nav-floating`, from `bare` in `App.tsx`) and taking a row of its
+  own where there is; on the desk the same four, in the same order, are
+  tabs on the top bar, and the bottom bar is not drawn. A phone on its
+  side does not get a rail down its edge: that is the sidebar this rule
+  refuses. What the corners buy is the height a bar across the foot of a
+  393px window was taking off the dial — the middle of that strip is empty,
+  and the middle is where the watch stands. Things you do and then leave belong on the top bar, which
   is where Settings went — a screen on the phone, a side panel on the desk.
   Over Today the watch carries the name and the cog itself, the way a dial
   carries its maker and its date, and the bar goes without them; on the
@@ -593,6 +598,14 @@ with `[Learn more](feature:<slug>)`.
 - **No timer.** The day's progress is the bezel and the state is the light
   and the one line under the dial. A figure ticking up is the thing this
   screen was rid of.
+- **The watch is centred, and it does not move.** Where the dial is sized by
+  the height its row has left over — the desk and the stand — the words under
+  it keep their room whether there are two lines of them or one
+  (`.app-dial-note`), and the same room is left empty above the dial
+  (`--dial-gap` and the reserve on the dial's column, `styles.css`). A line
+  that comes and goes there is a watch that changes size when the day starts,
+  and a caption reserved on one side only is a watch half a caption above the
+  middle of the window.
 - **A category's colour is one table.** `labels.ts` maps a kind of work to a
   hue — the one the project picked, or the one its position in the list gives
   it — and the clock's inner ring, the category chips, the Log's rows, the

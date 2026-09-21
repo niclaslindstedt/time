@@ -196,10 +196,17 @@ past on a screen they only meant to glance at.
 So from there the app lays the Today screen out the way the desk does — the
 dial in the middle, sized by the height there is, breaks down the left and
 kinds of work down the right, the state of the day in a line under the watch.
-Everything else stays the phone's: the four places are still the bottom bar,
-a swipe still moves along it, Settings is still a screen. The bar only gets
-shorter, each label moving beside its glyph, and both bars keep clear of the
-notch, which sideways is down one edge of the screen.
+Everything else stays the phone's: the same four places, the same order, a
+swipe still moving along them, Settings still a screen. What changes is where
+they sit. The bar goes to the top and splits — Today and Log into the left
+corner, Report and Projects into the right, each label beside its glyph — and
+over the watch, where there is no bar above it, the four float rather than
+taking a row: the middle of that strip is empty, which is where the dial
+stands, so the watch is centred on the whole window instead of on what a bar
+across the foot of the screen left over. The thumb has further to go than it
+does upright; a phone propped against something is not being held by the
+thumb. Both bars keep clear of the notch, which sideways is down one edge of
+the screen.
 
 It is meant to be left like that — propped against something on the desk, a
 clock that is also the day's record, with every break and every kind of work

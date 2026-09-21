@@ -14,7 +14,7 @@ index.html
             ├── ProjectsScreen   the projects, and the editor behind each
             ├── SettingsScreen    settings, sync controls, backup, about
             ├── SidePanel         Settings on the desk, over the right-hand edge
-            └── BottomNav         the four destinations, on the phone
+            └── BottomNav         the four destinations, on the phone — at the foot upright, split into the two top corners laid down
 
 src/app/
   types.ts          the model: Project, WorkDay (sessions, breaks, activities)

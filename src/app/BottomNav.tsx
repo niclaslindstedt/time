@@ -16,6 +16,23 @@ import { useT } from "./i18n/index.ts";
 // beat a drawer that has to be opened first. On a desk the same four move to
 // the top bar (`TopBar.tsx`), in this order, and the bottom bar is not drawn.
 //
+// Laid down, the bar goes to the top as well — two tabs into the left corner
+// and two into the right, in the same order (`styles.css`, the shell laid
+// down). A phone on its side has width going spare and no height at all, and
+// a bar across the foot of a 393px window is the one thing on that screen
+// taking height from the watch. In the corners the tabs take none: the
+// middle of that strip is empty, which is where the dial stands. It is the
+// same four in the same order, still one press away — the thumb has further
+// to go, and on a phone being propped against something rather than held
+// that is the better trade.
+//
+// Over the watch, where there is no bar above it, the strip *floats*: the
+// screen runs the whole height of the window under it and the dial is
+// centred on the window rather than on what is left over. That is `bare` —
+// the shell already works out whether the top bar has anything to draw
+// (`topBarNeeded`), and where it has, the strip takes its own row above it
+// instead of lying over it.
+//
 // The order is the order of the questions: what is happening *now* (Today),
 // what happened today and on other days (Log), what it adds up to (Report),
 // and what it is for (Projects). Settings is not a place you are but a thing
@@ -57,9 +74,13 @@ export const NAV_ICONS: Record<
 export function BottomNav({
   active,
   onSelect,
+  bare = false,
 }: {
   active: Tab;
   onSelect: (tab: NavTab) => void;
+  /** Whether the screen under it has no bar of its own — over the watch,
+   *  which is where the strip may float rather than take a row. */
+  bare?: boolean;
 }) {
   const t = useT();
   const items = useMemo(
@@ -77,7 +98,7 @@ export function BottomNav({
       active={active}
       onSelect={onSelect}
       label={t("app.name")}
-      className="app-bottom-nav"
+      className={`app-bottom-nav${bare ? " app-nav-floating" : ""}`}
     />
   );
 }

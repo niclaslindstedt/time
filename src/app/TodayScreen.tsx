@@ -66,9 +66,11 @@ import { useShortcuts } from "./useShortcuts.ts";
 // three noticed here: the line under the dial opens the arrival, a stretch
 // on the ring opens the day stretch by stretch, and the square marked "+" at
 // the end of each row invents the kind of break or work that nobody thought
-// to set up in advance. None of them leave this screen. The square carries
-// its name in a tooltip rather than beside the mark: spelled out it was as
-// wide as a break, and on a phone that pushed it onto a row of its own.
+// to set up in advance. None of them leave this screen. On a phone the
+// square carries its name in a tooltip rather than beside the mark: spelled
+// out it was as wide as a break, and that pushed it onto a row of its own.
+// Where the controls stand in a column beside the dial the row is the
+// column's width and there is nothing to save, so it spells it.
 //
 // A pill held rather than tapped is the fourth: it opens the kind itself, in
 // the same form the "+" fills in, so the mark a kind wears and the hue a
@@ -450,10 +452,15 @@ export function TodayScreen({
               sentence: the line is read at a glance, and a door with an
               arrow out of it is the same mark the menu puts on stopping
               work. The sentence is there for a screen reader and for
-              whoever rests on it. */}
+              whoever rests on it.
+
+              No separator before the mark. The dots on this line divide
+              words from words — the state from since when — and a glyph is
+              already a break in the reading; a dot in front of it made
+              three marks in a row and a gap wide enough to read as two
+              spaces. The space is the margin, once. */}
             {endsAt !== null && endsLabel !== null && (
-              <span className="ml-1.5 whitespace-nowrap" title={endsLabel}>
-                {"· "}
+              <span className="ml-2 whitespace-nowrap" title={endsLabel}>
                 <LeaveIcon className="inline-block h-3.5 w-3.5 align-[-0.15em]" />{" "}
                 <span className="tabular-nums">{formatTimeOfDay(endsAt)}</span>
                 <span className="sr-only">{` (${endsLabel})`}</span>
@@ -563,9 +570,12 @@ export function TodayScreen({
             onClick={() => setAsking({ kind: "break", id: null })}
             aria-label={t("today.custom")}
             title={t("today.custom")}
-            className="flex min-h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-dashed border-line bg-transparent text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:self-start"
+            className="flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:w-auto wide:justify-start wide:px-3"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
+            <span className="hidden truncate wide:inline">
+              {t("today.custom")}
+            </span>
           </button>
         </div>
       </section>
@@ -629,9 +639,12 @@ export function TodayScreen({
             onClick={() => setAsking({ kind: "activity", id: null })}
             aria-label={t("today.custom")}
             title={t("today.custom")}
-            className="inline-flex min-h-12 w-12 shrink-0 items-center justify-center rounded-full border border-dashed border-line text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:rounded-xl wide:self-start"
+            className="inline-flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-full border border-dashed border-line text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:w-auto wide:justify-start wide:rounded-xl wide:px-3 wide:font-semibold"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
+            <span className="hidden truncate wide:inline">
+              {t("today.custom")}
+            </span>
           </button>
         </div>
         {onBreak && (
