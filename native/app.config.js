@@ -1,0 +1,128 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The Expo config, as a FUNCTION rather than a static app.json so the app's
+// marketing version can be read from the web app's `package.json`. The wrapper
+// has no version of its own — it ships one build of the time report, and the
+// two must never disagree about which one. Store build numbers are
+// auto-incremented by EAS (see eas.json), so nothing here is bumped by hand.
+
+const { version } = require("../package.json");
+
+// Reverse-DNS app id, derived from the author domain and identical on both
+// stores so the app is one product across platforms.
+const BUNDLE_ID = "se.niclaslindstedt.time";
+
+// The app's own iCloud container. Pinned in three places that must agree: the
+// entitlements below, `modules/icloud-store/index.ts`, and its Swift twin in
+// `modules/icloud-store/ios/ICloudStoreModule.swift`. Apple requires the
+// `iCloud.` prefix on the identifier, and changing it after release strands
+// every document already synced under the old one.
+const ICLOUD_CONTAINER = `iCloud.${BUNDLE_ID}`;
+
+// The light theme's page background (`index.html`'s light `theme-color`).
+// Only paints the splash and the chrome before the page reports its own.
+const BRAND_BG = "#ffffff";
+
+// The near-black the app mark is cut from (scripts/generate-icons.mjs's BG).
+// The adaptive icon's foreground runs to the edges of its tile, so the layer
+// behind it has to be the same ink or the launcher's mask shows a seam.
+const MARK_INK = "#12101a";
+
+// The EAS project this app builds under. `eas init` prints the id; paste it
+// here or pass it in the environment (which is what CI does), because
+// `eas init` cannot write into a dynamic config. Left unset, the project is
+// simply unlinked and `eas build` will ask — it is not a build failure.
+const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? "";
+
+module.exports = () => ({
+  expo: {
+    name: "Time",
+    slug: "nird-time",
+    version,
+    // The Today screen is a watch: one dial, centred, with the day's controls
+    // beside it where the window is wide enough. Landscape is a supported
+    // shape (`src/app/shape.ts`'s `stand`), so the app is not pinned.
+    orientation: "default",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+    icon: "./assets/icon.png",
+    scheme: "nird-time",
+    backgroundColor: BRAND_BG,
+    assetBundlePatterns: ["**/*"],
+
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: BUNDLE_ID,
+      entitlements: {
+        // iCloud Documents: the app's own ubiquity container, which is what
+        // `modules/icloud-store` reads and writes. Without all three of these
+        // keys the container URL resolves to nil at runtime and the backend
+        // reports itself unavailable — which is a misconfiguration, not a
+        // state the user can fix.
+        "com.apple.developer.icloud-container-identifiers": [ICLOUD_CONTAINER],
+        "com.apple.developer.ubiquity-container-identifiers": [
+          ICLOUD_CONTAINER,
+        ],
+        "com.apple.developer.icloud-services": ["CloudDocuments"],
+      },
+      infoPlist: {
+        // The bundled build is served over plain HTTP on the loopback
+        // interface. ATS is left ON — only localhost is excepted, so nothing
+        // else in the app may fall back to cleartext.
+        NSAppTransportSecurity: {
+          NSAllowsArbitraryLoads: false,
+          NSAllowsLocalNetworking: true,
+          NSExceptionDomains: {
+            localhost: {
+              NSExceptionAllowsInsecureHTTPLoads: true,
+              NSIncludesSubdomains: false,
+            },
+          },
+        },
+        // Skips the App Store export-compliance prompt: no non-exempt crypto.
+        ITSAppUsesNonExemptEncryption: false,
+      },
+    },
+
+    android: {
+      package: BUNDLE_ID,
+      // None. The wrapper reads no sensor, no contact and no file outside its
+      // own sandbox — and Play's data-safety form is answered against this
+      // list. iCloud is Apple's, so on Android the app is the web app served
+      // from inside the download and nothing else.
+      permissions: [],
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: MARK_INK,
+      },
+    },
+
+    plugins: [
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/splash-icon.png",
+          imageWidth: 180,
+          resizeMode: "contain",
+          backgroundColor: BRAND_BG,
+        },
+      ],
+      // The bundled static server (lighttpd, via
+      // @dr.pogodin/react-native-static-server) needs Android minSdk 28, and
+      // the loopback origin is plain HTTP so cleartext has to be permitted.
+      [
+        "expo-build-properties",
+        { android: { minSdkVersion: 28, usesCleartextTraffic: true } },
+      ],
+    ],
+
+    extra: {
+      // NO remote URL here, deliberately. The app serves the copy of the time
+      // report bundled inside it (assets/webroot.zip) from a loopback server —
+      // that is what makes it work offline, and what makes it an app rather
+      // than a viewer for a website (App Store guideline 4.2). To point a
+      // debug build at a deployed slot, set EXPO_PUBLIC_TIME_URL at build
+      // time; src/config.ts reads that env var directly.
+      ...(EAS_PROJECT_ID ? { eas: { projectId: EAS_PROJECT_ID } } : {}),
+    },
+  },
+});

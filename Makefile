@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check actionlint release clean docs website website-dev install icons check-seo changelog bump shots
+.PHONY: build test lint fmt fmt-check actionlint release clean docs website website-dev install icons check-seo changelog bump shots native-install native-bundle native-typecheck native-prebuild
 
 build:
 	npm run build
@@ -34,6 +34,31 @@ icons:
 # Needs playwright, installed outside the lockfile — the script says how.
 shots:
 	npm run build && node scripts/dial-shots.mjs $(ARGS)
+
+# --- the native wrapper (native/) -------------------------------------------
+#
+# A thin Expo/React Native shell that bundles this web app and serves it in a
+# WebView, plus the iCloud Drive storage backend. It has its OWN dependency
+# tree — `make install` at the root does not touch it — so every target here
+# reaches in with `--prefix native`. Store builds run on EAS, by manual
+# dispatch: .github/workflows/native.yml; see native/RELEASING.md.
+
+native-install:
+	npm --prefix native install
+
+# Build the web app and pack it into native/assets/webroot.zip — the copy the
+# wrapper serves. Required before any native build; CI does it for you.
+native-bundle:
+	npm --prefix native run bundle
+
+native-typecheck:
+	npm --prefix native run typecheck
+
+# Regenerate native/ios and native/android from app.config.js and the config
+# plugins. Both are gitignored build output — this is only for inspecting what
+# the plugins produce.
+native-prebuild:
+	npm --prefix native run prebuild
 
 actionlint:
 	actionlint -color

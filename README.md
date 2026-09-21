@@ -46,6 +46,13 @@ Nothing about a total is stored: the document holds projects and the spans of
 each day, and every number is derived from them at read time, so a corrected
 break moves every downstream figure.
 
+The same app ships to the **App Store** and **Google Play** through a thin
+native wrapper in [`native/`](native/README.md) — the whole web build packed
+inside the download and served from the device, so it runs with no network at
+all. On a phone that gains one thing a browser cannot: **iCloud**, as a third
+option beside Dropbox and Google Drive, keeping the document in your own
+container under Files → iCloud Drive → Time.
+
 It is built on [`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework),
 the shared React/Preact surface behind the sibling
 [contacts](https://github.com/niclaslindstedt/contacts) and
@@ -56,8 +63,8 @@ adapters, same theme engine, same PWA update lifecycle.
 
 - **It is your record.** When you were at work, for whom and doing what is a
   record about a named person. It lives in your browser's localStorage, and
-  leaves the device only if you connect **your own** Dropbox or Google Drive —
-  to a folder you can open, in a JSON file you can read. No analytics, no
+  leaves the device only if you connect **your own** iCloud, Dropbox or Google
+  Drive — to a folder you can open, in a JSON file you can read. No analytics, no
   telemetry, no third-party requests at runtime.
 - **Two taps a day.** Enter, leave. Breaks and categories are one tap each,
   and anything you forgot can be added afterwards.
@@ -107,6 +114,18 @@ To try the production build the way it deploys:
 npm run build && npm run preview
 ```
 
+The native wrapper is a separate project with its own dependencies — a root
+`npm install` does not touch it:
+
+```sh
+make native-install      # install the wrapper's dependencies
+make native-bundle       # build the web app into native/assets/webroot.zip
+make native-typecheck
+```
+
+See [`native/README.md`](native/README.md) for running it on a device, and
+[`native/RELEASING.md`](native/RELEASING.md) for a store build.
+
 ## Usage
 
 Four places to be. On a phone held upright they are the bottom bar — swipe
@@ -126,9 +145,9 @@ dialog, `Enter` saves and `Escape` cancels):
 
 …and one button for the screen you visit and leave — on the dial over Today, and on the top bar everywhere else:
 
-| Button | What it does                                                                                                                                                                                                                                                                                   |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, week start, cloud sync, backup / restore / delete, developer tools, and the build. |
+| Button | What it does                                                                                                                                                                                                                                                                                                                                              |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, week start, cloud sync (Dropbox, Google Drive, and iCloud in the app-store build), backup / restore / delete, developer tools, and the build. |
 
 ## Configuration
 
@@ -143,6 +162,9 @@ is no secret to protect), and leaving either unset simply hides that provider:
 | `VITE_DROPBOX_APP_FOLDER` | Folder name the document is filed under (default `time`). |
 | `VITE_GDRIVE_APP_FOLDER`  | Folder name in My Drive (default `time`).                 |
 | `VITE_BASE`               | Deploy base path (default `/`).                           |
+
+iCloud takes no variable at all: it is offered by the native wrapper's host,
+so it appears in the app-store build and nowhere else.
 
 See [`docs/configuration.md`](docs/configuration.md) for the details.
 
@@ -210,6 +232,7 @@ More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 - [Architecture](docs/architecture.md)
 - [The day model](docs/day-model.md) — sessions, breaks, activities, and what they add up to
 - [Sync](docs/sync.md)
+- [The app on a phone](docs/features/native-app.md) — the native wrapper and iCloud
 - [Troubleshooting](docs/troubleshooting.md)
 - [`AGENTS.md`](AGENTS.md) — conventions for humans and coding agents
 

@@ -44,6 +44,11 @@ make fmt-check     # verify formatting (CI)
 make check-seo     # build + assert the structural SEO/PWA signals
 make icons         # regenerate the PWA icons, favicon, and og image
 make shots         # build + photograph the dial in a few states into shots/, with a contact sheet (ARGS="…" for options)
+
+make native-install    # install the native wrapper's own dependencies
+make native-bundle     # build the web app into native/assets/webroot.zip
+make native-typecheck  # tsc over native/
+make native-prebuild   # regenerate native/ios + native/android from the config
 ```
 
 The `@niclaslindstedt/oss-framework` dependency comes from the **GitHub
@@ -246,6 +251,20 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   that trusts stored bytes.
 - `src/app/useDocStore.ts` — the document store, over a `DocBackend` seam
   rather than `localStorage` directly (which is what demo data swaps).
+- `src/app/cloudHost.ts` — the seam a **host** fills to offer the app a
+  document store of its own, which today means iCloud. A browser has none, so
+  on the website the backend is simply absent; the native wrapper installs one
+  (`native/src/icloudBridge.ts`) and it appears. The question it asks is about
+  **capability, not identity** — never "am I native?", only "did something
+  offer a store?" — which is why `AVAILABLE_BACKENDS` stops being the whole
+  answer and the engine returns `available` instead. Also
+  `createCloudHostAdapter`, which turns a host into an ordinary
+  `StorageAdapter` through the framework's `createFileStoreAdapter`, so
+  everything downstream is the code path Dropbox and Drive already take, and
+  the mapping of a host's three failure kinds onto the errors the engine
+  routes on (`auth` → Reconnect, `offline` → keep the local copy, anything
+  else → stop). Validates every host before trusting it: the value arrives
+  from code outside this bundle.
 - `src/app/useSyncEngine.ts` — the sync engine over the framework's storage
   adapters (debounced push, conflict / auth / throttle handling). Suspended
   wholesale while demo data has taken over storage.
@@ -496,6 +515,127 @@ the switcher on the top bar and the "In use" badge appear only once there are
 two. A change that shows a project picker to someone with one project is a
 regression.
 
+## The native wrapper (`native/`)
+
+`native/` is a **thin** Expo / React Native shell that ships this web app to
+the App Store and Google Play. It is a **separate npm project** with its own
+`package.json`, its own lockfile and its own `node_modules` — `npm ci` at the
+root does not touch it, and neither does `make install`. Reach it with
+`--prefix native` (or the `make native-*` targets).
+
+**Thin is a constraint, not an aspiration.** The wrapper does four things:
+
+1. packs the built web app into `assets/webroot.zip` and serves it from a
+   loopback HTTP server (`src/local-server.ts`);
+2. points a `WebView` at that origin and otherwise gets out of the way;
+3. injects two scripts into the page — `src/injected.ts`, which reports the
+   resolved theme colours so the native chrome follows them and unregisters
+   the service worker, and `src/icloudBridge.ts`, which offers the page a
+   document store;
+4. answers those store requests against the app's own iCloud container
+   (`src/icloud.ts` → `modules/icloud-store`).
+
+### The two native-only features, and why there have to be two
+
+**Being self-contained and iCloud are the only features the wrapper adds.**
+Everything else a reader sees is the web app, unchanged.
+
+They are also the reason the wrapper is shippable at all. **App Store
+guideline 4.2 (minimum functionality) rejects a build that is only a viewer
+for a website**, so this app has to do things the browser cannot, and be seen
+to: it serves the time report from inside the download (no network at all,
+ever), and it keeps the document in the reader's own iCloud container, which
+no browser can reach. A change that removes a native-only feature does not
+just lose the feature — it weakens the 4.2 case for the whole listing. A
+change that _adds_ one is not forbidden, but it has to clear both rules below
+and it has to be worth its own row here.
+
+- **Nothing in `src/` may learn that the wrapper exists.** No `window.__native`
+  feature detection, no native-only branch, no build flag. The wrapper reads
+  the shipped app from the outside, the way a second reader would.
+
+  A native-only feature that the web app has to _offer_ — iCloud is the first
+  — is done as a **capability the host may offer**, never as a check for this
+  wrapper. `src/app/cloudHost.ts` asks whether a document store is present on
+  `window`; it never asks what it is running inside. A browser offers none, so
+  the backend is simply absent there, and a second host offering the same five
+  methods would light it up with no change to `src/`. If a change seems to need
+  the web app to know it is native, the change is wrong; if it needs a
+  capability the host can offer, name the capability.
+
+- **The wrapper may not reimplement the domain.** It moves bytes: a file in, a
+  file out. What a day adds up to, what a break counts for, and how two
+  devices' copies reconcile are `day.ts`, `report.ts` and `merge.ts`'s, and a
+  Swift copy of any of that would drift the first week it existed. That is
+  also why the store is file-shaped — `list` / `read` / `write` / `remove`, the
+  framework's own `FileStore` — rather than something that understands a day:
+  the whole document goes through the app's ordinary per-record merge with no
+  iCloud-shaped special case anywhere.
+
+### What breaks quietly
+
+- **The iCloud bridge is three strings that must agree with `src/`**: the
+  property the host installs itself on (`window.__timeCloudHost`), the
+  announcement event (`time:cloud-host`), and the provider's name
+  (`icloud`) — plus the five method names. None of them fails loudly on a
+  mismatch: the backend simply never appears in the storage picker, on a
+  device where the reader can see nothing wrong. `tests/native_icloud_test.ts`
+  pins all of them against the app's own constants.
+- **Nothing the root `tsc` can reach may import `expo`** (or any other
+  `native/`-only dependency). The root config type-checks `tests/`, and
+  `tests/native_icloud_test.ts` imports `native/src/icloudBridge.ts` — but a
+  root `npm ci` does not install `native/`'s dependencies, so such an import
+  passes on a fully-installed machine and fails only in CI. A **type-only**
+  import is still an import here. That is why the wire shapes live in
+  `native/src/icloudWire.ts`, which imports nothing at all, and why only
+  `native/src/icloud.ts` reaches for the native module. `tsc` cannot guard
+  this locally, so `tests/native_icloud_test.ts` reads the two files' import
+  lines instead — crudely, and on purpose, because that fails where it helps.
+- **A failure crosses the bridge as DATA, never as a rejection.** The only
+  channel back into the page is an injected script, and an exception thrown
+  there is swallowed by the WebView rather than reaching the promise. So
+  `src/icloud.ts` answers `{ ok: false, kind }` and `cloudHost.ts` turns the
+  kind back into the right framework error. Getting the three kinds apart
+  matters: `offline` is what keeps the local copy in play, and collapsing it
+  into `error` is how an unreachable container becomes an empty one and the
+  user's hours get pushed over.
+- **A file iCloud has listed is not a file iCloud has downloaded.** The Swift
+  side waits for the bytes and reports a timeout as a failure, never as an
+  empty document — an empty document is a valid one and would be merged as
+  such.
+- **The iCloud container id is pinned in three files that must agree**:
+  `app.config.js` (all three iCloud entitlements),
+  `modules/icloud-store/index.ts`, and `modules/icloud-store/ios/
+ICloudStoreModule.swift`. Changing it after release strands every document
+  already synced under the old one.
+- **The loopback port is fixed** (`src/local-server.ts`). A web origin is
+  scheme + host + port and `localStorage` is keyed by origin, so a random port
+  hands the WebView an empty store on every launch — every day the user logged
+  appears to vanish. The ladder falls back to another _deterministic_ port, and
+  never to `0`.
+- **`localhost`, never `127.0.0.1`.** App Transport Security blocks the literal
+  address from `WKWebView` even with exception domains declared; the failure
+  mode is a silent blank page on iOS.
+- **The service worker is unregistered** (`src/injected.ts`). The origin is
+  stable across app updates, so a worker registered by an older build keeps
+  answering from its precache after a store update has already unpacked the
+  new one — an App Store update that changes nothing until the app is deleted.
+- **`native/ios` and `native/android` are prebuild output.** Regenerated from
+  `app.config.js` by `expo prebuild --clean`, gitignored, and the source of
+  truth for nothing. A fix made there survives until the next build; make it
+  in the config instead.
+- **`native/tsconfig.json` must not `extend` Expo's base.** `native/` is not
+  installed by a root `npm ci`, so `expo/tsconfig.base` is absent in CI, and
+  Vite resolves the nearest tsconfig for the root test that imports
+  `native/src/icloudBridge.ts` — an unresolvable `extends` turns a
+  fully-installed machine green and CI red. The base is inlined instead;
+  re-check it against `node_modules/expo/tsconfig.base.json` when expo is
+  upgraded.
+
+Native builds run on **EAS** and are dispatch-only
+(`.github/workflows/native.yml`) — every run costs build credits. CI's `native`
+job only type-checks. See `native/README.md` and `native/RELEASING.md`.
+
 ## Where new code goes
 
 | Change                                             | Goes in                                                                                                                                                                                                                                                                                |
@@ -535,6 +675,8 @@ regression.
 | A new developer-only affordance                    | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                                                                                                                                                             |
 | A change to what the demo shows                    | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demoData_test.ts`                                                                                                                                                                            |
 | A new storage backend                              | The framework, not here — this app only wires adapters up in `useSyncEngine.ts`                                                                                                                                                                                                        |
+| A backend only some hosts can offer                | `src/app/cloudHost.ts` (the capability, tested in `tests/cloudHost_test.ts`) + a row in `useSyncEngine.ts`'s `PROVIDER_NAMES` and its `available` — never a check for the wrapper, and never a module constant that claims a host is there                                             |
+| Anything in the native wrapper                     | `native/...` — and read "The native wrapper" above first                                                                                                                                                                                                                               |
 | Any user-facing string                             | `src/app/i18n/en.ts`, never inline in a component                                                                                                                                                                                                                                      |
 | A shared UI primitive                              | The framework, if it is domain-free; `src/app/` only if it is time-report-specific                                                                                                                                                                                                     |
 
@@ -544,8 +686,11 @@ Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and run under
 Vitest in the `node` environment — they cover the pure domain modules
 (`intervals`, `day`, `actions`, `report`, `monthChart`, `clock`, `sheen`,
 `format`, `project`, `kinds`, `merge`, `migrations`, `demoData`,
-`shortcuts`), which is where the app's real
-logic is. No
+`shortcuts`, `cloudHost`), which is where the app's real
+logic is. `native_icloud_test.ts` is the one that reaches outside `src/`: it
+pins the strings the wrapper and the app have to agree on, and guards the
+import discipline that lets it import from `native/` at all — see "The native
+wrapper" above. No
 DOM, no testing-library, no mocked clock. `tests/fixtures/helpers.ts` holds the shared
 fixtures (a project, a day, a named-id `ctx`).
 
@@ -579,19 +724,21 @@ with `[Learn more](feature:<slug>)`.
 
 ## Documentation sync points
 
-| If you change…                   | Update…                                                                                                                                                                 |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The derivation in `day.ts`       | `docs/day-model.md`, `docs/features/today.md`, and the README's Examples block if the output shape moved                                                                |
-| `report.ts` or `monthChart.ts`   | `docs/day-model.md` (the report section) and `docs/features/report.md`                                                                                                  |
-| `actions.ts`                     | `docs/features/today.md` and `docs/features/log.md`                                                                                                                     |
-| The `Project` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/projects.md`, and a `migrations.ts` step — a purely additive optional field needs the validation rather than a step |
-| Where the day sits on the dial   | `docs/features/today.md` and the README's Usage table — both describe the ring a reader is looking at                                                                   |
-| The sync engine or the merge     | `docs/sync.md`                                                                                                                                                          |
-| A `VITE_*` variable              | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it                                                          |
-| A screen's behaviour             | The matching `docs/features/*.md` and the README's Usage table                                                                                                          |
-| The navigation (nav or top bar)  | `docs/architecture.md`'s tree and the README's Usage tables                                                                                                             |
-| Module layout                    | The "Where new code goes" table above and `docs/architecture.md`                                                                                                        |
-| A make target or script          | `CONTRIBUTING.md`, the README's Quick start, and this file's command list                                                                                               |
+| If you change…                   | Update…                                                                                                                                                                        |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| The derivation in `day.ts`       | `docs/day-model.md`, `docs/features/today.md`, and the README's Examples block if the output shape moved                                                                       |
+| `report.ts` or `monthChart.ts`   | `docs/day-model.md` (the report section) and `docs/features/report.md`                                                                                                         |
+| `actions.ts`                     | `docs/features/today.md` and `docs/features/log.md`                                                                                                                            |
+| The `Project` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/projects.md`, and a `migrations.ts` step — a purely additive optional field needs the validation rather than a step        |
+| Where the day sits on the dial   | `docs/features/today.md` and the README's Usage table — both describe the ring a reader is looking at                                                                          |
+| The sync engine or the merge     | `docs/sync.md`                                                                                                                                                                 |
+| `cloudHost.ts` or the bridge     | `docs/sync.md`, `docs/features/cloud-sync.md`, `docs/features/native-app.md`, `native/README.md`, and `tests/native_icloud_test.ts` — which pins the strings both halves share |
+| Anything under `native/`         | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`                                                                                                       |
+| A `VITE_*` variable              | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it                                                                 |
+| A screen's behaviour             | The matching `docs/features/*.md` and the README's Usage table                                                                                                                 |
+| The navigation (nav or top bar)  | `docs/architecture.md`'s tree and the README's Usage tables                                                                                                                    |
+| Module layout                    | The "Where new code goes" table above and `docs/architecture.md`                                                                                                               |
+| A make target or script          | `CONTRIBUTING.md`, the README's Quick start, and this file's command list                                                                                                      |
 
 ## Parity and cross-cutting rules
 
