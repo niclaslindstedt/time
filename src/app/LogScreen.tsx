@@ -219,7 +219,14 @@ export function LogScreen({ store, project, onNotice }: Props) {
         >
           <ChevronLeftIcon className="h-5 w-5" />
         </IconButton>
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
+        {/*
+          The menu button is aligned to the day's name rather than to the pair
+          of lines: centred against both, the dots land in the gap between
+          them and read as punctuation rather than as a control. Top-aligned,
+          the button's 2rem box centres on the headline's 1.75rem line — which
+          is why the title keeps its half-unit of padding on both screens.
+        */}
+        <div className="flex min-w-0 flex-1 items-start justify-center gap-1">
           <button
             type="button"
             onClick={() => setDate(now.today)}

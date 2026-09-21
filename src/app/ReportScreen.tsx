@@ -193,11 +193,12 @@ export function ReportScreen({ data, project, settings, update }: Props) {
         >
           <ChevronLeftIcon className="h-5 w-5" />
         </button>
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
+        {/* Aligned to the headline, not the pair of lines — see LogScreen. */}
+        <div className="flex min-w-0 flex-1 items-start justify-center gap-1">
           <button
             type="button"
             onClick={() => setAnchor(now.today)}
-            className="min-w-0 text-center"
+            className="min-w-0 py-0.5 text-center"
           >
             <span className="block truncate text-lg font-bold text-fg-bright">
               {title}
