@@ -29,6 +29,10 @@ interface ImportMetaEnv {
   // App-folder names the synced document is filed under, per provider.
   readonly VITE_DROPBOX_APP_FOLDER?: string;
   readonly VITE_GDRIVE_APP_FOLDER?: string;
+  // Which build this is: "store" for the one sold in the App Store, anything
+  // else (including unset) for the free web edition, whose exported
+  // specifications carry the notice. See `src/app/edition.ts`.
+  readonly VITE_EDITION?: string;
 }
 
 interface ImportMeta {

@@ -5,7 +5,9 @@ What the days add up to, for the project in use.
 ## The range
 
 **Week** or **Month**, with arrows to step back and forward and the title to
-jump to the current one. The week follows the **Week starts on** setting.
+jump to the current one. The week follows the **Week starts on** setting. The
+**…** beside the title is what else can be done with the range: today that is
+[**Export to PDF**](#export-to-pdf).
 
 ## The two rings
 
@@ -119,3 +121,96 @@ expected.
 Every figure is `summarizeRange` over the same `dayTotals` the Today screen
 ticks against — see [`../day-model.md`](../day-model.md) — so the report can
 never disagree with the timer.
+
+## Export to PDF
+
+The **…** beside the range opens **Export to PDF**: the same hours, as a
+document to send with an invoice or file against a contract. It is written on
+the device — no service renders it and nothing about the range leaves the
+machine — and it comes out either as a file or straight at the printer.
+
+### The style
+
+Six styles come with the app, each drawn on a card as the **first page of your
+own specification** rather than as a picture of somebody else's:
+
+| Style         | What it looks like                                            |
+| ------------- | ------------------------------------------------------------- |
+| **Ledger**    | Serif, centred, every row ruled                               |
+| **Studio**    | A band of colour across the top and a zebra under the figures |
+| **Editorial** | Serif headings over a sans body, air between everything       |
+| **Plain**     | Nothing but the hours, in decimals                            |
+| **Technical** | Every stretch of every day, monospaced and boxed in           |
+| **Executive** | The totals only, set large, and a line to sign on             |
+
+**Save these as my custom style** copies whichever is selected into **Custom**,
+where the pieces come apart: typeface, heading, colour, table, density, paper,
+detail and figures, plus what else the document carries. Editing any of them is
+editing Custom — a preset never quietly differs from what its own settings say.
+Both are kept, so going back to Custom finds it as it was left.
+
+The **typefaces** are the ones every PDF reader already has (Helvetica, Times
+and Courier, under this app's own names), which is why a specification is a few
+tens of kilobytes and why no font is ever fetched to make one.
+
+### Detail
+
+One choice decides how long the document is, and all three are the same hours:
+
+- **The period's totals** — no day-by-day table at all.
+- **A row per day** — when it started, when it ended, the break, the hours.
+- **Every stretch of every day** — each spell of work and each break under its
+  day, with the times they ran between. A break's length is in brackets,
+  because it is not time the document bills for.
+
+### Rounding
+
+Optional, and **not part of a style** — a document that billed different hours
+depending on the typeface it was set in would be a document nobody could trust.
+Each day's hours are rounded **up** to the next 5, 6, 10, 15, 30 or 60 minutes:
+a day of 5h 17m is billed as 5h 30m at a quarter of an hour, because the
+convention is that a quarter begun is a quarter billed.
+
+The range is the **sum of its rounded days**, never the range rounded once, and
+what the rounding added appears as its own line in **Hours by kind of work** so
+the table still adds up to the total under it. The document says in a line what
+it rounded to, so whoever receives it can reconcile the figures against the
+times beside them.
+
+### What is on it
+
+Always the project, the period and the date; then, as the style says, the
+totals, hours by kind of work, break time, the day-by-day table, target and
+balance, and a line to sign. **Prepared by**, **Client** and **Reference** are
+typed into the form and remembered per device; a field left empty is a line the
+document simply does not print.
+
+Hours are given as **hours and minutes**, as **decimal hours** to the hundredth,
+or both. The decimal column is the one an invoice line is a rate times, and it
+adds up by construction: each row is rounded to the hundredth and the total is
+the sum of the rows.
+
+Target and balance are off by default. They are your figures rather than the
+client's — they say how the hours stand against your own contract, not what was
+worked.
+
+### Out
+
+- **Download PDF** saves the file as
+  `<project>_<period>_specification.pdf`, lowercase and without a space in it —
+  `demo_ab_september_2026_specification.pdf`.
+- **Print** hands the printer the same pages the file is written from, rather
+  than a picture of the preview.
+
+The preview beside the form is the document: the pages are laid out once
+(`specLayout.ts`) and drawn twice, as a PDF and as SVG, off the same
+measurements. What is on screen, what comes out of the printer and what the
+client opens are the same page.
+
+### The notice
+
+A specification exported from the **free web edition** carries a band on every
+page saying what made it and where to buy the app without it. It is a build
+parameter (`VITE_EDITION`, see [`../configuration.md`](../configuration.md)) —
+there is no server to ask and no account to check, so the edition is the build
+that was shipped. The App Store build carries no notice.

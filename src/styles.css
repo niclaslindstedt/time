@@ -915,3 +915,46 @@ input:not(
 .app-clock [data-winding] [data-hand] {
   will-change: transform;
 }
+
+/* ── The specification, on its way to the printer ─────────────────────────
+   The export modal keeps a copy of the document's pages in the DOM, drawn as
+   SVG by `SpecPages` (the same pages the PDF is written from, see
+   `specLayout.ts`). It is not on the screen: the modal has its own preview,
+   and this one exists so that "Print" hands the printer the document rather
+   than a picture of the app.
+
+   So it is `display: none` until the print starts, and while it is printing
+   it is the only thing on the page — `body > *` covers the app root and the
+   modal's portal alike. The `@page` rule comes with the document rather than
+   from here, because the paper size is part of the style (`pageRule`). */
+.spec-print {
+  display: none;
+}
+
+@media print {
+  html[data-printing="spec"] body > * {
+    display: none !important;
+  }
+
+  html[data-printing="spec"] .spec-print {
+    display: block !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* A page is a page: full width, its own aspect ratio, and a break after it.
+     The last one takes no break, or a printer that honours it ejects a blank
+     sheet at the end of every specification. */
+  html[data-printing="spec"] .spec-print svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  html[data-printing="spec"] .spec-print svg:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}

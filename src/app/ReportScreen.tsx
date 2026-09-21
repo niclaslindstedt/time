@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import {
   addDays,
@@ -10,10 +10,14 @@ import {
 } from "@niclaslindstedt/oss-framework/calendar";
 import { BarChart, DonutChart } from "@niclaslindstedt/oss-framework/charts";
 import {
+  ActionMenuList,
   ChevronLeftIcon,
   ChevronRightIcon,
+  FloatingPanel,
+  IconButton,
   Section,
   SegmentedControl,
+  type FloatingPlacement,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { DayBars } from "./DayBars.tsx";
@@ -29,6 +33,7 @@ import {
   CupIcon,
   HourglassIcon,
   KindGlyph,
+  MoreIcon,
   TagIcon,
 } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
@@ -42,7 +47,9 @@ import { MonthCalendar } from "./MonthCalendar.tsx";
 import { monthChart } from "./monthChart.ts";
 import { RangeGlance } from "./RangeGlance.tsx";
 import { monthOf, runningBalance, summarizeRange, weekOf } from "./report.ts";
+import { SpecExportModal } from "./SpecExportModal.tsx";
 import type { AppData, Project } from "./types.ts";
+import type { AppSettings } from "./useAppSettings.ts";
 import { useNow } from "./useNow.ts";
 
 // What the days add up to: worked against target per day, where the hours
@@ -55,13 +62,27 @@ type Range = "week" | "month";
 type Props = {
   data: AppData;
   project: Project | null;
-  weekStartsOn: WeekStart;
+  settings: AppSettings;
+  update: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
 };
 
-export function ReportScreen({ data, project, weekStartsOn }: Props) {
+/** Where the range menu hangs: under the button and ranged to its right
+ *  edge, so on a phone it opens inwards rather than off the screen. */
+const RANGE_MENU: FloatingPlacement = {
+  width: { kind: "min", minPx: 176 },
+  anchor: "right",
+  gap: 4,
+  coordinateSpace: "viewport",
+};
+
+export function ReportScreen({ data, project, settings, update }: Props) {
   const t = useT();
   const now = useNow(60_000);
+  const weekStartsOn: WeekStart = settings.weekStartsOn;
   const [range, setRange] = useState<Range>("week");
+  const [rangeMenu, setRangeMenu] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const rangeMenuRef = useRef<HTMLButtonElement>(null);
   // The anchor day the range is built around; stepping moves it a week or a
   // month.
   const [anchor, setAnchor] = useState<DayKey>(now.today);
@@ -172,25 +193,36 @@ export function ReportScreen({ data, project, weekStartsOn }: Props) {
         >
           <ChevronLeftIcon className="h-5 w-5" />
         </button>
-        <button
-          type="button"
-          onClick={() => setAnchor(now.today)}
-          className="min-w-0 flex-1 text-center"
-        >
-          <span className="block text-lg font-bold text-fg-bright">
-            {title}
-          </span>
-          <span className="block text-xs text-muted">
-            {current
-              ? range === "week"
-                ? t("report.thisWeek")
-                : t("report.thisMonth")
-              : t("report.workedDays", {
-                  count: String(summary.workedDays),
-                  expected: String(summary.expectedDays),
-                })}
-          </span>
-        </button>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
+          <button
+            type="button"
+            onClick={() => setAnchor(now.today)}
+            className="min-w-0 text-center"
+          >
+            <span className="block truncate text-lg font-bold text-fg-bright">
+              {title}
+            </span>
+            <span className="block truncate text-xs text-muted">
+              {current
+                ? range === "week"
+                  ? t("report.thisWeek")
+                  : t("report.thisMonth")
+                : t("report.workedDays", {
+                    count: String(summary.workedDays),
+                    expected: String(summary.expectedDays),
+                  })}
+            </span>
+          </button>
+          <IconButton
+            ref={rangeMenuRef}
+            label={t("report.rangeMenu")}
+            expanded={rangeMenu}
+            className="h-8 w-8 shrink-0 border-transparent"
+            onClick={() => setRangeMenu((open) => !open)}
+          >
+            <MoreIcon className="h-5 w-5" />
+          </IconButton>
+        </div>
         <button
           type="button"
           aria-label={t("common.next")}
@@ -322,6 +354,52 @@ export function ReportScreen({ data, project, weekStartsOn }: Props) {
           expected: String(summary.expectedDays),
         })}
       </p>
+
+      <FloatingPanel
+        open={rangeMenu}
+        onClose={() => setRangeMenu(false)}
+        triggerRef={rangeMenuRef}
+        placement={RANGE_MENU}
+        className="py-1"
+      >
+        <ActionMenuList
+          actions={[
+            {
+              label: t("report.exportPdf"),
+              onSelect: () => setExporting(true),
+            },
+          ]}
+          ariaLabel={t("report.rangeMenu")}
+          onActivate={(action) => {
+            setRangeMenu(false);
+            action.onSelect();
+          }}
+        />
+      </FloatingPanel>
+
+      {exporting && (
+        <SpecExportModal
+          data={data}
+          project={project}
+          from={span.from}
+          to={span.to}
+          period={title}
+          // A month names itself; a week is two dates, and a filename made of
+          // "1 – 7 Sep" would lose the year the heading carries.
+          periodSlug={range === "month" ? title : `${span.from}_${span.to}`}
+          today={now.today}
+          now={now.seconds}
+          preset={settings.specPreset}
+          style={settings.spec}
+          details={settings.specDetails}
+          rounding={settings.specRounding}
+          onPreset={(preset) => update("specPreset", preset)}
+          onStyle={(style) => update("spec", style)}
+          onDetails={(details) => update("specDetails", details)}
+          onRounding={(rounding) => update("specRounding", rounding)}
+          onClose={() => setExporting(false)}
+        />
+      )}
     </div>
   );
 }

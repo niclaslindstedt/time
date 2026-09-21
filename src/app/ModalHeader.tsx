@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 
 import { Button } from "@niclaslindstedt/oss-framework/components";
 
@@ -31,6 +31,13 @@ type Props = {
   onSave: () => void;
   /** Whether the draft is savable — the save button is disabled while not. */
   saveDisabled?: boolean;
+  /** What the save button says, where "Save" is not what the modal does —
+   *  a form that ends in a file says so. */
+  saveLabel?: string;
+  /** A second way out, beside the save: the modal that both downloads and
+   *  prints has two outcomes rather than one, and they belong in this row
+   *  together rather than in a second row at the foot of the sheet. */
+  extra?: ReactNode;
 };
 
 export function ModalHeader({
@@ -39,6 +46,8 @@ export function ModalHeader({
   onCancel,
   onSave,
   saveDisabled = false,
+  saveLabel,
+  extra,
 }: Props) {
   const t = useT();
   const row = useRef<HTMLDivElement>(null);
@@ -59,13 +68,14 @@ export function ModalHeader({
       >
         {title}
       </h2>
+      {extra}
       <Button
         variant="primary"
         className="min-h-10 shrink-0 font-bold"
         disabled={saveDisabled}
         onClick={onSave}
       >
-        {t("common.save")}
+        {saveLabel ?? t("common.save")}
       </Button>
     </div>
   );

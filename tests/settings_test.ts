@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import { DEFAULT_BACKLIGHT, DIAL_PRESET } from "../src/app/look.ts";
+import { DEFAULT_SPEC_PRESET, SPEC_PRESET } from "../src/app/specStyle.ts";
 import { DEFAULT_SETTINGS, parseSettings } from "../src/app/useAppSettings.ts";
 
 // The settings store's parser: what comes back from localStorage is clamped
@@ -193,5 +194,57 @@ describe("parseSettings – the backlight", () => {
       JSON.stringify({ backlight: { color: "teal", hz: 0, intensity: 80 } }),
     );
     expect(s.backlight.spread).toBe(DEFAULT_BACKLIGHT.spread);
+  });
+});
+
+describe("the specification's style and details", () => {
+  it("boots on the default style with an empty form", () => {
+    expect(DEFAULT_SETTINGS.specPreset).toBe(DEFAULT_SPEC_PRESET);
+    expect(DEFAULT_SETTINGS.spec).toEqual(SPEC_PRESET[DEFAULT_SPEC_PRESET]);
+    expect(DEFAULT_SETTINGS.specDetails).toEqual({
+      preparedBy: "",
+      client: "",
+      reference: "",
+      note: "",
+    });
+  });
+
+  it("keeps a style choice and the custom style beside it", () => {
+    const custom = { ...SPEC_PRESET.plain, accent: "plum" };
+    const s = parseSettings(
+      JSON.stringify({ specPreset: "custom", spec: custom }),
+    );
+    expect(s.specPreset).toBe("custom");
+    expect(s.spec.accent).toBe("plum");
+    expect(parseSettings('{"specPreset":"ledger"}').specPreset).toBe("ledger");
+    expect(parseSettings('{"specPreset":"gothic"}').specPreset).toBe(
+      DEFAULT_SPEC_PRESET,
+    );
+  });
+
+  it("clamps the style field by field", () => {
+    const s = parseSettings(JSON.stringify({ spec: { paper: "foolscap" } }));
+    expect(s.spec.paper).toBe(SPEC_PRESET[DEFAULT_SPEC_PRESET].paper);
+  });
+
+  it("keeps the details as typed, to a length", () => {
+    const s = parseSettings(
+      JSON.stringify({
+        specDetails: {
+          preparedBy: "Alex Karlsson",
+          client: 7,
+          note: "x".repeat(900),
+        },
+      }),
+    );
+    expect(s.specDetails.preparedBy).toBe("Alex Karlsson");
+    expect(s.specDetails.client).toBe("");
+    expect(s.specDetails.note).toHaveLength(500);
+  });
+
+  it("gives a device that stored its settings before the export the defaults", () => {
+    const s = parseSettings('{"theme":"dark"}');
+    expect(s.specPreset).toBe(DEFAULT_SPEC_PRESET);
+    expect(s.specDetails).toEqual(DEFAULT_SETTINGS.specDetails);
   });
 });
