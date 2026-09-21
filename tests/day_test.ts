@@ -434,10 +434,23 @@ describe("workdayEnd", () => {
     expect(workdayEnd(lunched, p, h(13))).toBe(h(16, 20));
   });
 
-  it("reads a break's assumed end as time that has been spent", () => {
-    // Ten past twelve, of a lunch written down as ending at half past: the
-    // twenty minutes still to come are already on the day.
-    expect(workdayEnd(lunched, acme, h(12, 10))).toBe(h(16, 30));
+  it("says nothing while a break is on", () => {
+    // Ten past twelve, of a lunch written down as ending at half past. When
+    // the hours are done from here is about when the break ends, and the
+    // half hour is what a lunch is assumed to take rather than a plan.
+    expect(workdayEnd(lunched, acme, h(12, 10))).toBeNull();
+    // An open break — one nobody has written an end for — the same.
+    const coffee = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: null }],
+      breaks: [{ id: "b1", typeId: "coffee", start: h(10), end: null }],
+    });
+    expect(workdayEnd(coffee, acme, h(10, 5))).toBeNull();
+  });
+
+  it("has it back the moment the break is over", () => {
+    // Half past twelve exactly: the lunch is behind the day, and the half
+    // hour it took has moved the end out by half an hour.
+    expect(workdayEnd(lunched, acme, h(12, 30))).toBe(h(16, 30));
   });
 
   it("crosses the target inside a break that counts", () => {

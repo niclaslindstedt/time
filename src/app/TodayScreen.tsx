@@ -289,10 +289,11 @@ export function TodayScreen({
   const session = latestSession(day);
   const fraction = progress(totals.worked, project);
   /** When today's hours are done, if the work goes on from here unbroken.
-   *  Null on a day the project expects nothing of and before the day has
-   *  started — `workdayEnd` decides both, so neither the line nor the dial
-   *  has to. One figure, read twice: the line prints it and the clock marks
-   *  it on the day's track. */
+   *  Null on a day the project expects nothing of, before the day has
+   *  started, and while a break is on — `workdayEnd` decides all three, so
+   *  neither the line nor the dial has to. One figure, read twice: the line
+   *  prints it and the clock marks it on the day's track, so a break takes
+   *  it off both at once. */
   const endsAt = workdayEnd(day, project, now.seconds);
   /** A day begun late runs out after midnight. That end is still this day's —
    *  the record it closes goes on counting into the 25th hour — but the line

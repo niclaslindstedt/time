@@ -444,7 +444,14 @@ export function progress(worked: Seconds, project: Project): number {
  * the work simply goes on.
  *
  * Null when there is nothing to project from: a day the project expects no
- * work on, a project with no target, or a day with no session running. A
+ * work on, a project with no target, a day with no session running — or a
+ * break that is on. The last is the same refusal as the assumption above: a
+ * break's written end is the length its kind is _assumed_ to have and not a
+ * plan anybody made, so while you are on one the figure is a guess about
+ * when you come back rather than about how much work is left. It is also the
+ * one moment the screen has an end of its own to print — when the break is
+ * over — and two ends beside each other, one of them invented, is worse than
+ * the one that is known. It comes back the moment the break does. A
  * moment in the past is a real answer and not an error — it is the moment the
  * hours were done, on a day that carried on past them.
  */
@@ -456,6 +463,7 @@ export function workdayEnd(
   const target = targetSeconds(project);
   if (target <= 0 || !isWorkDay(project, day.date)) return null;
   if (!day.sessions.some((s) => s.end === null)) return null;
+  if (breakAt(day, now)) return null;
 
   /** How much of each kind of break the day has taken so far, so a partial
    *  credit is spent once rather than once per break. */
