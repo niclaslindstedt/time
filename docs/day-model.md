@@ -141,6 +141,12 @@ This is the derivation behind the clock face's break times and the stretch
 list they open, and it is derived from the spans like everything else: there
 is no second copy of the day to keep in step.
 
+`dayKinds` folds those stretches down to the colours the day is wearing:
+whether any of it was time at work, whether any of it was a break, and which
+kinds of work labelled it. The legend under the clock is that and nothing
+more — naming a hue the day has not worn sends the reader hunting round the
+dial for a band that is not there.
+
 `dayTotals` returns all of it at once — presence, worked, breaks by type, what
 those breaks counted as work, time by category, uncategorised, the state, the
 open spans, the first start and the last stop — and the three screens read the

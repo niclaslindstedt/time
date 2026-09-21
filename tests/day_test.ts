@@ -6,6 +6,7 @@ import {
   boundaryRange,
   breakIntervals,
   clip,
+  dayKinds,
   daySegments,
   dayTotals,
   horizon,
@@ -234,6 +235,56 @@ describe("the day as stretches", () => {
     });
     expect(dayTotals(open, acme, h(14)).currentBreak?.id).toBe("b1");
     expect(dayTotals(open, acme, h(14)).state).toBe("break");
+  });
+
+  it("says which of the day's colours are on it, and no others", () => {
+    // Nothing yet: the dial is empty, so the key names nothing.
+    expect(dayKinds(day("2026-03-02"), h(9))).toEqual({
+      work: false,
+      break: false,
+      categoryIds: [],
+    });
+
+    // An hour in, unlabelled. The accent is on the ring; the project's two
+    // kinds of work are not.
+    const started = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: null }],
+    });
+    expect(dayKinds(started, h(9))).toEqual({
+      work: true,
+      break: false,
+      categoryIds: [],
+    });
+
+    // The whole of a day spent on a break it has not come out of yet: the
+    // flag colour and nothing else, because no stretch was worked.
+    const straightToLunch = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(12), end: null }],
+      breaks: [{ id: "b1", typeId: "lunch", start: h(12), end: h(12, 30) }],
+    });
+    expect(dayKinds(straightToLunch, h(12, 10))).toEqual({
+      work: false,
+      break: true,
+      categoryIds: [],
+    });
+
+    // The full Monday wears everything — the kinds of work in the order the
+    // day first wore them, which is not the order the project lists them in.
+    expect(dayKinds(monday, h(23))).toEqual({
+      work: true,
+      break: true,
+      categoryIds: ["meet", "code"],
+    });
+  });
+
+  it("names a kind of work only once it has been worked", () => {
+    // Meetings from nine; read at half past eight, the day has worn no hue.
+    const d = day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: null }],
+      activities: [{ id: "a1", categoryId: "meet", start: h(9), end: null }],
+    });
+    expect(dayKinds(d, h(8, 30)).categoryIds).toEqual([]);
+    expect(dayKinds(d, h(9, 30)).categoryIds).toEqual(["meet"]);
   });
 
   it("gives an edge the room between its neighbours, a minute clear", () => {

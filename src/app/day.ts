@@ -341,6 +341,43 @@ export function daySegments(day: WorkDay, now: Seconds): DaySegment[] {
   return out;
 }
 
+/** Which of the day's colours are actually on it. */
+export type DayKinds = {
+  /** Any time at work — the accent, as a band or as the line along a kind
+   *  of work's own. */
+  work: boolean;
+  /** Any break — the flag colour. */
+  break: boolean;
+  /** The kinds of work the day was labelled with, in the order they first
+   *  appear, each of them a hue of its own. */
+  categoryIds: string[];
+};
+
+/**
+ * What the day is made of, as the ring draws it: folded from `daySegments`,
+ * so it says exactly which colours are on the dial and no others.
+ *
+ * A key to the ring is this and nothing more. Naming a colour the day is not
+ * wearing sends the reader hunting round the dial for a band that is not
+ * there — which is the one thing a legend must not do.
+ */
+export function dayKinds(day: WorkDay, now: Seconds): DayKinds {
+  const out: DayKinds = { work: false, break: false, categoryIds: [] };
+  for (const s of daySegments(day, now)) {
+    if (s.kind === "break") {
+      out.break = true;
+      continue;
+    }
+    // A labelled stretch wears its kind's hue over the accent and leaves the
+    // accent as the line along its edge, so it counts for both.
+    out.work = true;
+    if (s.typeId && !out.categoryIds.includes(s.typeId)) {
+      out.categoryIds.push(s.typeId);
+    }
+  }
+  return out;
+}
+
 function pairs(points: readonly Seconds[]): [Seconds, Seconds][] {
   const out: [Seconds, Seconds][] = [];
   for (let i = 0; i + 1 < points.length; i++) {
