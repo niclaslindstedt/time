@@ -22,7 +22,7 @@ import {
 import { ArrivalModal } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
-import { dayTotals, progress, workdayEnd } from "./day.ts";
+import { dayKinds, dayTotals, progress, workdayEnd } from "./day.ts";
 import { breakTypeOf, categoryOf, isWorkDay, storedCredit } from "./project.ts";
 import { formatDuration, formatPercent, formatTimeOfDay } from "./format.ts";
 import {
@@ -158,6 +158,14 @@ export function TodayScreen({
     [day, project, now.seconds],
   );
 
+  /** Which of the day's colours are on the ring, which is what the legend
+   *  under it may name. The same fold of the same stretches the dial is
+   *  drawn from, so the two cannot disagree. */
+  const drawn = useMemo(
+    () => (day ? dayKinds(day, now.seconds) : null),
+    [day, now.seconds],
+  );
+
   const ctx = (): EditContext => ({
     id: makeId,
     updatedAt: new Date().toISOString(),
@@ -240,7 +248,7 @@ export function TodayScreen({
     );
   }, [tabState, tabWorked, t]);
 
-  if (!project || !day || !totals) {
+  if (!project || !day || !totals || !drawn) {
     return (
       <div className="flex flex-1 flex-col justify-center gap-3 px-3 py-3">
         <div className="mx-auto w-full max-w-md rounded-2xl border border-line bg-surface-3 p-6 text-center">
@@ -280,6 +288,14 @@ export function TodayScreen({
       : t(endsAt <= now.seconds ? "today.endedAt" : "today.endsAt", {
           time: formatTimeOfDay(endsAt),
         });
+
+  /** The kinds of work the day has actually been labelled with, in the
+   *  project's own order — which is where their hues come from, so the key
+   *  is read in the order the pills are. */
+  const drawnCategories = project.categories.filter((c) =>
+    drawn.categoryIds.includes(c.id),
+  );
+  const hasLegend = drawn.work || drawn.break || drawnCategories.length > 0;
 
   const stateLine =
     state === "working" && totals.openSession
@@ -445,21 +461,37 @@ export function TodayScreen({
         )}
       </div>
 
-      <ul
-        data-area="legend"
-        className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted"
-      >
-        <Swatch color="var(--color-accent)" label={t("today.legend.work")} />
-        <Swatch color="var(--color-flag)" label={t("today.legend.break")} />
-        {project.categories.map((c) => (
-          <Swatch
-            key={c.id}
-            color={categoryColor(project, c.id)}
-            glyph={glyphFor(c.glyph, "category")}
-            label={c.name}
-          />
-        ))}
-      </ul>
+      {/* The legend names the colours on the day's track, and only those. A
+          hue the day is not wearing sends the reader hunting round the dial
+          for a band that is not there, so each entry waits for its own: work
+          for the accent, a break for the flag, a kind of work for its own
+          hue. Before the first clock-in that leaves nothing, and there is no
+          legend at all — the dial is empty and the line under it says to
+          press the clock. */}
+      {hasLegend && (
+        <ul
+          data-area="legend"
+          className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-muted"
+        >
+          {drawn.work && (
+            <Swatch
+              color="var(--color-accent)"
+              label={t("today.legend.work")}
+            />
+          )}
+          {drawn.break && (
+            <Swatch color="var(--color-flag)" label={t("today.legend.break")} />
+          )}
+          {drawnCategories.map((c) => (
+            <Swatch
+              key={c.id}
+              color={categoryColor(project, c.id)}
+              glyph={glyphFor(c.glyph, "category")}
+              label={c.name}
+            />
+          ))}
+        </ul>
+      )}
 
       <section data-area="breaks" className="flex flex-col gap-1.5">
         <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
