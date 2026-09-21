@@ -8,6 +8,7 @@ import {
   formatPercent,
   formatTimeOfDay,
   formatTimer,
+  formatWallTime,
   parseTimeOfDay,
   secondsOfDay,
   toTimeInput,
@@ -47,6 +48,16 @@ describe("times of day", () => {
     expect(formatTimeOfDay(h(12, 4))).toBe("12:04");
     expect(formatTimeOfDay(h(25, 10))).toBe("25:10");
     expect(toTimeInput(h(25, 10))).toBe("01:10");
+  });
+
+  it("reads a moment off the wall clock instead, for one not yet reached", () => {
+    // The same second, told the two ways: the record's 25th hour, and the
+    // hour a clock in the room shows. Whoever prints the second says which
+    // day it falls on.
+    expect(formatWallTime(h(12, 4))).toBe("12:04");
+    expect(formatWallTime(h(25, 14))).toBe("01:14");
+    expect(formatWallTime(h(24))).toBe("00:00");
+    expect(formatWallTime(h(48, 30))).toBe("00:30");
   });
 
   it("parses HH:MM and HH:MM:SS, rejecting the rest", () => {

@@ -234,7 +234,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   can pin what a marker at four o'clock looks like without a renderer.
   `useTilt.ts` is what moves the light.
 - `src/app/format.ts` — durations, timers, times of day, and the parse of a
-  typed time.
+  typed time. A time of day is told two ways, and which one depends on
+  whether the moment has happened: `formatTimeOfDay` keeps counting past
+  midnight ("25:14"), because the span it ends belongs to the day before, and
+  `formatWallTime` wraps into the day ("01:14"), because a moment being
+  _pointed at_ rather than recorded — `workdayEnd` is the only one — is read
+  off a clock, and whoever prints one says which day it falls on.
 - `src/app/merge.ts` — the per-record, last-edit-wins document merge that
   both cloud sync and backup restore run through.
 - `src/app/migrations.ts` — parse / normalise / serialize; the only module
@@ -518,7 +523,7 @@ regression.
 | A change to what a project holds                   | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                                                                                                                                                                           |
 | A new glyph, or a colour a kind can wear           | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                                                                                                                                                               |
 | A new control on the span editor                   | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                                                                                                                                                                 |
-| A new figure about a moment yet to come            | `src/app/day.ts` (`workdayEnd` is the only one, and it says nothing rather than guessing) — with a test at real times in `tests/day_test.ts`                                                                                                                                           |
+| A new figure about a moment yet to come            | `src/app/day.ts` (`workdayEnd` is the only one, and it says nothing rather than guessing) — with a test at real times in `tests/day_test.ts`, and printed with `format.ts`'s `formatWallTime` rather than a record's 25th hour                                                         |
 | A moment marked on the day's track                 | `src/app/clock.ts` (`DAY_MARK` / `dayMark`, and `aheadOnDial` — whether it has a place there at all, both walked by `tests/clock_test.ts`) + `ClockFace.tsx` (which moment, and its colour) + `Dial.tsx` (paint) — never the accent or the flag, which mean "at work" and "break" here |
 | A change to what a kind of break or work wears     | `src/app/KindModal.tsx` (the form, opened by "Custom" or by holding a pill) — the mark and the hue tables stay in `kinds.ts`                                                                                                                                                           |
 | A control that answers being held                  | `src/app/useLongPress.ts` — spread its handlers on the button; never a second timer in a screen                                                                                                                                                                                        |

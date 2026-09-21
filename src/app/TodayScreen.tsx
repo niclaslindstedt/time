@@ -24,7 +24,12 @@ import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { dayKinds, dayTotals, progress, workdayEnd } from "./day.ts";
 import { breakTypeOf, categoryOf, isWorkDay, storedCredit } from "./project.ts";
-import { formatDuration, formatPercent, formatTimeOfDay } from "./format.ts";
+import {
+  formatDuration,
+  formatPercent,
+  formatTimeOfDay,
+  formatWallTime,
+} from "./format.ts";
 import {
   CLOCK_SIZE,
   type Backlight,
@@ -39,6 +44,7 @@ import { autoCategoryColor, breakName, categoryColor } from "./labels.ts";
 import { KindModal, type NewKind } from "./KindModal.tsx";
 import { KEY_HINT, type Command } from "./shortcuts.ts";
 import {
+  DAY_SECONDS,
   DEFAULT_BREAK_CREDIT,
   blankDay,
   dayFor,
@@ -288,12 +294,24 @@ export function TodayScreen({
    *  has to. One figure, read twice: the line prints it and the clock marks
    *  it on the day's track. */
   const endsAt = workdayEnd(day, project, now.seconds);
+  /** A day begun late runs out after midnight. That end is still this day's —
+   *  the record it closes goes on counting into the 25th hour — but the line
+   *  prints a moment nobody has reached yet, and a moment you are waiting for
+   *  is the one your own clock will show. So the figure is the wall clock's
+   *  and the day it falls on is said rather than counted. A moment already
+   *  passed is always this day's: `now` never reaches midnight. */
+  const endsTomorrow = endsAt !== null && endsAt >= DAY_SECONDS;
   const endsLabel =
     endsAt === null
       ? null
-      : t(endsAt <= now.seconds ? "today.endedAt" : "today.endsAt", {
-          time: formatTimeOfDay(endsAt),
-        });
+      : t(
+          endsAt <= now.seconds
+            ? "today.endedAt"
+            : endsTomorrow
+              ? "today.endsAtTomorrow"
+              : "today.endsAt",
+          { time: formatWallTime(endsAt) },
+        );
 
   /** The kinds of work the day has actually been labelled with, in the
    *  project's own order — which is where their hues come from, so the key
@@ -465,7 +483,16 @@ export function TodayScreen({
             {endsAt !== null && endsLabel !== null && (
               <span className="ml-2 whitespace-nowrap" title={endsLabel}>
                 <LeaveIcon className="inline-block h-3.5 w-3.5 align-[-0.15em]" />{" "}
-                <span className="tabular-nums">{formatTimeOfDay(endsAt)}</span>
+                <span className="tabular-nums">{formatWallTime(endsAt)}</span>
+                {/* The next day's, marked the way a timetable marks it. The
+                    sentence in the tooltip and under the screen reader says
+                    "tomorrow" in full; out here it is one mark, because the
+                    line is read at a glance. */}
+                {endsTomorrow && (
+                  <span aria-hidden="true" className="align-super text-[0.7em]">
+                    {t("today.nextDay")}
+                  </span>
+                )}
                 <span className="sr-only">{` (${endsLabel})`}</span>
               </span>
             )}

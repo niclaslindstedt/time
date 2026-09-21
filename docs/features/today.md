@@ -65,7 +65,13 @@ The main screen, and the whole app for most of a day.
   from here without another break — so it moves out every time a break is
   taken that the project does not count, and stays put for one it does. It is
   a projection rather than a promise, and once the day has run past it, it is
-  simply the moment the hours were done.
+  simply the moment the hours were done. A day begun late runs out after
+  midnight, and that time is printed the way the clock in the room will show
+  it — "01:14", with a **+1** after it, the way a timetable marks a train that
+  arrives the next day — rather than as the 25th hour a _record_ of the day
+  keeps counting into: a span that ends at 01:14 belongs to the day before and
+  the Log says so by printing "25:14", but a moment nobody has reached yet is
+  one you will read off a clock.
 - **And that same moment on the dial**, as a small green dot in the day's own
   track, at the hour it falls on. It stands in the empty part of the track,
   ahead of the hours already coloured in, so the day walks towards it: the
