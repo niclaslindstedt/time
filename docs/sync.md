@@ -20,7 +20,7 @@ The local document in localStorage is always the working copy. The sync engine
   offline too.
 
 The framework's storage adapters (`createDropboxAdapter`,
-`createGdriveAdapter`) own the provider APIs, the token refresh and the
+) own the provider APIs, the token refresh and the
 revision checks; the engine is provider-agnostic past the `create*` calls.
 
 ## iCloud, and the host that offers it
