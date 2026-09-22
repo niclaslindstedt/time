@@ -89,6 +89,12 @@ export const en = {
     pausedHint: "A break is on, so nothing is being counted towards this.",
     outHint: "Press the clock to start the day.",
     custom: "Custom",
+    // The button at the end of each row: the kinds of that sort the project
+    // has but does not show, and "Custom". Named for what is in it rather
+    // than "More", which says nothing about which row it belongs to when a
+    // screen reader reaches it out of order.
+    moreBreaks: "More breaks",
+    moreKinds: "More kinds of work",
     // Tapping the timer: the moment the work started is the one time of day
     // that is wrong most often, because the app is opened after the fact.
     arrival: "Correct when you started",
@@ -99,13 +105,19 @@ export const en = {
     arrivalEarlier: "{minutes} min earlier",
     arrivalLater: "{minutes} min later",
     // Creating a break type or a kind of work from the Today screen, without
-    // going to the project form for it.
+    // going to the project form for it. Naming one is a change to the
+    // project, so it is offered before the day has started too — and then it
+    // only joins the project, since there is nothing open to log it against.
     newBreak: "A kind of break",
     newBreakHint:
       "It joins this project's breaks, and starts now. The minutes are how long one is assumed to take.",
+    newBreakHintOut:
+      "It joins this project's breaks, ready for when the day starts. The minutes are how long one is assumed to take.",
     newCategory: "A kind of work",
     newCategoryHint:
       "It joins this project's kinds of work, and you are doing it from now.",
+    newCategoryHintOut:
+      "It joins this project's kinds of work, ready for when the day starts.",
     // Holding a pill opens the kind it stands for, in the same form.
     holdToEdit: "Hold to edit",
     editKind: "Edit {name}",
@@ -117,6 +129,12 @@ export const en = {
     kindNamePlaceholder: "What to call it",
     kindMinutes: "Minutes",
     kindRequired: "Give it a name.",
+    // Whether it gets a button of its own on this screen, or waits in the
+    // row's "…" — the answer that keeps a project with a dozen kinds from
+    // being a screen of buttons nobody presses.
+    kindPinned: "Show on Today",
+    kindPinnedHint:
+      "A kind that is not shown is still here — it waits in the row's ··· with the rest, and everything logged under it counts the same.",
     // The movement's word on the dial, under the name: what a watch prints
     // on its face about what drives it.
     calibre: {
@@ -465,6 +483,9 @@ export const en = {
       "Optional labels for what you are doing, so the report can say where the hours went. Tap a mark to change it, or to pick the colour this kind of work is drawn in — on the clock, on its chip and in the report.",
     categoryName: "Name",
     addCategory: "Add a kind of work",
+    // Per kind, in the project form: the same answer `today.kindPinned` asks,
+    // as a button in the row it belongs to.
+    pin: "Show {name} on Today",
     saved: "Project saved",
     deleted: "Project deleted",
     // The names a new project starts with. Stored in the document once
@@ -473,6 +494,8 @@ export const en = {
       lunch: "Lunch",
       coffee: "Coffee",
       toilet: "Toilet",
+      training: "Training",
+      healthcare: "Healthcare",
       meetings: "Meetings",
       planning: "Planning",
       retro: "Retro",
@@ -488,6 +511,18 @@ export const en = {
     markOf: "Mark for {name}",
     colour: "Colour",
     colourAuto: "Automatic",
+    // What a break of this kind is assumed to take, and the two buttons that
+    // step it. The step is printed on them rather than left implied, the way
+    // a number field's own arrows leave it: five minutes is the granularity
+    // a break is actually thought about in, and the field is still typed
+    // into for the odd one that is not a multiple of it.
+    minutes: {
+      label: "Minutes",
+      less: "−{minutes}m",
+      more: "+{minutes}m",
+      lessLabel: "{minutes} minutes less",
+      moreLabel: "{minutes} minutes more",
+    },
     // How much of a break of this kind still counts as work. A trip down the
     // corridor usually does, an hour's lunch usually does not, and the common
     // middle case is a lunch of which the first half hour is paid — so three

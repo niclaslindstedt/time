@@ -31,17 +31,14 @@ export const DEFAULT_WORK_DAYS: Weekday[] = [1, 2, 3, 4, 5];
 export const DEFAULT_HOURS_PER_DAY = 8;
 
 /** The lengths the default break types are assumed to take when one is
- *  added after the fact: lunch half an hour, coffee a quarter, a toilet trip
- *  five minutes. */
+ *  added after the fact: lunch half an hour, coffee a quarter, and an hour
+ *  each for the two that take you out of the building — the gym and the
+ *  appointment are both the hour you block out for them rather than the time
+ *  you are actually under the barbell. */
 export const DEFAULT_LUNCH_MINUTES = 30;
 export const DEFAULT_COFFEE_MINUTES = 15;
-export const DEFAULT_TOILET_MINUTES = 5;
-
-/** What a new project counts a toilet break as: work, all of it. The only
- *  break the template answers for — see `projectTemplate`. It is a default
- *  and not a rule: every project's answer is its own, and changing this
- *  changes nothing about a project already made. */
-export const DEFAULT_TOILET_CREDIT: BreakCredit = { mode: "all" };
+export const DEFAULT_TRAINING_MINUTES = 60;
+export const DEFAULT_HEALTHCARE_MINUTES = 60;
 
 /** The bounds a working day may be set to, in hours. */
 export const MIN_HOURS_PER_DAY = 0.5;
@@ -89,11 +86,43 @@ export function storedCredit(
   return credit.mode === "none" ? {} : { credit };
 }
 
-/** The translated names the template stamps into a new project. */
+/**
+ * Whether a kind of break or work gets a button of its own on the Today
+ * screen, or waits in its row's "…".
+ *
+ * The one place a stored `pinned` is read, the way `creditSeconds` is the one
+ * place a stored `BreakCredit` is — so no screen has to know what an absent
+ * one means. Absent means pinned: every document written before there was a
+ * "…" shows the buttons it always did, and a kind is hidden only because
+ * somebody said to hide it.
+ */
+export function isPinned(kind: { pinned?: boolean }): boolean {
+  return kind.pinned !== false;
+}
+
+/** The other half: pinned is stored as nothing at all, the way a break that
+ *  counts for nothing and a kind of work's "automatic" colour are, so a
+ *  project nobody has hidden anything in is byte for byte the project it
+ *  always was. */
+export function storedPinned(
+  pinned: boolean,
+): { pinned: false } | Record<string, never> {
+  return pinned ? {} : { pinned: false };
+}
+
+/**
+ * The translated names of the kinds the app itself knows.
+ *
+ * Not all of them are stamped into a new project any more — `toilet` is here
+ * because a document written when it *was* still carries a break of that
+ * name, and `suggestedGlyph` has to go on knowing which mark that is.
+ */
 export type ProjectTemplateLabels = {
   lunch: string;
   coffee: string;
   toilet: string;
+  training: string;
+  healthcare: string;
   meetings: string;
   planning: string;
   retro: string;
@@ -101,9 +130,9 @@ export type ProjectTemplateLabels = {
 };
 
 /**
- * The kinds the app itself suggests — the three breaks and four kinds of work
- * a new project opens with — and what each one is: which of the two sorts it
- * is, and the mark it wears.
+ * The kinds the app itself suggests — the four breaks and four kinds of work
+ * a new project opens with, plus the toilet break it used to — and what each
+ * one is: which of the two sorts it is, and the mark it wears.
  *
  * The names beside them are the catalog's (`projects.defaults`) and the
  * user's to change; the marks are the user's too, in the project form. These
@@ -116,6 +145,8 @@ export const DEFAULT_KINDS = {
   lunch: { sort: "break", glyph: "meal" },
   coffee: { sort: "break", glyph: "coffee" },
   toilet: { sort: "break", glyph: "toilet" },
+  training: { sort: "break", glyph: "exercise" },
+  healthcare: { sort: "break", glyph: "health" },
   meetings: { sort: "category", glyph: "meeting" },
   planning: { sort: "category", glyph: "planning" },
   retro: { sort: "category", glyph: "review" },
@@ -176,17 +207,35 @@ export function projectTemplate(
       defaultMinutes: DEFAULT_COFFEE_MINUTES,
       glyph: DEFAULT_KINDS.coffee.glyph,
     },
+    // The two hours out of the building, and they arrive unpinned: an hour at
+    // the gym and an hour at the doctor are what a working day is actually
+    // interrupted by, so they are worth setting up in advance — but not
+    // worth two of the four buttons a phone has room for, when most days
+    // have neither in them. They wait in the row's "…", which is where a
+    // project's fifth and sixth breaks belong.
+    //
+    // Nothing the template stamps counts as work. The toilet break used to,
+    // and it was the only one: a trip down the corridor is paid nearly
+    // everywhere there is a corridor. It is not put in a new project any
+    // more — five minutes is shorter than the tap that logs it — and with it
+    // gone, every break a project starts with is one people actually
+    // disagree about. A wellness hour is a perk some employers grant and
+    // plenty do not; a doctor's appointment is paid under some agreements
+    // and deducted under others; lunch and coffee were always the argument.
+    // So the app answers for none of them, and the project form does.
     {
       id: id(),
-      name: labels.toilet,
-      defaultMinutes: DEFAULT_TOILET_MINUTES,
-      glyph: DEFAULT_KINDS.toilet.glyph,
-      // The one break a new project counts as work. A trip down the corridor
-      // is paid nearly everywhere there is a corridor, and a project that
-      // docked you five minutes for it would be wrong more often than right.
-      // Lunch and coffee are the ones people actually disagree about, so the
-      // app leaves those to you.
-      credit: DEFAULT_TOILET_CREDIT,
+      name: labels.training,
+      defaultMinutes: DEFAULT_TRAINING_MINUTES,
+      glyph: DEFAULT_KINDS.training.glyph,
+      pinned: false,
+    },
+    {
+      id: id(),
+      name: labels.healthcare,
+      defaultMinutes: DEFAULT_HEALTHCARE_MINUTES,
+      glyph: DEFAULT_KINDS.healthcare.glyph,
+      pinned: false,
     },
   ];
   // No colour on the kinds of work: a new project's four take the hues their

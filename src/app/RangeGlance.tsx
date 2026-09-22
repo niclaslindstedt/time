@@ -38,9 +38,86 @@ const C = 50;
 const R = 39;
 const BAND = 11;
 
-/** A figure longer than this has to come down a size to stay inside the hole.
- *  "+8h 00m" fits; "−131h 59m" does not. */
-const ROOMY = 7;
+// How big the figure in the middle of a ring is set. A ring's hole is a
+// *circle*, so the room a line of text has is the chord across it at the
+// text's own height — which narrows as the text grows — and what goes in it
+// is a balance: a sign, then up to three digits of hours. Counting
+// characters was near enough while the only question was "+8h 00m" or not,
+// but it says an "h" costs what an "m" costs and a space costs what a digit
+// does, and neither is true. "−5h 53m" came out seven characters, the same
+// as "13% ok", and at full size it is *wider than the hole* — which is the
+// minus sitting on the band. So the width is reckoned properly and tried
+// against the chord, largest size first.
+
+/** The radius of the hole inside the band, in CSS pixels. */
+const HOLE_PX = (RING_PX * (R - BAND / 2)) / 100;
+
+/** The sizes a figure may be set at, in CSS pixels, with the Tailwind class
+ *  that sets each. Largest first: the first that fits is the one used, and
+ *  the last is the floor — three digits of hours is a month nobody worked,
+ *  and it may sit closer to the band than the rest. */
+const SIZES: { px: number; className: string }[] = [
+  { px: 14, className: "text-sm" },
+  { px: 12, className: "text-xs" },
+  { px: 10.4, className: "text-[0.65rem]" },
+  { px: 9.6, className: "text-[0.6rem]" },
+];
+
+/** How much of the chord stays empty either side of the figure. About a
+ *  fifth of the hole's radius, which is what it takes for a minus sign — the
+ *  one glyph that starts hard against the band, since it is drawn at
+ *  mid-height where the hole is widest and so reads as touching first — to
+ *  have visible air round it rather than merely not overlapping. */
+const AIR_PX = 5.5;
+
+/** How wide each character is, in ems of its own size: bold Inter with
+ *  `tabular-nums`, measured. The digits are a slot each and so is the sign,
+ *  which is what `tabular-nums` buys — a balance does not jump about as the
+ *  minutes tick. The rest are their own widths. Inter is bundled from this
+ *  origin (`main.tsx`), so these do not depend on what the device has. */
+const EM: Record<string, number> = {
+  "0": 0.648,
+  "1": 0.648,
+  "2": 0.648,
+  "3": 0.648,
+  "4": 0.648,
+  "5": 0.648,
+  "6": 0.648,
+  "7": 0.648,
+  "8": 0.648,
+  "9": 0.648,
+  "−": 0.648,
+  "+": 0.648,
+  h: 0.623,
+  m: 0.913,
+  "%": 1.016,
+  " ": 0.269,
+};
+
+/** Anything the table does not have, which is nothing a formatter prints
+ *  today. Wider than the widest, so a figure it cannot measure errs towards
+ *  coming down a size rather than over the band. */
+const EM_UNKNOWN = 1.1;
+
+function labelEms(label: string): number {
+  let ems = 0;
+  for (const ch of label) ems += EM[ch] ?? EM_UNKNOWN;
+  return ems;
+}
+
+/** The class a figure is set in: the largest size whose width fits the chord
+ *  across the hole at that size, with air either side, or the smallest there
+ *  is. Exported for the test — nothing else calls it. */
+export function ringLabelClass(label: string): string {
+  const ems = labelEms(label);
+  const fits = SIZES.find(({ px }) => {
+    // The chord at the figure's own cap height, which is about 0.73em tall
+    // and centred on the middle of the ring.
+    const half = Math.sqrt(Math.max(0, HOLE_PX ** 2 - (0.365 * px) ** 2));
+    return ems * px <= 2 * (half - AIR_PX);
+  });
+  return (fits ?? SIZES[SIZES.length - 1]!).className;
+}
 
 type Props = {
   worked: Seconds;
@@ -193,9 +270,9 @@ function Ring({
       </svg>
       <span
         aria-hidden="true"
-        className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums ${
-          label.length > ROOMY ? "text-xs" : "text-sm"
-        } ${labelClass}`}
+        className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums ${ringLabelClass(
+          label,
+        )} ${labelClass}`}
       >
         {label}
       </span>

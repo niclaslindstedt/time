@@ -172,6 +172,31 @@ input[type="date"] {
   max-width: 100%;
 }
 
+/* ── Stepped number fields ───────────────────────────────────────────────────
+   A number field that has buttons of its own beside it (`BreakMinutesField`)
+   does not also want the browser's. The native spinner is a pair of arrows a
+   few pixels tall in the corner of the box, stepping by one — a mouse target
+   on a screen that is mostly thumbs, at a granularity nobody asked for — and
+   left in place it sits under the "+5m" that replaced it, saying the field
+   has two different ideas about what a press does.
+
+   Firefox is the second rule: it hides the arrows through `appearance`
+   rather than a shadow pseudo-element, and needs `-moz-appearance` on the
+   field itself. Both are scoped to the class, so every other number field in
+   the app — the hours a day, the minutes a break gives back — keeps its
+   arrows. */
+.app-step-field::-webkit-outer-spin-button,
+.app-step-field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.app-step-field {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* ── App shell ───────────────────────────────────────────────────────────────
    The app fills the viewport and never scrolls as a document: the <main>
    between the header and the bottom nav is the one scrolling region, so the

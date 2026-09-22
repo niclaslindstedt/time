@@ -1,10 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
+  ActionMenuList,
   Button,
   ContextMenu,
+  FloatingPanel,
   PlusIcon,
+  type FloatingPlacement,
   type RowAction,
 } from "@niclaslindstedt/oss-framework/components";
 
@@ -23,7 +33,14 @@ import { ArrivalModal } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { dayKinds, dayTotals, progress, workdayEnd } from "./day.ts";
-import { breakTypeOf, categoryOf, isWorkDay, storedCredit } from "./project.ts";
+import {
+  breakTypeOf,
+  categoryOf,
+  isPinned,
+  isWorkDay,
+  storedCredit,
+  storedPinned,
+} from "./project.ts";
 import {
   formatDuration,
   formatPercent,
@@ -36,7 +53,7 @@ import {
   type ClockSize,
   type DialConfig,
 } from "./look.ts";
-import { EnterIcon, KindGlyph, LeaveIcon } from "./icons.tsx";
+import { EnterIcon, KindGlyph, LeaveIcon, MoreIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
 import { glyphFor, type GlyphId } from "./kinds.ts";
@@ -70,13 +87,32 @@ import { useShortcuts } from "./useShortcuts.ts";
 //
 // Three corrections live here rather than on the Log, because they are the
 // three noticed here: the line under the dial opens the arrival, a stretch
-// on the ring opens the day stretch by stretch, and the square marked "+" at
-// the end of each row invents the kind of break or work that nobody thought
-// to set up in advance. None of them leave this screen. On a phone the
-// square carries its name in a tooltip rather than beside the mark: spelled
-// out it was as wide as a break, and that pushed it onto a row of its own.
-// Where the controls stand in a column beside the dial the row is the
-// column's width and there is nothing to save, so it spells it.
+// on the ring opens the day stretch by stretch, and the square marked "…" at
+// the end of each row reaches the kinds that are not on the screen and
+// invents the one nobody thought to set up in advance. None of them leave
+// this screen. On a phone the square carries its name in a tooltip rather
+// than beside the mark: spelled out it was as wide as a break, and that
+// pushed it onto a row of its own. Where the controls stand in a column
+// beside the dial the row is the column's width and there is nothing to
+// save, so it spells it.
+//
+// **Not every kind is on the screen.** A row shows the ones the project has
+// pinned (`isPinned`, `project.ts`) and the "…" holds the rest, because a
+// project is allowed to have a dozen kinds of work and a phone has room for
+// four buttons. The list in the "…" is the *same* list in the same order,
+// just the part of it that was left out — never a second vocabulary, which
+// is why the rows in it are built by the same two functions the right
+// button's menu uses. Absent means pinned, so a project nobody has hidden
+// anything in draws exactly the buttons it always did.
+//
+// The "…" answers whether or not the day has started, for the same reason a
+// held pill does: naming a kind of break or work is a change to the
+// *project*, and a project is edited whenever. What it cannot do before the
+// work starts is start one — `takeBreak` and `setCategory` want an open
+// session and hand the day straight back without one (`actions.ts`) — so
+// before the day starts the menu holds "Custom" alone, which is the same
+// guard the right button's menu has always had. Only the pills themselves
+// dim, because those are the edits that really have nothing to act on.
 //
 // A pill held rather than tapped is the fourth: it opens the kind itself, in
 // the same form the "+" fills in, so the mark a kind wears and the hue a
@@ -135,6 +171,51 @@ type Props = {
  *  corrected. */
 type Asking = { kind: "break" | "activity"; id: string | null };
 
+/** Where a row's "…" hangs its menu. Left-anchored and at least as wide as
+ *  the longest thing in it, because what is in it is a list of names. */
+const MORE_MENU: FloatingPlacement = {
+  width: { kind: "min", minPx: 200 },
+  anchor: "left",
+  gap: 4,
+  coordinateSpace: "viewport",
+};
+
+/**
+ * The button at the end of a row: the kinds the project has that are not
+ * pinned, and "Custom".
+ *
+ * Shaped like the pills it stands among rather than like the framework's
+ * `IconButton`, because it is the last thing in a row of twelve-high buttons
+ * and a nine-high square at the end of them reads as a different kind of
+ * control. Dashed like the "+" it replaced — it is still the way to the
+ * things not on the screen. On a phone it is a square with its name in a
+ * tooltip; given the width, where the row is a column, it spells it.
+ */
+const MoreButton = forwardRef<
+  HTMLButtonElement,
+  { label: string; open: boolean; onToggle: () => void; className: string }
+>(function MoreButton({ label, open, onToggle, className }, ref) {
+  return (
+    <button
+      ref={ref}
+      type="button"
+      aria-label={label}
+      title={label}
+      aria-haspopup="menu"
+      aria-expanded={open}
+      onClick={onToggle}
+      className={`flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 border border-dashed text-sm font-semibold transition-colors wide:w-auto wide:justify-start wide:px-3 ${className} ${
+        open
+          ? "border-accent bg-accent/15 text-fg-bright"
+          : "border-line bg-transparent text-muted hover:bg-surface-2"
+      }`}
+    >
+      <MoreIcon className="h-4 w-4 shrink-0" />
+      <span className="hidden truncate wide:inline">{label}</span>
+    </button>
+  );
+});
+
 export function TodayScreen({
   store,
   project,
@@ -153,6 +234,10 @@ export function TodayScreen({
   const [timeline, setTimeline] = useState<{ at: Seconds | null } | null>(null);
   const [asking, setAsking] = useState<Asking | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  /** Which row's "…" is open, if either. */
+  const [more, setMore] = useState<Asking["kind"] | null>(null);
+  const breakMoreRef = useRef<HTMLButtonElement>(null);
+  const kindMoreRef = useRef<HTMLButtonElement>(null);
   const press = useLongPress();
 
   const day = useMemo<WorkDay | null>(() => {
@@ -322,6 +407,14 @@ export function TodayScreen({
   );
   const hasLegend = drawn.work || drawn.break || drawnCategories.length > 0;
 
+  /** Which kinds get a button of their own, and which wait in the row's "…".
+   *  A project keeps its own order either way — the "…" is a shorter version
+   *  of the same list, not a second one. */
+  const pinnedBreaks = project.breakTypes.filter(isPinned);
+  const restBreaks = project.breakTypes.filter((b) => !isPinned(b));
+  const pinnedCategories = project.categories.filter(isPinned);
+  const restCategories = project.categories.filter((c) => !isPinned(c));
+
   const stateLine =
     state === "working" && totals.openSession
       ? `${t("today.state.working")} · ${t("today.since", { time: formatTimeOfDay(totals.openSession.start) })}`
@@ -353,6 +446,48 @@ export function TodayScreen({
         ? "border-accent bg-accent/15 text-fg-bright"
         : "border-line bg-surface-3 text-fg hover:bg-surface-2";
 
+  // A break and a kind of work as a row of a menu. One pair of builders
+  // because there are three menus over them — the right button's, and the
+  // "…" at the end of each row — and a row that said something different in
+  // one of them would be a second vocabulary for the same button.
+  const breakRow = (b: Project["breakTypes"][number]): RowAction => ({
+    label:
+      current?.typeId === b.id
+        ? t("today.endBreak", { name: b.name })
+        : t("today.menuBreak", {
+            name: b.name,
+            minutes: String(b.defaultMinutes),
+          }),
+    icon: (
+      <KindGlyph
+        id={glyphFor(b.glyph, "break")}
+        className="h-4 w-4 text-flag"
+      />
+    ),
+    onSelect: () => pickBreak(b.id, b.defaultMinutes),
+  });
+  const categoryRow = (c: Project["categories"][number]): RowAction => {
+    const on = totals.currentCategoryId === c.id;
+    return {
+      label: on ? t("today.stopLabelling", { name: c.name }) : c.name,
+      icon: (
+        <KindGlyph
+          id={glyphFor(c.glyph, "category")}
+          className="h-4 w-4"
+          style={{ color: categoryColor(project, c.id) }}
+        />
+      ),
+      onSelect: () => pickCategory(c.id),
+    };
+  };
+  /** The row that invents one, which is in every "…" whatever the day is
+   *  doing — naming a kind is a change to the project. */
+  const customRow = (kind: Asking["kind"]): RowAction => ({
+    label: t("today.custom"),
+    icon: <PlusIcon className="h-4 w-4" />,
+    onSelect: () => setAsking({ kind, id: null }),
+  });
+
   // The right button's menu: everything the screen can do, where the
   // pointer is.
   const menuActions: RowAction[] = [
@@ -366,40 +501,8 @@ export function TodayScreen({
         ),
       onSelect: toggleWork,
     },
-    ...(state !== "out"
-      ? project.breakTypes.map<RowAction>((b) => ({
-          label:
-            current?.typeId === b.id
-              ? t("today.endBreak", { name: b.name })
-              : t("today.menuBreak", {
-                  name: b.name,
-                  minutes: String(b.defaultMinutes),
-                }),
-          icon: (
-            <KindGlyph
-              id={glyphFor(b.glyph, "break")}
-              className="h-4 w-4 text-flag"
-            />
-          ),
-          onSelect: () => pickBreak(b.id, b.defaultMinutes),
-        }))
-      : []),
-    ...(state !== "out"
-      ? project.categories.map<RowAction>((c) => {
-          const on = totals.currentCategoryId === c.id;
-          return {
-            label: on ? t("today.stopLabelling", { name: c.name }) : c.name,
-            icon: (
-              <KindGlyph
-                id={glyphFor(c.glyph, "category")}
-                className="h-4 w-4"
-                style={{ color: categoryColor(project, c.id) }}
-              />
-            ),
-            onSelect: () => pickCategory(c.id),
-          };
-        })
-      : []),
+    ...(state !== "out" ? project.breakTypes.map(breakRow) : []),
+    ...(state !== "out" ? project.categories.map(categoryRow) : []),
     ...(session
       ? [
           {
@@ -561,7 +664,7 @@ export function TodayScreen({
             left after the square, wrapping when a project has more of them
             than the row holds. */}
         <div className="flex flex-wrap gap-2 wide:flex-col wide:flex-nowrap">
-          {project.breakTypes.map((b) => {
+          {pinnedBreaks.map((b) => {
             const running = current?.typeId === b.id;
             return (
               <button
@@ -604,19 +707,13 @@ export function TodayScreen({
               </button>
             );
           })}
-          <button
-            type="button"
-            disabled={state === "out"}
-            onClick={() => setAsking({ kind: "break", id: null })}
-            aria-label={t("today.custom")}
-            title={t("today.custom")}
-            className="flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:w-auto wide:justify-start wide:px-3"
-          >
-            <PlusIcon className="h-4 w-4 shrink-0" />
-            <span className="hidden truncate wide:inline">
-              {t("today.custom")}
-            </span>
-          </button>
+          <MoreButton
+            ref={breakMoreRef}
+            label={t("today.moreBreaks")}
+            open={more === "break"}
+            onToggle={() => setMore((m) => (m === "break" ? null : "break"))}
+            className="rounded-xl"
+          />
         </div>
       </section>
 
@@ -631,7 +728,8 @@ export function TodayScreen({
             than the window is tall spilled them off the right-hand edge of
             the screen instead of scrolling the one it has (`styles.css`). */}
         <div className="flex flex-wrap gap-2 wide:flex-col wide:flex-nowrap">
-          {project.categories.map((c, i) => {
+          {pinnedCategories.map((c) => {
+            const i = project.categories.indexOf(c);
             const on = totals.currentCategoryId === c.id;
             const key = KEY_HINT.category(i);
             return (
@@ -673,24 +771,64 @@ export function TodayScreen({
               </button>
             );
           })}
-          <button
-            type="button"
-            disabled={state === "out"}
-            onClick={() => setAsking({ kind: "activity", id: null })}
-            aria-label={t("today.custom")}
-            title={t("today.custom")}
-            className="inline-flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-full border border-dashed border-line text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:w-auto wide:justify-start wide:rounded-xl wide:px-3 wide:font-semibold"
-          >
-            <PlusIcon className="h-4 w-4 shrink-0" />
-            <span className="hidden truncate wide:inline">
-              {t("today.custom")}
-            </span>
-          </button>
+          <MoreButton
+            ref={kindMoreRef}
+            label={t("today.moreKinds")}
+            open={more === "activity"}
+            onToggle={() =>
+              setMore((m) => (m === "activity" ? null : "activity"))
+            }
+            className="rounded-full wide:rounded-xl"
+          />
         </div>
         {onBreak && (
           <p className="app-hint text-xs text-muted">{t("today.pausedHint")}</p>
         )}
       </section>
+
+      {/* The rest of each row. The kinds themselves are only in it while
+          there is a day to log them against — the same guard the right
+          button's menu has always had, and the reason the pills beside it go
+          pale rather than disappear. "Custom" is in it either way. */}
+      <FloatingPanel
+        open={more === "break"}
+        onClose={() => setMore(null)}
+        triggerRef={breakMoreRef}
+        placement={MORE_MENU}
+        className="py-1"
+      >
+        <ActionMenuList
+          actions={[
+            ...(state !== "out" ? restBreaks.map(breakRow) : []),
+            customRow("break"),
+          ]}
+          ariaLabel={t("today.moreBreaks")}
+          onActivate={(action) => {
+            setMore(null);
+            action.onSelect();
+          }}
+        />
+      </FloatingPanel>
+
+      <FloatingPanel
+        open={more === "activity"}
+        onClose={() => setMore(null)}
+        triggerRef={kindMoreRef}
+        placement={MORE_MENU}
+        className="py-1"
+      >
+        <ActionMenuList
+          actions={[
+            ...(state !== "out" ? restCategories.map(categoryRow) : []),
+            customRow("activity"),
+          ]}
+          ariaLabel={t("today.moreKinds")}
+          onActivate={(action) => {
+            setMore(null);
+            action.onSelect();
+          }}
+        />
+      </FloatingPanel>
 
       <ContextMenu
         position={menu}
@@ -748,11 +886,15 @@ export function TodayScreen({
         <KindModal
           kind={asking.kind}
           existing={kindAsked(project, asking)}
+          // A kind invented before the day has started only joins the
+          // project: the edits below want an open session and hand the day
+          // straight back without one.
+          starts={state !== "out"}
           // "Automatic" is the hue the kind's place in the list gives it —
           // the slot after the last for one being invented, which is what an
           // id the project does not have yet asks for.
           autoColor={autoCategoryColor(project, asking.id ?? "")}
-          onSave={({ name, minutes, glyph, color, credit }) => {
+          onSave={({ name, minutes, glyph, color, credit, pinned }) => {
             // A kind that already exists keeps its id, so nothing logged
             // under it moves; only what it is called and what it wears
             // change, and every screen that reads `labels.ts` follows.
@@ -762,11 +904,16 @@ export function TodayScreen({
                 stampProject({
                   breakTypes: project.breakTypes.map((b) => {
                     if (b.id !== at) return b;
-                    // "No" is stored as no credit at all, the way
-                    // "automatic" is stored as no colour.
+                    // "No" is stored as no credit at all, and so is
+                    // "shown", the way "automatic" is stored as no colour.
                     const rest = { ...b, name, defaultMinutes: minutes, glyph };
                     delete rest.credit;
-                    return { ...rest, ...storedCredit(credit) };
+                    delete rest.pinned;
+                    return {
+                      ...rest,
+                      ...storedCredit(credit),
+                      ...storedPinned(pinned),
+                    };
                   }),
                 });
               } else {
@@ -777,7 +924,12 @@ export function TodayScreen({
                     // goes on taking its position's hue.
                     const rest = { ...c, name, glyph };
                     delete rest.color;
-                    return color ? { ...rest, color } : rest;
+                    delete rest.pinned;
+                    return {
+                      ...rest,
+                      ...(color ? { color } : {}),
+                      ...storedPinned(pinned),
+                    };
                   }),
                 });
               }
@@ -796,6 +948,7 @@ export function TodayScreen({
                     defaultMinutes: minutes,
                     glyph,
                     ...storedCredit(credit),
+                    ...storedPinned(pinned),
                   },
                 ],
               });
@@ -804,7 +957,13 @@ export function TodayScreen({
               stampProject({
                 categories: [
                   ...project.categories,
-                  { id, name, glyph, ...(color ? { color } : {}) },
+                  {
+                    id,
+                    name,
+                    glyph,
+                    ...(color ? { color } : {}),
+                    ...storedPinned(pinned),
+                  },
                 ],
               });
               apply(setCategory(day, id, now.seconds, ctx()));
@@ -833,6 +992,7 @@ function kindAsked(project: Project, asking: Asking): NewKind | null {
           glyph: glyphFor(b.glyph, "break"),
           color: null,
           credit: b.credit ?? DEFAULT_BREAK_CREDIT,
+          pinned: isPinned(b),
         }
       : null;
   }
@@ -846,6 +1006,7 @@ function kindAsked(project: Project, asking: Asking): NewKind | null {
         glyph: glyphFor(c.glyph, "category"),
         color: c.color ?? null,
         credit: DEFAULT_BREAK_CREDIT,
+        pinned: isPinned(c),
       }
     : null;
 }

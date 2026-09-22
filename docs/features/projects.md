@@ -11,14 +11,20 @@ or several; most people have one.
 - **Hours per working day** — the target, and what the Today screen's
   percentage measures against. Fractions allowed (7.5).
 - **Break types** — one button each on the Today screen, with the minutes a
-  break added afterwards is assumed to have taken, a mark, and how much of one
-  still counts as work (below). A new project
-  starts with Lunch (30 min), Coffee (15 min) and Toilet (5 min), of which only
-  the toilet counts as work; rename them, change the minutes, remove them, add
-  a walk.
+  break added afterwards is assumed to have taken — stepped five at a time by
+  the **−5m** and **+5m** buttons either side of the number, or typed straight
+  in for the odd one that is not a multiple of five — a mark, how much of one
+  still counts as work (below), and whether it is shown on the Today screen
+  (the star beside it). A new project
+  starts with Lunch (30 min), Coffee (15 min), Training (60 min) and
+  Healthcare (60 min) — the last two waiting in the Today screen's **···**,
+  since most days have neither in them. None of the four counts as work:
+  every one of them is a thing employers disagree about, so the app answers
+  for none and this is where you say. Rename them, change the minutes, remove
+  them, add a walk.
 - **Kinds of work** — optional labels for what you are doing, so the report
-  can say where the hours went, each with a mark and a colour. A new project
-  starts with Meetings, Planning, Retro and Admin.
+  can say where the hours went, each with a mark, a colour and the same star.
+  A new project starts with Meetings, Planning, Retro and Admin, all shown.
 
 Projects are data, not settings: they live in the document, so they sync and
 back up with the days.
@@ -59,16 +65,39 @@ figures on the Log, the balance on the Report, and when today's hours are done
 lists, still the flag colour on the clock, and the Log still shows the whole
 of the time spent on breaks.
 
-A new project answers for one of its three: the toilet break counts as work,
-because a trip down the corridor is paid nearly everywhere there is a
-corridor. Lunch and coffee are the ones people actually disagree about, so
-they start out counting for nothing and the answer is left to you.
+A new project answers for none of its four. It used to start with a toilet
+break that counted as work — a trip down the corridor is paid nearly
+everywhere there is a corridor — but five minutes is shorter than the tap
+that logs it, so it is not put in a new project any more. What is left is
+lunch, coffee, the gym and the doctor, and every one of those is a thing
+employers actually disagree about: they start out counting for nothing and
+the answer is left to you.
 
 A project you already have is untouched by any of that — the answer lives in
 the project rather than in the app — so updating changes no day already
 logged. Changing one afterwards changes every day it has ever been taken on,
 because nothing about a total is stored: see
 [`../day-model.md`](../day-model.md).
+
+## What is on the Today screen
+
+A project can hold more kinds than a phone has room for buttons, so each
+break type and kind of work carries one more answer: whether it is **shown**
+on the Today screen. The ones that are get a button of their own; the rest
+wait in that row's **···**, along with **Custom** (see
+[`today.md`](today.md)).
+
+It is the star beside the kind's name in the project form, and **Show on
+Today** in the form a pill opens when it is held. A kind that is not shown is
+in no way a lesser kind: it is still in the project, still one tap away, and
+everything ever logged under it counts exactly the same everywhere the app
+adds hours up.
+
+A new project shows Lunch and Coffee and leaves Training and Healthcare in
+the **···**; every kind of work it starts with is shown. A project you
+already have shows all of both, which is what it always did — being shown is
+what a kind is unless somebody says otherwise, so nothing moved when this
+arrived.
 
 ## Marks and colours
 
@@ -99,8 +128,9 @@ read, leaving that kind with the one its sort starts out with — the cup for a
 break, the label for a kind of work.
 
 A kind the app itself suggested is marked whether or not it was marked when it
-was written. The three break types and four kinds of work a new project opens
-with — Lunch, Coffee, Toilet, Meetings, Planning, Retro and Admin — each have
+was written. The four break types and four kinds of work a new project opens
+with — Lunch, Coffee, Training, Healthcare, Meetings, Planning, Retro and
+Admin — and Toilet, which a new project used to start with, each have
 a mark of the app's choosing, and a kind of one of those names carrying none
 of its own is given it when the document is read, so a project made before
 there were marks shows a fork on its Lunch rather than the cup every unmarked

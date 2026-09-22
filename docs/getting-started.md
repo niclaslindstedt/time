@@ -26,8 +26,9 @@ requires authentication even for public packages.
 ## Your first day
 
 1. The app opens on **Today** and asks for a project. Give it a name; the
-   defaults are Monday to Friday, eight hours a day, with a 30-minute lunch, a
-   15-minute coffee break and a 5-minute toilet break as break types, and four
+   defaults are Monday to Friday, eight hours a day, four break types — a
+   30-minute lunch and a 15-minute coffee on the screen, with an hour of
+   training and an hour of healthcare waiting in the row's **···** — and four
    kinds of work. Change any of it, or come back to it later under
    **Projects**.
 2. Press the clock. The light behind it comes up, and the clock begins

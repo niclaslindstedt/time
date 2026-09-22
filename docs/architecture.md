@@ -71,6 +71,7 @@ src/app/
   ArrivalModal.tsx  when you started, corrected from the timer
   KindModal.tsx     a kind of break or work — invented, or held open to correct
   BreakCreditField.tsx  how much of a kind of break counts as work — one control, both forms
+  BreakMinutesField.tsx what a kind of break is assumed to take — one control, both forms
   SpanEditModal.tsx the one editor behind every span
   ProjectEditModal.tsx  name, working days, breaks, kinds of work
   dev/              the demo-data switch: an in-memory DocBackend
@@ -139,12 +140,14 @@ type Project = {
     glyph?: GlyphId; // its mark; absent takes the cup
     // how much of one still counts as work; absent counts none of it
     credit?: { mode: "all" } | { mode: "partial"; minutes: number };
+    pinned?: false; // in the Today row's "···"; absent is a button of its own
   }[];
   categories: {
     id: string;
     name: string;
     glyph?: GlyphId; // its mark; absent takes the label
     color?: CategoryColor; // its hue; absent takes its place in the list
+    pinned?: false; // in the Today row's "···"; absent is a button of its own
   }[];
   updatedAt: string; // ISO — the merge tiebreak
 };
