@@ -219,3 +219,15 @@ page saying what made it and where to buy the app without it. It is a build
 parameter (`VITE_EDITION`, see [`../configuration.md`](../configuration.md)) —
 there is no server to ask and no account to check, so the edition is the build
 that was shipped. The App Store build carries no notice.
+
+## Export for Invoice
+
+The same **…** also exports the range as a file for the
+[Invoice](https://github.com/niclaslindstedt/invoice) app: drop it on a draft
+invoice there and the hours arrive as lines at the customer's price. The
+form asks how the hours are cut into lines — one line for the period, a line
+a day, or a line a kind of work — and shares the specification's rounding, so
+the invoice bills the hours the specification sent with it shows. The file
+(`<project>_<period>_invoice.json`) is a reading of the specification and
+says nothing about money; the format is documented in the Invoice app's
+`docs/interchange.md`.

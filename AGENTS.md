@@ -281,6 +281,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   turns them into bytes; `svg.ts` turns the same page into SVG attributes for
   the modal's preview and for the printer, pinned to this module's widths with
   `textLength` so a substituted face cannot change the layout.
+- `src/app/invoiceExport.ts` — the range as the file the sibling Invoice app
+  fills an invoice from (`invoice-lines`, versioned): a reading of `spec.ts`
+  at one of three grains — a line for the period, a line a day, a line a kind
+  of work — with the specification's rounding, so the invoice bills the hours
+  the specification shows, and nothing about money. The format lives in the
+  Invoice app's `docs/interchange.md`; a change here is a change there.
+  `InvoiceExportModal.tsx` is the form, opened from the Report's **…**.
 - `src/app/specExport.ts` — the way out: `specFilename`
   (`<project>_<period>_specification.pdf`, lowercase and not a space in it),
   the blob download, and the print, which shows the `.spec-print` copy of the
@@ -705,6 +712,7 @@ job only type-checks. See `native/README.md` and `native/RELEASING.md`.
 | A change to the Report's week chart                | `src/app/dayBars.ts` (how a day splits at its target, tested in `tests/dayBars_test.ts`) or `DayBars.tsx` (paint)                                                                                                                                                                      |
 | A change to the Report's two rings                 | `src/app/RangeGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `report.ts`, never a second fold of the days                                                                                                                                                  |
 | A new figure on the exported specification         | `src/app/spec.ts` (the reading, tested in `tests/spec_test.ts`) + `specLayout.ts` (where it goes) — never a second fold of the days, and never a figure the screens cannot also show                                                                                                   |
+| A change to the file exported for an invoice       | `src/app/invoiceExport.ts` (a reading of `spec.ts`, tested in `tests/invoiceExport_test.ts`) — bump `INVOICE_LINES_VERSION` on a breaking change and change the Invoice app's `interchange.ts` with it; never a second fold of the days                                                |
 | A new look a specification may have                | `src/app/specStyle.ts` (id + spec, walked by `tests/specStyle_test.ts`) + a string in `en.ts` + `SpecExportModal.tsx` (the control) — fixed hex, never a theme token, and never a billing rule dressed as a style                                                                      |
 | A change to how a specification is drawn           | `src/app/specLayout.ts` (the one layout, tested in `tests/specLayout_test.ts`) — never in `SpecPages.tsx` or `pdf/write.ts`, which are the two renderers over it and must stay interchangeable                                                                                         |
 | A change to what a day is billed at                | `src/app/spec.ts` (`roundUpTo`, applied per day and never to the range) + `useAppSettings.ts` (`specRounding`) — never `SpecStyle`, and never `day.ts`, which reports what was worked                                                                                                  |
@@ -778,6 +786,7 @@ with `[Learn more](feature:<slug>)`.
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | The derivation in `day.ts`       | `docs/day-model.md`, `docs/features/today.md`, and the README's Examples block if the output shape moved                                                                       |
 | `report.ts` or `monthChart.ts`   | `docs/day-model.md` (the report section) and `docs/features/report.md`                                                                                                         |
+| `spec.ts` or `invoiceExport.ts`  | `docs/features/report.md` — and, for the export, the Invoice app's `docs/interchange.md`                                                                                       |
 | `actions.ts`                     | `docs/features/today.md` and `docs/features/log.md`                                                                                                                            |
 | The `Project` or `WorkDay` shape | `docs/architecture.md`'s data shape, `docs/features/projects.md`, and a `migrations.ts` step — a purely additive optional field needs the validation rather than a step        |
 | Where the day sits on the dial   | `docs/features/today.md` and the README's Usage table — both describe the ring a reader is looking at                                                                          |

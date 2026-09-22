@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 import type { WeekStart } from "@niclaslindstedt/oss-framework/calendar";
 
+import { clampGrain, type InvoiceGrain } from "./invoiceExport.ts";
 import { DEFAULT_ROUNDING, clampRounding, type SpecRounding } from "./spec.ts";
 import {
   DEFAULT_SPEC_PRESET,
@@ -81,6 +82,10 @@ export type AppSettings = {
    *  document that billed different hours depending on which typeface it was
    *  set in would be the one thing a specification may not do. */
   specRounding: SpecRounding;
+  /** How the hours are cut into lines when the range is exported for an
+   *  invoice: one line for the period, a line a day, or a line a kind of
+   *  work. Per device, like the rest of the export form. */
+  invoiceGrain: InvoiceGrain;
   /** The project the Today, Log and Report screens show. Null until one is
    *  chosen; `App` falls back to the first project by name. */
   activeProjectId: string | null;
@@ -123,6 +128,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   spec: SPEC_PRESET[DEFAULT_SPEC_PRESET],
   specDetails: DEFAULT_SPEC_DETAILS,
   specRounding: DEFAULT_ROUNDING,
+  invoiceGrain: "period",
   activeProjectId: null,
   devMode: false,
   captureLogs: false,
@@ -235,6 +241,7 @@ export function parseSettings(raw: string): AppSettings {
     spec: clampSpecStyle(merged.spec),
     specDetails: parseDetails(merged.specDetails),
     specRounding: clampRounding(merged.specRounding),
+    invoiceGrain: clampGrain(merged.invoiceGrain),
     activeProjectId,
     devMode: merged.devMode === true,
     captureLogs: merged.captureLogs === true,
