@@ -11,6 +11,12 @@
 // twelve in the red of a shortfall or the green of time in hand, against the
 // range's own target, so a week half a day behind is a ring a sixteenth red.
 //
+// The balance card's two figures are the same quantity at two scopes — the
+// range, and everything ever logged — so they are labelled by scope ("This
+// week" / "All time") rather than by name. Calling one of them "Balance" and
+// the other "Overall" read as two different quantities and wanted a footnote
+// to say they were not; a label that says which span it covers does not.
+//
 // Paint only: every figure here is the `summarizeRange` the charts below
 // fold, and the ring's geometry is `clock.ts`'s. Nothing on this screen
 // derives a number of its own.
@@ -41,9 +47,18 @@ type Props = {
   target: Seconds;
   balance: Seconds;
   overall: Seconds;
+  /** Which range the left-hand balance is for — the word it is labelled with.
+   *  Named rather than dated: the dates are in the header directly above. */
+  range: "week" | "month";
 };
 
-export function RangeGlance({ worked, target, balance, overall }: Props) {
+export function RangeGlance({
+  worked,
+  target,
+  balance,
+  overall,
+  range,
+}: Props) {
   const t = useT();
   const share = target > 0 ? worked / target : worked > 0 ? 1 : 0;
   // A range with no target to measure against — a week of days off — has no
@@ -61,68 +76,67 @@ export function RangeGlance({ worked, target, balance, overall }: Props) {
         : 1;
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="grid grid-cols-2 gap-2">
-        <Card>
-          <Ring
-            arcs={[
-              { at: done, color: "var(--color-accent)" },
-              { at: over, color: "var(--color-flag)" },
-            ]}
-            label={target > 0 ? formatPercent(share) : formatDuration(worked)}
-            ariaLabel={t("report.shareLabel")}
-            desc={t("report.shareDesc", {
-              worked: formatDuration(worked),
-              target: formatDuration(target),
-            })}
+    <div className="grid grid-cols-2 gap-2">
+      <Card>
+        <Ring
+          arcs={[
+            { at: done, color: "var(--color-accent)" },
+            { at: over, color: "var(--color-flag)" },
+          ]}
+          label={target > 0 ? formatPercent(share) : formatDuration(worked)}
+          ariaLabel={t("report.shareLabel")}
+          desc={t("report.shareDesc", {
+            worked: formatDuration(worked),
+            target: formatDuration(target),
+          })}
+        />
+        <Figures>
+          <Figure
+            label={t("report.worked")}
+            value={formatDuration(worked)}
+            dot="var(--color-accent)"
           />
-          <Figures>
-            <Figure
-              label={t("report.worked")}
-              value={formatDuration(worked)}
-              dot="var(--color-accent)"
-            />
-            <Figure
-              label={t("report.target")}
-              value={formatDuration(target)}
-              dot="var(--color-muted)"
-            />
-          </Figures>
-        </Card>
+          <Figure
+            label={t("report.target")}
+            value={formatDuration(target)}
+            dot="var(--color-muted)"
+          />
+        </Figures>
+      </Card>
 
-        <Card>
-          <Ring
-            arcs={[
-              {
-                at: swing,
-                color: short ? "var(--color-danger)" : "var(--color-accent)",
-              },
-            ]}
-            label={formatBalance(balance)}
-            labelClass={short ? "text-danger" : "text-accent"}
-            ariaLabel={t("report.balanceLabel")}
-            desc={t("report.balanceDesc", {
-              balance: formatBalance(balance),
-              target: formatDuration(target),
-            })}
+      <Card>
+        <Ring
+          arcs={[
+            {
+              at: swing,
+              color: short ? "var(--color-danger)" : "var(--color-accent)",
+            },
+          ]}
+          label={formatBalance(balance)}
+          labelClass={short ? "text-danger" : "text-accent"}
+          ariaLabel={t("report.balanceLabel")}
+          desc={t("report.balanceDesc", {
+            balance: formatBalance(balance),
+            target: formatDuration(target),
+          })}
+        />
+        <Figures>
+          <Figure
+            label={
+              range === "week"
+                ? t("report.balanceWeek")
+                : t("report.balanceMonth")
+            }
+            value={formatBalance(balance)}
+            dot={short ? "var(--color-danger)" : "var(--color-accent)"}
           />
-          <Figures>
-            <Figure
-              label={t("report.balance")}
-              value={formatBalance(balance)}
-              dot={short ? "var(--color-danger)" : "var(--color-accent)"}
-            />
-            <Figure
-              label={t("report.overallShort")}
-              value={formatBalance(overall)}
-              dot={overall < 0 ? "var(--color-danger)" : "var(--color-accent)"}
-            />
-          </Figures>
-        </Card>
-      </div>
-      <p className="px-1 text-right text-[0.65rem] text-muted">
-        {t("report.overallHint")}
-      </p>
+          <Figure
+            label={t("report.balanceAllTime")}
+            value={formatBalance(overall)}
+            dot={overall < 0 ? "var(--color-danger)" : "var(--color-accent)"}
+          />
+        </Figures>
+      </Card>
     </div>
   );
 }
