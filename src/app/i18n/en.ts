@@ -264,7 +264,7 @@ export const en = {
     balanceDesc: "{balance} against a target of {target}.",
     perDay: "Hours per day",
     perDayDesc:
-      "A column a day: the target is the track, the hours worked fill it from the floor up, and a day that ran long carries on past the top.",
+      "A column a day: the target is the track, the hours worked fill it from the floor up, a day that ran long carries on past the top, and the hours a day that is over fell short by are left red at the top of its track.",
     perWeek: "Hours per week",
     perWeekDesc:
       "A row per week and a box per day: a box is as wide as the day's hours, a row as tall as the week's, and the rows stack to the month's total. The dotted lines are the target — a working day's hours across, and what the month should have added up to down.",
@@ -275,6 +275,7 @@ export const en = {
     scale: "Short of the day's target, on it, a fifth past.",
     seriesWorked: "Worked",
     seriesOver: "Over",
+    seriesMissed: "Missed",
     seriesTarget: "Target",
     categories: "Where the hours went",
     categoriesDesc: "Worked hours by kind of work over the range.",

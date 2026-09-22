@@ -8,7 +8,9 @@
 // carry on past the top of the track, so the target ends up *underneath* the
 // bar that overtook it. A short day leaves the rest of its track showing, and
 // the gap is the shortfall — read as a gap rather than worked out from two
-// bars standing side by side.
+// bars standing side by side. Once the day is over that gap is a shortfall
+// rather than a day still being worked, so it is marked as one — `missed`,
+// which is `short` on a day before today and nothing on today or after.
 //
 // Pure and clock-free, like `report.ts` and `monthChart.ts`: `today` comes in
 // as an argument, and nothing here measures a pixel. The view scales seconds
@@ -34,6 +36,14 @@ export type DayBar = {
   over: Seconds;
   /** The target not worked — the empty track left showing above the bar. */
   short: Seconds;
+  /** The part of that which is a shortfall: the target not worked on a day
+   *  that is over. Zero on the day being worked and on a day still ahead,
+   *  the same rule `summarizeDay` balances by — at nine in the morning
+   *  nobody is eight hours behind, and a chart that paints them so is one
+   *  you have to do arithmetic on before it means anything. So `short` is
+   *  the gap and `missed` is the gap you are answerable for, and the two
+   *  differ only on today and after. */
+  missed: Seconds;
   /** How tall the day stands: whichever of worked and target is further. */
   height: Seconds;
   /** `worked / target`, or null when there is nothing to fall short of — a
@@ -43,6 +53,9 @@ export type DayBar = {
    *  but the gap in it is not a shortfall — the same rule `summarizeRange`
    *  balances by. */
   future: boolean;
+  /** A day that is over: before today. The one day that is neither this nor
+   *  `future` is the day being worked. */
+  past: boolean;
 };
 
 /** A range laid out as bars. */
@@ -68,16 +81,20 @@ export function dayBars(
     const inside = Math.min(day.worked, day.target);
     const over = Math.max(0, day.worked - day.target);
     const future = day.date > today;
+    const past = day.date < today;
+    const short = Math.max(0, day.target - day.worked);
     return {
       date: day.date,
       worked: day.worked,
       target: day.target,
       inside,
       over,
-      short: Math.max(0, day.target - day.worked),
+      short,
+      missed: past ? short : 0,
       height: Math.max(day.worked, day.target),
       ratio: day.target === 0 || future ? null : day.worked / day.target,
       future,
+      past,
     };
   });
 

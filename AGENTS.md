@@ -475,7 +475,12 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   splits in seconds, scaled into the plot the screen has. Decides how many
   pixels an hour is worth and nothing else. The part of a bar past the target
   wears the flag colour — the Today screen's bezel overshoot, so a long day
-  looks the same wherever the app draws one.
+  looks the same wherever the app draws one — and the gap left in the track
+  of a day that is _over_ is painted over the track in the red the
+  `RangeGlance` ring gives a negative balance, so red means one thing on the
+  screen. Never on the day being worked or on one still ahead: a red column
+  over this afternoon is the chart telling you off for a day you are in the
+  middle of.
 - `src/app/RangeGlance.tsx` — the Report's header: `DayGlance`'s two rings,
   one screen up. The range's share of its target, filled from twelve and going
   round again in the flag colour past it, and its balance as an arc out of
