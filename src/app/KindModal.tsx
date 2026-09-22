@@ -37,6 +37,12 @@ import { DEFAULT_BREAK_CREDIT, type BreakCredit } from "./types.ts";
 // form alone because it is the answer that decides when the day is done, and
 // the day being done is what this screen is about.
 //
+// A kind invented here usually starts the moment it is saved — that is the
+// point of inventing it on this screen. Before the day has started it cannot,
+// so the form says so instead (`starts`): naming a kind is a change to the
+// project and belongs to no particular day, and a hint that promised a break
+// nobody is on would be the one sentence here that is not true.
+//
 // One form for both, because they are the same few questions. Held open on a
 // kind that exists, it starts on the grid rather than the name: the mark and
 // the hue are what you are looking at when you hold a pill, and the name is
@@ -65,6 +71,12 @@ type Props = {
   /** The kind as it stands, when the form was opened on one the project
    *  already has; null when it is being invented. */
   existing?: NewKind | null;
+  /** Whether a kind invented here starts the moment it is saved. It does
+   *  while the day is open, and it cannot before the day has started — the
+   *  edits want a session and hand the day back without one (`actions.ts`) —
+   *  so the hint says which of the two is about to happen rather than
+   *  promising a break nobody is on. */
+  starts?: boolean;
   /** The hue a kind of work would be drawn in if no colour is picked — the
    *  slot of the positional ramp its place in the list gives it. */
   autoColor: string;
@@ -75,6 +87,7 @@ type Props = {
 export function KindModal({
   kind,
   existing = null,
+  starts = true,
   autoColor,
   onSave,
   onClose,
@@ -138,8 +151,10 @@ export function KindModal({
               ? t("today.editBreakHint")
               : t("today.editCategoryHint")
             : isBreak
-              ? t("today.newBreakHint")
-              : t("today.newCategoryHint")}
+              ? t(starts ? "today.newBreakHint" : "today.newBreakHintOut")
+              : t(
+                  starts ? "today.newCategoryHint" : "today.newCategoryHintOut",
+                )}
         </p>
 
         {/* Controlled on every keystroke rather than committed on blur: the

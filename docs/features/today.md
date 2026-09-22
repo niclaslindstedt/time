@@ -95,7 +95,8 @@ The main screen, and the whole app for most of a day.
   Breaks and chips take
   no tap until you have started working, and say so by going pale — but they
   still answer a hold, because what a kind looks like has nothing to do with
-  being clocked in.
+  being clocked in. The two **+** squares stay bright for the same reason:
+  naming a kind is a change to the project, and a project is edited whenever.
   Given the width — a desk, or a phone laid on its side — the two rows stand
   either side of the dial instead, breaks to its left and kinds of work to
   its right, and a list longer than the window is tall scrolls in its own
@@ -171,6 +172,13 @@ kind's own vocabulary — the day's pauses for a break, work's for a kind of
 work, and the neutral marks to either — and a
 kind of work a colour — adds it to the project, and starts it — so the walk nobody set up in advance is two taps rather than a trip
 to the project form. It stays there afterwards as another pill.
+
+Unlike the pills beside it, **+** answers before the day has started. Naming
+a kind is a change to the _project_, and the project is the same whatever
+today is doing; what it cannot do then is start one, so it only joins the
+list and the form says so ("ready for when the day starts") rather than
+promising a break nobody is on. The new pill is there waiting when you press
+the clock.
 
 ## Holding a pill
 

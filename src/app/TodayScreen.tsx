@@ -78,6 +78,14 @@ import { useShortcuts } from "./useShortcuts.ts";
 // Where the controls stand in a column beside the dial the row is the
 // column's width and there is nothing to save, so it spells it.
 //
+// The square answers whether or not the day has started, for the same reason
+// a held pill does: naming a kind of break or work is a change to the
+// *project*, and a project is edited whenever. What it cannot do before the
+// work starts is start one — `takeBreak` and `setCategory` want an open
+// session and hand the day straight back without one (`actions.ts`), so the
+// kind is added and nothing is logged under it. Only the pills themselves
+// dim, because those are the edits that really have nothing to act on.
+//
 // A pill held rather than tapped is the fourth: it opens the kind itself, in
 // the same form the "+" fills in, so the mark a kind wears and the hue a
 // kind of work is drawn in are changed where they are worn rather than in
@@ -606,11 +614,10 @@ export function TodayScreen({
           })}
           <button
             type="button"
-            disabled={state === "out"}
             onClick={() => setAsking({ kind: "break", id: null })}
             aria-label={t("today.custom")}
             title={t("today.custom")}
-            className="flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent text-sm font-semibold text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:w-auto wide:justify-start wide:px-3"
+            className="flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-dashed border-line bg-transparent text-sm font-semibold text-muted transition-colors hover:bg-surface-2 wide:w-auto wide:justify-start wide:px-3"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
             <span className="hidden truncate wide:inline">
@@ -675,11 +682,10 @@ export function TodayScreen({
           })}
           <button
             type="button"
-            disabled={state === "out"}
             onClick={() => setAsking({ kind: "activity", id: null })}
             aria-label={t("today.custom")}
             title={t("today.custom")}
-            className="inline-flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-full border border-dashed border-line text-sm font-medium text-muted transition-colors hover:bg-surface-2 disabled:opacity-40 wide:w-auto wide:justify-start wide:rounded-xl wide:px-3 wide:font-semibold"
+            className="inline-flex min-h-12 w-12 shrink-0 items-center justify-center gap-1.5 rounded-full border border-dashed border-line text-sm font-medium text-muted transition-colors hover:bg-surface-2 wide:w-auto wide:justify-start wide:rounded-xl wide:px-3 wide:font-semibold"
           >
             <PlusIcon className="h-4 w-4 shrink-0" />
             <span className="hidden truncate wide:inline">
@@ -748,6 +754,10 @@ export function TodayScreen({
         <KindModal
           kind={asking.kind}
           existing={kindAsked(project, asking)}
+          // A kind invented before the day has started only joins the
+          // project: the edits below want an open session and hand the day
+          // straight back without one.
+          starts={state !== "out"}
           // "Automatic" is the hue the kind's place in the list gives it —
           // the slot after the last for one being invented, which is what an
           // id the project does not have yet asks for.

@@ -25,8 +25,10 @@ made of underneath.
     yet.
 - **The balance** — an arc growing out of twelve, in the red of a shortfall or
   the green of time in hand, against the range's own target, so a week half a
-  day behind is a ring a sixteenth red. The middle prints the balance. Under
-  it:
+  day behind is a ring a sixteenth red. The middle prints the balance, set as
+  large as the hole it goes in has room for: a balance carries a sign and, over
+  a month, three digits of hours, and it comes down a size rather than out over
+  the band. Under it:
   - **This week** / **This month** — worked against what the range has _come
     due_ for.
   - **All time** — the same quantity over everything ever logged, up to

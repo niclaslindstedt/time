@@ -99,13 +99,19 @@ export const en = {
     arrivalEarlier: "{minutes} min earlier",
     arrivalLater: "{minutes} min later",
     // Creating a break type or a kind of work from the Today screen, without
-    // going to the project form for it.
+    // going to the project form for it. Naming one is a change to the
+    // project, so it is offered before the day has started too — and then it
+    // only joins the project, since there is nothing open to log it against.
     newBreak: "A kind of break",
     newBreakHint:
       "It joins this project's breaks, and starts now. The minutes are how long one is assumed to take.",
+    newBreakHintOut:
+      "It joins this project's breaks, ready for when the day starts. The minutes are how long one is assumed to take.",
     newCategory: "A kind of work",
     newCategoryHint:
       "It joins this project's kinds of work, and you are doing it from now.",
+    newCategoryHintOut:
+      "It joins this project's kinds of work, ready for when the day starts.",
     // Holding a pill opens the kind it stands for, in the same form.
     holdToEdit: "Hold to edit",
     editKind: "Edit {name}",
