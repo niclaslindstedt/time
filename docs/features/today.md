@@ -337,6 +337,15 @@ Cancel. Enter is left alone wherever it already does a job: on a focused
 button it presses that button, and it saves nothing while Save is greyed
 out.
 
+Save is greyed out while the dialog has nothing worth saving — but never over
+a field that is still being typed into. A text field keeps its own draft
+until you leave it, so between the first keystroke and the field being left
+the form has not yet been told what the field says; greying Save out on that
+answer would call an obviously filled-in form empty, and then save it anyway
+the moment it was pressed. So while a field is holding an edit the button
+stays live, and pressing it files the field first and reads the answer
+after.
+
 While the day is being counted the browser tab's title carries the time
 worked and the state, so the tab strip is a glance at the day.
 

@@ -29,7 +29,9 @@ type Props = {
   title: string;
   onCancel: () => void;
   onSave: () => void;
-  /** Whether the draft is savable — the save button is disabled while not. */
+  /** Whether the form calls the draft savable. The save button is disabled
+   *  while it is not — except while a field is still holding an edit the
+   *  form has not been told about, which is when the answer is stale. */
   saveDisabled?: boolean;
   /** What the save button says, where "Save" is not what the modal does —
    *  a form that ends in a file says so. */
@@ -52,7 +54,15 @@ export function ModalHeader({
   const t = useT();
   const row = useRef<HTMLDivElement>(null);
 
-  useModalSave({ anchor: row, onSave, saveDisabled });
+  // The button's own `disabled` rather than the form's verdict: while a
+  // field is holding a typed edit, that verdict is out of date and painting
+  // the button dead over a form the reader has plainly filled in is a lie the
+  // press then contradicts. See `useModalSave`.
+  const { disabled, save } = useModalSave({
+    anchor: row,
+    onSave,
+    saveDisabled,
+  });
 
   return (
     <div
@@ -72,8 +82,8 @@ export function ModalHeader({
       <Button
         variant="primary"
         className="min-h-10 shrink-0 font-bold"
-        disabled={saveDisabled}
-        onClick={onSave}
+        disabled={disabled}
+        onClick={save}
       >
         {saveLabel ?? t("common.save")}
       </Button>

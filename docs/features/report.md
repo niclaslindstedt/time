@@ -2,6 +2,15 @@
 
 What the days add up to, for the project in use.
 
+## Before there is a project
+
+A report is a fold over the days of a project, so with none the screen is a
+single card saying so — with the **Add project** button that makes one. The
+form is the same editor the **Projects** screen opens (see
+[`projects.md`](projects.md)), and saving from here puts the project in use,
+so the report fills in behind the sheet rather than sending you to another
+tab and back.
+
 ## The range
 
 **Week** or **Month**, with arrows to step back and forward and the title to
