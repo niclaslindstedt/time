@@ -23,12 +23,8 @@ interface ImportMetaEnv {
   // Dropbox app key (PKCE public client). Unset hides the Dropbox backend in
   // Settings → Sync. See `src/app/useSyncEngine.ts`.
   readonly VITE_DROPBOX_APP_KEY?: string;
-  // Google OAuth client id (GIS token client). Unset hides the Google Drive
-  // backend. See `src/app/useSyncEngine.ts`.
-  readonly VITE_GOOGLE_CLIENT_ID?: string;
   // App-folder names the synced document is filed under, per provider.
   readonly VITE_DROPBOX_APP_FOLDER?: string;
-  readonly VITE_GDRIVE_APP_FOLDER?: string;
   // Which build this is: "store" for the one sold in the App Store, anything
   // else (including unset) for the free web edition, whose exported
   // specifications carry the notice. See `src/app/edition.ts`.

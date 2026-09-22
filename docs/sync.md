@@ -2,7 +2,7 @@
 
 Cloud sync is optional and off by default. When it is on, the app keeps a copy
 of its one document — `time.json` — in a folder of the user's own Dropbox,
-Google Drive or iCloud, and pulls that copy in when it opens.
+iCloud, and pulls that copy in when it opens.
 
 ## The shape of it
 

@@ -804,13 +804,13 @@ export const en = {
     sunday: "Sunday",
     sync: "Cloud sync",
     syncHint:
-      "Off by default. Connect your own Dropbox or Google Drive to keep a copy there and sync between devices.",
+      "Off by default. Connect your own Dropbox to keep a copy there and sync between devices.",
     // The same sentence with iCloud in it, shown only where the app has a
     // store to offer — which is the app-store build. A browser has none, so
     // naming iCloud there would be offering something that is not on the
     // picker below it.
     syncHintICloud:
-      "Off by default. Keep a copy in your own iCloud, Dropbox or Google Drive to sync between devices.",
+      "Off by default. Keep a copy in your own iCloud or Dropbox to sync between devices.",
     backend: "Storage",
     connected: "Connected to {name}",
     localOnly: "Kept on this device only",

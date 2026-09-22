@@ -52,7 +52,7 @@ Two things it will tell you rather than guess about:
   offline — it never treats a file it could not read as an empty one.
 
 Android has no iCloud, so there the app is the web app served from inside the
-download, with Dropbox and Google Drive as before.
+download, with Dropbox as before.
 
 ## What the wrapper is not allowed to do
 

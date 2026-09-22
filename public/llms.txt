@@ -4,7 +4,7 @@
 > Start working with one tap and stop with the same one; log breaks
 > (lunch, coffee, a walk) and kinds of work (meetings, coding) as they happen
 > or afterwards. One document, stored on-device as JSON, with an optional copy
-> synced to the user's own Dropbox or Google Drive. Totals, balances and
+> synced to the user's own iCloud or Dropbox. Totals, balances and
 > charts are derived from the logged spans at read time; nothing about a
 > total is stored.
 

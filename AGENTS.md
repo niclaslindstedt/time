@@ -94,7 +94,7 @@ same shared surface behind the sibling `contacts` and `period` apps.
 
 The framework owns the UI kit and the generic mechanics: modals, form
 primitives, the theme engine, the charts, the bottom bar and the tab-paging
-swipe, the storage adapters (localStorage / Dropbox / Google Drive), the i18n
+swipe, the storage adapters (localStorage / Dropbox), the i18n
 runtime, logging, the toast store, and the PWA update state machine. What
 stays here is the vocabulary — what a day is made of, what a button on the
 Today screen does, and what a report adds up.

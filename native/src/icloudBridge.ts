@@ -5,7 +5,7 @@
 // look for a DOCUMENT-STORE HOST on `window` — a capability, not an identity —
 // and this is the script that installs one (see `src/app/cloudHost.ts` for the
 // other side of the contract). A browser has no such host, so on the website
-// the picker offers Dropbox and Google Drive and iCloud is simply not there.
+// the picker offers Dropbox and iCloud is simply not there.
 //
 // `react-native-webview` gives us one message channel in each direction: the
 // page posts strings out, and the app injects scripts in. That is enough for

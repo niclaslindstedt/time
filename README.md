@@ -55,7 +55,7 @@ The same app ships to the **App Store** and **Google Play** through a thin
 native wrapper in [`native/`](native/README.md) — the whole web build packed
 inside the download and served from the device, so it runs with no network at
 all. On a phone that gains one thing a browser cannot: **iCloud**, as a third
-option beside Dropbox and Google Drive, keeping the document in your own
+option beside Dropbox, keeping the document in your own
 container under Files → iCloud Drive → Time.
 
 It is built on [`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework),
@@ -152,7 +152,7 @@ dialog, `Enter` saves and `Escape` cancels):
 
 | Button | What it does                                                                                                                                                                                                                                                                                                                                              |
 | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, week start, cloud sync (Dropbox, Google Drive, and iCloud in the app-store build), backup / restore / delete, developer tools, and the build. |
+| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, week start, cloud sync (Dropbox and iCloud in the app-store build), backup / restore / delete, developer tools, and the build. |
 
 ## Configuration
 
@@ -163,9 +163,7 @@ is no secret to protect), and leaving either unset simply hides that provider:
 | Variable                  | Effect                                                                                                             |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `VITE_DROPBOX_APP_KEY`    | Enables the Dropbox backend.                                                                                       |
-| `VITE_GOOGLE_CLIENT_ID`   | Enables the Google Drive backend.                                                                                  |
 | `VITE_DROPBOX_APP_FOLDER` | Folder name the document is filed under (default `time`).                                                          |
-| `VITE_GDRIVE_APP_FOLDER`  | Folder name in My Drive (default `time`).                                                                          |
 | `VITE_BASE`               | Deploy base path (default `/`).                                                                                    |
 | `VITE_EDITION`            | `store` for the App Store build, whose exported PDF specifications carry no notice. Default: the free web edition. |
 

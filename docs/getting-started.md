@@ -54,5 +54,5 @@ corrected one span at a time.
 
 In your browser's localStorage, on this device. **Settings → Your data**
 downloads a JSON backup or restores one. To keep a copy in your own Dropbox
-or Google Drive, and to sync between devices, see
+or and to sync between devices, see
 [`features/cloud-sync.md`](features/cloud-sync.md).

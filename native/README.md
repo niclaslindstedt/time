@@ -86,7 +86,7 @@ open, copy and delete the file holding their own hours. A time report that
 synced to a place its owner could not see would be a worse answer than not
 syncing at all.
 
-It appears in **Settings → Cloud sync** beside Dropbox and Google Drive, and
+It appears in **Settings → Cloud sync** beside Dropbox, and
 there is no OAuth: the container belongs to the device's iCloud account, so
 "connecting" is choosing it. Signing in and out of iCloud happens in iOS
 Settings, which is why the app re-asks whether the store is usable every time
