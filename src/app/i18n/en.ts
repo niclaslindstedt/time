@@ -227,9 +227,12 @@ export const en = {
     worked: "Worked",
     target: "Target",
     balance: "Balance",
-    overall: "Overall balance",
-    overallShort: "Overall",
-    overallHint: "Overall is since the first day you logged.",
+    // The balance card's two figures are the same question at two scopes, so
+    // the scope is the label — "Balance / Overall" made them look like two
+    // different quantities and needed a footnote to say they were not.
+    balanceWeek: "This week",
+    balanceMonth: "This month",
+    balanceAllTime: "All time",
     workedDays: "{count} of {expected} days",
     // The two rings over the charts — the Log's header, one screen up.
     shareLabel: "Worked against target",

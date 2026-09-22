@@ -27,8 +27,11 @@ made of underneath.
   the green of time in hand, against the range's own target, so a week half a
   day behind is a ring a sixteenth red. The middle prints the balance. Under
   it:
-  - **Balance** — worked against what the range has _come due_ for.
-  - **Overall** — the same, from the first day ever logged to today.
+  - **This week** / **This month** — worked against what the range has _come
+    due_ for.
+  - **All time** — the same quantity over everything ever logged, up to
+    today. It does not change as you step between ranges, because it is not
+    about the range: it is the balance you are actually carrying.
 
   The day you are standing in is where due parts company with target. Today
   asks for its whole day — that is what the share is read against — but it

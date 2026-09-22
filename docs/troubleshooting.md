@@ -25,7 +25,7 @@ of work only labels the time. Tap the break type, not the category.
 sessions minus the breaks; each is a row with its times, and tapping one opens
 the editor. A session nobody closed on a past day is read up to midnight.
 
-**The overall balance is very negative.** It counts every expected working day
+**The all-time balance is very negative.** It counts every expected working day
 from the first day you logged, so a week of holiday without a logged day is a
 week of shortfall. Adjust the project's working days for the weeks that
 differ, or log the days off — a day with no time worked still counts as

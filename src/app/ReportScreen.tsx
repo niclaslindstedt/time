@@ -239,6 +239,7 @@ export function ReportScreen({ data, project, settings, update }: Props) {
         target={summary.target}
         balance={summary.balance}
         overall={overall}
+        range={range}
       />
 
       <Section
