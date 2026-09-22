@@ -64,8 +64,9 @@ the bar that overtook it.
 That makes the two ways a day can go two shapes rather than two bars to
 compare:
 
-- **Short** — the rest of the track is left showing above the green. The gap
-  is the shortfall, read as a gap.
+- **Short** — the rest of the track is left showing above the green, and on a
+  day that is _over_ it is left showing in red: the hours the day was asked
+  for and did not get, read as a gap rather than worked out from two bars.
 - **Long** — the column rises past the top of the track, and the change of
   colour is exactly where the target was.
 
@@ -73,7 +74,10 @@ A **Saturday** has no track at all, because the project expects nothing of it:
 every hour worked on one is above the target from the first minute, and the
 whole column is drawn in the flag colour. A **day still ahead** shows its
 track, fainter — the hours are coming, and the gap in it is not yet a
-shortfall. Today's name under its column is the bold one.
+shortfall, so it is not red. Neither is **today's**: the afternoon you have
+not worked yet is not a shortfall until the day is over, which is the same
+rule the balance is measured by. Today's name under its column is the bold
+one.
 
 Pointing at a column names the day, its hours, its target and its balance.
 

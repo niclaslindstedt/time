@@ -8,6 +8,16 @@
 // the top when the day ran long, and the part above the target wears the flag
 // colour — the same overshoot the Today screen's bezel draws, so a long day
 // looks the same wherever the app shows one.
+//
+// The other way a day goes is the gap left in the track, and once the day is
+// over that gap is a shortfall: it wears the red the ring beside it already
+// puts a negative balance in (`dayBars.ts`'s `missed`), so red means the same
+// thing everywhere on the screen. It goes *over* the track rather than
+// tinting it — a grey track showing through a red is a brown, and the hours
+// you did not work are not a third colour. Not on the day being worked and
+// not on a day still ahead: those hours are still to come, and a red column
+// standing over this afternoon would be the chart telling you off for a day
+// you are in the middle of.
 
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -146,6 +156,23 @@ export function DayBars({ chart, today, className = "" }: Props) {
                   fillOpacity={bar.future ? 0.16 : 0.3}
                 />
               )}
+              {/* The shortfall of a day that is over, in the red of a
+                  negative balance: the top of the track, from the hours
+                  worked up to the hours asked for. Over the track, so the
+                  red is the ring's red rather than a red over a grey. */}
+              {bar.missed > 0 && (
+                <path
+                  d={barPath(
+                    x,
+                    y(bar.target),
+                    w,
+                    px(bar.missed),
+                    RADIUS,
+                    "top",
+                  )}
+                  fill="var(--color-danger)"
+                />
+              )}
               {/* The hours worked, up the track. Square-topped while there is
                   more of the bar above it, so the two pieces read as one
                   column divided at the target. */}
@@ -219,13 +246,14 @@ function barTitle(t: TFn, bar: DayBar): string {
   return `${head} ${of} (${formatBalance(bar.worked - bar.target)})`;
 }
 
-/** The three things a column can be made of. */
+/** The four things a column can be made of. */
 function Legend() {
   const t = useT();
   return (
     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.65rem] text-muted">
       <Key color="var(--color-accent)" label={t("report.seriesWorked")} />
       <Key color="var(--color-flag)" label={t("report.seriesOver")} />
+      <Key color="var(--color-danger)" label={t("report.seriesMissed")} />
       <Key
         color="var(--muted)"
         opacity={0.3}

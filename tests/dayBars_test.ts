@@ -51,9 +51,47 @@ describe("dayBars", () => {
     expect(bar.inside).toBe(h(6));
     expect(bar.over).toBe(0);
     expect(bar.short).toBe(h(2));
+    // The day is over, so the gap is a shortfall and is marked as one.
+    expect(bar.missed).toBe(h(2));
+    expect(bar.past).toBe(true);
     // The bar stands as tall as the track it did not fill.
     expect(bar.height).toBe(h(8));
     expect(bar.ratio).toBeCloseTo(0.75);
+  });
+
+  it("calls the whole target missed on a workday nobody logged", () => {
+    const bar = chartOf([]).bars[0]!;
+    expect(bar.worked).toBe(0);
+    expect(bar.short).toBe(h(8));
+    expect(bar.missed).toBe(h(8));
+  });
+
+  it("marks nothing missed on the day being worked", () => {
+    // Read on the Monday itself, four hours in: the other four are still
+    // ahead of the clock, so they are a gap and not a shortfall.
+    const chart = chartOf([worked("2026-04-06", 4)], "2026-04-06");
+    const monday = chart.bars[0]!;
+    expect(monday.date).toBe("2026-04-06");
+    expect(monday.past).toBe(false);
+    expect(monday.future).toBe(false);
+    expect(monday.short).toBe(h(4));
+    expect(monday.missed).toBe(0);
+  });
+
+  it("marks nothing missed on a day still ahead", () => {
+    const chart = chartOf([worked("2026-04-06", 8)], "2026-04-06");
+    const thursday = chart.bars[3]!;
+    expect(thursday.future).toBe(true);
+    expect(thursday.short).toBe(h(8));
+    expect(thursday.missed).toBe(0);
+  });
+
+  it("misses nothing on a day off, however little was worked", () => {
+    // Saturday: the project asked for nothing, so there is nothing to miss.
+    const bar = chartOf([]).bars[5]!;
+    expect(bar.date).toBe("2026-04-11");
+    expect(bar.target).toBe(0);
+    expect(bar.missed).toBe(0);
   });
 
   it("carries the bar past the top of the track on a long day", () => {
@@ -61,6 +99,7 @@ describe("dayBars", () => {
     expect(bar.inside).toBe(h(8));
     expect(bar.over).toBe(h(1, 30));
     expect(bar.short).toBe(0);
+    expect(bar.missed).toBe(0);
     // Past the target the bar, not the track, is what the day stands at.
     expect(bar.height).toBe(h(9, 30));
     expect(bar.ratio).toBeCloseTo(9.5 / 8);
@@ -71,6 +110,7 @@ describe("dayBars", () => {
     expect(bar.inside).toBe(h(8));
     expect(bar.over).toBe(0);
     expect(bar.short).toBe(0);
+    expect(bar.missed).toBe(0);
     expect(bar.ratio).toBe(1);
   });
 
