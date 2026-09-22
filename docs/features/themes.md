@@ -28,17 +28,17 @@ itself — the light as much as the dial. A card's light is held steady rather
 than beating: ten cards beating at ten rates would be a fairground, and what
 a card is showing is the colour and the reach.
 
-| Preset        | The dial                                                                                                                                                       |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Snowfield** | Textured silver, applied batons, a second hand that glides. The default.                                                                                       |
-| **Abyss**     | The diver: black, dots with a triangle at twelve and batons at the quarters.                                                                                   |
-| **Trailhead** | The field watch: every hour numbered in a tall condensed sans, outside the ring.                                                                               |
-| **Summit**    | The expedition dial: 3, 6 and 9 in an engineered sans, batons between.                                                                                         |
-| **Boulevard** | The dress watch: white, Roman numerals in a high-contrast serif, quartz.                                                                                       |
-| **Studio**    | Small geometric numerals at the rim, and nothing else.                                                                                                         |
-| **Tidewater** | A blue sunburst with tapered wedges.                                                                                                                           |
-| **Harvest**   | Champagne, numerals at the quarters in a serif.                                                                                                                |
-| **Uptown**    | The sixties dress watch: silver, long applied blocks out to the ring with a lumed plot on it at each hour, tapered steel hands, the day on a blue minute ring. |
+| Preset        | The dial                                                                                                                                                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Snowfield** | Textured silver, applied batons, a second hand that glides.                                                                                                                 |
+| **Abyss**     | The diver: black, dots with a triangle at twelve and batons at the quarters.                                                                                                |
+| **Trailhead** | The field watch: every hour numbered in a tall condensed sans, outside the ring.                                                                                            |
+| **Summit**    | The expedition dial: 3, 6 and 9 in an engineered sans, batons between.                                                                                                      |
+| **Boulevard** | The dress watch: white, Roman numerals in a high-contrast serif, quartz.                                                                                                    |
+| **Studio**    | Small geometric numerals at the rim, and nothing else.                                                                                                                      |
+| **Tidewater** | A blue sunburst with tapered wedges.                                                                                                                                        |
+| **Harvest**   | Champagne, numerals at the quarters in a serif.                                                                                                                             |
+| **Uptown**    | The sixties dress watch: silver, long applied blocks out to the ring with a lumed plot on it at each hour, tapered steel hands, the day on a blue minute ring. The default. |
 
 ### Custom
 

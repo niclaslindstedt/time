@@ -10,7 +10,6 @@ import {
 
 import {
   ActionMenuList,
-  Button,
   ContextMenu,
   FloatingPanel,
   PlusIcon,
@@ -34,6 +33,8 @@ import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { dayKinds, dayTotals, progress, workdayEnd } from "./day.ts";
 import {
+  DEFAULT_HOURS_PER_DAY,
+  DEFAULT_WORK_DAYS,
   breakTypeOf,
   categoryOf,
   isPinned,
@@ -59,6 +60,7 @@ import { makeId } from "./ids.ts";
 import { glyphFor, type GlyphId } from "./kinds.ts";
 import { autoCategoryColor, breakName, categoryColor } from "./labels.ts";
 import { KindModal, type NewKind } from "./KindModal.tsx";
+import { ProjectEditModal } from "./ProjectEditModal.tsx";
 import { KEY_HINT, type Command } from "./shortcuts.ts";
 import {
   DAY_SECONDS,
@@ -144,6 +146,17 @@ import { useShortcuts } from "./useShortcuts.ts";
 // over it unless there is a project to switch or a cloud to show: the watch
 // is the top of the screen — and, laid down, the middle of it.
 //
+// **Before there is a project, there is still a watch.** The first thing a
+// new reader sees is the clock — an empty dial on an ordinary week, drawn
+// against `NO_PROJECT` — rather than a card asking for a project in the
+// place the clock goes. Pressing it is how the first project is made: the
+// press opens the project form here, on this screen, and saving it puts the
+// project in use and leaves the reader on the watch with the day ready to
+// start. Out there the *whole* watch is that one button, ring and rim
+// included — the rule that everything outside the face opens the day's
+// stretches is about correcting a record, and there is no record to correct
+// until there is a project to keep one for.
+//
 // The screen owns no state beyond the modals it opens. Every band is derived
 // from the day's spans up to `now`, once a second, through `day.ts`; every
 // button is one of the pure edits in `actions.ts` applied to the day and
@@ -159,7 +172,9 @@ type Props = {
   backlight: Backlight;
   /** Whether the light on the dial's metal follows the device. */
   reflect: boolean;
-  onAddProject: () => void;
+  /** A project made from the dial on the first run: it is saved here, and
+   *  the shell is told to put it in use. */
+  onProjectAdded: (id: string) => void;
   onNotice: (message: string) => void;
   /** The cog on the dial. Settings is a screen on the phone and a panel on
    *  the desk; the shell knows which. */
@@ -170,6 +185,26 @@ type Props = {
 /** The kind form on screen: one being invented (`id` null), or the one being
  *  corrected. */
 type Asking = { kind: "break" | "activity"; id: string | null };
+
+/**
+ * The project an empty dial is drawn against, before there is a real one.
+ *
+ * The dial is drawn against a project — that is where a break's name and a
+ * kind of work's hue come from — so a screen with no project would have no
+ * clock to show. A day with no spans asks this one nothing, so none of it is
+ * ever read: it is never stored, never edited and never merged. The ordinary
+ * week is here so the bezel has a target to stand at rather than divide by
+ * nothing; with nothing worked it draws the same empty ring either way.
+ */
+const NO_PROJECT: Project = {
+  id: "",
+  name: "",
+  workDays: DEFAULT_WORK_DAYS,
+  hoursPerDay: DEFAULT_HOURS_PER_DAY,
+  breakTypes: [],
+  categories: [],
+  updatedAt: "",
+};
 
 /** Where a row's "…" hangs its menu. Left-anchored and at least as wide as
  *  the longest thing in it, because what is in it is a list of names. */
@@ -217,19 +252,26 @@ const MoreButton = forwardRef<
 });
 
 export function TodayScreen({
+  project: chosen,
   store,
-  project,
   dial,
   clockSize,
   backlight,
   reflect,
-  onAddProject,
+  onProjectAdded,
   onNotice,
   onOpenSettings,
   settingsOpen,
 }: Props) {
   const t = useT();
   const now = useNow(1000);
+  /** The first run: no project yet, so the dial is empty and every press on
+   *  the watch opens the form that makes one. */
+  const first = chosen === null;
+  /** What the screen is drawn against: the project in use, or the empty one
+   *  the watch stands on until there is one (see `NO_PROJECT`). */
+  const project = chosen ?? NO_PROJECT;
+  const [adding, setAdding] = useState(false);
   const [arriving, setArriving] = useState(false);
   const [timeline, setTimeline] = useState<{ at: Seconds | null } | null>(null);
   const [asking, setAsking] = useState<Asking | null>(null);
@@ -240,39 +282,42 @@ export function TodayScreen({
   const kindMoreRef = useRef<HTMLButtonElement>(null);
   const press = useLongPress();
 
-  const day = useMemo<WorkDay | null>(() => {
-    if (!project) return null;
-    return (
+  const day = useMemo<WorkDay>(
+    () =>
       dayFor(store.data, project.id, now.today) ??
-      blankDay(project.id, now.today, new Date().toISOString())
-    );
-  }, [store.data, project, now.today]);
+      blankDay(project.id, now.today, new Date().toISOString()),
+    [store.data, project, now.today],
+  );
 
   const totals = useMemo(
-    () => (day && project ? dayTotals(day, project, now.seconds) : null),
+    () => dayTotals(day, project, now.seconds),
     [day, project, now.seconds],
   );
 
   /** Which of the day's colours are on the ring, which is what the legend
    *  under it may name. The same fold of the same stretches the dial is
    *  drawn from, so the two cannot disagree. */
-  const drawn = useMemo(
-    () => (day ? dayKinds(day, now.seconds) : null),
-    [day, now.seconds],
-  );
+  const drawn = useMemo(() => dayKinds(day, now.seconds), [day, now.seconds]);
 
   const ctx = (): EditContext => ({
     id: makeId,
     updatedAt: new Date().toISOString(),
   });
   const apply = (next: WorkDay) => {
-    if (day && next !== day) store.saveDay(next);
+    if (first || next === day) return;
+    store.saveDay(next);
   };
 
   // The edits, as the buttons and the keys and the menu all reach them.
-  const state = totals?.state ?? "out";
+  const state = totals.state;
+  // The face. Before there is a project it is the way to one: a day cannot
+  // be started until there is something to log it against, and the form is
+  // the answer rather than a refusal.
   const toggleWork = () => {
-    if (!day) return;
+    if (first) {
+      setAdding(true);
+      return;
+    }
     apply(
       state === "out"
         ? clockIn(day, now.seconds, ctx())
@@ -280,12 +325,12 @@ export function TodayScreen({
     );
   };
   const pickCategory = (id: string) => {
-    if (!day || !totals || state === "out") return;
+    if (state === "out") return;
     const on = totals.currentCategoryId === id;
     apply(setCategory(day, on ? null : id, now.seconds, ctx()));
   };
   const pickBreak = (id: string, minutes: number) => {
-    if (!day || !totals || state === "out") return;
+    if (state === "out") return;
     const running = totals.currentBreak?.typeId === id;
     apply(
       running
@@ -298,11 +343,12 @@ export function TodayScreen({
   // is bound once rather than once a second.
   const keys = useRef<(command: Command) => boolean>(() => false);
   keys.current = (command) => {
-    if (!project) return false;
+    // S answers on the first run too, and opens the form the face opens.
     if (command.kind === "toggleWork") {
       toggleWork();
       return true;
     }
+    if (first) return false;
     if (command.kind === "category") {
       const c = project.categories[command.index];
       if (!c || state === "out") return false;
@@ -317,9 +363,8 @@ export function TodayScreen({
   // state where the page's name would be, so the tab strip is a glance at
   // the day. Once a minute rather than once a second, because a tab title
   // that flickers is a tab you close.
-  const current = totals?.currentBreak;
-  const currentName =
-    project && current ? breakName(t, project, current.typeId) : null;
+  const current = totals.currentBreak;
+  const currentName = current ? breakName(t, project, current.typeId) : null;
   const tabState =
     state === "working"
       ? t("today.state.working")
@@ -331,7 +376,7 @@ export function TodayScreen({
         : state === "break"
           ? t("today.state.break")
           : null;
-  const tabWorked = totals ? formatDuration(totals.worked) : "";
+  const tabWorked = formatDuration(totals.worked);
   useEffect(() => {
     if (!tabState) return;
     return setWindowTitle(
@@ -343,28 +388,14 @@ export function TodayScreen({
     );
   }, [tabState, tabWorked, t]);
 
-  if (!project || !day || !totals || !drawn) {
-    return (
-      <div className="flex flex-1 flex-col justify-center gap-3 px-3 py-3">
-        <div className="mx-auto w-full max-w-md rounded-2xl border border-line bg-surface-3 p-6 text-center">
-          <p className="text-sm text-muted">{t("today.noProject")}</p>
-          <Button variant="primary" className="mt-4" onClick={onAddProject}>
-            <span className="inline-flex items-center gap-1.5">
-              <PlusIcon className="h-4 w-4" />
-              {t("today.addProject")}
-            </span>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const stampProject = (patch: Partial<Project>) =>
+  const stampProject = (patch: Partial<Project>) => {
+    if (first) return;
     store.saveProject({
       ...project,
       ...patch,
       updatedAt: new Date().toISOString(),
     });
+  };
 
   const expected = isWorkDay(project, now.today);
   const onBreak = state === "break";
@@ -415,8 +446,9 @@ export function TodayScreen({
   const pinnedCategories = project.categories.filter(isPinned);
   const restCategories = project.categories.filter((c) => !isPinned(c));
 
-  const stateLine =
-    state === "working" && totals.openSession
+  const stateLine = first
+    ? t("today.state.noProject")
+    : state === "working" && totals.openSession
       ? `${t("today.state.working")} · ${t("today.since", { time: formatTimeOfDay(totals.openSession.start) })}`
       : state === "break" && current
         ? `${t("today.state.break")} · ${
@@ -518,7 +550,16 @@ export function TodayScreen({
   ];
 
   return (
-    <div className="app-today flex flex-1 flex-col gap-3 px-3 py-3">
+    <div
+      className={`app-today flex flex-1 flex-col gap-3 px-3 py-3 ${
+        // Nothing under the watch on the first run, so on the phone's column
+        // it stands in the middle of the screen rather than at the top of an
+        // empty one. Layout only, and only while there is no project: where
+        // the controls stand beside the dial the row is a grid that centres
+        // it already (`.app-today`, `styles.css`).
+        first ? "justify-center" : ""
+      }`}
+    >
       {/* The dial, and under it the one line of words: what the day is doing
           and since when. The line is a button — the arrival is the time of
           day that is wrong most often, and this is where you see it. */}
@@ -546,8 +587,15 @@ export function TodayScreen({
             progress={fraction}
             endsAt={endsAt}
             onToggle={toggleWork}
-            onOpen={(at) => setTimeline({ at: at ?? null })}
-            onMenu={(x, y) => setMenu({ x, y })}
+            // On the first run the whole watch is the one button: there is
+            // no record out on the ring to correct, so the press that would
+            // open the day's stretches opens the form instead.
+            onOpen={(at) =>
+              first ? setAdding(true) : setTimeline({ at: at ?? null })
+            }
+            onMenu={(x, y) => {
+              if (!first) setMenu({ x, y });
+            }}
             onOpenSettings={onOpenSettings}
             settingsOpen={settingsOpen}
           />
@@ -614,9 +662,12 @@ export function TodayScreen({
               {t("today.percentOfTarget", { percent: formatPercent(fraction) })}
             </span>
           </button>
-          {/* The first press of the day is the one nobody has been told about. */}
-          {state === "out" && totals.lastOut === null && (
-            <p className="text-xs text-muted">{t("today.outHint")}</p>
+          {/* The press nobody has been told about: the one that makes the
+              first project, and after that the first of the day. */}
+          {(first || (state === "out" && totals.lastOut === null)) && (
+            <p className="text-xs text-muted">
+              {t(first ? "today.noProjectHint" : "today.outHint")}
+            </p>
           )}
         </div>
       </div>
@@ -653,138 +704,151 @@ export function TodayScreen({
         </ul>
       )}
 
-      <section data-area="breaks" className="flex flex-col gap-1.5">
-        <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
-          {t("today.breaks")}
-        </h2>
-        {/* The breaks and the one square that invents another, on the same
-            row: a grid of equal columns put "Custom" on a line of its own
-            below two breaks, which is a whole row of a phone's screen spent
-            on the least-used control there is. So the breaks share what is
-            left after the square, wrapping when a project has more of them
-            than the row holds. */}
-        <div className="flex flex-wrap gap-2 wide:flex-col wide:flex-nowrap">
-          {pinnedBreaks.map((b) => {
-            const running = current?.typeId === b.id;
-            return (
-              <button
-                key={b.id}
-                type="button"
-                aria-disabled={out}
-                aria-pressed={running}
-                {...press({
-                  press: () => pickBreak(b.id, b.defaultMinutes),
-                  hold: () => setAsking({ kind: "break", id: b.id }),
-                })}
-                title={`${
-                  running
-                    ? t("today.endBreak", { name: b.name })
-                    : t("today.menuBreak", {
-                        name: b.name,
-                        minutes: String(b.defaultMinutes),
-                      })
-                } · ${t("today.holdToEdit")}`}
-                className={`flex min-h-12 grow basis-32 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors wide:basis-auto wide:justify-start ${
-                  out ? "opacity-40" : ""
-                } ${
-                  running
-                    ? "border-flag bg-flag/20 text-fg-bright"
-                    : "border-line bg-surface-3 text-fg hover:bg-surface-2"
-                }`}
-              >
-                <KindGlyph
-                  id={glyphFor(b.glyph, "break")}
-                  className="h-4 w-4 shrink-0 text-flag"
-                />
-                <span className="truncate">
-                  {running ? t("today.endBreak", { name: b.name }) : b.name}
-                </span>
-                {!running && (
-                  <span className="text-xs font-normal text-muted wide:ml-auto">
-                    {b.defaultMinutes}m
-                  </span>
-                )}
-              </button>
-            );
-          })}
-          <MoreButton
-            ref={breakMoreRef}
-            label={t("today.moreBreaks")}
-            open={more === "break"}
-            onToggle={() => setMore((m) => (m === "break" ? null : "break"))}
-            className="rounded-xl"
-          />
-        </div>
-      </section>
+      {/* The breaks and the kinds of work are the project's own vocabulary,
+          so before there is a project there are none of them: the screen is
+          the watch and the words under it, and the only thing to do is press
+          it. */}
+      {!first && (
+        <>
+          <section data-area="breaks" className="flex flex-col gap-1.5">
+            <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
+              {t("today.breaks")}
+            </h2>
+            {/* The breaks and the one square that invents another, on the
+                same row: a grid of equal columns put "Custom" on a line of
+                its own below two breaks, which is a whole row of a phone's
+                screen spent on the least-used control there is. So the
+                breaks share what is left after the square, wrapping when a
+                project has more of them than the row holds. */}
+            <div className="flex flex-wrap gap-2 wide:flex-col wide:flex-nowrap">
+              {pinnedBreaks.map((b) => {
+                const running = current?.typeId === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    aria-disabled={out}
+                    aria-pressed={running}
+                    {...press({
+                      press: () => pickBreak(b.id, b.defaultMinutes),
+                      hold: () => setAsking({ kind: "break", id: b.id }),
+                    })}
+                    title={`${
+                      running
+                        ? t("today.endBreak", { name: b.name })
+                        : t("today.menuBreak", {
+                            name: b.name,
+                            minutes: String(b.defaultMinutes),
+                          })
+                    } · ${t("today.holdToEdit")}`}
+                    className={`flex min-h-12 grow basis-32 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors wide:basis-auto wide:justify-start ${
+                      out ? "opacity-40" : ""
+                    } ${
+                      running
+                        ? "border-flag bg-flag/20 text-fg-bright"
+                        : "border-line bg-surface-3 text-fg hover:bg-surface-2"
+                    }`}
+                  >
+                    <KindGlyph
+                      id={glyphFor(b.glyph, "break")}
+                      className="h-4 w-4 shrink-0 text-flag"
+                    />
+                    <span className="truncate">
+                      {running ? t("today.endBreak", { name: b.name }) : b.name}
+                    </span>
+                    {!running && (
+                      <span className="text-xs font-normal text-muted wide:ml-auto">
+                        {b.defaultMinutes}m
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+              <MoreButton
+                ref={breakMoreRef}
+                label={t("today.moreBreaks")}
+                open={more === "break"}
+                onToggle={() =>
+                  setMore((m) => (m === "break" ? null : "break"))
+                }
+                className="rounded-xl"
+              />
+            </div>
+          </section>
 
-      <section data-area="kinds" className="flex flex-col gap-1.5">
-        <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
-          {t("today.categories")}
-        </h2>
-        {/* Pills on a phone, a column beside the dial when the controls
-            stand there. `flex-nowrap` with the column: wrapping is what makes
-            the pills a paragraph on the phone, and the same wrapping in a
-            column is a *second* column — a project with more kinds of work
-            than the window is tall spilled them off the right-hand edge of
-            the screen instead of scrolling the one it has (`styles.css`). */}
-        <div className="flex flex-wrap gap-2 wide:flex-col wide:flex-nowrap">
-          {pinnedCategories.map((c) => {
-            const i = project.categories.indexOf(c);
-            const on = totals.currentCategoryId === c.id;
-            const key = KEY_HINT.category(i);
-            return (
-              <button
-                key={c.id}
-                type="button"
-                aria-disabled={out}
-                aria-pressed={on}
-                {...press({
-                  press: () => pickCategory(c.id),
-                  hold: () => setAsking({ kind: "activity", id: c.id }),
-                })}
-                title={`${c.name}${key ? ` (${key})` : ""} · ${t("today.holdToEdit")}`}
-                className={`inline-flex min-h-12 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors wide:rounded-xl wide:font-semibold ${
-                  out ? "opacity-40" : ""
-                } ${categoryTone(on)}`}
-              >
-                <KindGlyph
-                  id={glyphFor(c.glyph, "category")}
-                  className="h-4 w-4 shrink-0"
-                  style={{
-                    color:
-                      on && onBreak
-                        ? "var(--color-flag)"
-                        : categoryColor(project, c.id),
-                  }}
-                />
-                <span className="truncate">{c.name}</span>
-                {on && onBreak && (
-                  <span className="text-xs font-normal text-flag">
-                    {t("today.paused")}
-                  </span>
-                )}
-                {totals.categories[c.id] ? (
-                  <span className="text-xs font-normal text-muted tabular-nums wide:ml-auto">
-                    {formatDuration(totals.categories[c.id]!)}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-          <MoreButton
-            ref={kindMoreRef}
-            label={t("today.moreKinds")}
-            open={more === "activity"}
-            onToggle={() =>
-              setMore((m) => (m === "activity" ? null : "activity"))
-            }
-            className="rounded-full wide:rounded-xl"
-          />
-        </div>
-        {onBreak && (
-          <p className="app-hint text-xs text-muted">{t("today.pausedHint")}</p>
-        )}
-      </section>
+          <section data-area="kinds" className="flex flex-col gap-1.5">
+            <h2 className="text-xs font-bold tracking-wide text-muted uppercase">
+              {t("today.categories")}
+            </h2>
+            {/* Pills on a phone, a column beside the dial when the controls
+                stand there. `flex-nowrap` with the column: wrapping is what
+                makes the pills a paragraph on the phone, and the same
+                wrapping in a column is a *second* column — a project with
+                more kinds of work than the window is tall spilled them off
+                the right-hand edge of the screen instead of scrolling the
+                one it has (`styles.css`). */}
+            <div className="flex flex-wrap gap-2 wide:flex-col wide:flex-nowrap">
+              {pinnedCategories.map((c) => {
+                const i = project.categories.indexOf(c);
+                const on = totals.currentCategoryId === c.id;
+                const key = KEY_HINT.category(i);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-disabled={out}
+                    aria-pressed={on}
+                    {...press({
+                      press: () => pickCategory(c.id),
+                      hold: () => setAsking({ kind: "activity", id: c.id }),
+                    })}
+                    title={`${c.name}${key ? ` (${key})` : ""} · ${t("today.holdToEdit")}`}
+                    className={`inline-flex min-h-12 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors wide:rounded-xl wide:font-semibold ${
+                      out ? "opacity-40" : ""
+                    } ${categoryTone(on)}`}
+                  >
+                    <KindGlyph
+                      id={glyphFor(c.glyph, "category")}
+                      className="h-4 w-4 shrink-0"
+                      style={{
+                        color:
+                          on && onBreak
+                            ? "var(--color-flag)"
+                            : categoryColor(project, c.id),
+                      }}
+                    />
+                    <span className="truncate">{c.name}</span>
+                    {on && onBreak && (
+                      <span className="text-xs font-normal text-flag">
+                        {t("today.paused")}
+                      </span>
+                    )}
+                    {totals.categories[c.id] ? (
+                      <span className="text-xs font-normal text-muted tabular-nums wide:ml-auto">
+                        {formatDuration(totals.categories[c.id]!)}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+              <MoreButton
+                ref={kindMoreRef}
+                label={t("today.moreKinds")}
+                open={more === "activity"}
+                onToggle={() =>
+                  setMore((m) => (m === "activity" ? null : "activity"))
+                }
+                className="rounded-full wide:rounded-xl"
+              />
+            </div>
+            {onBreak && (
+              <p className="app-hint text-xs text-muted">
+                {t("today.pausedHint")}
+              </p>
+            )}
+          </section>
+        </>
+      )}
 
       {/* The rest of each row. The kinds themselves are only in it while
           there is a day to log them against — the same guard the right
@@ -836,6 +900,22 @@ export function TodayScreen({
         onClose={() => setMenu(null)}
         ariaLabel={t("today.menuLabel")}
       />
+
+      {/* The first project, made from the dial. The same editor the
+          Projects screen opens, so there is one project form; saving it puts
+          it in use and the watch behind the sheet is ready for the day. */}
+      {adding && (
+        <ProjectEditModal
+          project={null}
+          onSave={(made) => {
+            store.saveProject(made);
+            onProjectAdded(made.id);
+            onNotice(t("projects.saved"));
+            setAdding(false);
+          }}
+          onClose={() => setAdding(false)}
+        />
+      )}
 
       {arriving && session && (
         <ArrivalModal

@@ -30,10 +30,6 @@ type Props = {
   store: DocStore;
   activeId: string | null;
   onActivate: (id: string) => void;
-  /** Open the editor for a new project on mount — the Today screen's
-   *  onboarding button lands here. */
-  openNew: boolean;
-  onOpenedNew: () => void;
   onNotice: (message: string) => void;
 };
 
@@ -48,21 +44,14 @@ export function ProjectsScreen({
   store,
   activeId,
   onActivate,
-  openNew,
-  onOpenedNew,
   onNotice,
 }: Props) {
   const t = useT();
-  const [editing, setEditing] = useState<Editing | null>(() =>
-    openNew ? { project: null } : null,
-  );
+  const [editing, setEditing] = useState<Editing | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Project | null>(null);
   const projects = projectList(store.data);
 
-  const closeEditor = () => {
-    setEditing(null);
-    if (openNew) onOpenedNew();
-  };
+  const closeEditor = () => setEditing(null);
 
   return (
     <div className="flex flex-col gap-3 px-3 py-3">
