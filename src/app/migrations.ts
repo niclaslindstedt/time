@@ -179,6 +179,22 @@ function parseGlyph(
 }
 
 /**
+ * Whether the kind waits in its row's "…" rather than carrying a button of
+ * its own.
+ *
+ * Only the literal `false` is kept, and it is the only value ever written
+ * (see `storedPinned`). Everything else — absent, `true`, a string, a
+ * document from before there was a "…" — reads as pinned and stores nothing,
+ * which is what keeps two devices from churning cloud revisions over a field
+ * neither of them has an opinion about.
+ */
+function parsePinned(
+  raw: Record<string, unknown>,
+): { pinned: false } | Record<string, never> {
+  return raw.pinned === false ? { pinned: false } : {};
+}
+
+/**
  * How much of a kind of break still counts as work, when the stored value
  * says something this build understands.
  *
@@ -215,6 +231,7 @@ function parseProject(key: string, value: unknown): Project | null {
       defaultMinutes: clampBreakMinutes(raw.defaultMinutes, 15),
       ...parseGlyph(raw, base, "break"),
       ...(credit ? { credit } : {}),
+      ...parsePinned(raw),
     };
   });
   const categories = parseNamed<WorkCategory>(
@@ -223,6 +240,7 @@ function parseProject(key: string, value: unknown): Project | null {
       ...base,
       ...parseGlyph(raw, base, "category"),
       ...(isCategoryColor(raw.color) ? { color: raw.color } : {}),
+      ...parsePinned(raw),
     }),
   );
   return {

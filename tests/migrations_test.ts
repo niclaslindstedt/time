@@ -365,3 +365,65 @@ describe("what a break counts for, through the pipeline", () => {
     });
   });
 });
+
+describe("whether a kind is on the Today screen, through the pipeline", () => {
+  const withPinned = (pinned: unknown) =>
+    normalizeDoc({
+      version: DOC_VERSION,
+      projects: {
+        acme: {
+          id: "acme",
+          name: "Acme",
+          breakTypes: [
+            { id: "lunch", name: "Lunch", defaultMinutes: 30, pinned },
+          ],
+          categories: [{ id: "coding", name: "Coding", pinned }],
+        },
+      },
+      days: {},
+    }).projects.acme!;
+
+  it("keeps a kind that was hidden", () => {
+    expect(withPinned(false).breakTypes[0]!.pinned).toBe(false);
+    expect(withPinned(false).categories[0]!.pinned).toBe(false);
+  });
+
+  it("reads shown back as no answer, so the bytes agree", () => {
+    // The same discipline as a break that counts for nothing and a kind of
+    // work's automatic colour: the common answer is stored as nothing, so two
+    // devices cannot churn revisions over a field neither has an opinion on.
+    expect(withPinned(true).breakTypes[0]!.pinned).toBeUndefined();
+    expect(withPinned(undefined).breakTypes[0]!.pinned).toBeUndefined();
+    expect(withPinned(true).categories[0]!.pinned).toBeUndefined();
+  });
+
+  it("reads anything it cannot make sense of as shown", () => {
+    // Every document written before there was a ··· shows what it always did.
+    expect(withPinned("no").breakTypes[0]!.pinned).toBeUndefined();
+    expect(withPinned(0).breakTypes[0]!.pinned).toBeUndefined();
+    expect(withPinned(null).categories[0]!.pinned).toBeUndefined();
+  });
+
+  it("leaves a document that hides nothing byte for byte what it was", () => {
+    const shown = serializeDoc(withPinnedDoc(true));
+    const absent = serializeDoc(withPinnedDoc(undefined));
+    expect(shown).toBe(absent);
+  });
+
+  function withPinnedDoc(pinned: unknown) {
+    return normalizeDoc({
+      version: DOC_VERSION,
+      projects: {
+        acme: {
+          id: "acme",
+          name: "Acme",
+          breakTypes: [
+            { id: "lunch", name: "Lunch", defaultMinutes: 30, pinned },
+          ],
+          categories: [],
+        },
+      },
+      days: {},
+    });
+  }
+});

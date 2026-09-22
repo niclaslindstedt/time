@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import {
   LABELED_FIELD_CLASS,
   Modal,
+  ToggleRow,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { useT } from "./i18n/index.ts";
@@ -15,9 +16,9 @@ import {
   type KindSort,
 } from "./kinds.ts";
 import { KindPicker, MarkButton } from "./KindPicker.tsx";
-import { clampBreakMinutes } from "./project.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
 import { BreakCreditField } from "./BreakCreditField.tsx";
+import { BreakMinutesField } from "./BreakMinutesField.tsx";
 import { DEFAULT_BREAK_CREDIT, type BreakCredit } from "./types.ts";
 
 // The Today screen's kind form: a kind of break, or a kind of work — invented
@@ -36,6 +37,12 @@ import { DEFAULT_BREAK_CREDIT, type BreakCredit } from "./types.ts";
 // work (see `BreakCreditField`). It belongs here rather than in the project
 // form alone because it is the answer that decides when the day is done, and
 // the day being done is what this screen is about.
+//
+// Whether the kind is on the Today screen at all is asked here too, because
+// this is the form a pill opens: the row that has grown too long is thinned
+// out by holding the kind you do not want on it and turning it off, which is
+// nearer than a trip to the project form. It arrives on, since a kind
+// invented from "Custom" was named in order to be used.
 //
 // A kind invented here usually starts the moment it is saved — that is the
 // point of inventing it on this screen. Before the day has started it cannot,
@@ -64,6 +71,11 @@ export type NewKind = {
   glyph: GlyphId;
   color: CategoryColor | null;
   credit: BreakCredit;
+  /** Whether it gets a button of its own on the Today screen, or waits in
+   *  its row's "…". A kind invented here arrives pinned — you named it to
+   *  use it — and this is where a pill held open is taken off the screen
+   *  again, which is the whole way a crowded row is thinned out. */
+  pinned: boolean;
 };
 
 type Props = {
@@ -107,6 +119,7 @@ export function KindModal({
   const [credit, setCredit] = useState<BreakCredit>(
     existing?.credit ?? DEFAULT_BREAK_CREDIT,
   );
+  const [pinned, setPinned] = useState(existing?.pinned ?? true);
   /** A kind opened by holding its pill was opened to be looked at, so the
    *  grid is already unfolded; an invented one is a name first. */
   const [picking, setPicking] = useState(existing !== null);
@@ -140,7 +153,9 @@ export function KindModal({
               : t("today.newCategory")
         }
         onCancel={onClose}
-        onSave={() => onSave({ name: trimmed, minutes, glyph, color, credit })}
+        onSave={() =>
+          onSave({ name: trimmed, minutes, glyph, color, credit, pinned })
+        }
         saveDisabled={trimmed === ""}
       />
 
@@ -200,20 +215,7 @@ export function KindModal({
         )}
         {isBreak && (
           <>
-            <label className="flex min-w-0 flex-col gap-1">
-              <span className="text-xs text-muted">
-                {t("today.kindMinutes")}
-              </span>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={String(minutes)}
-                onInput={(e) =>
-                  setMinutes(clampBreakMinutes(e.currentTarget.value, minutes))
-                }
-                className={LABELED_FIELD_CLASS}
-              />
-            </label>
+            <BreakMinutesField minutes={minutes} onChange={setMinutes} />
             <BreakCreditField
               credit={credit}
               defaultMinutes={minutes}
@@ -221,6 +223,17 @@ export function KindModal({
             />
           </>
         )}
+
+        {/* Last, and after the mark: whether it is on the screen at all is a
+            question about the row rather than about the kind, and asking it
+            before the name would be asking where to put something that has
+            not been made yet. */}
+        <ToggleRow
+          label={t("today.kindPinned")}
+          hint={t("today.kindPinnedHint")}
+          checked={pinned}
+          onChange={setPinned}
+        />
       </div>
     </Modal>
   );

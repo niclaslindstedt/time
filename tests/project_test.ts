@@ -6,9 +6,11 @@ import {
   breakTypeOf,
   clampHours,
   creditSeconds,
+  isPinned,
   projectTemplate,
   isWorkDay,
   storedCredit,
+  storedPinned,
   suggestedGlyph,
   targetSeconds,
   weekdayOf,
@@ -35,7 +37,6 @@ describe("projectTemplate", () => {
     expect(e.breakTypes.map((b) => b.glyph)).toEqual([
       "meal",
       "coffee",
-      "toilet",
       "exercise",
       "health",
     ]);
@@ -109,7 +110,6 @@ describe("projectTemplate", () => {
     expect(e.breakTypes.map((b) => [b.name, b.defaultMinutes])).toEqual([
       ["Lunch", 30],
       ["Coffee", 15],
-      ["Toilet", 5],
       ["Training", 60],
       ["Healthcare", 60],
     ]);
@@ -166,30 +166,80 @@ describe("the template's own answers", () => {
     let n = 0;
     return projectTemplate("Acme", labels, () => `id${++n}`, "now");
   };
-  const breakNamed = (name: string) =>
-    made().breakTypes.find((b) => b.name === name)!;
-
-  it("counts a toilet break as work, and only that one", () => {
-    expect(breakNamed("Toilet").credit).toEqual({ mode: "all" });
-    // The ones people actually disagree about are left to them — the two at
-    // the desk, and the two that take you out of the building.
-    expect(breakNamed("Lunch").credit).toBeUndefined();
-    expect(breakNamed("Coffee").credit).toBeUndefined();
-    expect(breakNamed("Training").credit).toBeUndefined();
-    expect(breakNamed("Healthcare").credit).toBeUndefined();
-    // Said once more from the other end, so a break added to the template
-    // later cannot quietly start counting: the toilet is the only one.
-    expect(
-      made()
-        .breakTypes.filter((b) => b.credit !== undefined)
-        .map((b) => b.name),
-    ).toEqual(["Toilet"]);
+  it("counts no break as work, and stores that as nothing at all", () => {
+    // Every break a new project starts with is one people actually disagree
+    // about, so the app answers for none of them. Said from the list end, so
+    // a break added to the template later cannot quietly start counting.
+    expect(made().breakTypes.filter((b) => b.credit !== undefined)).toEqual([]);
+    for (const b of made().breakTypes) {
+      expect(creditSeconds(made(), b.id), b.name).toBe(0);
+    }
   });
 
-  it("gives a new project a toilet break that costs it nothing", () => {
-    const project = made();
-    const toilet = breakNamed("Toilet");
-    expect(creditSeconds(project, toilet.id)).toBe(Infinity);
+  it("shows lunch and coffee, and keeps the two long ones in the ···", () => {
+    // Four breaks is more than a phone's row holds, and most days have
+    // neither the gym nor the doctor in them.
+    expect(
+      made()
+        .breakTypes.filter(isPinned)
+        .map((b) => b.name),
+    ).toEqual(["Lunch", "Coffee"]);
+    expect(
+      made()
+        .breakTypes.filter((b) => !isPinned(b))
+        .map((b) => b.name),
+    ).toEqual(["Training", "Healthcare"]);
+  });
+
+  it("shows every kind of work it starts with", () => {
+    expect(made().categories.every(isPinned)).toBe(true);
+  });
+
+  it("stores only the hidden ones, so the shown ones are the bytes they were", () => {
+    // "Shown" is absent, the way "no credit" and "automatic colour" are: a
+    // project nobody has hidden anything in must not grow a field.
+    const pinnedFields = [...made().breakTypes, ...made().categories].map(
+      (k) => k.pinned,
+    );
+    expect(pinnedFields).toEqual([
+      undefined,
+      undefined,
+      false,
+      false,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
+  });
+
+  it("does not stamp a toilet break any more, but still knows the mark", () => {
+    // It was the one break that counted as work, and five minutes is shorter
+    // than the tap that logs it. The name is still the app's own, so a
+    // document written when it was stamped keeps getting the right mark.
+    expect(made().breakTypes.some((b) => b.name === "Toilet")).toBe(false);
+    expect(suggestedGlyph("Toilet", "break", labels)).toBe("toilet");
+  });
+});
+
+describe("isPinned and storedPinned", () => {
+  it("reads an absent answer as shown", () => {
+    // Every document written before there was a ··· shows the buttons it
+    // always did.
+    expect(isPinned({})).toBe(true);
+    expect(isPinned({ pinned: true })).toBe(true);
+    expect(isPinned({ pinned: false })).toBe(false);
+  });
+
+  it("writes nothing for shown, and the flag for hidden", () => {
+    expect(storedPinned(true)).toEqual({});
+    expect(storedPinned(false)).toEqual({ pinned: false });
+  });
+
+  it("round-trips either way", () => {
+    for (const pinned of [true, false]) {
+      expect(isPinned({ ...storedPinned(pinned) })).toBe(pinned);
+    }
   });
 });
 

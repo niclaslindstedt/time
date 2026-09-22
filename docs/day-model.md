@@ -104,10 +104,10 @@ and `worked` is longer than the stretches by exactly that much.
 
 Absent means none, so a break counts for nothing until somebody says
 otherwise, and no day already logged changes when the app is updated. A _new_
-project is made with one answer of its own — the toilet break counts as work
-(`DEFAULT_TOILET_CREDIT`) — and the rest are yours. Because
-the answer belongs to the _project_, `dayTotals` takes the project as well as
-the day.
+project answers for none of its breaks: the one it used to answer for was the
+toilet break, and that is not put in a new project any more (see
+[`features/projects.md`](features/projects.md)). Because the answer belongs to
+the _project_, `dayTotals` takes the project as well as the day.
 
 ### When the day is done
 

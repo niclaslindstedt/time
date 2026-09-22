@@ -71,6 +71,12 @@ export type BreakType = {
    *  `DEFAULT_BREAK_CREDIT` — none of it, which is what a break has always
    *  counted for. */
   credit?: BreakCredit;
+  /** Whether it gets a button of its own on the Today screen, or waits in
+   *  the row's "…" with the rest. Absent means pinned, so a document written
+   *  before there was a "…" shows exactly the buttons it always did — and a
+   *  project that pins everything is byte for byte the project it was. Only
+   *  "not pinned" is worth storing (see `storedPinned`). */
+  pinned?: boolean;
 };
 
 /** A kind of work — meetings, coding, support — used to label an activity
@@ -85,6 +91,12 @@ export type WorkCategory = {
    *  the project's list gives it, which is what every kind of work had
    *  before one could be picked. */
   color?: CategoryColor;
+  /** Whether it gets a button of its own on the Today screen, or waits in
+   *  the row's "…" with the rest. Absent means pinned, so a document written
+   *  before there was a "…" shows exactly the buttons it always did — and a
+   *  project that pins everything is byte for byte the project it was. Only
+   *  "not pinned" is worth storing (see `storedPinned`). */
+  pinned?: boolean;
 };
 
 export type Project = {

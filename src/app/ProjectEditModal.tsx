@@ -3,20 +3,21 @@ import { useState } from "react";
 
 import {
   Button,
+  IconButton,
   LabeledInput,
   Modal,
+  StarIcon,
   TrashIcon,
 } from "@niclaslindstedt/oss-framework/components";
 
 import {
-  MAX_BREAK_MINUTES,
   MAX_HOURS_PER_DAY,
-  MIN_BREAK_MINUTES,
   MIN_HOURS_PER_DAY,
-  clampBreakMinutes,
   clampHours,
+  isPinned,
   projectTemplate,
   storedCredit,
+  storedPinned,
 } from "./project.ts";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
@@ -32,6 +33,7 @@ import { KindPicker, MarkButton } from "./KindPicker.tsx";
 import { CATEGORY_COLORS, WEEK, weekdayLabel } from "./labels.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
 import { BreakCreditField } from "./BreakCreditField.tsx";
+import { BreakMinutesField } from "./BreakMinutesField.tsx";
 import {
   DEFAULT_BREAK_CREDIT,
   type BreakCredit,
@@ -127,6 +129,31 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
         const rest = { ...x };
         delete rest.color;
         return color ? { ...rest, color } : rest;
+      }),
+    }));
+
+  /** What a break of this kind is assumed to take. Already clamped by the
+   *  control, which is the only thing that sets it. */
+  const setMinutes = (id: string, defaultMinutes: number) =>
+    setDraft((d) => ({
+      ...d,
+      breakTypes: d.breakTypes.map((x) =>
+        x.id === id ? { ...x, defaultMinutes } : x,
+      ),
+    }));
+
+  /** Whether the kind carries a button of its own on the Today screen.
+   *  "Shown" is stored as nothing at all, the same discipline (see
+   *  `storedPinned`), so a project nobody has hidden anything in is the
+   *  document it always was. */
+  const setPinned = (list: "breakTypes" | "categories", id: string) =>
+    setDraft((d) => ({
+      ...d,
+      [list]: d[list].map((x) => {
+        if (x.id !== id) return x;
+        const rest = { ...x };
+        delete rest.pinned;
+        return { ...rest, ...storedPinned(!isPinned(x)) };
       }),
     }));
 
@@ -259,32 +286,11 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
                       }
                     />
                   </div>
-                  <div className="w-20">
-                    <LabeledInput
-                      label={t("projects.breakMinutes")}
-                      type="number"
-                      inputMode="numeric"
-                      min={MIN_BREAK_MINUTES}
-                      max={MAX_BREAK_MINUTES}
-                      value={String(b.defaultMinutes)}
-                      onCommit={(next) =>
-                        setDraft((d) => ({
-                          ...d,
-                          breakTypes: d.breakTypes.map((x) =>
-                            x.id === b.id
-                              ? {
-                                  ...x,
-                                  defaultMinutes: clampBreakMinutes(
-                                    next,
-                                    x.defaultMinutes,
-                                  ),
-                                }
-                              : x,
-                          ),
-                        }))
-                      }
-                    />
-                  </div>
+                  <PinButton
+                    name={b.name}
+                    pinned={isPinned(b)}
+                    onToggle={() => setPinned("breakTypes", b.id)}
+                  />
                   <button
                     type="button"
                     aria-label={t("common.remove")}
@@ -299,6 +305,15 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
                     <TrashIcon className="h-4 w-4" />
                   </button>
                 </div>
+                {/* The minutes on a line of their own, under the name. They
+                    used to be a twenty-wide box wedged between the name and
+                    the bin, which left the name of a break about as much room
+                    as the word "Healthcare" needs — and there is nowhere in
+                    that row to put two buttons. */}
+                <BreakMinutesField
+                  minutes={b.defaultMinutes}
+                  onChange={(next) => setMinutes(b.id, next)}
+                />
                 <BreakCreditField
                   credit={b.credit ?? DEFAULT_BREAK_CREDIT}
                   defaultMinutes={b.defaultMinutes}
@@ -370,6 +385,11 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
                       }
                     />
                   </div>
+                  <PinButton
+                    name={c.name}
+                    pinned={isPinned(c)}
+                    onToggle={() => setPinned("categories", c.id)}
+                  />
                   <button
                     type="button"
                     aria-label={t("common.remove")}
@@ -415,5 +435,37 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
         </div>
       </div>
     </Modal>
+  );
+}
+
+/**
+ * Whether a kind is on the Today screen, as the button that sits between its
+ * name and the bin.
+ *
+ * A star rather than `kinds.ts`'s pin, which is a map pin — a place, the
+ * office, the customer — and reads as "where" beside a break called Lunch.
+ * The star is the framework's, for the same reason: this is a control in a
+ * form, not a mark a kind wears, and the two vocabularies stay apart.
+ * Pressed it wears the accent, because a kind held on the screen is one you
+ * will be looking at.
+ */
+function PinButton({
+  name,
+  pinned,
+  onToggle,
+}: {
+  name: string;
+  pinned: boolean;
+  onToggle: () => void;
+}) {
+  const t = useT();
+  return (
+    <IconButton
+      label={t("projects.pin", { name })}
+      pressed={pinned}
+      onClick={onToggle}
+    >
+      <StarIcon className="h-4 w-4" />
+    </IconButton>
   );
 }

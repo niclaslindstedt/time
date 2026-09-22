@@ -91,11 +91,12 @@ The main screen, and the whole app for most of a day.
   corrected on the clock — and the button turns into **End lunch** for as long
   as you are on it. A row of chips, one per kind of work, each wearing its own mark in
   its own colour; tapping one says that is what you are doing from now, tapping
-  it again stops labelling. Both rows end in a dashed **+**, which is Custom.
-  Breaks and chips take
+  it again stops labelling. Only the kinds the project has pinned get a button
+  of their own; both rows end in a dashed **···**, which holds the rest and
+  **Custom**. Breaks and chips take
   no tap until you have started working, and say so by going pale — but they
   still answer a hold, because what a kind looks like has nothing to do with
-  being clocked in. The two **+** squares stay bright for the same reason:
+  being clocked in. The two **···** squares stay bright for the same reason:
   naming a kind is a change to the project, and a project is edited whenever.
   Given the width — a desk, or a phone laid on its side — the two rows stand
   either side of the dial instead, breaks to its left and kinds of work to
@@ -160,31 +161,55 @@ here:
 None of this was timed to the second, and the screen says so: it is the shape
 of the day, not a stopwatch.
 
+## The ··· at the end of a row
+
+Not every kind the project has is on the screen. Each row shows the ones it
+has **pinned** and ends in a dashed **···**, which holds the rest and
+**Custom**. A project is allowed a dozen kinds of work; a phone has room for
+about four buttons, and the row that scrolls the watch off the top of the
+screen is worse than a second tap.
+
+What is in the **···** is the same list in the same order — just the part of
+it that was left out — so a break reads the same wherever you reach it, with
+its mark and the minutes it is assumed to take. Tapping one does exactly what
+its pill would have done.
+
+A new project pins Lunch and Coffee and leaves Training and Healthcare in the
+**···**: an hour at the gym and an hour at the doctor are worth setting up in
+advance, but most days have neither in them. Every kind of work it starts with
+is pinned.
+
+Which side a kind is on is the kind's own answer, and there are two ways to
+change it: **Show on Today** in the form a held pill opens (see below), which
+is the quick way to thin out a row you are looking at, and the star beside
+each kind in the project form. A kind that is not shown is still there —
+everything logged under it counts exactly the same, on the clock, in the Log
+and in the report.
+
 ## Custom
 
-The last pill in each row is a dashed **+** — Custom, which is the name it
-carries as a tooltip rather than beside the mark. Spelled out it was as wide
-as a break, and on a phone that was a whole row of the screen spent on the
-least-used control in it; as a square it sits at the end of the breaks with
-room to spare. It names a kind of break (with the
-minutes one is assumed to take) or a kind of work, gives it a mark from that
-kind's own vocabulary — the day's pauses for a break, work's for a kind of
-work, and the neutral marks to either — and a
-kind of work a colour — adds it to the project, and starts it — so the walk nobody set up in advance is two taps rather than a trip
-to the project form. It stays there afterwards as another pill.
+The last thing in every **···** is **Custom**. It names a kind of break (with
+the minutes one is assumed to take) or a kind of work, gives it a mark from
+that kind's own vocabulary — the day's pauses for a break, work's for a kind
+of work, and the neutral marks to either — and a kind of work a colour — adds
+it to the project, and starts it — so the walk nobody set up in advance is a
+few taps rather than a trip to the project form. It arrives pinned, so it is
+a pill on the row from then on.
 
-Unlike the pills beside it, **+** answers before the day has started. Naming
-a kind is a change to the _project_, and the project is the same whatever
-today is doing; what it cannot do then is start one, so it only joins the
-list and the form says so ("ready for when the day starts") rather than
-promising a break nobody is on. The new pill is there waiting when you press
-the clock.
+Unlike the kinds beside it, **Custom** answers before the day has started —
+it is the only thing in the **···** then. Naming a kind is a change to the
+_project_, and the project is the same whatever today is doing; what it
+cannot do then is start one, so it only joins the list and the form says so
+("ready for when the day starts") rather than promising a break nobody is on.
+The new pill is there waiting when you press the clock.
 
 ## Holding a pill
 
 A pill held rather than tapped opens the kind it stands for, in the same form
 **Custom** fills in: its mark, its name, the minutes a break is assumed to
-take, and the colour a kind of work is drawn in. It opens on the grid rather
+take (**−5m** and **+5m** either side of the number, or type one in), the
+colour a kind of work is drawn in, and whether it is shown on this screen at
+all. It opens on the grid rather
 than the name, because the mark and the hue are what you are looking at when
 you hold a pill — and the tap that ends the hold is swallowed, so holding
 **Lunch** opens it rather than also taking one. Under a mouse the right
