@@ -279,12 +279,13 @@ describe("the hour markers", () => {
 });
 
 describe("the presets", () => {
-  it("default to a silver face whose second hand glides", () => {
-    expect(DEFAULT_DIAL_PRESET).toBe("snowfield");
+  it("default to the silver dress dial with applied blocks", () => {
+    expect(DEFAULT_DIAL_PRESET).toBe("uptown");
     const dial = DIAL_PRESET[DEFAULT_DIAL_PRESET];
     expect(dial.face).toBe("silver");
-    expect(dial.movement).toBe("sweep");
-    expect(dial.markers).toBe("batons");
+    expect(dial.movement).toBe("mechanical");
+    expect(dial.markers).toBe("blocks");
+    expect(dial.ring).toBe("chapter");
   });
 
   it("are all made of the options on offer", () => {

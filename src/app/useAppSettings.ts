@@ -171,13 +171,17 @@ function parseDial(value: unknown): DialConfig {
     )
       ? (raw.placement as DialConfig["placement"])
       : base.placement,
-    // A dial stored before the ring was a choice gets the groove, which is
-    // the ring every dial had.
-    ring: oneOf(DIAL_RING, raw.ring, base.ring),
+    // A dial stored before the ring was a choice gets the groove, and one
+    // stored before the hands were a choice gets the bar: what every dial
+    // wore while the field was absent, which is a fact about those documents
+    // and not about whichever preset is the default today — read off the
+    // default dial instead, they would have changed under a reader the day
+    // the default did. A field that holds something that is not a ring or a
+    // hand at all is a different matter, and falls back to the default dial
+    // with the rest of them.
+    ring: oneOf(DIAL_RING, raw.ring ?? "groove", base.ring),
     movement: oneOf(DIAL_MOVEMENT, raw.movement, base.movement),
-    // A dial stored before the hands were a choice gets the bar, which is
-    // the hand every dial had.
-    hands: oneOf(DIAL_HANDS, raw.hands, base.hands),
+    hands: oneOf(DIAL_HANDS, raw.hands ?? "bar", base.hands),
   };
 }
 

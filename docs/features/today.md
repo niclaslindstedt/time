@@ -337,6 +337,14 @@ worked and the state, so the tab strip is a glance at the day.
 
 ## The first run
 
-With no project yet, the screen asks for one. **Add project** opens the
-editor (see [`projects.md`](projects.md)); saving makes it the project in
-use and the clock is ready.
+With no project yet the screen is still the watch: an empty dial on an
+ordinary week, and under it **No project** and the one line that says what
+to do. Pressing the clock opens the project editor (see
+[`projects.md`](projects.md)) there and then; saving makes it the project in
+use, the breaks and the kinds of work appear under the dial, and the next
+press on the face starts the day.
+
+Out there the whole watch is that one press — the ring and the rim as well
+as the face. Everywhere else a press outside the face opens the day's
+stretches, because the ring is a record and a record is corrected rather
+than switched; before the first project there is no record to correct.

@@ -358,7 +358,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   where a watch keeps its date, and on the top bar everywhere else — because
   it is a thing you do and leave rather than a place you are. Today is where the day
   is _filed_; Log is where it is _corrected_, because a list is where a wrong
-  time is visible.
+  time is visible. Today is the way in as well: with no project yet it draws
+  the dial against `NO_PROJECT` — an empty day on an ordinary week — and a
+  press anywhere on the watch opens the project form, so the first project
+  is made from the clock rather than from a card standing where it goes.
 - `src/app/Dial.tsx` — the watch face, drawn: bezel, face, minute track,
   the dial's own ring (a groove, or a chapter ring printed with the minutes),
   the day's track just inside the bezel and the day on it as the coloured
@@ -726,6 +729,7 @@ job only type-checks. See `native/README.md` and `native/RELEASING.md`.
 | A change to which kinds are on the Today screen    | `src/app/types.ts` (`pinned`) + `project.ts` (`isPinned` / `storedPinned` — the one place an absent one is read) + the validation in `migrations.ts` + `TodayScreen.tsx` (the split and the row's "…") — never a second list, and never a kind the "…" cannot reach                    |
 | A control that answers being held                  | `src/app/useLongPress.ts` — spread its handlers on the button; never a second timer in a screen                                                                                                                                                                                        |
 | A modal's save / cancel                            | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's                                                                                                                                                |
+| What Today does before there is a project          | `src/app/TodayScreen.tsx` (`NO_PROJECT`, and the `first` branches over it) — the dial is drawn either way and a press on the watch opens the project form; never a card in place of the clock                                                                                          |
 | A new way to correct a time on Today               | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`                                                                                                                                                         |
 | A new screen                                       | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                                                                                                                              |
 | A change to the light on the dial's metal          | `src/app/sheen.ts` (the light, and what it does to a facet or a dome — tested in `tests/sheen_test.ts`), `useTilt.ts` (the device's own readings) or `Dial.tsx` (paint)                                                                                                                |
@@ -844,6 +848,12 @@ with `[Learn more](feature:<slug>)`.
   out there the watch is carrying a record and a record is corrected rather
   than switched. The line under the dial opens the arrival. Do not add a start
   button back, and do not give the switch the ring again.
+- **Before there is a project, the watch is still the screen.** The first
+  run shows an empty dial rather than a card where the clock goes, and the
+  press that would start the day opens the project form instead — the whole
+  watch, ring and rim included, because there is no record out there to
+  correct yet (`NO_PROJECT` in `TodayScreen.tsx`). A card in place of the
+  clock, or an onboarding screen of its own, is the thing this replaced.
 - **No timer.** The day's progress is the bezel and the state is the light
   and the one line under the dial. A figure ticking up is the thing this
   screen was rid of.

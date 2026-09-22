@@ -43,12 +43,13 @@ export const en = {
   // along. Every label here is read one-handed as the work starts or stops,
   // so they are short.
   today: {
-    noProject: "Add the project you work on, and the clock is ready.",
-    addProject: "Add project",
     state: {
       out: "Not working",
       working: "Working",
       break: "On a break",
+      // The first run. The watch is there before the project is, so the line
+      // under it says what is missing rather than what the day is doing.
+      noProject: "No project",
     },
     since: "since {time}",
     breakSince: "{name} since {time}",
@@ -88,6 +89,10 @@ export const en = {
     paused: "paused",
     pausedHint: "A break is on, so nothing is being counted towards this.",
     outHint: "Press the clock to start the day.",
+    // The same invitation, one step earlier: the press that makes the first
+    // project. The clock is already on the screen, so the words point at it
+    // rather than at a button.
+    noProjectHint: "Press the clock to add the project you work on.",
     custom: "Custom",
     // The button at the end of each row: the kinds of that sort the project
     // has but does not show, and "Custom". Named for what is in it rather
