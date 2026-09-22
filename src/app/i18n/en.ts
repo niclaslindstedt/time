@@ -284,6 +284,26 @@ export const en = {
     total: "Total",
     rangeMenu: "What else to do with this range",
     exportPdf: "Export to PDF",
+    exportInvoice: "Export for Invoice",
+  },
+
+  // The range as a file for the Invoice app: the hours cut into lines, and
+  // nothing about money — what they cost is the invoice's business.
+  invoiceExport: {
+    title: "Export for Invoice",
+    intro:
+      "A file the Invoice app fills an invoice from: drop it on a draft and these hours arrive as lines at the customer's price.",
+    grain: "One line per",
+    grains: {
+      period: "Period",
+      day: "Day",
+      kind: "Kind of work",
+    },
+    summary: "{count} lines, {hours} in all.",
+    empty: "No hours in this range.",
+    hint: "The rounding is the specification's, so the invoice bills the hours the specification shows.",
+    rounding: "Rounding added",
+    download: "Download",
   },
 
   // The specification: the range as a document to send to whoever is paying

@@ -37,6 +37,7 @@ import {
   TagIcon,
 } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
+import { InvoiceExportModal } from "./InvoiceExportModal.tsx";
 import {
   breakName,
   categoryColor,
@@ -82,6 +83,7 @@ export function ReportScreen({ data, project, settings, update }: Props) {
   const [range, setRange] = useState<Range>("week");
   const [rangeMenu, setRangeMenu] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportingInvoice, setExportingInvoice] = useState(false);
   const rangeMenuRef = useRef<HTMLButtonElement>(null);
   // The anchor day the range is built around; stepping moves it a week or a
   // month.
@@ -370,6 +372,10 @@ export function ReportScreen({ data, project, settings, update }: Props) {
               label: t("report.exportPdf"),
               onSelect: () => setExporting(true),
             },
+            {
+              label: t("report.exportInvoice"),
+              onSelect: () => setExportingInvoice(true),
+            },
           ]}
           ariaLabel={t("report.rangeMenu")}
           onActivate={(action) => {
@@ -400,6 +406,24 @@ export function ReportScreen({ data, project, settings, update }: Props) {
           onDetails={(details) => update("specDetails", details)}
           onRounding={(rounding) => update("specRounding", rounding)}
           onClose={() => setExporting(false)}
+        />
+      )}
+
+      {exportingInvoice && (
+        <InvoiceExportModal
+          data={data}
+          project={project}
+          from={span.from}
+          to={span.to}
+          period={title}
+          periodSlug={range === "month" ? title : `${span.from}_${span.to}`}
+          today={now.today}
+          now={now.seconds}
+          grain={settings.invoiceGrain}
+          rounding={settings.specRounding}
+          onGrain={(grain) => update("invoiceGrain", grain)}
+          onRounding={(rounding) => update("specRounding", rounding)}
+          onClose={() => setExportingInvoice(false)}
         />
       )}
     </div>
