@@ -46,11 +46,13 @@ import {
 } from "./labels.ts";
 import { MonthCalendar } from "./MonthCalendar.tsx";
 import { monthChart } from "./monthChart.ts";
+import { NoProject } from "./NoProject.tsx";
 import { RangeGlance } from "./RangeGlance.tsx";
 import { monthOf, runningBalance, summarizeRange, weekOf } from "./report.ts";
 import { SpecExportModal } from "./SpecExportModal.tsx";
-import type { AppData, Project } from "./types.ts";
+import type { Project } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
+import type { DocStore } from "./useDocStore.ts";
 import { useNow } from "./useNow.ts";
 
 // What the days add up to: worked against target per day, where the hours
@@ -61,10 +63,15 @@ import { useNow } from "./useNow.ts";
 type Range = "week" | "month";
 
 type Props = {
-  data: AppData;
+  store: DocStore;
   project: Project | null;
   settings: AppSettings;
   update: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
+  /** The first project, made from the card this screen stands on before
+   *  there is one — it goes into use, so the report fills in behind the
+   *  sheet. */
+  onProjectAdded: (id: string) => void;
+  onNotice: (message: string) => void;
 };
 
 /** Where the range menu hangs: under the button and ranged to its right
@@ -76,8 +83,16 @@ const RANGE_MENU: FloatingPlacement = {
   coordinateSpace: "viewport",
 };
 
-export function ReportScreen({ data, project, settings, update }: Props) {
+export function ReportScreen({
+  store,
+  project,
+  settings,
+  update,
+  onProjectAdded,
+  onNotice,
+}: Props) {
   const t = useT();
+  const data = store.data;
   const now = useNow(60_000);
   const weekStartsOn: WeekStart = settings.weekStartsOn;
   const [range, setRange] = useState<Range>("week");
@@ -132,11 +147,12 @@ export function ReportScreen({ data, project, settings, update }: Props) {
 
   if (!project || !summary) {
     return (
-      <div className="px-3 py-3">
-        <div className="rounded-2xl border border-line bg-surface-3 p-6 text-center">
-          <p className="text-sm text-muted">{t("report.noProject")}</p>
-        </div>
-      </div>
+      <NoProject
+        store={store}
+        message={t("report.noProject")}
+        onAdded={onProjectAdded}
+        onNotice={onNotice}
+      />
     );
   }
 

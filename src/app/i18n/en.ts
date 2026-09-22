@@ -187,7 +187,7 @@ export const en = {
   // The day as a list — what the clock drew, editable.
   log: {
     title: "Log",
-    noProject: "Add a project to start logging.",
+    noProject: "No project yet. Add one and the day is logged here.",
     empty: "Nothing logged this day.",
     sessions: "Working",
     breaks: "Breaks",
@@ -242,7 +242,7 @@ export const en = {
 
   report: {
     title: "Report",
-    noProject: "Add a project to see a report.",
+    noProject: "No project yet. Add one and the report fills in.",
     week: "Week",
     month: "Month",
     thisWeek: "This week",

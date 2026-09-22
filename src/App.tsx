@@ -246,14 +246,21 @@ export function App() {
     />
   );
   const logScreen = (
-    <LogScreen store={store} project={project} onNotice={notice} />
+    <LogScreen
+      store={store}
+      project={project}
+      onProjectAdded={(id) => update("activeProjectId", id)}
+      onNotice={notice}
+    />
   );
   const reportScreen = (
     <ReportScreen
-      data={store.data}
+      store={store}
       project={project}
       settings={settings}
       update={update}
+      onProjectAdded={(id) => update("activeProjectId", id)}
+      onNotice={notice}
     />
   );
   const projectsScreen = (

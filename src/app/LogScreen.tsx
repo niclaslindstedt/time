@@ -29,6 +29,7 @@ import { formatFullDay, formatTimeOfDay } from "./format.ts";
 import { DayGlance } from "./DayGlance.tsx";
 import { CupIcon, EnterIcon, KindGlyph, MoreIcon, TagIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
+import { NoProject } from "./NoProject.tsx";
 import { makeId } from "./ids.ts";
 import type { GlyphId } from "./kinds.ts";
 import {
@@ -57,12 +58,15 @@ import { useNow } from "./useNow.ts";
 type Props = {
   store: DocStore;
   project: Project | null;
+  /** The first project, made from the card this screen stands on before
+   *  there is one — it goes into use, so the Log fills in behind the sheet. */
+  onProjectAdded: (id: string) => void;
   onNotice: (message: string) => void;
 };
 
 type Editing = { kind: SpanKind; draft: SpanDraft | null };
 
-export function LogScreen({ store, project, onNotice }: Props) {
+export function LogScreen({ store, project, onProjectAdded, onNotice }: Props) {
   const t = useT();
   const now = useNow(60_000);
   const [date, setDate] = useState<DayKey>(now.today);
@@ -87,11 +91,12 @@ export function LogScreen({ store, project, onNotice }: Props) {
 
   if (!project || !day || !totals) {
     return (
-      <div className="px-3 py-3">
-        <div className="rounded-2xl border border-line bg-surface-3 p-6 text-center">
-          <p className="text-sm text-muted">{t("log.noProject")}</p>
-        </div>
-      </div>
+      <NoProject
+        store={store}
+        message={t("log.noProject")}
+        onAdded={onProjectAdded}
+        onNotice={onNotice}
+      />
     );
   }
 

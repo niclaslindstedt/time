@@ -422,7 +422,15 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   `ModalHeader`: a document listener, because the header is a _sibling_ of
   the form it saves, scoped to its own `aria-modal` card so only the top
   dialog answers, and deferred a tick so a field that commits on blur has
-  committed before the save reads the draft. Escape is the framework's.
+  committed before the save reads the draft. The **press** goes through the
+  same door for the same reason, and so does the button's `disabled`: a
+  form's `valid` is read off the committed draft, so while a name is being
+  typed the draft is still empty and the button paints itself dead over a
+  form that is plainly filled in — and then saves anyway when pressed,
+  because the press commits the field on its way in. So `holdsEdit` says
+  which fields keep a draft of their own, the hook watches its card for one
+  being typed into, and while one is the form's verdict is known to be stale
+  and the button is not greyed. Escape is the framework's.
 - `src/app/shape.ts` — what shape the window is, which is the only thing the
   shell asks about a device: a `phone` (a column), a `stand` (the same phone
   laid on its side — wide enough for three columns and far too short to stack
@@ -501,6 +509,13 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   abandoned: cancel on the left, the title between, save on the right. It is
   a sibling of the modal's scrolling body, so it stays put over a long form —
   and it keeps the buttons off the bottom edge, where the nav is.
+- `src/app/NoProject.tsx` — the card a screen stands on before there is a
+  project, and the way out of it: the sentence, and the **Add project**
+  button that opens the one project form the whole app opens. A screen that
+  names what is missing and leaves the reader to go and find it is a dead
+  end — Today has never had one, because the dial itself opens the form.
+  Saving puts the project in use, so the screen already open is the screen
+  that fills in.
 - `src/app/SpanEditModal.tsx`, `ProjectEditModal.tsx` — the two editors.
   The span editor is the one form behind every row in the Log; the project
   editor edits a draft and saves whole.
@@ -758,6 +773,8 @@ job only type-checks. See `native/README.md` and `native/RELEASING.md`.
 | A change to which kinds are on the Today screen    | `src/app/types.ts` (`pinned`) + `project.ts` (`isPinned` / `storedPinned` — the one place an absent one is read) + the validation in `migrations.ts` + `TodayScreen.tsx` (the split and the row's "…") — never a second list, and never a kind the "…" cannot reach                    |
 | A control that answers being held                  | `src/app/useLongPress.ts` — spread its handlers on the button; never a second timer in a screen                                                                                                                                                                                        |
 | A modal's save / cancel                            | `src/app/ModalHeader.tsx` — one top bar, never a row of buttons at the foot of the sheet; Enter and Escape are that bar's, not a form's                                                                                                                                                |
+| When a modal's save may look greyed out            | `src/app/useModalSave.ts` (`holdsEdit`, and the verdict it holds back, tested in `tests/modalSave_test.ts`) — never a form's own `valid` straight onto `disabled`, which greys the button over a field still being typed into                                                          |
+| What a screen does before there is a project       | `src/app/NoProject.tsx` — the card carries the button that makes one and puts it in use; never a sentence naming what is missing with nothing to press, and never a second project form                                                                                                |
 | What Today does before there is a project          | `src/app/TodayScreen.tsx` (`NO_PROJECT`, and the `first` branches over it) — the dial is drawn either way and a press on the watch opens the project form; never a card in place of the clock                                                                                          |
 | A new way to correct a time on Today               | `src/app/DayTimelineModal.tsx` (an edge) or `ArrivalModal.tsx` (the arrival), with the edit as a pure function in `actions.ts`                                                                                                                                                         |
 | A new screen                                       | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                                                                                                                              |

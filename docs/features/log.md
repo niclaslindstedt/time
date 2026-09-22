@@ -47,6 +47,15 @@ flag colour, a kind of work in its own — so the list is scanned the same way
 the Today screen's buttons are. Sessions have no mark: they are presence, not
 a kind of anything.
 
+## Before there is a project
+
+There is nothing to log until there is something to log against, so the
+screen is a single card saying so — with the **Add project** button that
+makes one. The form is the same editor the **Projects** screen opens (see
+[`projects.md`](projects.md)), and saving from here puts the project in use,
+so the day fills in behind the sheet rather than sending you to another tab
+and back.
+
 ## Editing
 
 Tap a row to open the editor: the kind (for a break or an activity), the

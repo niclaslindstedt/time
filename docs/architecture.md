@@ -53,7 +53,7 @@ src/app/
   useFocus.ts       focus mode: the stand left alone, where everything but the watch fades out
   shortcuts.ts      key → command, and whether Enter saves a modal   (pure)
   useShortcuts.ts   the window's keydown, turned into those commands
-  useModalSave.ts   Enter inside a modal's card, turned into its Save
+  useModalSave.ts   a modal's Save: Enter, the press, and when it may look dead
   useLongPress.ts   a control held rather than tapped, and the right button
   backup.ts         export / restore a JSON file
   cloudHost.ts      the seam a host fills to offer a document store of its own (iCloud)
@@ -75,6 +75,7 @@ src/app/
   BreakMinutesField.tsx what a kind of break is assumed to take — one control, both forms
   SpanEditModal.tsx the one editor behind every span
   ProjectEditModal.tsx  name, mark, working days, breaks, kinds of work
+  NoProject.tsx     the card a screen stands on before there is a project, and the form behind it
   ProjectPickerModal.tsx  the top bar's mark, and the list of projects it opens
   dev/              the demo-data switch: an in-memory DocBackend
   i18n/             the catalog and the runtime
