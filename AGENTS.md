@@ -512,9 +512,14 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   there is a cloud to show — `App.tsx` leaves it out (`topBarNeeded`) and the
   screen pads down from the status bar itself (`.app-bare`). The project's
   mark is the one thing that will **not** bring the bar back: over the watch
-  it floats in the corner instead (`floatProject`, `.app-project-mark`), the
-  way the tabs do where there is no bar to sit above — except on the stand,
-  where all four corners are the tabs'.
+  it floats instead (`floatProject`, `.app-project-mark`), the way the tabs
+  do where there is no bar to sit above. Upright that is the top left corner;
+  laid down all four corners are the tabs', so it goes to the middle of their
+  strip, which is empty and is the dial's own axis — and which the dial
+  cannot reach, because its column reserves a caption's height above the
+  watch and the strip is shorter than that. It sits above the strip's z-index
+  rather than under it: a fixed row the width of the window takes a press
+  across its empty middle too.
 - `src/app/ProjectPickerModal.tsx` — the switcher: the mark in the corner
   (`ProjectMarkButton`) and the sheet it opens, every project with its own
   mark and hue and the one in use badged. A press on a row is the whole

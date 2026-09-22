@@ -267,12 +267,16 @@ body {
 }
 
 /* The project's mark over the watch, where the bar it would otherwise sit in
-   is not drawn at all (`floatProject` in `App.tsx`). It pads down from the
-   status bar the way `.app-bare` does, and in from the notch the way the
-   Today grid does, so the corner it floats in is the corner of the *screen*
-   rather than of the glass. Positioned rather than laid out: the watch is
-   centred in the whole window, and a mark that pushed it down would be the
-   bar this replaced. */
+   is not drawn at all (`floatProject` in `App.tsx`). Upright it goes in the
+   top left corner: it pads down from the status bar the way `.app-bare`
+   does, and in from the notch the way the Today grid does, so the corner it
+   floats in is the corner of the *screen* rather than of the glass. Laid
+   down the corners are the tabs' and it moves to the middle of their strip —
+   see the landscape block below.
+
+   Positioned rather than laid out either way: the watch is centred in the
+   whole window, and a mark that pushed it down would be the bar this
+   replaced. */
 .app-project-mark {
   top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
   left: calc(env(safe-area-inset-left, 0px) + 0.5rem);
@@ -734,6 +738,22 @@ input:not(
   .app-today > :is([data-area="breaks"], [data-area="kinds"]) {
     max-height: calc(100% - 2 * var(--nav-strip));
   }
+
+  /* The project's mark goes to the middle of the strip, between the two
+     pairs of tabs, rather than to a corner: laid down all four corners are
+     the tabs', and the middle of the strip is the one part of it that is
+     empty — which is also the dial's own axis, so the mark reads as the
+     watch's rather than as a fifth tab in the wrong place.
+
+     It cannot reach the dial: the strip is `--nav-strip` tall and the dial's
+     column reserves a caption's height plus the gap above the watch (see
+     `.app-today > [data-area="dial"]`), which is more. Keep those two
+     numbers on that side of each other. */
+  .app-project-mark {
+    top: env(safe-area-inset-top, 0px);
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 /* ── Focus mode, laid down ───────────────────────────────────────────────────
@@ -769,12 +789,14 @@ input:not(
   .app-dial-note,
   .app-dial-chip,
   .app-bottom-nav,
+  .app-project-mark,
   .app-header {
     transition: opacity 600ms ease;
   }
 
   [data-focus="on"] .app-today,
   [data-focus="on"] .app-bottom-nav,
+  [data-focus="on"] .app-project-mark,
   [data-focus="on"] .app-header {
     pointer-events: none;
   }
@@ -783,6 +805,7 @@ input:not(
   [data-focus="on"] .app-dial-note,
   [data-focus="on"] .app-dial-chip,
   [data-focus="on"] .app-bottom-nav,
+  [data-focus="on"] .app-project-mark,
   [data-focus="on"] .app-header {
     opacity: 0;
   }
@@ -793,6 +816,7 @@ input:not(
   .app-dial-note,
   .app-dial-chip,
   .app-bottom-nav,
+  .app-project-mark,
   .app-header {
     transition: none;
   }

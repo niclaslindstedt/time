@@ -176,10 +176,11 @@ per-device choice.
 That corner is the whole switcher: the mark and nothing else — no name, no
 chevron. Press it and a sheet lists every project, each with its own mark and
 colour and the one in use badged; press a row and the app is on that project.
-Over the watch the mark floats in the corner rather than keeping a top bar
-alive for itself, so the dial gets the height a bar would have taken — except
-on a phone laid on its side, where the four tabs are in the corners already
-and the mark keeps to the bar.
+Over the watch the mark floats rather than keeping a top bar alive for
+itself, so the dial gets the height a bar would have taken. On a phone held
+upright it floats in the top left corner; laid on its side, where the four
+tabs are in the corners already, it goes to the middle of their strip —
+above the watch, on its axis.
 
 The Log and the Report show the project in use; Today writes to it. Two
 projects on the same date are two separate days.
