@@ -672,8 +672,7 @@ export const DIAL_PRESETS: DialPreset[] = [
 ];
 
 export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
-  // A silver-white textured face, applied batons, and a hand that glides:
-  // the default.
+  // A silver-white textured face, applied batons, and a hand that glides.
   snowfield: {
     face: "silver",
     font: "grotesque",
@@ -763,7 +762,9 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
   },
   // The sixties dress watch: a silver dial, long applied blocks, tapered
   // steel hands, and the day drawn on a deep blue minute ring printed in a
-  // light grotesque. An automatic, so the dial says so under the name.
+  // light grotesque. An automatic, so the dial says so under the name. The
+  // default: it is the dial with the most on it, and the first thing a new
+  // reader sees is a watch worth looking at.
   uptown: {
     face: "silver",
     font: "light",
@@ -776,7 +777,7 @@ export const DIAL_PRESET: Record<DialPreset, DialConfig> = {
   },
 };
 
-export const DEFAULT_DIAL_PRESET: DialPreset = "snowfield";
+export const DEFAULT_DIAL_PRESET: DialPreset = "uptown";
 
 /** The dial a preset choice resolves to: the preset's own, or the custom
  *  configuration when "custom" is picked. A preset is looked up rather than

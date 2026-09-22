@@ -123,9 +123,6 @@ export function App() {
   // window that narrows to the phone shell with the panel open simply drops
   // it and shows whatever tab was left.
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // The Today screen's onboarding button lands on Projects with the editor
-  // already open.
-  const [openNewProject, setOpenNewProject] = useState(false);
   // Focus mode: the phone laid down on the watch and left alone, where
   // everything but the dial fades out until the screen is touched again (see
   // `useFocus.ts`). The stand and the Today screen together, because the
@@ -235,10 +232,7 @@ export function App() {
       clockSize={settings.clockSize}
       backlight={resolveBacklight(settings.clockPreset, settings.backlight)}
       reflect={settings.reflect}
-      onAddProject={() => {
-        setOpenNewProject(true);
-        show("projects");
-      }}
+      onProjectAdded={(id) => update("activeProjectId", id)}
       onNotice={notice}
       onOpenSettings={toggleSettings}
       settingsOpen={desk && settingsOpen}
@@ -260,8 +254,6 @@ export function App() {
       store={store}
       activeId={project?.id ?? null}
       onActivate={(id) => update("activeProjectId", id)}
-      openNew={openNewProject}
-      onOpenedNew={() => setOpenNewProject(false)}
       onNotice={notice}
     />
   );

@@ -17,8 +17,8 @@ describe("parseSettings", () => {
   });
 
   it("boots on the default dial, large", () => {
-    expect(DEFAULT_SETTINGS.clockPreset).toBe("snowfield");
-    expect(DEFAULT_SETTINGS.clock).toEqual(DIAL_PRESET.snowfield);
+    expect(DEFAULT_SETTINGS.clockPreset).toBe("uptown");
+    expect(DEFAULT_SETTINGS.clock).toEqual(DIAL_PRESET.uptown);
     expect(DEFAULT_SETTINGS.clockSize).toBe("large");
   });
 
