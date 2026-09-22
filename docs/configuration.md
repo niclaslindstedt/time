@@ -55,10 +55,10 @@ The last three are the export form's (**Report** → **…** → **Export to PDF
 They are per device like everything else here: who you are is not a fact about
 a project, and the next export starts where the last one left off.
 
-The project in use is chosen from the **Projects** tab (or the top-bar
-switcher once there are two). Everything about a project — working days,
-hours per day, break types, kinds of work — is data in the document, not a
-setting, so it syncs and backs up with the days.
+The project in use is chosen from the **Projects** tab (or from the mark in
+the top left corner once there are two). Everything about a project — its
+mark and colour, working days, hours per day, break types, kinds of work — is
+data in the document, not a setting, so it syncs and backs up with the days.
 
 ## Storage keys
 

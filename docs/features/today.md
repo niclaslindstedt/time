@@ -27,7 +27,11 @@ The main screen, and the whole app for most of a day.
   wheel — and above six a window where a date would be, with the Settings
   cog in it. That cog is Settings; over the watch the top bar carries
   neither the name nor a cog, and on a phone, with nothing else to show on
-  it, there is no bar at all: the watch is the top of the screen.
+  it, there is no bar at all: the watch is the top of the screen. With two or
+  more projects the project's mark floats in the top left corner instead of
+  bringing the bar back for itself — press it to switch project (see
+  [`projects.md`](projects.md)). A phone laid on its side keeps the bar for
+  it, since the four tabs are in its corners already.
 - **Coming back to it.** Leave the tab for an hour and the hands are an hour
   behind. They are not swapped for the right time — the watch is _set_. The
   crown winds forward: the minute hand goes round once for every hour there

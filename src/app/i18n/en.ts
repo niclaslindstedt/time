@@ -485,6 +485,11 @@ export const en = {
     edit: "Edit project",
     active: "In use",
     use: "Use",
+    // The mark in the corner of the top bar, and the list it opens. The
+    // button announces which project is in use, because the glyph alone
+    // cannot be read aloud.
+    switch: "Switch project",
+    switchOf: "Project: {name}",
     delete: "Delete",
     deleteConfirm: "Delete {name}?",
     deleteHint:
@@ -493,6 +498,8 @@ export const en = {
     summaryNoDays: "No working days",
     name: "Name",
     namePlaceholder: "What you are working on",
+    markHint:
+      "The mark and colour the project wears in the corner of the top bar, in the switcher and on its card. Tap the mark to change it.",
     nameRequired: "Give the project a name.",
     workDays: "Working days",
     workDaysHint: "The days a full day is expected. Any other day is extra.",
@@ -528,9 +535,10 @@ export const en = {
     },
   },
 
-  // The marks a break type or a kind of work can wear, and the hues a kind of
-  // work can be drawn in — the ids of `kinds.ts`, named. A name here is what
-  // the picker's cell announces to a screen reader and shows on hover.
+  // The marks a project, a break type or a kind of work can wear, and the hues
+  // a project or a kind of work can be drawn in — the ids of `kinds.ts`,
+  // named. A name here is what the picker's cell announces to a screen reader
+  // and shows on hover.
   kinds: {
     mark: "Mark",
     markOf: "Mark for {name}",
@@ -623,6 +631,7 @@ export const en = {
       flag: "Flag",
       pin: "Place",
       bolt: "Urgent",
+      folder: "Folder",
       dot: "Dot",
     },
     palette: {

@@ -30,7 +30,12 @@ import {
   type GlyphId,
 } from "./kinds.ts";
 import { KindPicker, MarkButton } from "./KindPicker.tsx";
-import { CATEGORY_COLORS, WEEK, weekdayLabel } from "./labels.ts";
+import {
+  CATEGORY_COLORS,
+  PROJECT_AUTO_COLOR,
+  WEEK,
+  weekdayLabel,
+} from "./labels.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
 import { BreakCreditField } from "./BreakCreditField.tsx";
 import { BreakMinutesField } from "./BreakMinutesField.tsx";
@@ -45,10 +50,16 @@ import {
 // and the kinds of work. One sheet, edited as a draft and saved whole, so a
 // half-finished rename never reaches the document.
 //
-// Each break type and kind of work carries a mark, and a kind of work a
-// colour; both are picked from the row itself. The picker unfolds under the
-// row rather than opening over it — one row at a time, because the sheet is
-// already a sheet and a dialog on a dialog is a trap on a phone.
+// The project itself carries a mark and a hue, and so does each break type
+// and kind of work — a kind of work a colour too; every one of them is picked
+// from the row it belongs to. The picker unfolds under the row rather than
+// opening over it — one row at a time, because the sheet is already a sheet
+// and a dialog on a dialog is a trap on a phone.
+//
+// The project's own is the first thing the sheet asks for after the name, and
+// it is not decoration: the top bar shows the mark *instead of* the name, so
+// this is the row that decides what a project looks like from the corner of
+// every screen.
 
 type Props = {
   /** The project to edit, or null to create one. */
@@ -56,6 +67,9 @@ type Props = {
   onSave: (project: Project) => void;
   onClose: () => void;
 };
+
+/** The key the project's own picker is opened under (see `picking`). */
+const PROJECT_ROW = "project";
 
 export function ProjectEditModal({ project, onSave, onClose }: Props) {
   const t = useT();
@@ -80,9 +94,18 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
       ),
   );
   /** Which row has its picker unfolded — one at a time, so the sheet does not
-   *  turn into a wall of grids. */
+   *  turn into a wall of grids. The project's own row is keyed by a name
+   *  rather than an id, since it is the sheet itself rather than a row of a
+   *  list; a kind can never collide with it, ids being what `makeId` hands
+   *  out. */
   const [picking, setPicking] = useState<string | null>(null);
   const name = draft.name.trim();
+  /** The project's own mark and the hue it is drawn in, read off the draft so
+   *  the row previews what the top bar will actually show. */
+  const projectMark = glyphFor(draft.glyph, "project");
+  const projectTint = draft.color
+    ? CATEGORY_COLOR[draft.color]
+    : PROJECT_AUTO_COLOR;
   const valid =
     name.length > 0 &&
     draft.breakTypes.every((b) => b.name.trim().length > 0) &&
@@ -118,6 +141,16 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
         return { ...rest, ...storedCredit(credit) };
       }),
     }));
+
+  /** The project's own hue, under the same discipline: "automatic" is stored
+   *  as no colour at all, so a project nobody has dressed is byte for byte
+   *  the project it always was. */
+  const setProjectColor = (color: CategoryColor | null) =>
+    setDraft((d) => {
+      const rest = { ...d };
+      delete rest.color;
+      return color ? { ...rest, color } : rest;
+    });
 
   /** A colour, or null for "automatic" — which is stored as no colour at all,
    *  so the kind goes on taking its position's hue if the list is reordered. */
@@ -198,14 +231,46 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
           bottom safe area in under one — so the body keeps clear of the home
           indicator itself. */}
       <div className="flex flex-col gap-5 overflow-y-auto px-3 pt-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-        <LabeledInput
-          label={t("projects.name")}
-          value={draft.name}
-          placeholder={t("projects.namePlaceholder")}
-          required
-          invalid={draft.name.trim().length === 0}
-          onCommit={(next) => setDraft((d) => ({ ...d, name: next }))}
-        />
+        {/* The project's own mark and hue, in the row its name is in — because
+            the mark is what the app shows of a project from here on: the
+            corner of the top bar carries it instead of the name, and the
+            list that corner opens is read by it. Same control as a kind's,
+            unfolding under the row the same way. */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-end gap-2">
+            <MarkButton
+              glyph={projectMark}
+              tint={projectTint}
+              label={t("kinds.markOf", { name: name || t("common.project") })}
+              open={picking === PROJECT_ROW}
+              onToggle={() =>
+                setPicking((p) => (p === PROJECT_ROW ? null : PROJECT_ROW))
+              }
+            />
+            <div className="min-w-0 flex-1">
+              <LabeledInput
+                label={t("projects.name")}
+                value={draft.name}
+                placeholder={t("projects.namePlaceholder")}
+                required
+                invalid={draft.name.trim().length === 0}
+                onCommit={(next) => setDraft((d) => ({ ...d, name: next }))}
+              />
+            </div>
+          </div>
+          {picking === PROJECT_ROW && (
+            <KindPicker
+              kind="project"
+              glyph={projectMark}
+              tint={projectTint}
+              autoTint={PROJECT_AUTO_COLOR}
+              color={draft.color ?? null}
+              onGlyph={(next) => setDraft((d) => ({ ...d, glyph: next }))}
+              onColor={setProjectColor}
+            />
+          )}
+          <p className="text-xs text-muted">{t("projects.markHint")}</p>
+        </div>
 
         <div className="flex flex-col gap-1.5">
           <span className="text-xs text-muted">{t("projects.workDays")}</span>

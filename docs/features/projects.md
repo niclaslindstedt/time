@@ -6,6 +6,11 @@ or several; most people have one.
 ## What a project holds
 
 - **Name.**
+- **A mark and a colour** — the glyph the project wears in the corner of the
+  top bar, in the switcher and on its card. Picked from work's vocabulary and
+  the neutral marks (the same pair a kind of work picks from), in one of the
+  eight palette colours or in the accent, which is what a project that has
+  picked none is drawn in. Tap the mark beside the name to change either.
 - **Working days** — the days a full day is expected. Any other day is extra:
   its hours are all balance, and it never counts as a shortfall.
 - **Hours per working day** — the target, and what the Today screen's
@@ -31,7 +36,9 @@ back up with the days.
 
 ## The card
 
-A card is the week at a glance: a pill for each working day, Monday first,
+A card opens with the project's own mark, in its own colour — the same square
+the top bar's corner carries — and then the week at a glance: a pill for each
+working day, Monday first,
 with a day that falls on a weekend drawn in the flag colour rather than the
 accent — a Saturday worked is the exception, and it should look like one.
 Beside them sits the day's length, "8 hour workday". What the project holds
@@ -161,9 +168,18 @@ on it) and the same sheet opens on it, with the picker already unfolded (see
 
 ## One or many
 
-With one project the app never asks which. Add a second and the top bar
-grows a switcher, the Projects tab shows which is **in use**, and each card
-gains a **Use** button. The project in use is a per-device choice.
+With one project the app never asks which. Add a second and the project's
+mark appears in the top left corner, the Projects tab shows which is **in
+use**, and each card gains a **Use** button. The project in use is a
+per-device choice.
+
+That corner is the whole switcher: the mark and nothing else — no name, no
+chevron. Press it and a sheet lists every project, each with its own mark and
+colour and the one in use badged; press a row and the app is on that project.
+Over the watch the mark floats in the corner rather than keeping a top bar
+alive for itself, so the dial gets the height a bar would have taken — except
+on a phone laid on its side, where the four tabs are in the corners already
+and the mark keeps to the bar.
 
 The Log and the Report show the project in use; Today writes to it. Two
 projects on the same date are two separate days.

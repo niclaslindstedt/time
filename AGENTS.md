@@ -114,9 +114,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
 
 ### The app owns the domain ("store stays in the app")
 
-- `src/app/types.ts` — the model. A `Project` (name, working days, hours per
-  day, break types with default lengths and how much of one still counts as
-  work, kinds of work) and a `WorkDay` per
+- `src/app/types.ts` — the model. A `Project` (name, the mark and hue it
+  wears, working days, hours per day, break types with default lengths and how
+  much of one still counts as work, kinds of work) and a `WorkDay` per
   project per calendar day: three lists of spans — `sessions` (presence),
   `breaks` (pauses inside presence, each of a type), `activities` (a kind of
   work over presence). Times are **seconds since the day's local midnight**,
@@ -505,25 +505,40 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   The span editor is the one form behind every row in the Log; the project
   editor edits a draft and saves whole.
 - `src/app/TopBar.tsx`, `BottomNav.tsx` — the shell's two bars. The top bar
-  grows a project switcher only once there are two projects, and on the desk
-  carries the four destinations as tabs; the bottom bar is the phone's. Over
-  Today the dial carries the wordmark and the cog, so the bar draws neither,
-  and on the phone — where that leaves it empty unless there is a project to
-  switch or a cloud to show — `App.tsx` leaves it out (`topBarNeeded`) and
-  the screen pads down from the status bar itself (`.app-bare`).
-- `src/app/kinds.ts` — what a kind of break or work _looks_ like: the
-  fifty-two glyphs one may wear (work, breaks, and the neutral marks), and the
-  eight hues a kind of work may be drawn in. Id and spec, the way `look.ts`
-  holds the dial's, so the form offers the ids, the document stores one, the
-  reader validates it and a test walks the table. Imports nothing — it sits
-  under the model. Pure.
+  carries the project's mark in its **left** corner once there are two
+  projects, and on the desk the four destinations as tabs; the bottom bar is
+  the phone's. Over Today the dial carries the wordmark and the cog, so the
+  bar draws neither, and on the phone — where that leaves it empty unless
+  there is a cloud to show — `App.tsx` leaves it out (`topBarNeeded`) and the
+  screen pads down from the status bar itself (`.app-bare`). The project's
+  mark is the one thing that will **not** bring the bar back: over the watch
+  it floats in the corner instead (`floatProject`, `.app-project-mark`), the
+  way the tabs do where there is no bar to sit above — except on the stand,
+  where all four corners are the tabs'.
+- `src/app/ProjectPickerModal.tsx` — the switcher: the mark in the corner
+  (`ProjectMarkButton`) and the sheet it opens, every project with its own
+  mark and hue and the one in use badged. A press on a row is the whole
+  switch, so there is no save. The bar used to carry the project's _name_ in
+  a select, which on a phone over Today was a menu bar for one word.
+- `src/app/kinds.ts` — what a project, a kind of break or a kind of work
+  _looks_ like: the fifty-four glyphs one may wear (work, breaks, and the
+  neutral marks), and the eight hues a project or a kind of work may be drawn
+  in. Id and spec, the way `look.ts` holds the dial's, so the form offers the
+  ids, the document stores one, the reader validates it and a test walks the
+  table. `KindSort` is the three things a mark is picked for — a break type, a
+  kind of work, and the project itself — and `GLYPH_GROUPS_FOR` is the
+  vocabulary each may wear. Imports nothing — it sits under the model. Pure.
 - `src/app/labels.ts` — domain value → label, glyph and colour, in one place,
   so a kind of work is one hue and one mark on the clock, in the lists and in
   the charts. A kind of work's own colour first, then the hue its position in
-  the project's list gives it.
-- `src/app/KindPicker.tsx` — the mark a kind wears and, for a kind of work,
-  its colour: the grid unfolds under the row that opened it — in the project
-  form and in `KindModal` — rather than over it, and the marks in it are
+  the project's list gives it. A project's own mark and hue are here too
+  (`projectGlyph` / `projectColor`) — its own choice first, then the folder
+  and the accent, which is the fallback rather than a positional ramp because
+  projects are listed by name.
+- `src/app/KindPicker.tsx` — the mark a project or a kind wears and, for a
+  project or a kind of work, its colour: the grid unfolds under the row that
+  opened it — in the project form and in `KindModal` — rather than over it,
+  and the marks in it are
   drawn in the hue being chosen, so the grid is the preview.
 - `src/app/i18n/en.ts` — every user-facing string.
 - `src/output.ts` — the §19.4 central output module (semantic log helpers
@@ -565,9 +580,17 @@ that way: it is what lets the tests pin real times without fake timers.
 Which project the screens show is a per-device setting
 (`useAppSettings.ts`); the projects themselves are in the document, so they
 sync and back up with the days. With one project the app never asks which;
-the switcher on the top bar and the "In use" badge appear only once there are
-two. A change that shows a project picker to someone with one project is a
-regression.
+the mark in the top left corner and the "In use" badge appear only once there
+are two. A change that shows a project picker to someone with one project is
+a regression.
+
+Outside its own screens a project is a **mark, not a name**: the corner shows
+the glyph and the hue and nothing else, and the name is read in the sheet it
+opens, on the Projects cards and in the project form. A mark is learned in a
+day and read at a glance; a name in the bar is a word that has to be
+truncated on a phone and tells you what you already knew. Both come from
+`labels.ts` (`projectGlyph` / `projectColor`) — one table, the way a kind of
+work's hue is.
 
 ## The native wrapper (`native/`)
 
@@ -721,7 +744,8 @@ job only type-checks. See `native/README.md` and `native/RELEASING.md`.
 | A change to what a day is billed at                | `src/app/spec.ts` (`roundUpTo`, applied per day and never to the range) + `useAppSettings.ts` (`specRounding`) — never `SpecStyle`, and never `day.ts`, which reports what was worked                                                                                                  |
 | A change to the Log's two rings                    | `src/app/DayGlance.tsx` (paint) — the angles come from `clock.ts` and the figures from `day.ts`, never from a second reading of the day                                                                                                                                                |
 | A change to what a project holds                   | `src/app/types.ts` + `project.ts` + `ProjectEditModal.tsx` + `migrations.ts`                                                                                                                                                                                                           |
-| A new glyph, or a colour a kind can wear           | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen                                                                                                                                                               |
+| A change to how a project is shown, or switched    | `src/app/ProjectPickerModal.tsx` (the corner's mark and the sheet it opens) + `labels.ts` (`projectGlyph` / `projectColor`, the one table) — never a second reading of a project's look, and never the project's name back in the bar                                                  |
+| A new glyph, or a colour a kind can wear           | `src/app/kinds.ts` (id + spec, walked by `tests/kinds_test.ts`) and a name in `en.ts` — never a second table in a screen; a project picks from the same table (`KindSort`'s third member) rather than a vocabulary of its own                                                          |
 | A new control on the span editor                   | `src/app/SpanEditModal.tsx` — never in one of the screens that open it                                                                                                                                                                                                                 |
 | A new figure about a moment yet to come            | `src/app/day.ts` (`workdayEnd` is the only one, and it says nothing rather than guessing) — with a test at real times in `tests/day_test.ts`, and printed with `format.ts`'s `formatWallTime` rather than a record's 25th hour                                                         |
 | A moment marked on the day's track                 | `src/app/clock.ts` (`DAY_MARK` / `dayMark`, and `aheadOnDial` — whether it has a place there at all, both walked by `tests/clock_test.ts`) + `ClockFace.tsx` (which moment, and its colour) + `Dial.tsx` (paint) — never the accent or the flag, which mean "at work" and "break" here |

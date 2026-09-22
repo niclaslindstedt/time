@@ -280,6 +280,38 @@ describe("shape validation", () => {
     expect(doc.projects.e!.categories[0]!.glyph).toBeUndefined();
   });
 
+  it("keeps the mark and hue a project was given", () => {
+    const doc = normalizeDoc({
+      version: 2,
+      projects: {
+        e: { id: "e", name: "E", glyph: "design", color: "violet" },
+      },
+      days: {},
+    });
+    expect(doc.projects.e!.glyph).toBe("design");
+    expect(doc.projects.e!.color).toBe("violet");
+  });
+
+  it("drops a project's mark or hue this version cannot draw", () => {
+    // Including a break's mark, which a project may not wear: out there the
+    // pauses mean the day is stopped. What is left is a project that never
+    // picked either — the folder and the accent.
+    const doc = normalizeDoc({
+      version: 2,
+      projects: {
+        a: { id: "a", name: "A", glyph: "teleport", color: "chartreuse" },
+        b: { id: "b", name: "B", glyph: "coffee" },
+        c: { id: "c", name: "C", glyph: 7, color: 9 },
+      },
+      days: {},
+    });
+    for (const id of ["a", "b", "c"]) {
+      const e = doc.projects[id]!;
+      expect(e.glyph, id).toBeUndefined();
+      expect(e.color, id).toBeUndefined();
+    }
+  });
+
   it("clamps a project's numbers and fills in the defaults", () => {
     const doc = normalizeDoc({
       version: 2,
