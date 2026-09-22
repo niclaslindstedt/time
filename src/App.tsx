@@ -312,12 +312,13 @@ export function App() {
         />
       ) : undefined,
   };
-  // Whether the mark floats: only where the bar would be drawn for it alone.
-  const floatProject = !stand && !topBarNeeded(bar);
-  const bare = !topBarNeeded({
-    ...bar,
-    projectSlot: floatProject ? undefined : projectButton,
-  });
+  // Whether the mark floats, which is wherever the bar would be drawn for it
+  // alone — `bar` above is everything *else* that could keep one alive. Laid
+  // down as much as upright: a strip across the top of a 393px-tall window
+  // for one glyph costs the dial the same height a bar across the foot used
+  // to, which is the whole reason the tabs went to the corners.
+  const floatProject = !topBarNeeded(bar);
+  const bare = floatProject;
 
   return (
     <div
@@ -380,9 +381,17 @@ export function App() {
         {/* The floating mark, over the watch where no bar is drawn. Inside
             the content area so the light behind the dial is clipped the same
             way it is, and positioned rather than laid out, so the watch is
-            centred in the whole window as if nothing were there. */}
+            centred in the whole window as if nothing were there. Which
+            corner is the stylesheet's: upright the top left, and laid down
+            the middle of the tabs' own strip, where the four corners are
+            taken and the dial's column reserves the room anyway. */}
         {floatProject && projectButton && (
-          <div className="app-project-mark absolute z-30">{projectButton}</div>
+          // Above the nav's own z-30: laid down the tabs' strip is a fixed
+          // row the full width of the window, and its empty middle — which
+          // is where the mark stands — takes a press like any other box. It
+          // is still the strip that is on top of the screen; only the mark
+          // is on top of the strip.
+          <div className="app-project-mark absolute z-40">{projectButton}</div>
         )}
 
         {desk && settingsOpen && (
