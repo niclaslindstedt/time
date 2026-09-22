@@ -17,9 +17,17 @@ import {
 // pair of arrows four pixels tall in the corner of the box: a mouse target
 // on a screen that is mostly thumbs, pointing at a step nobody stated — one
 // minute, which is not a step anyone adjusts a lunch by. So the step is
-// five, it is printed on the buttons that take it, and they are as tall as
-// everything else in the form. The arrows are turned off in `styles.css`
-// (`.app-step-field`) rather than left under the buttons that replaced them.
+// five, and it is printed on the buttons that take it. The arrows are turned
+// off in `styles.css` (`.app-step-field`) rather than left under the buttons
+// that replaced them.
+//
+// The pair sits together at the right of the field, where the arrows were and
+// in the order the arrows were in — down then up. Split either side of the
+// number they were two controls with a number between them, which is a range
+// rather than a stepper; together they are the one thing the spinner was, at
+// a size a thumb can find. A few pixels smaller than the three answers to
+// "Counts as work" directly below, because these are a handle on the field
+// beside them and those are a choice of their own.
 //
 // The number is still typed into. Five at a time is how a break is nudged,
 // not how an unusual one is entered, and a field you can only step is a
@@ -48,12 +56,6 @@ export function BreakMinutesField({ minutes, onChange }: Props) {
     <div className="flex flex-col gap-1.5">
       <span className="text-xs text-muted">{t("kinds.minutes.label")}</span>
       <div className="flex items-center gap-2">
-        <StepButton
-          label={t("kinds.minutes.lessLabel", { minutes: String(STEP) })}
-          text={t("kinds.minutes.less", { minutes: String(STEP) })}
-          disabled={minutes <= MIN_BREAK_MINUTES}
-          onClick={() => step(-STEP)}
-        />
         <input
           type="number"
           inputMode="numeric"
@@ -64,22 +66,31 @@ export function BreakMinutesField({ minutes, onChange }: Props) {
           onInput={(e) =>
             onChange(clampBreakMinutes(e.currentTarget.value, minutes))
           }
-          className={`app-step-field min-w-0 flex-1 text-center ${LABELED_FIELD_CLASS}`}
+          className={`app-step-field min-w-0 flex-1 ${LABELED_FIELD_CLASS}`}
         />
-        <StepButton
-          label={t("kinds.minutes.moreLabel", { minutes: String(STEP) })}
-          text={t("kinds.minutes.more", { minutes: String(STEP) })}
-          disabled={minutes >= MAX_BREAK_MINUTES}
-          onClick={() => step(STEP)}
-        />
+        <div className="flex shrink-0 gap-1">
+          <StepButton
+            label={t("kinds.minutes.lessLabel", { minutes: String(STEP) })}
+            text={t("kinds.minutes.less", { minutes: String(STEP) })}
+            disabled={minutes <= MIN_BREAK_MINUTES}
+            onClick={() => step(-STEP)}
+          />
+          <StepButton
+            label={t("kinds.minutes.moreLabel", { minutes: String(STEP) })}
+            text={t("kinds.minutes.more", { minutes: String(STEP) })}
+            disabled={minutes >= MAX_BREAK_MINUTES}
+            onClick={() => step(STEP)}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-/** One of the two. Shaped like `BreakCreditField`'s answers, because they sit
- *  one above the other in both forms and a second button shape between them
- *  would read as a different kind of control. */
+/** One of the two: the same border and tint as `BreakCreditField`'s answers,
+ *  which sit directly under these in both forms, and a few pixels shorter and
+ *  narrower than one — enough that the pair reads as a handle on the field
+ *  beside it rather than as two more of the buttons below. */
 function StepButton({
   label,
   text,
@@ -98,7 +109,7 @@ function StepButton({
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className="min-h-10 w-16 shrink-0 rounded-md border border-line bg-surface-2 text-xs font-semibold text-muted tabular-nums transition-colors enabled:hover:bg-surface-3 enabled:hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+      className="h-9 w-14 shrink-0 rounded-md border border-line bg-surface-2 text-xs font-semibold text-muted tabular-nums transition-colors enabled:hover:bg-surface-3 enabled:hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
     >
       {text}
     </button>
