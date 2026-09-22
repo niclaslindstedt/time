@@ -7,7 +7,8 @@ below runs in the browser tab.
 index.html
   └── src/main.tsx            mounts <App> inside the i18n LanguageRoot
        └── src/App.tsx        theme, store, sync, tab switch, chrome
-            ├── TopBar            mark + wordmark, the desk's tabs, project switcher, sync glyph, cog — the dial carries the first and last over Today
+            ├── TopBar            the project's mark in the left corner, mark + wordmark, the desk's tabs, sync glyph, cog — the dial carries the wordmark and the cog over Today
+            ├── ProjectPickerModal  the corner's mark, and the list of projects it opens
             ├── TodayScreen       the timer, the clock, the buttons — writes the day
             ├── LogScreen         the day as a list — corrects it
             ├── ReportScreen      a week or a month, as two rings and charts
@@ -34,7 +35,7 @@ src/app/
     write.ts          those pages → the bytes of a PDF                    (pure)
     svg.ts            the same pages → SVG attributes, for preview and print
   project.ts       the template, working days, the day's target, what a break counts for (pure)
-  kinds.ts          the marks a kind wears, and a kind of work's hues (pure)
+  kinds.ts          the marks a project or a kind wears, and their hues  (pure)
   clock.ts          the dial's layout, hands, arcs, the frame's path, the wind  (pure)
   look.ts           the theme, and the dial's faces, fonts, markers, rings, presets
   edition.ts        which build this is — the free web one, or the App Store's
@@ -65,7 +66,7 @@ src/app/
   SpecExportModal.tsx  the export form: the six style cards, the pieces, the details, the preview
   SpecPages.tsx     a specification's pages as SVG — the preview, and what the printer gets
   DayGlance.tsx     the Log's header: the day on a dial, and its worked / break ring
-  KindPicker.tsx    a kind's mark, and a kind of work's colour
+  KindPicker.tsx    a project's or a kind's mark, and its colour
   ModalHeader.tsx   a dialog's top bar: cancel, the title, save — and Enter / Escape
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
   ArrivalModal.tsx  when you started, corrected from the timer
@@ -73,7 +74,8 @@ src/app/
   BreakCreditField.tsx  how much of a kind of break counts as work — one control, both forms
   BreakMinutesField.tsx what a kind of break is assumed to take — one control, both forms
   SpanEditModal.tsx the one editor behind every span
-  ProjectEditModal.tsx  name, working days, breaks, kinds of work
+  ProjectEditModal.tsx  name, mark, working days, breaks, kinds of work
+  ProjectPickerModal.tsx  the top bar's mark, and the list of projects it opens
   dev/              the demo-data switch: an in-memory DocBackend
   i18n/             the catalog and the runtime
 
@@ -131,6 +133,8 @@ type AppData = {
 type Project = {
   id: string;
   name: string;
+  glyph?: GlyphId; // its mark; absent takes the folder
+  color?: CategoryColor; // its hue; absent takes the accent
   workDays: Weekday[]; // 0 = Sunday … 6 = Saturday
   hoursPerDay: number;
   breakTypes: {

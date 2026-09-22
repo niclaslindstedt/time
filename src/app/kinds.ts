@@ -433,6 +433,15 @@ export const GLYPH = {
   },
   /** A bolt — the urgent thing that arrived without asking. */
   bolt: { group: "mark", d: ["M13 2 4 14h7l-1 8 9-12h-7Z"] },
+  /** A folder — the app's own sign for a project, on the nav tab and on the
+   *  empty Projects screen, and the mark a project wears until it is given
+   *  one of its own. */
+  folder: {
+    group: "mark",
+    d: [
+      "M4 5h4.2a2 2 0 0 1 1.6.8l1.2 1.7H20a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z",
+    ],
+  },
   /** A ring — a mark that says nothing, for a kind that needs none. */
   dot: { group: "mark", d: ["M12 5a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z"] },
 } satisfies Record<string, GlyphSpec>;
@@ -456,9 +465,11 @@ export function isGlyphId(value: unknown): value is GlyphId {
   return typeof value === "string" && value in GLYPH;
 }
 
-/** The two things a project names, and so the two things a mark is picked
- *  for: a break type, or a kind of work. */
-export type KindSort = "break" | "category";
+/** The three things a mark is picked for: the two a project names — a break
+ *  type and a kind of work — and the project itself. A project is not a kind
+ *  of anything, but it wears a mark and a hue under the same rules, and one
+ *  table is the whole point of this module. */
+export type KindSort = "break" | "category" | "project";
 
 /** The mark a break type wears when it has none of its own. */
 export const DEFAULT_BREAK_GLYPH: GlyphId = "coffee";
@@ -466,25 +477,37 @@ export const DEFAULT_BREAK_GLYPH: GlyphId = "coffee";
 /** The mark a kind of work wears when it has none of its own. */
 export const DEFAULT_CATEGORY_GLYPH: GlyphId = "tag";
 
-/** The mark either sort starts out with. */
+/** The mark a project wears when it has none of its own — the folder the
+ *  Projects tab and the empty Projects screen already use, so the corner of
+ *  the top bar says "project" before it says which one. */
+export const DEFAULT_PROJECT_GLYPH: GlyphId = "folder";
+
+/** The mark each sort starts out with. */
 export const DEFAULT_GLYPH: Record<KindSort, GlyphId> = {
   break: DEFAULT_BREAK_GLYPH,
   category: DEFAULT_CATEGORY_GLYPH,
+  project: DEFAULT_PROJECT_GLYPH,
 };
 
 /**
- * The vocabularies a sort of kind may wear, its own first.
+ * The vocabularies a sort may wear, its own first.
  *
  * A break wears the day's pauses and a kind of work wears work's: a break
  * called "Lunch" carrying a pair of angle brackets is not shorthand, it is a
  * misfiling — and the two lists sit next to each other on the Today screen,
  * where a mark is what tells them apart at a glance. The neutral marks belong
- * to both: they are what the other two vocabularies miss, and the label every
- * kind of work starts out with is one of them.
+ * to all of them: they are what the other two vocabularies miss, and the
+ * label every kind of work starts out with is one of them, as is the folder
+ * a project does.
  */
 export const GLYPH_GROUPS_FOR: Record<KindSort, GlyphGroup[]> = {
   break: ["break", "mark"],
   category: ["work", "mark"],
+  // A project is what the work is *for* — a customer, a product, a side
+  // thing — so it picks from work's vocabulary and the neutral marks, the
+  // same pair a kind of work does. A project called "Lunch bar" is still not
+  // a fork and knife: out there the break marks mean "the day is paused".
+  project: ["work", "mark"],
 };
 
 /** The ids a sort of kind may wear, in the order the picker offers them. */
@@ -511,6 +534,14 @@ export function glyphFor(value: unknown, kind: KindSort): GlyphId {
 // ring, the chips, the Log's rows, the Report's donut — and now its glyph too.
 // Until now that hue was purely positional; a project can set it per kind
 // instead, and a kind with none set keeps the position it always had.
+//
+// The same palette dresses a *project*, which is why the type is one type:
+// the mark in the corner of the top bar and the row it opens are read the
+// same way a chip is, and a second table of eight hues that had to stay in
+// step with this one would be a table waiting to disagree. A project that has
+// picked none is the accent — see `labels.ts` — rather than a positional hue,
+// because projects are listed by name and a list that repaints itself when a
+// project is renamed is telling the eye something that did not happen.
 //
 // The palette is the theme's own tokens rather than fixed hex, so a colour
 // chosen on the light theme is still legible on the dark one — this is the

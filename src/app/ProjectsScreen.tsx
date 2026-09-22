@@ -12,15 +12,24 @@ import {
   TrashIcon,
 } from "@niclaslindstedt/oss-framework/components";
 
+import { KindGlyph } from "./icons.tsx";
 import { ProjectEditModal } from "./ProjectEditModal.tsx";
 import { useT } from "./i18n/index.ts";
-import { WEEK, isWeekend, weekdayLabel } from "./labels.ts";
+import {
+  WEEK,
+  isWeekend,
+  projectColor,
+  projectGlyph,
+  weekdayLabel,
+} from "./labels.ts";
 import { projectList, type Project } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
 
 // What the hours are for. One card per project, and the editor behind each.
-// A card is the shape of the week: a pill per working day (a weekend in the
-// flag colour) and a pill for the day's length. What the project holds
+// A card wears the project's own mark in its own hue — the same square the
+// top bar's corner carries and the switcher lists — and then the shape of the
+// week: a pill per working day (a weekend in the flag colour) and a pill for
+// the day's length. What the project holds
 // beyond that — its breaks and its kinds of work — is the editor's business,
 // not a count on a card. Editing and deleting are the two glyphs top right.
 // With one project the rest of the app never asks which; with two or more
@@ -76,6 +85,14 @@ export function ProjectsScreen({
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
+                {/* The mark the top bar's corner carries for this project —
+                    the card is where you learn which is which. */}
+                <span
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-line bg-surface"
+                  style={{ color: projectColor(e) }}
+                >
+                  <KindGlyph id={projectGlyph(e)} className="h-5 w-5" />
+                </span>
                 <h2 className="min-w-0 truncate text-lg font-bold text-fg-bright">
                   {e.name}
                 </h2>

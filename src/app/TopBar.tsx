@@ -8,8 +8,9 @@ import { AppMarkIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { KEY_HINT } from "./shortcuts.ts";
 
-// The bar across the top: the app's mark and name, the project switcher when
-// there is something to switch between, the sync glyph, and the cog.
+// The bar across the top: the project's mark in the left corner when there is
+// something to switch between, the app's mark and name, the sync glyph, and
+// the cog.
 //
 // It is the sibling cycle bar's geometry — a bordered row at `px-4 py-3` with
 // the action cluster on the right — because these are the same app family and
@@ -46,7 +47,13 @@ type Props = {
   syncSlot?: ReactNode;
   /** The project picker, when there is more than one project. With a
    *  single project there is nothing to choose, and the slot stays empty
-   *  rather than showing a control with one option. */
+   *  rather than showing a control with one option.
+   *
+   *  It sits in the *left* corner, before the wordmark — the corner an app
+   *  puts the thing it is currently looking at in, and the one corner the
+   *  watch leaves empty. It used to be a select on the right carrying the
+   *  project's name, which on a phone over Today was the whole contents of
+   *  the bar: a menu bar for one word. */
   projectSlot?: ReactNode;
   /** The watch is on screen, and carries the name and the cog itself. */
   watch?: boolean;
@@ -77,16 +84,19 @@ export function TopBar({
   const onSettings = active === "settings" || settingsOpen;
   return (
     <header className="app-header relative flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-3 px-4 pb-3">
-      {watch ? (
-        // The dial has the name. The bar keeps its height, so the tabs and
-        // the slots land where they do on every other screen.
-        <div aria-hidden="true" className="h-9 w-0 shrink-0" />
-      ) : (
-        <h1 className="app-wordmark flex min-w-0 items-center gap-2 text-accent">
-          <AppMarkIcon className="h-6 w-6 shrink-0" />
-          <span className="truncate">{t("app.name")}</span>
-        </h1>
-      )}
+      <div className="flex min-w-0 shrink items-center gap-2">
+        {projectSlot}
+        {watch ? (
+          // The dial has the name. The bar keeps its height, so the tabs and
+          // the slots land where they do on every other screen.
+          <div aria-hidden="true" className="h-9 w-0 shrink-0" />
+        ) : (
+          <h1 className="app-wordmark flex min-w-0 items-center gap-2 text-accent">
+            <AppMarkIcon className="h-6 w-6 shrink-0" />
+            <span className="truncate">{t("app.name")}</span>
+          </h1>
+        )}
+      </div>
 
       {/* Centred on the bar rather than between the two clusters, so the tabs
           stay put when the project switcher comes and goes. */}
@@ -120,8 +130,7 @@ export function TopBar({
         </nav>
       )}
 
-      <div className="flex min-w-0 shrink items-center gap-2">
-        {projectSlot}
+      <div className="flex shrink-0 items-center gap-2">
         {syncSlot}
         {!watch && (
           <button

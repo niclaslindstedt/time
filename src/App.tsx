@@ -2,7 +2,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  SelectPicker,
   SpinnerIcon,
   ToastViewport,
   createToastStore,
@@ -26,6 +25,10 @@ import {
   type Tab,
 } from "./app/BottomNav.tsx";
 import { demoBackendModule, useDemoData } from "./app/dev/useDemoData.ts";
+import {
+  ProjectMarkButton,
+  ProjectPickerModal,
+} from "./app/ProjectPickerModal.tsx";
 import { ProjectsScreen } from "./app/ProjectsScreen.tsx";
 import { useT } from "./app/i18n/index.ts";
 import { LogScreen } from "./app/LogScreen.tsx";
@@ -190,6 +193,10 @@ export function App() {
   // A mouse drag across the desk is a selection, not a page turn.
   useSwipeNav(main, swipe, { enabled: !desk });
 
+  // The project switcher, opened from the mark in the corner of the top bar.
+  // Never opened with one project: there is nothing to switch to, and the
+  // corner has no mark in it to press.
+  const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   const [syncDetailsOpen, setSyncDetailsOpen] = useState(false);
   const [reloading, setReloading] = useState(false);
 
@@ -274,19 +281,25 @@ export function App() {
   // or a cloud to show, and an empty bar is not drawn — the watch is the
   // top of the screen, and the screen pads down from the status bar itself
   // (`.app-bare`).
+  //
+  // The project's mark is the one thing that will not keep the bar alive by
+  // itself. A bordered row across the top of the window, with a rule under
+  // it, for one glyph is the menu bar this app does not have — so over the
+  // watch it floats in the corner instead, the way the tabs do where there
+  // is no bar to sit above (`app-nav-floating`). Laid down there is no
+  // corner to float in: the tabs are in all four of them, and the mark goes
+  // back to the bar, which the stand draws anyway.
+  const projectButton =
+    projects.length > 1 && project ? (
+      <ProjectMarkButton
+        project={project}
+        open={projectPickerOpen}
+        onOpen={() => setProjectPickerOpen(true)}
+      />
+    ) : undefined;
   const bar = {
     watch: tab === "today",
     onSelect: desk ? show : undefined,
-    projectSlot:
-      projects.length > 1 && project ? (
-        <SelectPicker<string>
-          value={project.id}
-          options={projects.map((e) => ({ value: e.id, label: e.name }))}
-          onChange={(id) => update("activeProjectId", id)}
-          ariaLabel={t("common.project")}
-          triggerClassName="max-w-[9rem] truncate lg:max-w-[16rem]"
-        />
-      ) : undefined,
     syncSlot:
       sync.backend !== "local" ? (
         <SyncStatus
@@ -299,7 +312,12 @@ export function App() {
         />
       ) : undefined,
   };
-  const bare = !topBarNeeded(bar);
+  // Whether the mark floats: only where the bar would be drawn for it alone.
+  const floatProject = !stand && !topBarNeeded(bar);
+  const bare = !topBarNeeded({
+    ...bar,
+    projectSlot: floatProject ? undefined : projectButton,
+  });
 
   return (
     <div
@@ -312,6 +330,7 @@ export function App() {
           onOpenSettings={toggleSettings}
           settingsOpen={desk && settingsOpen}
           {...bar}
+          projectSlot={floatProject ? undefined : projectButton}
         />
       )}
 
@@ -358,6 +377,14 @@ export function App() {
           </div>
         </div>
 
+        {/* The floating mark, over the watch where no bar is drawn. Inside
+            the content area so the light behind the dial is clipped the same
+            way it is, and positioned rather than laid out, so the watch is
+            centred in the whole window as if nothing were there. */}
+        {floatProject && projectButton && (
+          <div className="app-project-mark absolute z-30">{projectButton}</div>
+        )}
+
         {desk && settingsOpen && (
           <SidePanel title={t("nav.settings")} onClose={closeSettings}>
             {settingsScreen}
@@ -396,6 +423,15 @@ export function App() {
       </div>
 
       {!desk && <BottomNav active={tab} onSelect={show} bare={bare} />}
+
+      {projectPickerOpen && (
+        <ProjectPickerModal
+          projects={projects}
+          activeId={project?.id ?? null}
+          onSelect={(id) => update("activeProjectId", id)}
+          onClose={() => setProjectPickerOpen(false)}
+        />
+      )}
 
       <SyncDetailsModal
         open={syncDetailsOpen}

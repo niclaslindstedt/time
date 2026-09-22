@@ -266,6 +266,18 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* The project's mark over the watch, where the bar it would otherwise sit in
+   is not drawn at all (`floatProject` in `App.tsx`). It pads down from the
+   status bar the way `.app-bare` does, and in from the notch the way the
+   Today grid does, so the corner it floats in is the corner of the *screen*
+   rather than of the glass. Positioned rather than laid out: the watch is
+   centred in the whole window, and a mark that pushed it down would be the
+   bar this replaced. */
+.app-project-mark {
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+  left: calc(env(safe-area-inset-left, 0px) + 0.5rem);
+}
+
 /* The nav is the last thing above the screen edge, and the app paints under
    the home indicator (`viewport-fit=cover`), so 10px is all that sits below
    the labels. Carrying `env(safe-area-inset-bottom)` as well left them 44px

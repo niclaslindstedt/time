@@ -11,13 +11,14 @@
 // through it.
 //
 // A *purely additive optional* field is the one change that needs no step: a
-// kind of work's glyph and colour, and how much of a kind of break still
-// counts as work, are absent on every document written before them, and
-// absent is a thing this module can read — it is the validation
-// below, rather than a step, that says what such a kind looks like. The value
-// is an id into `kinds.ts`, so an id this build has no entry for is dropped
-// like any other unknown field, and a break or a kind of work left with no
-// mark at all takes the one the app's own suggested kind of that name wears.
+// project's own glyph and colour, a kind of work's, and how much of a kind of
+// break still counts as work, are absent on every document written before
+// them, and absent is a thing this module can read — it is the validation
+// below, rather than a step, that says what such a project or kind looks
+// like. The value is an id into `kinds.ts`, so an id this build has no entry
+// for is dropped like any other unknown field, and a break or a kind of work
+// left with no mark at all takes the one the app's own suggested kind of that
+// name wears.
 
 import {
   createMigrator,
@@ -246,6 +247,13 @@ function parseProject(key: string, value: unknown): Project | null {
   return {
     id,
     name,
+    // The project's own mark and hue, read under the same rules as a kind's:
+    // an id this build has no entry for, or one from the break vocabulary, is
+    // dropped and the project falls back to the folder and the accent. No
+    // `parseGlyph` here — that looks a name up among the kinds the app
+    // suggests, and the app suggests no projects.
+    ...(allowsGlyph("project", value.glyph) ? { glyph: value.glyph } : {}),
+    ...(isCategoryColor(value.color) ? { color: value.color } : {}),
     workDays: parseWeekdays(value.workDays),
     hoursPerDay: clampHours(value.hoursPerDay, DEFAULT_HOURS_PER_DAY),
     breakTypes,

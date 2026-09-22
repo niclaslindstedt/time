@@ -102,6 +102,16 @@ export type WorkCategory = {
 export type Project = {
   id: string;
   name: string;
+  /** The mark it wears (see `kinds.ts`): in the corner of the top bar, where
+   *  it is the whole of the switcher, and in the list that corner opens.
+   *  Absent on every document written before a project could carry one, and
+   *  absent means the folder every project falls back to. */
+  glyph?: GlyphId;
+  /** The hue that mark is drawn in. Absent means the accent, which is what
+   *  every project was drawn in before one could be picked — a project is
+   *  listed by name rather than by position, so there is no positional ramp
+   *  to fall back to the way a kind of work has. */
+  color?: CategoryColor;
   /** The days a full working day is expected — what the report measures a
    *  day against, and what makes a Saturday of work overtime rather than a
    *  short day. */

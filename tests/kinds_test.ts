@@ -8,6 +8,7 @@ import {
   CATEGORY_PALETTE,
   DEFAULT_BREAK_GLYPH,
   DEFAULT_CATEGORY_GLYPH,
+  DEFAULT_PROJECT_GLYPH,
   GLYPH,
   GLYPH_GROUPS,
   GLYPH_GROUPS_FOR,
@@ -21,9 +22,12 @@ import {
 } from "../src/app/kinds.ts";
 import {
   CATEGORY_COLORS,
+  PROJECT_AUTO_COLOR,
   breakGlyph,
   categoryColor,
   categoryGlyph,
+  projectColor,
+  projectGlyph,
 } from "../src/app/labels.ts";
 import { project } from "./fixtures/helpers.ts";
 
@@ -112,6 +116,24 @@ describe("the glyph catalogue", () => {
     expect(
       [...new Set([...glyphsFor("break"), ...glyphsFor("category")])].sort(),
     ).toEqual([...GLYPH_IDS].sort());
+  });
+
+  it("dresses a project from work's vocabulary and the neutral marks", () => {
+    // A project is what the work is *for*, so it picks the same pair a kind
+    // of work does — never the day's pauses, which out there mean the day is
+    // stopped.
+    expect(GLYPH_GROUPS_FOR.project).toEqual(["work", "mark"]);
+    expect(allowsGlyph("project", "coding")).toBe(true);
+    expect(allowsGlyph("project", "folder")).toBe(true);
+    expect(allowsGlyph("project", "coffee")).toBe(false);
+    expect(allowsGlyph("project", "nonsense")).toBe(false);
+    expect(allowsGlyph("project", undefined)).toBe(false);
+    // The folder every project falls back to is one it may wear, and it is
+    // a neutral mark rather than a kind of work.
+    expect(allowsGlyph("project", DEFAULT_PROJECT_GLYPH)).toBe(true);
+    expect(GLYPH[DEFAULT_PROJECT_GLYPH].group).toBe("mark");
+    expect(glyphFor(undefined, "project")).toBe(DEFAULT_PROJECT_GLYPH);
+    expect(glyphFor("coffee", "project")).toBe(DEFAULT_PROJECT_GLYPH);
   });
 
   it("refuses a mark from the other vocabulary", () => {
@@ -205,6 +227,24 @@ describe("what a kind is drawn in", () => {
   it("gives a deleted kind of work the slot after the last", () => {
     const p = project();
     expect(categoryColor(p, "gone")).toBe(CATEGORY_COLORS[2]);
+  });
+
+  it("gives a project its own mark and hue, or the folder and the accent", () => {
+    const plain = project();
+    expect(projectGlyph(plain)).toBe(DEFAULT_PROJECT_GLYPH);
+    expect(projectColor(plain)).toBe(PROJECT_AUTO_COLOR);
+
+    const dressed = project({ glyph: "design", color: "violet" });
+    expect(projectGlyph(dressed)).toBe("design");
+    expect(projectColor(dressed)).toBe(CATEGORY_COLOR.violet);
+  });
+
+  it("does not draw a project in a break's mark", () => {
+    // Nothing stores one — the reader drops it — but the drawing falls back
+    // rather than trusting what it is handed.
+    expect(projectGlyph(project({ glyph: "coffee" }))).toBe(
+      DEFAULT_PROJECT_GLYPH,
+    );
   });
 
   it("gives a kind the mark it chose, or the one its sort starts with", () => {

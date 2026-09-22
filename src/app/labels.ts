@@ -67,6 +67,26 @@ export function categoryColor(project: Project, categoryId: string): string {
   return autoCategoryColor(project, categoryId);
 }
 
+/** The hue a project that has picked none is drawn in.
+ *
+ *  The accent rather than a slot of a ramp: projects are listed by name, so a
+ *  positional hue would move the moment one was renamed — and the accent is
+ *  what the corner of the top bar was drawn in before a project could carry a
+ *  colour at all. It is the clock ring's "at work" elsewhere, which is no
+ *  clash here: this mark is chrome rather than a band on the day. */
+export const PROJECT_AUTO_COLOR = "var(--color-accent)";
+
+/** The colour a project's mark is drawn in — its own, or the accent. */
+export function projectColor(project: Project): string {
+  return project.color ? CATEGORY_COLOR[project.color] : PROJECT_AUTO_COLOR;
+}
+
+/** The mark a project wears — its own, or the folder every project falls
+ *  back to. */
+export function projectGlyph(project: Project): GlyphId {
+  return glyphFor(project.glyph, "project");
+}
+
 /** The mark a break type wears — its own, or the cup every break started
  *  out with. */
 export function breakGlyph(project: Project, typeId: string): GlyphId {
