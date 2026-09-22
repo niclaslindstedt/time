@@ -32,10 +32,14 @@ export const DEFAULT_HOURS_PER_DAY = 8;
 
 /** The lengths the default break types are assumed to take when one is
  *  added after the fact: lunch half an hour, coffee a quarter, a toilet trip
- *  five minutes. */
+ *  five minutes, and an hour each for the two that take you out of the
+ *  building — the gym and the appointment are both the hour you block out
+ *  for them rather than the time you are actually under the barbell. */
 export const DEFAULT_LUNCH_MINUTES = 30;
 export const DEFAULT_COFFEE_MINUTES = 15;
 export const DEFAULT_TOILET_MINUTES = 5;
+export const DEFAULT_TRAINING_MINUTES = 60;
+export const DEFAULT_HEALTHCARE_MINUTES = 60;
 
 /** What a new project counts a toilet break as: work, all of it. The only
  *  break the template answers for — see `projectTemplate`. It is a default
@@ -94,6 +98,8 @@ export type ProjectTemplateLabels = {
   lunch: string;
   coffee: string;
   toilet: string;
+  training: string;
+  healthcare: string;
   meetings: string;
   planning: string;
   retro: string;
@@ -101,7 +107,7 @@ export type ProjectTemplateLabels = {
 };
 
 /**
- * The kinds the app itself suggests — the three breaks and four kinds of work
+ * The kinds the app itself suggests — the five breaks and four kinds of work
  * a new project opens with — and what each one is: which of the two sorts it
  * is, and the mark it wears.
  *
@@ -116,6 +122,8 @@ export const DEFAULT_KINDS = {
   lunch: { sort: "break", glyph: "meal" },
   coffee: { sort: "break", glyph: "coffee" },
   toilet: { sort: "break", glyph: "toilet" },
+  training: { sort: "break", glyph: "exercise" },
+  healthcare: { sort: "break", glyph: "health" },
   meetings: { sort: "category", glyph: "meeting" },
   planning: { sort: "category", glyph: "planning" },
   retro: { sort: "category", glyph: "review" },
@@ -187,6 +195,29 @@ export function projectTemplate(
       // Lunch and coffee are the ones people actually disagree about, so the
       // app leaves those to you.
       credit: DEFAULT_TOILET_CREDIT,
+    },
+    // The two hours out of the building. Both are common enough to be worth
+    // a pill of their own — an hour at the gym and an hour at the doctor are
+    // what a working day is actually interrupted by, and typing them in from
+    // "Custom" every time was the whole argument for the three above.
+    //
+    // Neither counts as work, by the same test the toilet passes and these
+    // do not: a wellness hour is a perk some employers grant and plenty do
+    // not, and a doctor's appointment is paid under some agreements and
+    // deducted under others. They are exactly the thing people disagree
+    // about, so the app does not answer for them — one tap on the pill sets
+    // it per project, and the answer is the project's from then on.
+    {
+      id: id(),
+      name: labels.training,
+      defaultMinutes: DEFAULT_TRAINING_MINUTES,
+      glyph: DEFAULT_KINDS.training.glyph,
+    },
+    {
+      id: id(),
+      name: labels.healthcare,
+      defaultMinutes: DEFAULT_HEALTHCARE_MINUTES,
+      glyph: DEFAULT_KINDS.healthcare.glyph,
     },
   ];
   // No colour on the kinds of work: a new project's four take the hues their

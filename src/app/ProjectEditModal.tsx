@@ -66,6 +66,8 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
           lunch: t("projects.defaults.lunch"),
           coffee: t("projects.defaults.coffee"),
           toilet: t("projects.defaults.toilet"),
+          training: t("projects.defaults.training"),
+          healthcare: t("projects.defaults.healthcare"),
           meetings: t("projects.defaults.meetings"),
           planning: t("projects.defaults.planning"),
           retro: t("projects.defaults.retro"),

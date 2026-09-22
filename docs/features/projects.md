@@ -13,9 +13,12 @@ or several; most people have one.
 - **Break types** — one button each on the Today screen, with the minutes a
   break added afterwards is assumed to have taken, a mark, and how much of one
   still counts as work (below). A new project
-  starts with Lunch (30 min), Coffee (15 min) and Toilet (5 min), of which only
-  the toilet counts as work; rename them, change the minutes, remove them, add
-  a walk.
+  starts with Lunch (30 min), Coffee (15 min), Toilet (5 min), Training
+  (60 min) and Healthcare (60 min), of which only the toilet counts as work —
+  a trip down the corridor is paid nearly everywhere there is a corridor,
+  while a wellness hour and a doctor's appointment are exactly what people
+  disagree about, so the app leaves those to you. Rename them, change the
+  minutes, remove them, add a walk.
 - **Kinds of work** — optional labels for what you are doing, so the report
   can say where the hours went, each with a mark and a colour. A new project
   starts with Meetings, Planning, Retro and Admin.
@@ -99,8 +102,9 @@ read, leaving that kind with the one its sort starts out with — the cup for a
 break, the label for a kind of work.
 
 A kind the app itself suggested is marked whether or not it was marked when it
-was written. The three break types and four kinds of work a new project opens
-with — Lunch, Coffee, Toilet, Meetings, Planning, Retro and Admin — each have
+was written. The five break types and four kinds of work a new project opens
+with — Lunch, Coffee, Toilet, Training, Healthcare, Meetings, Planning, Retro
+and Admin — each have
 a mark of the app's choosing, and a kind of one of those names carrying none
 of its own is given it when the document is read, so a project made before
 there were marks shows a fork on its Lunch rather than the cup every unmarked

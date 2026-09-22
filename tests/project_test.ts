@@ -20,6 +20,8 @@ const labels = {
   lunch: "Lunch",
   coffee: "Coffee",
   toilet: "Toilet",
+  training: "Training",
+  healthcare: "Healthcare",
   meetings: "Meetings",
   planning: "Planning",
   retro: "Retro",
@@ -34,6 +36,8 @@ describe("projectTemplate", () => {
       "meal",
       "coffee",
       "toilet",
+      "exercise",
+      "health",
     ]);
     expect(e.categories.map((c) => c.glyph)).toEqual([
       "meeting",
@@ -106,6 +110,8 @@ describe("projectTemplate", () => {
       ["Lunch", 30],
       ["Coffee", 15],
       ["Toilet", 5],
+      ["Training", 60],
+      ["Healthcare", 60],
     ]);
     expect(e.categories.map((c) => c.name)).toEqual([
       "Meetings",
@@ -165,9 +171,19 @@ describe("the template's own answers", () => {
 
   it("counts a toilet break as work, and only that one", () => {
     expect(breakNamed("Toilet").credit).toEqual({ mode: "all" });
-    // The two people actually disagree about are left to them.
+    // The ones people actually disagree about are left to them — the two at
+    // the desk, and the two that take you out of the building.
     expect(breakNamed("Lunch").credit).toBeUndefined();
     expect(breakNamed("Coffee").credit).toBeUndefined();
+    expect(breakNamed("Training").credit).toBeUndefined();
+    expect(breakNamed("Healthcare").credit).toBeUndefined();
+    // Said once more from the other end, so a break added to the template
+    // later cannot quietly start counting: the toilet is the only one.
+    expect(
+      made()
+        .breakTypes.filter((b) => b.credit !== undefined)
+        .map((b) => b.name),
+    ).toEqual(["Toilet"]);
   });
 
   it("gives a new project a toilet break that costs it nothing", () => {

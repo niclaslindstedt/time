@@ -479,6 +479,8 @@ export const en = {
       lunch: "Lunch",
       coffee: "Coffee",
       toilet: "Toilet",
+      training: "Training",
+      healthcare: "Healthcare",
       meetings: "Meetings",
       planning: "Planning",
       retro: "Retro",
