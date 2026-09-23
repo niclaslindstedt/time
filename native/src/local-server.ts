@@ -31,8 +31,13 @@ import StaticServer from "@dr.pogodin/react-native-static-server";
 import Constants from "expo-constants";
 
 /** Deterministic ports, tried in order. See the header — the *stability* of
- *  the first one is what keeps the user's days across launches. */
-const PORT_LADDER = [8241, 8242, 8243] as const;
+ *  the first one is what keeps the user's days across launches.
+ *
+ *  Every wrapper in the fleet has its own ladder — calendar 8231, contacts
+ *  8241, time 8251, calc 8261, paint 8271, checklist 8791, the games 9006 /
+ *  9007 / 9033 — so no two contend for a port on a phone that has both. A new
+ *  wrapper takes the next free ten. */
+const PORT_LADDER = [8251, 8252, 8253] as const;
 
 /** The hostname the WebView addresses the server as. Not `127.0.0.1`. */
 const HOSTNAME = "localhost";
@@ -126,7 +131,7 @@ async function ensureExtracted(): Promise<void> {
 }
 
 export type LocalServer = {
-  /** The origin to point the WebView at, e.g. `http://localhost:8241`. */
+  /** The origin to point the WebView at, e.g. `http://localhost:8251`. */
   origin: string;
   stop: () => Promise<void>;
 };
