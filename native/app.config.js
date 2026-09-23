@@ -9,8 +9,11 @@ const { version } = require("../package.json");
 
 // The listing's name and identifier, and the container the document syncs
 // through. Build variables rather than literals — see ./identifiers.js.
-const { DISPLAY_NAME, BUNDLE_ID, ICLOUD_CONTAINER } = require("./identifiers.js");
-
+const {
+  DISPLAY_NAME,
+  BUNDLE_ID,
+  ICLOUD_CONTAINER,
+} = require("./identifiers.js");
 
 // The light theme's page background (`index.html`'s light `theme-color`).
 // Only paints the splash and the chrome before the page reports its own.
@@ -30,7 +33,7 @@ const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? "";
 module.exports = () => ({
   expo: {
     name: DISPLAY_NAME,
-    slug: "nird-time",
+    slug: "time",
     version,
     // The Today screen is a watch: one dial, centred, with the day's controls
     // beside it where the window is wide enough. Landscape is a supported
@@ -39,7 +42,7 @@ module.exports = () => ({
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     icon: "./assets/icon.png",
-    scheme: "nird-time",
+    scheme: "time",
     backgroundColor: BRAND_BG,
     assetBundlePatterns: ["**/*"],
 
