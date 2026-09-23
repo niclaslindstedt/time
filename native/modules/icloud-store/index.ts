@@ -29,7 +29,7 @@ import { requireOptionalNativeModule } from "expo";
  * is pinned in three places that must agree: here, `app.config.js` (all three
  * iCloud entitlements), and `ios/ICloudStoreModule.swift`.
  */
-export const ICLOUD_CONTAINER = "iCloud.se.niclaslindstedt.time";
+export const ICLOUD_CONTAINER = "iCloud.se.agilator.time";
 
 /**
  * The subdirectory inside the container the documents sit in.

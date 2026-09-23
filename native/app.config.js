@@ -7,16 +7,10 @@
 
 const { version } = require("../package.json");
 
-// Reverse-DNS app id, derived from the author domain and identical on both
-// stores so the app is one product across platforms.
-const BUNDLE_ID = "se.niclaslindstedt.time";
+// The listing's name and identifier, and the container the document syncs
+// through. Build variables rather than literals — see ./identifiers.js.
+const { DISPLAY_NAME, BUNDLE_ID, ICLOUD_CONTAINER } = require("./identifiers.js");
 
-// The app's own iCloud container. Pinned in three places that must agree: the
-// entitlements below, `modules/icloud-store/index.ts`, and its Swift twin in
-// `modules/icloud-store/ios/ICloudStoreModule.swift`. Apple requires the
-// `iCloud.` prefix on the identifier, and changing it after release strands
-// every document already synced under the old one.
-const ICLOUD_CONTAINER = `iCloud.${BUNDLE_ID}`;
 
 // The light theme's page background (`index.html`'s light `theme-color`).
 // Only paints the splash and the chrome before the page reports its own.
@@ -35,7 +29,7 @@ const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? "";
 
 module.exports = () => ({
   expo: {
-    name: "Time",
+    name: DISPLAY_NAME,
     slug: "nird-time",
     version,
     // The Today screen is a watch: one dial, centred, with the day's controls

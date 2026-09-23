@@ -104,7 +104,7 @@ window.__timeCloudHost           — installed by src/icloudBridge.ts
 App.tsx → src/icloud.ts → modules/icloud-store
    │
    ▼
-iCloud.se.niclaslindstedt.time/Documents/time.json
+iCloud.se.agilator.time/Documents/time.json
 ```
 
 The four operations are the framework's `FileStore` — `list`, `read`, `write`,

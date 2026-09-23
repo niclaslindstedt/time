@@ -49,7 +49,7 @@ For submission, fill in the placeholders in `eas.json` →
 
 ### 4. iOS capabilities
 
-The app declares one iCloud container, `iCloud.se.niclaslindstedt.time`.
+The app declares one iCloud container, `iCloud.se.agilator.time`.
 Before the first store build, in the Apple Developer portal:
 
 1. **Certificates, Identifiers & Profiles → Identifiers → iCloud Containers**

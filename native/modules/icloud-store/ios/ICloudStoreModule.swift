@@ -32,7 +32,7 @@ import ExpoModulesCore
 /// The container both halves address. Kept in step with `../index.ts` and
 /// `app.config.js`'s three iCloud entitlements — changing it after release
 /// strands every document already synced under the old identifier.
-private let CONTAINER_ID = "iCloud.se.niclaslindstedt.time"
+private let CONTAINER_ID = "iCloud.se.agilator.time"
 
 /// The subdirectory the documents sit in. `Documents` is the one iCloud
 /// publishes to the Files app, so the user can open the file holding their
@@ -63,7 +63,7 @@ private let DOWNLOAD_POLL: TimeInterval = 0.2
 /// everything else the module has been asked to do. Serial, so two writes
 /// cannot interleave inside the container.
 private let WORK_QUEUE = DispatchQueue(
-  label: "se.niclaslindstedt.time.icloud-store", qos: .utility
+  label: "se.agilator.time.icloud-store", qos: .utility
 )
 
 public class ICloudStoreModule: Module {
