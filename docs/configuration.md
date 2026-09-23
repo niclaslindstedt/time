@@ -20,6 +20,12 @@ Read by Vite at build time through `import.meta.env` (declared in
 Both OAuth identifiers are public by design: the flows are PKCE, so there is no
 client secret anywhere in the pipeline.
 
+In CI, `VITE_DROPBOX_APP_KEY` and `VITE_DROPBOX_APP_FOLDER` come from repository
+**secrets** of the same names — every setting the workflows read is a secret,
+and the repository keeps no Actions variables. Being public, they need not be
+secret; keeping them there means one place to look for everything a deploy is
+configured with.
+
 ## The native wrapper's variables
 
 `native/` is a separate project with a build of its own; these are read there,
