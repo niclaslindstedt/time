@@ -60,16 +60,16 @@ data in the document, not a setting, so it syncs and backs up with the days.
 
 ## Storage keys
 
-| Key                        | Holds                                                            |
-| -------------------------- | ---------------------------------------------------------------- |
-| `time:doc`                 | The document: projects and days (see `docs/day-model.md`)        |
-| `time:doc:unreadable`      | A quarantined copy of a document this build could not parse      |
-| `time:settings`            | The runtime settings above                                       |
-| `time:sync:backend`        | Which backend is active (`local`, `icloud`, `dropbox`) |
-| `time:sync:dropbox`        | Dropbox tokens                                                   |
-| `time:logs`                | The in-app log buffer                                            |
-| `time:language`            | The language choice (English only today)                         |
-| `oss:cache:<backend>:time` | The framework's offline cache of the cloud copy                  |
+| Key                        | Holds                                                       |
+| -------------------------- | ----------------------------------------------------------- |
+| `time:doc`                 | The document: projects and days (see `docs/day-model.md`)   |
+| `time:doc:unreadable`      | A quarantined copy of a document this build could not parse |
+| `time:settings`            | The runtime settings above                                  |
+| `time:sync:backend`        | Which backend is active (`local`, `icloud`, `dropbox`)      |
+| `time:sync:dropbox`        | Dropbox tokens                                              |
+| `time:logs`                | The in-app log buffer                                       |
+| `time:language`            | The language choice (English only today)                    |
+| `oss:cache:<backend>:time` | The framework's offline cache of the cloud copy             |
 
 iCloud has no key of its own beyond `time:sync:backend`: there is nothing to
 store. The container belongs to the device's iCloud account, so choosing the

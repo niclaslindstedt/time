@@ -150,8 +150,8 @@ dialog, `Enter` saves and `Escape` cancels):
 
 …and one button for the screen you visit and leave — on the dial over Today, and on the top bar everywhere else:
 
-| Button | What it does                                                                                                                                                                                                                                                                                                                                              |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Button | What it does                                                                                                                                                                                                                                                                                                                               |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, week start, cloud sync (Dropbox and iCloud in the app-store build), backup / restore / delete, developer tools, and the build. |
 
 ## Configuration

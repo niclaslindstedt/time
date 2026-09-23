@@ -108,9 +108,7 @@ type DropboxTokens = { accessToken: string; refreshToken: string | null };
 function readBackend(): SyncBackendId {
   try {
     const raw = localStorage.getItem(BACKEND_KEY);
-    return raw === "dropbox" || raw === "icloud"
-      ? raw
-      : "local";
+    return raw === "dropbox" || raw === "icloud" ? raw : "local";
   } catch {
     return "local";
   }
