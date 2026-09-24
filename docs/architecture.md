@@ -86,6 +86,8 @@ native/             the thin Expo wrapper — a separate npm project (see below)
   src/injected.ts   the theme reporter, and the service-worker teardown
   src/icloudBridge.ts   the store host it installs into the page   (pure)
   src/icloud.ts     answers the page's store requests
+  src/authSessionBridge.ts  the sign-in provider it installs into the page   (pure)
+  src/authSession.ts    opens a Dropbox sign-in in an authentication session
   modules/icloud-store/ list / read / write / remove in the app's iCloud container
 ```
 
@@ -116,6 +118,13 @@ Nothing in `src/` knows it exists. iCloud reaches the app the same way any
 other capability would: `cloudHost.ts` looks for a document store on `window`
 and the wrapper installs one, so the browser shows no native-shaped hole and a
 second host would light the same backend up.
+
+Dropbox sign-in works the same way. The page's redirect cannot come back into
+a WebView on a loopback origin, so the wrapper offers an authentication
+session at `window.__ossAuthSession` — the framework's name — and the page's
+`connectDropboxAuthSession` uses it when `getAuthSessionHost()` finds one. The
+sheet returns on `<bundle id>://oauth` (`se.agilator.time://oauth` in the
+store build), the redirect URI the Dropbox app must list.
 
 See [`features/native-app.md`](features/native-app.md) and
 [`../native/README.md`](../native/README.md).

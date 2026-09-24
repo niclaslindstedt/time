@@ -650,17 +650,22 @@ the App Store and Google Play. It is a **separate npm project** with its own
 root does not touch it, and neither does `make install`. Reach it with
 `--prefix native` (or the `make native-*` targets).
 
-**Thin is a constraint, not an aspiration.** The wrapper does four things:
+**Thin is a constraint, not an aspiration.** The wrapper does five things:
 
 1. packs the built web app into `assets/webroot.zip` and serves it from a
    loopback HTTP server (`src/local-server.ts`);
 2. points a `WebView` at that origin and otherwise gets out of the way;
-3. injects two scripts into the page — `src/injected.ts`, which reports the
+3. injects three scripts into the page — `src/injected.ts`, which reports the
    resolved theme colours so the native chrome follows them and unregisters
-   the service worker, and `src/icloudBridge.ts`, which offers the page a
-   document store;
+   the service worker, `src/icloudBridge.ts`, which offers the page a
+   document store, and `src/authSessionBridge.ts`, which offers it an
+   authentication session for signing in to Dropbox;
 4. answers those store requests against the app's own iCloud container
-   (`src/icloud.ts` → `modules/icloud-store`).
+   (`src/icloud.ts` → `modules/icloud-store`);
+5. opens a sign-in in an authentication session when the page asks
+   (`src/authSession.ts` → `expo-web-browser`) and hands the redirect back.
+   The page — the framework's `connectDropboxAuthSession`, reached through
+   `getAuthSessionHost()` — keeps the PKCE verifier and makes the exchange.
 
 ### The two native-only features, and why there have to be two
 
@@ -708,14 +713,27 @@ and it has to be worth its own row here.
   mismatch: the backend simply never appears in the storage picker, on a
   device where the reader can see nothing wrong. `tests/native_icloud_test.ts`
   pins all of them against the app's own constants.
+- **The auth-session bridge's names are the framework's**
+  (`AUTH_SESSION_HOST_PROPERTY`, `AUTH_SESSION_HOST_EVENT`), spelled again in
+  `native/src/authSessionBridge.ts`; `tests/native_auth_session_test.ts` runs
+  the injected script against `getAuthSessionHost` to pin them. A drift is
+  silent: the page finds no host and Dropbox opens in Safari again.
+- **The URL scheme is the bundle id**, and the Dropbox sign-in returns on
+  `<scheme>://oauth` — `se.agilator.time://oauth` in the store build, which
+  the Dropbox app must list as a redirect URI (`native/RELEASING.md`). The
+  scheme follows `APP_BUNDLE_ID` (`native/identifiers.js`) and is never
+  committed; changing the bundle id breaks phone sign-in until the App
+  Console follows.
 - **Nothing the root `tsc` can reach may import `expo`** (or any other
   `native/`-only dependency). The root config type-checks `tests/`, and
   `tests/native_icloud_test.ts` imports `native/src/icloudBridge.ts` — but a
   root `npm ci` does not install `native/`'s dependencies, so such an import
   passes on a fully-installed machine and fails only in CI. A **type-only**
   import is still an import here. That is why the wire shapes live in
-  `native/src/icloudWire.ts`, which imports nothing at all, and why only
-  `native/src/icloud.ts` reaches for the native module. `tsc` cannot guard
+  `native/src/icloudWire.ts` and the script escaping in
+  `native/src/scriptText.ts`, which import nothing at all, why neither bridge
+  imports anything from `expo`, and why only `native/src/icloud.ts` and
+  `native/src/authSession.ts` reach for native modules. `tsc` cannot guard
   this locally, so `tests/native_icloud_test.ts` reads the two files' import
   lines instead — crudely, and on purpose, because that fails where it helps.
 - **A failure crosses the bridge as DATA, never as a rejection.** The only

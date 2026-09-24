@@ -54,6 +54,14 @@ Two things it will tell you rather than guess about:
 Android has no iCloud, so there the app is the web app served from inside the
 download, with Dropbox as before.
 
+## Dropbox
+
+**Settings → Cloud sync → Dropbox** opens Dropbox's sign-in in a sheet over
+the app — not in Safari, which could never hand the result back. Approving
+closes the sheet and connects; closing it leaves the backend as it was. The
+sheet is the platform's own authentication session, and the wrapper never
+sees a token: the page makes the exchange itself, exactly as the website does.
+
 ## What the wrapper is not allowed to do
 
 Two rules, and they are what keep the app and the website the same product:

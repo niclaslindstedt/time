@@ -20,6 +20,15 @@ Read by Vite at build time through `import.meta.env` (declared in
 Both OAuth identifiers are public by design: the flows are PKCE, so there is no
 client secret anywhere in the pipeline.
 
+The Dropbox app must list every redirect URI the app signs in through, under
+**Settings → OAuth 2 → Redirect URIs** in the Dropbox App Console: the
+deployed URL for the website, `http://127.0.0.1:53682/`, `:53683/` and
+`:53684/` for the desktop app, and **`se.agilator.time://oauth`** for the
+phone app — its URL scheme is the
+bundle id, and it signs in through an in-app authentication session (see
+[`../native/README.md`](../native/README.md#signing-in-to-dropbox)). The
+native build passes the same two secrets to the bundle it ships.
+
 In CI, `VITE_DROPBOX_APP_KEY` and `VITE_DROPBOX_APP_FOLDER` come from repository
 **secrets** of the same names — every setting the workflows read is a secret,
 and the repository keeps no Actions variables. Being public, they need not be
