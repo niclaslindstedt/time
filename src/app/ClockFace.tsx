@@ -136,7 +136,8 @@ type Props = {
   endsAt: Seconds | null;
   /** The face pressed: start the day, or stop it. */
   onToggle: () => void;
-  /** Open the day's stretches, optionally at the moment that was pressed. */
+  /** Open the day's stretches, optionally at the one that was pressed —
+   *  named by the moment it starts. */
   onOpen: (at?: Seconds) => void;
   /** The right button, at a point in the window. Left out, the browser's
    *  own menu opens instead. */
@@ -234,12 +235,17 @@ export function ClockFace({
   // One chip per break end, in the order of the dial, dropping any that would
   // land on top of the one before it.
   const labels = useMemo(() => {
-    const out: { at: Seconds; angle: number; typeId: string | null }[] = [];
+    const out: {
+      at: Seconds;
+      start: Seconds;
+      angle: number;
+      typeId: string | null;
+    }[] = [];
     for (const s of segments) {
       if (s.kind !== "break" || s.running) continue;
       const angle = angleOf(s.end);
       if (out.some((l) => gap(l.angle, angle) < sizing.labelGap)) continue;
-      out.push({ at: s.end, angle, typeId: s.typeId });
+      out.push({ at: s.end, start: s.start, angle, typeId: s.typeId });
     }
     return out.map((l) => {
       const [x, y] = polar(DIAL_BOX / 2, DIAL_BOX / 2, LABEL_R, l.angle);
@@ -305,13 +311,7 @@ export function ClockFace({
       return;
     }
     const hit = stretchAt(e.clientX, e.clientY);
-    onOpen(
-      hit
-        ? hit.segment.running
-          ? hit.segment.start
-          : hit.segment.end
-        : undefined,
-    );
+    onOpen(hit?.segment.start);
   };
 
   const readingLabel = (s: DaySegment) =>
@@ -461,7 +461,7 @@ export function ClockFace({
             <button
               key={l.at}
               type="button"
-              onClick={() => onOpen(l.at)}
+              onClick={() => onOpen(l.start)}
               style={{ left: `${l.left}%`, top: `${l.top}%` }}
               aria-label={label}
               title={label}

@@ -170,16 +170,20 @@ export const en = {
   },
 
   // The clock face's popup: the day as the stretches it is made of, with the
-  // moment each one ended up for correction.
+  // moments each one started and ended up for correction.
   timeline: {
     title: "Today, stretch by stretch",
-    hint: "Change when a stretch ended and the next one starts there. None of this was timed to the second — it is the shape of the day, not a stopwatch.",
+    hint: "Change when a stretch started or ended, and the one next to it moves too. None of this was timed to the second — it is the shape of the day, not a stopwatch.",
     empty: "Nothing logged yet today.",
     running: "still going",
-    ends: "Ended",
+    from: "From",
+    to: "To",
+    startOf: "When {name} started",
     endOf: "When {name} ended",
-    earlier: "Five minutes earlier",
-    later: "Five minutes later",
+    startEarlier: "Start {name} five minutes earlier",
+    startLater: "Start {name} five minutes later",
+    endEarlier: "End {name} five minutes earlier",
+    endLater: "End {name} five minutes later",
     work: "Working",
     stuck: "That would leave no room for the stretch next to it.",
   },

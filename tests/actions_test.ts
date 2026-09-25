@@ -16,7 +16,7 @@ import {
   takeBreak,
   updateSpan,
 } from "../src/app/actions.ts";
-import { dayTotals } from "../src/app/day.ts";
+import { boundaryRange, dayTotals, daySegments } from "../src/app/day.ts";
 import { STAMP, ctx, day, h, project } from "./fixtures/helpers.ts";
 
 /** The project the totals here are read against — no break of it counts as
@@ -355,6 +355,43 @@ describe("moving an edge of the day", () => {
   it("refuses a move that would invert the session", () => {
     const d = lunchDay();
     expect(moveBoundary(d, h(17), h(7), ctx())).toBe(d);
+  });
+
+  // The two mistakes the timeline is for, each fixed on the stretch it was
+  // made on: its start and then its end.
+
+  it("moves the arrival of a day started late, while it runs", () => {
+    const c = ctx();
+    let d = setCategory(clockIn(empty(), h(17, 40), c), "code", h(17, 40), c);
+    const now = h(17, 41);
+    expect(boundaryRange(d, h(17, 40), now)).toEqual({
+      min: 0,
+      max: h(17, 40),
+    });
+
+    d = moveBoundary(d, h(17, 40), h(8), c);
+    expect(d.sessions).toEqual([{ id: "id1", start: h(8), end: null }]);
+    expect(d.activities[0]).toMatchObject({ start: h(8), end: null });
+    expect(daySegments(d, now)).toMatchObject([
+      { kind: "work", start: h(8), end: now, typeId: "code", running: true },
+    ]);
+    expect(dayTotals(d, acme, now).worked).toBe(h(9, 41));
+  });
+
+  it("moves both ends of a lunch pressed at the end of it", () => {
+    const c = ctx();
+    let d = takeBreak(clockIn(empty(), h(8), c), "lunch", h(12, 40), 1800, c);
+    const now = h(12, 41);
+
+    d = moveBoundary(d, h(12, 40), h(12), c);
+    d = moveBoundary(d, h(13, 10), h(12, 30), c);
+    expect(d.breaks[0]).toMatchObject({ start: h(12), end: h(12, 30) });
+    expect(daySegments(d, now)).toMatchObject([
+      { kind: "work", start: h(8), end: h(12) },
+      { kind: "break", start: h(12), end: h(12, 30), typeId: "lunch" },
+      { kind: "work", start: h(12, 30), end: now, running: true },
+    ]);
+    expect(dayTotals(d, acme, now).worked).toBe(h(4, 11));
   });
 });
 
