@@ -953,10 +953,10 @@ export function TodayScreen({
             const next = moveBoundary(day, at, to, ctx());
             if (next === day) {
               onNotice(t("timeline.stuck"));
-              return;
+              return false;
             }
             apply(next);
-            setTimeline({ at: to });
+            return true;
           }}
           onClose={() => setTimeline(null)}
         />

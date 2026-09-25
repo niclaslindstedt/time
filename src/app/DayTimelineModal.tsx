@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { Modal } from "@niclaslindstedt/oss-framework/components";
+import { useState } from "react";
 
 import { boundaryRange, daySegments, type DaySegment } from "./day.ts";
-import {
-  formatDuration,
-  formatTimeOfDay,
-  parseTimeOfDay,
-  toTimeInput,
-} from "./format.ts";
+import { formatDuration, parseTimeOfDay, toTimeInput } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor, categoryName } from "./labels.ts";
+import { DAY_SECONDS } from "./types.ts";
 import type { Project, Seconds, WorkDay } from "./types.ts";
 
 // What the clock face opens: the day as the stretches it is made of, in
-// order, with the moment each one ended up for correction.
+// order, each with the moment it began and the moment it ended up for
+// correction.
 //
 // The list is derived, not stored — the same `daySegments` the dial draws —
 // so the only edit this screen can make is to move an edge, and moving one
@@ -21,6 +19,14 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 // coding session that started at 12:20 (see `moveBoundary`). That is the
 // whole point of editing here rather than in the Log, where the two spans
 // would have to be corrected one at a time and could disagree in between.
+//
+// A shared edge is offered on both of its rows — as the end of one and the
+// start of the next — because the way a day goes wrong is a press made late:
+// the face pressed at twenty to six for a day begun at eight, a lunch pill
+// pressed at the end of lunch rather than the start. Both mistakes are fixed
+// on the stretch they were made on, start first and then end, without having
+// to know that the start of a lunch lives on the row above it. The first
+// stretch's start is the arrival, and moves like any other edge.
 //
 // The times either side of a break were never measured to the second, so the
 // hint says so: this is the shape of the day, not a stopwatch.
@@ -32,10 +38,11 @@ type Props = {
   day: WorkDay;
   project: Project;
   now: Seconds;
-  /** The edge the clock face was tapped on, drawn as the one in question. */
+  /** Where the stretch the clock face was pressed on starts, drawn as the
+   *  one in question. */
   highlight?: Seconds | null;
-  /** Move an edge of the day. Refused moves come back as an unchanged day. */
-  onMove: (at: Seconds, to: Seconds) => void;
+  /** Move an edge of the day. False when the move was refused. */
+  onMove: (at: Seconds, to: Seconds) => boolean;
   onClose: () => void;
 };
 
@@ -49,12 +56,16 @@ export function DayTimelineModal({
 }: Props) {
   const t = useT();
   const segments = daySegments(day, now);
+  // The stretch in question follows its own start as it is moved, so the
+  // row being corrected stays the one marked.
+  const [marked, setMarked] = useState<Seconds | null>(highlight ?? null);
 
   const move = (at: Seconds, to: Seconds) => {
     const range = boundaryRange(day, at, now);
     if (!range) return;
     const clamped = Math.min(range.max, Math.max(range.min, to));
-    if (clamped !== at) onMove(at, clamped);
+    if (clamped === at || !onMove(at, clamped)) return;
+    if (marked === at) setMarked(clamped);
   };
 
   return (
@@ -87,7 +98,7 @@ export function DayTimelineModal({
                 segment={s}
                 project={project}
                 label={label(s)}
-                highlighted={highlight != null && s.end === highlight}
+                highlighted={marked !== null && s.start === marked}
                 onMove={move}
               />
             ))}
@@ -145,52 +156,94 @@ function Row({
           {formatDuration(segment.end - segment.start)}
         </span>
       </div>
-      <div className="mt-1.5 flex items-center gap-2">
-        <span className="shrink-0 text-sm text-muted tabular-nums">
-          {formatTimeOfDay(segment.start)} –
-        </span>
-        {segment.running ? (
+      <Edge
+        caption={t("timeline.from")}
+        at={segment.start}
+        name={t("timeline.startOf", { name: label })}
+        earlier={t("timeline.startEarlier", { name: label })}
+        later={t("timeline.startLater", { name: label })}
+        // A start typed is the one nearer where the stretch began: 01:10 on
+        // a stretch that began at 23:50 is the night shift's, the next day.
+        read={(typed) =>
+          Math.abs(typed + DAY_SECONDS - segment.start) <
+          Math.abs(typed - segment.start)
+            ? typed + DAY_SECONDS
+            : typed
+        }
+        onMove={onMove}
+      />
+      {segment.running ? (
+        <div className="mt-1.5 flex items-center gap-2">
+          <span className="w-10 shrink-0 text-xs text-muted">
+            {t("timeline.to")}
+          </span>
           <span className="text-sm text-muted">{t("timeline.running")}</span>
-        ) : (
-          <>
-            {/* Uncontrolled, committed on blur, and re-seeded by its key
-                when the move lands: re-assigning the value of a native time
-                input mid-interaction dismisses iOS's wheel picker. */}
-            <input
-              key={segment.end}
-              type="time"
-              aria-label={t("timeline.endOf", { name: label })}
-              defaultValue={toTimeInput(segment.end)}
-              onBlur={(e) => {
-                const next = parseTimeOfDay(e.currentTarget.value);
-                if (next === null) return;
-                // An end typed before the stretch began is the next day's —
-                // a night shift, or a lunch that ran past midnight.
-                onMove(
-                  segment.end,
-                  next < segment.start ? next + 86_400 : next,
-                );
-              }}
-              className="w-[7.5rem] min-w-0 shrink rounded-md border border-line bg-surface-2 px-2 py-1 text-sm text-fg tabular-nums outline-none focus:border-accent"
-            />
-            <div className="ml-auto flex shrink-0 gap-1">
-              <Nudge
-                label={t("timeline.earlier")}
-                onClick={() => onMove(segment.end, segment.end - STEP)}
-              >
-                −5
-              </Nudge>
-              <Nudge
-                label={t("timeline.later")}
-                onClick={() => onMove(segment.end, segment.end + STEP)}
-              >
-                +5
-              </Nudge>
-            </div>
-          </>
-        )}
-      </div>
+        </div>
+      ) : (
+        <Edge
+          caption={t("timeline.to")}
+          at={segment.end}
+          name={t("timeline.endOf", { name: label })}
+          earlier={t("timeline.endEarlier", { name: label })}
+          later={t("timeline.endLater", { name: label })}
+          // An end typed before the stretch began is the next day's — a
+          // night shift, or a lunch that ran past midnight.
+          read={(typed) =>
+            typed < segment.start ? typed + DAY_SECONDS : typed
+          }
+          onMove={onMove}
+        />
+      )}
     </li>
+  );
+}
+
+/** One end of a stretch: the time, typed or picked, and the two nudges. */
+function Edge({
+  caption,
+  at,
+  name,
+  earlier,
+  later,
+  read,
+  onMove,
+}: {
+  caption: string;
+  at: Seconds;
+  name: string;
+  earlier: string;
+  later: string;
+  /** The typed time of day as a moment of this day's record. */
+  read: (typed: Seconds) => Seconds;
+  onMove: (at: Seconds, to: Seconds) => void;
+}) {
+  return (
+    <div className="mt-1.5 flex items-center gap-2">
+      <span className="w-10 shrink-0 text-xs text-muted">{caption}</span>
+      {/* Uncontrolled, committed on blur, and re-seeded by its key when the
+          move lands: re-assigning the value of a native time input
+          mid-interaction dismisses iOS's wheel picker. */}
+      <input
+        key={at}
+        type="time"
+        aria-label={name}
+        defaultValue={toTimeInput(at)}
+        onBlur={(e) => {
+          const next = parseTimeOfDay(e.currentTarget.value);
+          if (next === null) return;
+          onMove(at, read(next));
+        }}
+        className="w-[7.5rem] min-w-0 shrink rounded-md border border-line bg-surface-2 px-2 py-1 text-sm text-fg tabular-nums outline-none focus:border-accent"
+      />
+      <div className="ml-auto flex shrink-0 gap-1">
+        <Nudge label={earlier} onClick={() => onMove(at, at - STEP)}>
+          −5
+        </Nudge>
+        <Nudge label={later} onClick={() => onMove(at, at + STEP)}>
+          +5
+        </Nudge>
+      </div>
+    </div>
   );
 }
 

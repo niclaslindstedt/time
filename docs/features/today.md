@@ -157,11 +157,17 @@ here:
   twenty past — so the nudges go backwards first (−30, −15, −5) and the modal
   says what the change makes of the day before you save it.
 - **A stretch on the ring** opens the day stretch by stretch: working, lunch,
-  working. Each
-  end can be moved, by typing a time or nudging it five minutes either way, and
-  moving one moves both sides of it — a lunch that ended at 12:20 rather than
-  12:10 is a coding session that started at 12:20. An edge cannot be pushed
-  over its neighbour.
+  working, with the one pressed marked. Every stretch shows both its start and
+  its end, each of which can be moved by typing a time or nudging it five
+  minutes either way, and moving one moves both sides of it — a lunch that
+  ended at 12:20 rather than 12:10 is a coding session that started at 12:20,
+  so the same moment is offered as the end of one row and the start of the
+  next. That is what makes a late press quick to put right: the face pressed at
+  twenty to six for a day begun at eight is the first stretch's start moved
+  back, and a lunch pill pressed at the end of lunch is the lunch's own start
+  moved back and its assumed end moved to when you came back. Only a stretch
+  still going has no end to move. An edge cannot be pushed over its
+  neighbour.
 
 None of this was timed to the second, and the screen says so: it is the shape
 of the day, not a stopwatch.
