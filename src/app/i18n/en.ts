@@ -115,9 +115,9 @@ export const en = {
     // only joins the project, since there is nothing open to log it against.
     newBreak: "A kind of break",
     newBreakHint:
-      "It joins this project's breaks, and starts now. The minutes are how long one is assumed to take.",
+      "It joins this project's breaks, and starts now. The minutes are how long one usually takes — it runs until you end it.",
     newBreakHintOut:
-      "It joins this project's breaks, ready for when the day starts. The minutes are how long one is assumed to take.",
+      "It joins this project's breaks, ready for when the day starts. The minutes are how long one usually takes — it runs until you end it.",
     newCategory: "A kind of work",
     newCategoryHint:
       "It joins this project's kinds of work, and you are doing it from now.",
@@ -127,7 +127,7 @@ export const en = {
     holdToEdit: "Hold to edit",
     editKind: "Edit {name}",
     editBreakHint:
-      "Its mark, its name, and how long one is assumed to take. Breaks already written down keep the times they have.",
+      "Its mark, its name, and how long one usually takes. Breaks already written down keep the times they have.",
     editCategoryHint:
       "Its mark, its colour and its name. Everything already logged under it follows the change.",
     kindName: "Name",
@@ -156,6 +156,7 @@ export const en = {
     },
     openTimeline: "Open today's stretches",
     breakEndLabel: "{name} ended {time} — tap to change",
+    breakDueLabel: "{name} expected to end {time} — tap to change",
     // The desk. The dial answers a mouse: hovering a stretch of the ring
     // says what it was and when, and the right button opens the day's
     // actions where the pointer is.
@@ -176,6 +177,7 @@ export const en = {
     hint: "Change when a stretch started or ended, and the one next to it moves too. None of this was timed to the second — it is the shape of the day, not a stopwatch.",
     empty: "Nothing logged yet today.",
     running: "still going",
+    breakRunning: "Still going — set when it ended, or when you'll be back.",
     from: "From",
     to: "To",
     startOf: "When {name} started",
@@ -511,7 +513,7 @@ export const en = {
     hoursPerDay: "Hours per working day",
     breakTypes: "Break types",
     breakTypesHint:
-      "One button each on the Today screen. The minutes are how long a break of that kind is assumed to take when you tap it — correct it on the clock afterwards. Tap a mark to change it.",
+      "One button each on the Today screen. The minutes are how long a break of that kind usually takes — the clock expects it back then, and it runs until you end it. Tap a mark to change it.",
     breakName: "Name",
     breakMinutes: "Minutes",
     addBreakType: "Add a break type",

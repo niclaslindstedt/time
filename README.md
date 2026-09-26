@@ -17,9 +17,9 @@ main screen is a wrist watch with the day drawn on it: time worked as a ring,
 breaks marked on it, the kind of work in its colour, the day's share of its
 target filling the bezel, and a light behind the case while you are working.
 
-A break is written down with an end the moment you take it — the length that
-kind of break usually takes — so you never have to remember to say you are
-back. The guess is printed on the rim of the clock; tap it (or the clock) and
+A break runs until you end it, so a coffee you forget to end is still
+coffee rather than work. The length that kind usually takes is printed on the
+rim of the clock as when it is expected to be over; tap it (or the clock) and
 the day opens stretch by stretch, where every stretch's start and end can be
 moved and moving the end of the lunch moves the start of the work after it. Tap the timer to correct when you started. Every
 one of those times is an estimate and the app says so: work is not timed to

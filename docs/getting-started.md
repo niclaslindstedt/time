@@ -33,10 +33,11 @@ requires authentication even for public packages.
    **Projects**.
 2. Press the clock. The light behind it comes up, and the clock begins
    drawing the day.
-3. Tap a break — **Lunch**, say — when you go. It is written down there and
-   then, ending after the half hour a lunch is assumed to take, so you do not
-   have to tell the app you are back. The light dims for as long as it runs.
-   Back early? Tap **End Lunch**.
+3. Tap a break — **Lunch**, say — when you go, and tap **End Lunch** when you
+   are back. It runs until you do; the half hour a lunch usually takes is
+   printed on the rim as when it is expected to be over. The light dims for as
+   long as it runs. Forgot to end it? Tap the time on the rim and set when you
+   came back.
 4. Tap a kind of work when it changes. This only labels the time; it does not
    start or stop anything. While a break is on it says **paused**, because a
    break stops the counting.

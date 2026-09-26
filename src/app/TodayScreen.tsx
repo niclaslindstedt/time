@@ -31,7 +31,7 @@ import {
 import { ArrivalModal } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
-import { dayKinds, dayTotals, progress, workdayEnd } from "./day.ts";
+import { breakDue, dayKinds, dayTotals, progress, workdayEnd } from "./day.ts";
 import {
   DEFAULT_HOURS_PER_DAY,
   DEFAULT_WORK_DAYS,
@@ -329,13 +329,13 @@ export function TodayScreen({
     const on = totals.currentCategoryId === id;
     apply(setCategory(day, on ? null : id, now.seconds, ctx()));
   };
-  const pickBreak = (id: string, minutes: number) => {
+  const pickBreak = (id: string) => {
     if (state === "out") return;
     const running = totals.currentBreak?.typeId === id;
     apply(
       running
         ? endBreak(day, now.seconds, ctx())
-        : takeBreak(day, id, now.seconds, minutes * 60, ctx()),
+        : takeBreak(day, id, now.seconds, ctx()),
     );
   };
 
@@ -365,13 +365,18 @@ export function TodayScreen({
   // that flickers is a tab you close.
   const current = totals.currentBreak;
   const currentName = current ? breakName(t, project, current.typeId) : null;
+  /** When the break that is on is over, for as long as that is still to come:
+   *  the end it was given, or the length its kind usually takes. Past that
+   *  the break is simply still going, and the line says since when. */
+  const breakEnd = current ? (current.end ?? breakDue(day, project)) : null;
+  const until = breakEnd !== null && breakEnd > now.seconds ? breakEnd : null;
   const tabState =
     state === "working"
       ? t("today.state.working")
-      : state === "break" && current && current.end !== null
+      : state === "break" && until !== null
         ? t("today.tabBreak", {
             name: currentName ?? "",
-            time: formatTimeOfDay(current.end),
+            time: formatTimeOfDay(until),
           })
         : state === "break"
           ? t("today.state.break")
@@ -452,14 +457,14 @@ export function TodayScreen({
       ? `${t("today.state.working")} · ${t("today.since", { time: formatTimeOfDay(totals.openSession.start) })}`
       : state === "break" && current
         ? `${t("today.state.break")} · ${
-            current.end === null
+            until === null
               ? t("today.breakSince", {
                   name: currentName ?? "",
                   time: formatTimeOfDay(current.start),
                 })
               : t("today.breakUntil", {
                   name: currentName ?? "",
-                  time: formatTimeOfDay(current.end),
+                  time: formatTimeOfDay(until),
                 })
           }`
         : totals.lastOut !== null
@@ -496,7 +501,7 @@ export function TodayScreen({
         className="h-4 w-4 text-flag"
       />
     ),
-    onSelect: () => pickBreak(b.id, b.defaultMinutes),
+    onSelect: () => pickBreak(b.id),
   });
   const categoryRow = (c: Project["categories"][number]): RowAction => {
     const on = totals.currentCategoryId === c.id;
@@ -730,7 +735,7 @@ export function TodayScreen({
                     aria-disabled={out}
                     aria-pressed={running}
                     {...press({
-                      press: () => pickBreak(b.id, b.defaultMinutes),
+                      press: () => pickBreak(b.id),
                       hold: () => setAsking({ kind: "break", id: b.id }),
                     })}
                     title={`${
@@ -958,6 +963,15 @@ export function TodayScreen({
             apply(next);
             return true;
           }}
+          onEndBreak={(to) => {
+            const next = endBreak(day, to, ctx());
+            if (next === day) {
+              onNotice(t("timeline.stuck"));
+              return false;
+            }
+            apply(next);
+            return true;
+          }}
           onClose={() => setTimeline(null)}
         />
       )}
@@ -1032,7 +1046,7 @@ export function TodayScreen({
                   },
                 ],
               });
-              apply(takeBreak(day, id, now.seconds, minutes * 60, ctx()));
+              apply(takeBreak(day, id, now.seconds, ctx()));
             } else {
               stampProject({
                 categories: [

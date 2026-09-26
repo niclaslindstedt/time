@@ -172,10 +172,12 @@ export function clockOut(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
 }
 
 /**
- * Take a break of a kind, now. The end is written down at the same moment,
- * `seconds` later: nobody taps "I'm back" reliably, and a break whose end is
- * assumed and then corrected is a truer record than one left running until
- * somebody remembers it. The clock face is where it gets corrected.
+ * Take a break of a kind, now. It stays open until it is ended — the pill
+ * pressed again, the face pressed, or another break taken — however long
+ * that is. The length its kind usually takes is what the dial expects of it
+ * (`breakDue`), and never a stop: a coffee that ran to twenty-five minutes
+ * was twenty-five minutes of coffee, and a break that cut itself off at
+ * fifteen would have booked the other ten as work nobody did.
  *
  * Requires an open session — a break is a pause inside presence. A break
  * already going on is ended here, so a coffee during lunch is two breaks.
@@ -184,23 +186,21 @@ export function takeBreak(
   day: WorkDay,
   typeId: string,
   at: Seconds,
-  seconds: Seconds,
   ctx: EditContext,
 ): WorkDay {
   if (!day.sessions.some((s) => s.end === null)) return day;
-  const length = Math.max(60, Math.round(seconds));
-  if (!isValidSpan(at, at + length)) return day;
+  if (!isValidSpan(at, null)) return day;
   return stamp(day, ctx, {
     breaks: [
       ...closeBreaks(day.breaks, at),
-      { id: ctx.id(), typeId, start: at, end: at + length },
+      { id: ctx.id(), typeId, start: at, end: null },
     ],
   });
 }
 
-/** End the break going on at `at` — "I'm back", before the kind's assumed
- *  end. A break that ends less than a minute after it started is dropped: that
- *  is a tap and its undo, or the wrong pill. */
+/** End the break going on at `at` — "I'm back". A break that ends less than
+ *  a minute after it started is dropped: that is a tap and its undo, or the
+ *  wrong pill. */
 export function endBreak(day: WorkDay, at: Seconds, ctx: EditContext): WorkDay {
   if (
     !day.breaks.some((b) => b.start <= at && (b.end === null || at < b.end))
