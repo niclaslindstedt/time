@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check actionlint release clean docs website website-dev install icons check-seo changelog bump shots native-install native-bundle native-typecheck native-prebuild store-preflight store-metadata tauri tauri-bundle tauri-clean tauri-fast tauri-fmt tauri-fmt-check tauri-install tauri-lint tauri-package tauri-package-debug tauri-test
+.PHONY: demo build test lint fmt fmt-check actionlint release clean docs website website-dev install icons check-seo changelog bump shots native-install native-bundle native-typecheck native-prebuild store-preflight store-metadata tauri tauri-bundle tauri-clean tauri-fast tauri-fmt tauri-fmt-check tauri-install tauri-lint tauri-package tauri-package-debug tauri-test
 
 build:
 	npm run build
@@ -23,6 +23,11 @@ clean:
 
 install:
 	npm install
+
+# The dev server on the demo: one developer's working weeks, held in memory,
+# nothing read from or written to this browser's document (src/app/dev/).
+demo:
+	VITE_SEED=demo npm run dev
 
 # Regenerate the PWA install icons + the Open Graph image from the app mark.
 icons:

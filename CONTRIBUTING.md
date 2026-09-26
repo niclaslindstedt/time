@@ -22,6 +22,7 @@ npm install
 
 ```sh
 make build
+make demo         # the dev server on the demo document (VITE_SEED=demo)
 make test
 make lint
 make fmt-check

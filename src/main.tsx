@@ -46,6 +46,7 @@ import "@fontsource/cinzel/latin-700.css";
 
 import "./styles.css";
 import { App } from "./App.tsx";
+import { DEMO, bootDemo } from "./app/dev/useDemoData.ts";
 import { LanguageRoot } from "./app/i18n/index.ts";
 
 // In dev no worker registers (`usePwaUpdate` runs disabled), but a worker
@@ -66,9 +67,18 @@ if (!root) throw new Error("missing #root element");
 // object to create. `StrictMode` is gone with it: Preact has no
 // double-invoking dev mode, so `preact/compat` only aliases it to a plain
 // `Fragment` and wrapping the tree in it would imply a check that never runs.
-render(
-  <LanguageRoot>
-    <App />
-  </LanguageRoot>,
-  root,
+// The store demo (`VITE_SEED=demo`, `make demo`) turns the in-memory demo
+// document on BEFORE the first render, so the first frame is already the demo
+// and the device's own document is never read, cached or synced
+// (`app/dev/useDemoData.ts`). If the demo cannot load, nothing mounts. Any
+// other build folds this to a resolved promise.
+const boot = DEMO ? bootDemo() : Promise.resolve();
+
+void boot.then(() =>
+  render(
+    <LanguageRoot>
+      <App />
+    </LanguageRoot>,
+    root,
+  ),
 );

@@ -29,6 +29,9 @@ interface ImportMetaEnv {
   // else (including unset) for the free web edition, whose exported
   // specifications carry the notice. See `src/app/edition.ts`.
   readonly VITE_EDITION?: string;
+  // "demo" boots the app onto the in-memory demo document, and nothing else:
+  // `make demo` and the store screenshots. See `src/app/dev/useDemoData.ts`.
+  readonly VITE_SEED?: string;
 }
 
 interface ImportMeta {

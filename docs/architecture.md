@@ -77,7 +77,7 @@ src/app/
   ProjectEditModal.tsx  name, mark, working days, breaks, kinds of work
   NoProject.tsx     the card a screen stands on before there is a project, and the form behind it
   ProjectPickerModal.tsx  the top bar's mark, and the list of projects it opens
-  dev/              the demo-data switch: an in-memory DocBackend
+  dev/              the demo document (VITE_SEED=demo, and the Settings switch): an in-memory DocBackend
   i18n/             the catalog and the runtime
 
 native/             the thin Expo wrapper — a separate npm project (see below)

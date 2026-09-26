@@ -75,6 +75,9 @@ can open, copy and delete.
 
 ## Demo data
 
-While the developer "Demo data" switch is on, the engine is paused entirely:
-nothing is pulled and nothing is pushed, so two months of invented days can
-never reach a connected account.
+While the developer "Demo data" switch is on — or the build was made with
+`VITE_SEED=demo` — the engine is paused entirely: nothing is pulled and
+nothing is pushed, so the invented weeks can never reach a connected account.
+The storage picker refuses to connect or disconnect a backend meanwhile,
+since either would change the reader's real backend from a session that is
+not theirs.

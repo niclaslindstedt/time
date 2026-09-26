@@ -37,6 +37,7 @@ convenience.
 ```sh
 make install       # npm install (needs GitHub Packages auth — see below)
 make build         # production build (vite build)
+make demo          # dev server on the in-memory demo document (VITE_SEED=demo)
 make test          # full test suite (vitest)
 make lint          # eslint + tsc --noEmit
 make fmt           # prettier --write

@@ -113,6 +113,9 @@ half hour; tap it again if you are back early), tap **Planning** when you sit
 down to it, and press the face when you are done for the day. The **Log** has
 the day as a list; the **Report** has the week.
 
+To open it on a demo instead — one developer's working weeks, held in memory
+and never written to the browser — run `make demo` (`VITE_SEED=demo`).
+
 To try the production build the way it deploys:
 
 ```sh
@@ -166,6 +169,7 @@ is no secret to protect), and leaving either unset simply hides that provider:
 | `VITE_DROPBOX_APP_FOLDER` | Folder name the document is filed under (default `time`).                                                          |
 | `VITE_BASE`               | Deploy base path (default `/`).                                                                                    |
 | `VITE_EDITION`            | `store` for the App Store build, whose exported PDF specifications carry no notice. Default: the free web edition. |
+| `VITE_SEED`               | `demo` boots onto the in-memory demo document (`make demo`, the store screenshots). Never set for a release.       |
 
 iCloud takes no variable at all: it is offered by the native wrapper's host,
 so it appears in the app-store build and nowhere else.
