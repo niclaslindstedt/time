@@ -7,7 +7,9 @@
 //
 // The web build is a plain `npm run build` at the repo root — base `/`, which
 // is exactly what a localhost origin wants — and NOTHING in `src/` is changed
-// for the app. If the wrapper ever needs the web app to behave differently,
+// for the app. The one build parameter it sets is `VITE_EDITION=store`: this
+// is the build sold in the App Store, so its exported PDF specifications carry
+// no "made with the free web edition" notice (`src/app/edition.ts`). If the wrapper ever needs the web app to behave differently,
 // that is a sign it has stopped being thin.
 //
 // Usage:
@@ -55,6 +57,7 @@ if (!skipBuild) {
   console.log(`• building the web app (npm run build) — profile ${profile}…`);
   execFileSync(NPM, ["run", "build"], {
     cwd: REPO_DIR,
+    env: { ...process.env, VITE_EDITION: process.env.VITE_EDITION ?? "store" },
     stdio: "inherit",
     // npm on Windows is a batch shim, which Node cannot execute directly.
     shell: WINDOWS,

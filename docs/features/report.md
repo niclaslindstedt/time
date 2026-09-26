@@ -231,7 +231,8 @@ A specification exported from the **free web edition** carries a band on every
 page saying what made it and where to buy the app without it. It is a build
 parameter (`VITE_EDITION`, see [`../configuration.md`](../configuration.md)) —
 there is no server to ask and no account to check, so the edition is the build
-that was shipped. The App Store build carries no notice.
+that was shipped. The App Store build carries no notice: the phone app's
+bundle is built with `VITE_EDITION=store` (`native/scripts/bundle-web.mjs`).
 
 ## Export for Invoice
 

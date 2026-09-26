@@ -56,7 +56,7 @@ and `merge.ts`.
 | `src/authSession.ts`       | Opens one sign-in in an authentication session (`expo-web-browser`) and hands back where it ended.                           |
 | `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by both bridges.                                       |
 | `modules/icloud-store/`    | A local Expo module: list / read / write / remove inside the app's iCloud container.                                         |
-| `scripts/bundle-web.mjs`   | Builds the web app and packs `dist/` into `assets/webroot.zip`.                                                              |
+| `scripts/bundle-web.mjs`   | Builds the web app as the store edition (`VITE_EDITION=store`) and packs `dist/` into `assets/webroot.zip`.                  |
 
 `ios/` and `android/` are **prebuild output**: regenerated from `app.config.js`
 by `expo prebuild --clean`, gitignored, and the source of truth for nothing.
