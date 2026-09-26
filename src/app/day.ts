@@ -28,7 +28,12 @@
 // the credit comes out of `breakTotal`, which goes on reporting the whole of
 // the time spent on breaks.
 
-import { creditSeconds, isWorkDay, targetSeconds } from "./project.ts";
+import {
+  breakTypeOf,
+  creditSeconds,
+  isWorkDay,
+  targetSeconds,
+} from "./project.ts";
 import {
   contains,
   intersect,
@@ -253,10 +258,26 @@ export function breakAt(day: WorkDay, at: Seconds): BreakSpan | null {
   );
 }
 
+/**
+ * When the break that is still open is expected to be over: its start plus
+ * the length its kind usually takes. A projection and never a record — the
+ * break runs until it is ended, however long that is, and this is only what
+ * the dial draws ahead of the hands and the line under it says the break is
+ * "until". Once it is passed the break simply carries on, and so does its
+ * band. Null with no break open, and for a kind the project no longer has,
+ * whose usual length nobody knows.
+ */
+export function breakDue(day: WorkDay, project: Project): Seconds | null {
+  const open = day.breaks.find((b) => b.end === null);
+  if (!open) return null;
+  const type = breakTypeOf(project, open.typeId);
+  return type ? open.start + type.defaultMinutes * 60 : null;
+}
+
 /** How far ahead of `now` the day is drawn. Normally not at all — but a break
- *  is written down with the end its kind is assumed to have, so at 12:10 of a
- *  lunch booked until 12:30 the day already reaches twenty minutes into the
- *  future. The totals never read past `now` (a minute not yet worked is not
+ *  given an end still to come (typed into the Log, or written by a build that
+ *  booked a break's usual length when it was taken) already reaches into the
+ *  future: at 12:10 of a lunch booked until 12:30, twenty minutes. The totals never read past `now` (a minute not yet worked is not
  *  worked); this is only how far the *shape* of the day is known. */
 export function horizon(day: WorkDay, now: Seconds): Seconds {
   if (!day.sessions.some((s) => s.end === null)) return now;
@@ -440,15 +461,16 @@ export function progress(worked: Seconds, project: Project): number {
  * not counts for nothing. The walk carries the credit each kind has left, so
  * a lunch of which the first half hour counts crosses the target half an hour
  * into itself and not a second later. Past the end of what the day already
- * knows — a break written down with an assumed end reaches into the future —
- * the work simply goes on.
+ * knows — a break given an end still to come reaches into the future — the
+ * work simply goes on.
  *
  * Null when there is nothing to project from: a day the project expects no
  * work on, a project with no target, a day with no session running — or a
  * break that is on. The last is the same refusal as the assumption above: a
- * break's written end is the length its kind is _assumed_ to have and not a
- * plan anybody made, so while you are on one the figure is a guess about
- * when you come back rather than about how much work is left. It is also the
+ * break runs until it is ended, and the length its kind usually takes
+ * (`breakDue`) is not a plan anybody made, so while you are on one the
+ * figure is a guess about when you come back rather than about how much work
+ * is left. It is also the
  * one moment the screen has an end of its own to print — when the break is
  * over — and two ends beside each other, one of them invented, is worse than
  * the one that is known. It comes back the moment the break does. A

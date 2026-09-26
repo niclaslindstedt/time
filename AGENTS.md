@@ -160,8 +160,11 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   break time. `workdayEnd` is the one figure here about a moment that has not
   happened: when the target is met if the work carries on unbroken, walked
   stretch by stretch rather than divided, because a counted break counts while
-  you are on it and an uncounted one counts for nothing. **Pure and
-  clock-free** — `now` is a parameter.
+  you are on it and an uncounted one counts for nothing. `breakDue` is the
+  other: when the break still open is expected to be over, its kind's usual
+  length — an expectation the dial draws ahead of the hands, never a stop,
+  because a break runs until it is ended (`takeBreak` writes it open). **Pure
+  and clock-free** — `now` is a parameter.
 - `src/app/actions.ts` — the edits, as pure functions from a day to a new
   day: clock in / out, start / end a break, set the category, add a span after
   the fact, edit or remove one. The invariants (one open session, one open
@@ -411,8 +414,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the watch is being set: each band is cut at the moment the wind has reached
   (`reached`) and its arcs written from the same loop, so the ring fills in
   under the hands instead of the whole day being on it before they arrive. A
-  band marked `ahead` is the other side of that cut — the assumed tail of a
-  break, drawn from the moment rather than up to it. Nothing moves on the
+  band marked `ahead` is the other side of that cut — the expected tail of a
+  break still going (`breakDue`), drawn from the moment rather than up to it. Nothing moves on the
   day's track but the day: a light was run round it twice, as a travelling
   dash and then as a specular glint, and neither earned its place — the
   backlight behind the case already says the day is being counted, and a
@@ -793,7 +796,7 @@ job only type-checks. See `native/README.md` and `native/RELEASING.md`.
 | A change to where the day sits on the dial         | `src/app/clock.ts` (`DAY_TRACK` and `FACE_R`, walked by `tests/clock_test.ts` for every dial) — never a second set of radii in `Dial.tsx`, and never back onto the dial's own ring                                                                                                     |
 | A dial option that only makes sense with another   | `src/app/clock.ts` (let the geometry decide, the way `placementOf` does) + `DialPicker.tsx` (drop the control rather than offer a choice that cannot look right) — never a preset that quietly differs from what its settings say                                                      |
 | A change to what a break counts for                | `src/app/types.ts` (`BreakCredit`) + `project.ts` (`creditSeconds` / `storedCredit`) + `day.ts` (what it counts for) + the validation in `migrations.ts` + `BreakCreditField.tsx` — one control for both forms, never a second table                                                   |
-| A change to how long a break is assumed to take    | `src/app/BreakMinutesField.tsx` (the control and its step) + `project.ts` (`clampBreakMinutes` and the bounds) — one control for both forms, and the step is printed on the button that takes it rather than left to a number field's own arrows                                       |
+| A change to how long a break usually takes         | `src/app/BreakMinutesField.tsx` (the control and its step) + `project.ts` (`clampBreakMinutes` and the bounds) — one control for both forms, and the step is printed on the button that takes it rather than left to a number field's own arrows                                       |
 | A change to how the hands move                     | `src/app/clock.ts` (the beat and the wind, tested) or `useHands.ts` (the frames) — never a CSS transition, see the note there; anything else on the dial that has to move with them is cut at `windMoment` and written from that loop too                                              |
 | A change to the shape of a hand                    | `src/app/look.ts` (`DIAL_HANDS` — the widths, the bevel its sides close at, the tail) + `clock.ts` (`handPoint`, walked by `tests/clock_test.ts`) + `Dial.tsx` (paint) — the tip is an angle, never a share of the hand's length                                                       |
 | A new keyboard shortcut                            | `src/app/shortcuts.ts` (the key and the command, tested in `tests/shortcuts_test.ts`) + the screen that answers the command                                                                                                                                                            |

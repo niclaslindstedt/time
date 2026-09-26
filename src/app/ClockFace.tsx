@@ -7,7 +7,7 @@ import {
   type PointerEvent,
 } from "react";
 
-import { daySegments, type DaySegment } from "./day.ts";
+import { breakDue, daySegments, type DaySegment } from "./day.ts";
 import {
   DAY_TRACK,
   SIGNATURE,
@@ -60,13 +60,15 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 // where the day has one, and simply at the top of the list where it does
 // not. A record is a thing you correct rather than a thing you switch, and
 // the ring is a record. The break-end chips on the rim do the same for the
-// end they print, since a break is written down with the end its kind is
-// assumed to have (see `takeBreak`) and that end is a guess.
+// end they print — and a break still going has one printed where it is
+// expected to be over, the length its kind usually takes (`breakDue`).
 //
 // Everything is derived from the day's spans (see `day.ts`); the face holds
 // no state of its own and re-renders as the second ticks. The part of a
-// break that has not happened yet — the tail between now and its assumed
+// break that has not happened yet — the tail between now and its expected
 // end — is drawn at half strength, because it is a plan rather than a record.
+// A break is not stopped there: it runs until it is ended (see `takeBreak`),
+// and past its expected end it is simply a band like any other.
 //
 // One thing on the ring is not the record at all: the green dot where the
 // day's hours come out, if the work carries on unbroken from here
@@ -171,6 +173,14 @@ export function ClockFace({
   const t = useT();
   const sizing = CLOCK_SIZE[size];
   const segments = useMemo(() => daySegments(day, now), [day, now]);
+  /** The break still open and the moment it is expected to be over, while
+   *  that is still to come — the one stretch the ring draws ahead of the
+   *  hands. Past it the break carries on as a band like any other. */
+  const due = useMemo(() => {
+    const open = day.breaks.find((b) => b.end === null);
+    const at = breakDue(day, project);
+    return open && at !== null && at > now ? { open, at } : null;
+  }, [day, project, now]);
   const layout = useMemo(() => dialLayout(dial), [dial]);
   const box = useRef<HTMLDivElement>(null);
   const [reading, setReading] = useState<Reading | null>(null);
@@ -212,8 +222,20 @@ export function ClockFace({
         });
       }
     }
+    // The same for a break still open, up to the length its kind usually
+    // takes: what the break is expected to be, not what it is held to.
+    if (due) {
+      out.push({
+        start: due.open.start,
+        end: due.at,
+        fill: "var(--color-flag)",
+        edge: "var(--color-flag)",
+        opacity: 0.4,
+        ahead: true,
+      });
+    }
     return out;
-  }, [segments, project, now]);
+  }, [segments, project, now, due]);
 
   // Where the day is heading, as one green dot on its own track: the moment
   // today's hours are done if the work carries on from here. It is a
@@ -240,18 +262,35 @@ export function ClockFace({
       start: Seconds;
       angle: number;
       typeId: string | null;
+      /** An expected end rather than one the break has had. */
+      due: boolean;
     }[] = [];
+    if (due) {
+      out.push({
+        at: due.at,
+        start: due.open.start,
+        angle: angleOf(due.at),
+        typeId: due.open.typeId,
+        due: true,
+      });
+    }
     for (const s of segments) {
       if (s.kind !== "break" || s.running) continue;
       const angle = angleOf(s.end);
       if (out.some((l) => gap(l.angle, angle) < sizing.labelGap)) continue;
-      out.push({ at: s.end, start: s.start, angle, typeId: s.typeId });
+      out.push({
+        at: s.end,
+        start: s.start,
+        angle,
+        typeId: s.typeId,
+        due: false,
+      });
     }
     return out.map((l) => {
       const [x, y] = polar(DIAL_BOX / 2, DIAL_BOX / 2, LABEL_R, l.angle);
       return { ...l, left: (x / DIAL_BOX) * 100, top: (y / DIAL_BOX) * 100 };
     });
-  }, [segments, sizing.labelGap]);
+  }, [segments, due, sizing.labelGap]);
 
   /** A point in the window, in the dial's own coordinates — and where it
    *  fell inside the box, which is what a hover card is hung on. Null when
@@ -453,10 +492,13 @@ export function ClockFace({
         )}
 
         {labels.map((l) => {
-          const label = t("today.breakEndLabel", {
-            name: l.typeId ? breakName(t, project, l.typeId) : "",
-            time: formatTimeOfDay(l.at),
-          });
+          const label = t(
+            l.due ? "today.breakDueLabel" : "today.breakEndLabel",
+            {
+              name: l.typeId ? breakName(t, project, l.typeId) : "",
+              time: formatTimeOfDay(l.at),
+            },
+          );
           return (
             <button
               key={l.at}
