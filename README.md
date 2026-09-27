@@ -3,7 +3,6 @@
 > A local-first time report PWA — start working, take your breaks, stop, and read your working hours back as a clock, a log and charts. No account, no server.
 
 [![ci](https://github.com/niclaslindstedt/time/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/time/actions/workflows/ci.yml)
-[![seo](https://github.com/niclaslindstedt/time/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/time/actions/workflows/seo.yml)
 [![pages](https://github.com/niclaslindstedt/time/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/time/actions/workflows/pages.yml)
 [![license](https://img.shields.io/badge/license-PolyForm--Noncommercial--1.0.0-blue.svg)](LICENSE)
 

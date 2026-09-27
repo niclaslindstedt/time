@@ -28,7 +28,9 @@
       name="description"
       content="Time is a local-first time report PWA. Start working with one tap and stop with the same one, log breaks and what kind of work you are doing, and read your hours back per project as a clock, a log and charts. Your hours stay on your device, and sync to Dropbox only if you connect one."
     />
-    <link rel="canonical" href="https://time.niclaslindstedt.se/" />
+    <!-- Not meant to be found: people find the App Store page and
+         apps.agilator.se, not this web edition. -->
+    <meta name="robots" content="noindex" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -54,21 +56,6 @@
       name="twitter:image"
       content="https://time.niclaslindstedt.se/og.png"
     />
-
-    <!-- JSON-LD -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Time",
-        "applicationCategory": "BusinessApplication",
-        "operatingSystem": "Any",
-        "description": "A local-first time report PWA: start and stop working, log breaks and kinds of work as they happen or afterwards, and read your hours back per project as a clock, a log and charts. Optional Dropbox sync.",
-        "url": "https://time.niclaslindstedt.se/",
-        "image": "https://time.niclaslindstedt.se/og.png",
-        "offers": { "@type": "Offer", "price": "0" }
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
