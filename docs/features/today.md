@@ -91,10 +91,9 @@ The main screen, and the whole app for most of a day.
   It is only there while the day is being counted, on a day the project asks
   work of, and only for an end inside the twelve hours the dial can show.
 - **The buttons.** A row of break buttons, one per break type the project
-  defines, each showing its mark and the length it is assumed to take; tapping
-  one takes it now — written down as the length its kind usually takes, to be
-  corrected on the clock — and the button turns into **End lunch** for as long
-  as you are on it. A row of chips, one per kind of work, each wearing its own mark in
+  defines, each showing its mark and the length it usually takes; tapping one
+  takes it now, and it runs until you end it — the button turns into **End
+  lunch** for as long as you are on it. A row of chips, one per kind of work, each wearing its own mark in
   its own colour; tapping one says that is what you are doing from now, tapping
   it again stops labelling. Only the kinds the project has pinned get a button
   of their own; both rows end in a dashed **···**, which holds the rest and
@@ -132,15 +131,20 @@ of its own.
 
 ## Taking a break
 
-Tapping a break writes it down there and then, ending at the length its kind
-is assumed to take — half an hour of lunch, a quarter of coffee. You do not
-have to come back and tell the app you are back: the day is on a break until
-that end passes and then goes on counting by itself.
+Tapping a break starts it there and then, and it runs until you end it: tap
+**End lunch** (the same button), press the face to stop the day, or take
+another break. A coffee you forgot to end at fifteen minutes and ended at
+twenty-five is twenty-five minutes of coffee — the break is never cut off at
+its usual length and the rest booked as work.
 
-That end is a guess, so the clock face prints it on the rim next to the arc it
-ends. Tapping the time — or the stretch itself on the ring — opens the day's
-stretches, where it is corrected. Back earlier than assumed? Tap **End
-lunch** and the break ends now instead.
+The usual length — half an hour of lunch, a quarter of coffee — is what the
+clock expects: the break is drawn ahead of the hands at half strength up to
+there, the time is printed on the rim, and the line under the dial says
+**Lunch until 12:30**. Once that is passed the break simply carries on and the
+line says since when. Tapping the time — or the stretch itself on the ring —
+opens the day's stretches, where a break still going can be given its end:
+earlier, for one you forgot to end, or later, for one you know when you will
+be back from, which then ends there by itself.
 
 While a break is on, the kind of work you are doing turns the break's colour
 and says **paused**: a break carves time out of the day, so nothing is being
@@ -165,8 +169,9 @@ here:
   next. That is what makes a late press quick to put right: the face pressed at
   twenty to six for a day begun at eight is the first stretch's start moved
   back, and a lunch pill pressed at the end of lunch is the lunch's own start
-  moved back and its assumed end moved to when you came back. Only a stretch
-  still going has no end to move. An edge cannot be pushed over its
+  moved back and its end set to when you came back. A break still going is
+  offered an end — its usual length, or now — and stops at the one you set;
+  work still going has no end to move, because stopping it is the face's. An edge cannot be pushed over its
   neighbour.
 
 None of this was timed to the second, and the screen says so: it is the shape

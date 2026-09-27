@@ -2,7 +2,12 @@
 import { Modal } from "@niclaslindstedt/oss-framework/components";
 import { useState } from "react";
 
-import { boundaryRange, daySegments, type DaySegment } from "./day.ts";
+import {
+  boundaryRange,
+  breakDue,
+  daySegments,
+  type DaySegment,
+} from "./day.ts";
 import { formatDuration, parseTimeOfDay, toTimeInput } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor, categoryName } from "./labels.ts";
@@ -28,6 +33,13 @@ import type { Project, Seconds, WorkDay } from "./types.ts";
 // to know that the start of a lunch lives on the row above it. The first
 // stretch's start is the arrival, and moves like any other edge.
 //
+// The one end that is not an edge is a break's still going: a break runs
+// until it is ended (see `takeBreak`), so its row offers an end — when its
+// kind is usually over, or now — and setting it is `endBreak` at that
+// moment. Past, for a coffee left running; ahead, for a lunch you know when
+// you will be back from. Work still going has no such field: ending it is
+// the face's.
+//
 // The times either side of a break were never measured to the second, so the
 // hint says so: this is the shape of the day, not a stopwatch.
 
@@ -43,6 +55,9 @@ type Props = {
   highlight?: Seconds | null;
   /** Move an edge of the day. False when the move was refused. */
   onMove: (at: Seconds, to: Seconds) => boolean;
+  /** End the break still going at `to` — before now for one that was left
+   *  running, or later for one you know when you will be back from. */
+  onEndBreak: (to: Seconds) => boolean;
   onClose: () => void;
 };
 
@@ -52,6 +67,7 @@ export function DayTimelineModal({
   now,
   highlight,
   onMove,
+  onEndBreak,
   onClose,
 }: Props) {
   const t = useT();
@@ -59,6 +75,12 @@ export function DayTimelineModal({
   // The stretch in question follows its own start as it is moved, so the
   // row being corrected stays the one marked.
   const [marked, setMarked] = useState<Seconds | null>(highlight ?? null);
+  // What a break still going offers as its end: when its kind is usually
+  // over, while that is ahead, and otherwise the minute the list was opened
+  // — held still, because a field re-seeded as the clock ticks is a field
+  // that closes iOS's wheel under the finger.
+  const [opened] = useState(() => Math.floor(now / 60) * 60);
+  const breakEnd = Math.max(breakDue(day, project) ?? 0, opened);
 
   const move = (at: Seconds, to: Seconds) => {
     const range = boundaryRange(day, at, now);
@@ -100,6 +122,8 @@ export function DayTimelineModal({
                 label={label(s)}
                 highlighted={marked !== null && s.start === marked}
                 onMove={move}
+                breakEnd={breakEnd}
+                onEndBreak={(to) => void onEndBreak(to)}
               />
             ))}
           </ul>
@@ -122,12 +146,17 @@ function Row({
   label,
   highlighted,
   onMove,
+  breakEnd,
+  onEndBreak,
 }: {
   segment: DaySegment;
   project: Project;
   label: string;
   highlighted: boolean;
   onMove: (at: Seconds, to: Seconds) => void;
+  /** The end offered to a break still going, before one is set. */
+  breakEnd: Seconds;
+  onEndBreak: (to: Seconds) => void;
 }) {
   const t = useT();
   const colour =
@@ -172,7 +201,26 @@ function Row({
         }
         onMove={onMove}
       />
-      {segment.running ? (
+      {segment.running && segment.kind === "break" ? (
+        // A break runs until it is ended, so the one still going has no end
+        // yet: the field offers one and the break stops there when it is set.
+        <>
+          <Edge
+            caption={t("timeline.to")}
+            at={breakEnd}
+            name={t("timeline.endOf", { name: label })}
+            earlier={t("timeline.endEarlier", { name: label })}
+            later={t("timeline.endLater", { name: label })}
+            read={(typed) =>
+              typed < segment.start ? typed + DAY_SECONDS : typed
+            }
+            onMove={(_, to) => onEndBreak(to)}
+          />
+          <p className="mt-1 text-xs text-muted">
+            {t("timeline.breakRunning")}
+          </p>
+        </>
+      ) : segment.running ? (
         <div className="mt-1.5 flex items-center gap-2">
           <span className="w-10 shrink-0 text-xs text-muted">
             {t("timeline.to")}
@@ -229,7 +277,12 @@ function Edge({
         aria-label={name}
         defaultValue={toTimeInput(at)}
         onBlur={(e) => {
-          const next = parseTimeOfDay(e.currentTarget.value);
+          // A field left as it was moves nothing — not a start with seconds
+          // in it to the whole minute it shows, and not a running break to
+          // the end it was only offered.
+          const value = e.currentTarget.value;
+          if (value === toTimeInput(at)) return;
+          const next = parseTimeOfDay(value);
           if (next === null) return;
           onMove(at, read(next));
         }}

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   activityIntervals,
   boundaryRange,
+  breakDue,
   breakIntervals,
   clip,
   dayKinds,
@@ -385,6 +386,35 @@ describe("breaks that count as work", () => {
 });
 
 // ── When the day is done ──
+
+describe("breakDue", () => {
+  const onBreak = (typeId: string, start: number) =>
+    day("2026-03-02", {
+      sessions: [{ id: "s1", start: h(8), end: null }],
+      breaks: [{ id: "b1", typeId, start, end: null }],
+    });
+
+  it("is when an open break's kind is usually over", () => {
+    expect(breakDue(onBreak("lunch", h(12)), acme)).toBe(h(12, 30));
+    expect(breakDue(onBreak("coffee", h(15, 5)), acme)).toBe(h(15, 20));
+  });
+
+  it("stops nothing: the break runs on past it", () => {
+    const d = onBreak("coffee", h(15));
+    expect(dayTotals(d, acme, h(15, 40)).state).toBe("break");
+    expect(daySegments(d, h(15, 40)).at(-1)).toMatchObject({
+      kind: "break",
+      start: h(15),
+      end: h(15, 40),
+      running: true,
+    });
+  });
+
+  it("is nothing without an open break, or for a kind the project lost", () => {
+    expect(breakDue(monday, acme)).toBeNull();
+    expect(breakDue(onBreak("nap", h(13)), acme)).toBeNull();
+  });
+});
 
 describe("workdayEnd", () => {
   /** In at eight and still going, read at ten. Eight hours to do. */

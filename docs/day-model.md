@@ -17,10 +17,9 @@ A `WorkDay` holds, for one project on one calendar day:
   over presence, never a claim of presence on its own.
 
 Every span is `[start, end)` in seconds since the day's local midnight, `end`
-being null while it is still running. A break is the exception in practice: it
-is written down with an end from the moment it starts (see
-[the break's assumed end](#the-breaks-assumed-end)), so its end is usually a
-figure to correct rather than one to wait for.
+being null while it is still running. A break is no exception: it runs until
+it is ended, and the length its kind usually takes is only what it is
+expected to be (see [the break's expected end](#the-breaks-expected-end)).
 
 ## The derivation
 
@@ -60,22 +59,29 @@ intervals say: a session opened this second covers zero seconds and is still
 "working"; a break `now` falls inside makes it "on a break"; no open session is
 "not working".
 
-### The break's assumed end
+### The break's expected end
 
-Nobody taps "I'm back" reliably, so a break is not left running until somebody
-remembers it. `takeBreak` writes the end down with the start, the length the
-project assumes that kind of break takes — lunch half an hour, coffee a
-quarter — and the day is "on a break" until that end passes, whether or not
-anything else is tapped.
+`takeBreak` writes a break down open, and it stays open until it is ended:
+the pill pressed again, the face pressed, another break taken, or an end set
+on the day's stretches. A coffee forgotten for twenty-five minutes is
+twenty-five minutes of coffee. An earlier version wrote the kind's usual
+length down as the end the moment the break was taken, which capped a
+forgotten break at that length and booked the rest of it as work nobody did.
 
-That makes the end a **guess**, and the app treats it as one. `horizon` is how
-far past `now` the shape of the day is known: normally not at all, but during
-a break it reaches that break's end, which is what lets the clock draw the
-break to 12:30 at 12:10 and print the time on the rim to be corrected. The
-_totals_ never read past `now` — a minute not yet worked is not worked — so
-the timer is unaffected by a break that has not finished.
+The usual length — lunch half an hour, coffee a quarter — is still worth
+knowing, as an **expectation** rather than a stop. `breakDue` is the open
+break's start plus its kind's minutes: the clock draws the break ahead of the
+hands up to there at half strength and prints the time on the rim, and the
+line under the dial says the break is "until" then. Once it is passed the
+break carries on as an ordinary band and the line says since when instead.
 
-Ending a break early is "I'm back": its end moves to now. A break with less
+A break can also be given an end still to come — "back at half past", set on
+the day's stretches — and then it ends there by itself. `horizon` is how far
+past `now` the shape of the day is known for that: normally not at all, but
+up to such an end when one is written. The _totals_ never read past `now` — a
+minute not yet worked is not worked.
+
+Ending a break is "I'm back": its end moves to now. A break with less
 than a minute left of it after that is dropped rather than kept, because it is
 the wrong pill corrected a second later, not a minute of lunch.
 
@@ -120,14 +126,14 @@ holds would make a leaving time worse than no leaving time.
 It walks the day's stretches rather than dividing what is left by one, because
 the rate the target is worked towards is not one all day: a break the project
 counts as work counts while you are on it, and a break it does not counts for
-nothing. Past the end of what the day already knows — a break written down
-with an assumed end reaches into the future — the work simply goes on.
+nothing. Past the end of what the day already knows — a break given an end
+still to come reaches into the future — the work simply goes on.
 
 It says nothing at all on a day the project expects no work on, on a project
-with no target, before the day has started, or while a break is on: the end a
-break is written down with is the length its kind is assumed to take rather
-than a plan anybody made, so from inside one the figure would be a guess about
-when you come back. It is there again the moment the break is over. A moment in the _past_ is a
+with no target, before the day has started, or while a break is on: a break
+runs until it is ended, and the length its kind usually takes is not a plan
+anybody made, so from inside one the figure would be a guess about when you
+come back. It is there again the moment the break is over. A moment in the _past_ is a
 real answer: it is when the hours were done, on a day that carried on past
 them.
 
@@ -165,7 +171,7 @@ day to a new day:
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `clockIn`                               | Opens a session; a no-op while one is open. Inside a minute of the last one having ended, reopens that one instead — gap and kind of work and all.        |
 | `clockOut`                              | Closes the session, and the running break and activity with it. Drops the session outright, with whatever began inside it, when it is under a minute old. |
-| `takeBreak`                             | Needs an open session; writes a break of the kind's assumed length, ending a break already going on first.                                                |
+| `takeBreak`                             | Needs an open session; opens a break of the kind that runs until it is ended, ending a break already going on first.                                      |
 | `endBreak`                              | "I'm back": ends the break `now` falls inside, dropping it if under a minute is left of it.                                                               |
 | `setCategory`                           | Needs an open session; closes the running activity, opens one of the new kind.                                                                            |
 | `addBreak`, `addSession`, `addActivity` | After the fact, with both ends (or an open end, if none of that kind is open).                                                                            |

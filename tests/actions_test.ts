@@ -34,7 +34,8 @@ describe("a day as it happens", () => {
     expect(d.updatedAt).toBe(STAMP);
 
     d = setCategory(d, "code", h(8), c);
-    d = takeBreak(d, "lunch", h(12), 30 * 60, c);
+    d = takeBreak(d, "lunch", h(12), c);
+    d = endBreak(d, h(12, 30), c);
     d = setCategory(d, "meet", h(14), c);
     d = clockOut(d, h(17), c);
 
@@ -51,7 +52,7 @@ describe("a day as it happens", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
     d = setCategory(d, "code", h(8), c);
-    d = takeBreak(d, "coffee", h(10), 15 * 60, c);
+    d = takeBreak(d, "coffee", h(10), c);
     d = clockOut(d, h(10, 5), c);
     expect(d.breaks[0]!.end).toBe(h(10, 5));
     expect(d.activities[0]!.end).toBe(h(10, 5));
@@ -84,7 +85,7 @@ describe("a minute either side of the face", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
     d = setCategory(d, "code", h(8) + 5, c);
-    d = takeBreak(d, "coffee", h(8) + 10, 15 * 60, c);
+    d = takeBreak(d, "coffee", h(8) + 10, c);
     d = clockOut(d, h(8) + 30, c);
     expect(d.sessions).toEqual([]);
     expect(d.breaks).toEqual([]);
@@ -146,7 +147,7 @@ describe("a minute either side of the face", () => {
   it("does not resume a break that was cut short with the session", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
-    d = takeBreak(d, "lunch", h(12), 30 * 60, c);
+    d = takeBreak(d, "lunch", h(12), c);
     d = clockOut(d, h(12, 10), c);
     d = clockIn(d, h(12, 10) + 30, c);
     expect(d.sessions).toEqual([{ id: "id1", start: h(8), end: null }]);
@@ -167,7 +168,7 @@ describe("invariants", () => {
     const c = ctx();
     const d = empty();
     expect(clockOut(d, h(9), c)).toBe(d);
-    expect(takeBreak(d, "lunch", h(9), 30 * 60, c)).toBe(d);
+    expect(takeBreak(d, "lunch", h(9), c)).toBe(d);
     expect(setCategory(d, "code", h(9), c)).toBe(d);
     expect(endBreak(d, h(9), c)).toBe(d);
   });
@@ -175,11 +176,11 @@ describe("invariants", () => {
   it("a break taken during another one cuts the first one short", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
-    d = takeBreak(d, "lunch", h(12), 30 * 60, c);
-    d = takeBreak(d, "coffee", h(12, 20), 15 * 60, c);
+    d = takeBreak(d, "lunch", h(12), c);
+    d = takeBreak(d, "coffee", h(12, 20), c);
     expect(d.breaks).toEqual([
       { id: "id2", typeId: "lunch", start: h(12), end: h(12, 20) },
-      { id: "id3", typeId: "coffee", start: h(12, 20), end: h(12, 35) },
+      { id: "id3", typeId: "coffee", start: h(12, 20), end: null },
     ]);
   });
 
@@ -247,38 +248,64 @@ describe("isValidSpan", () => {
   });
 });
 
-// A break is written down with the end its kind is assumed to have, so it is
-// a record from the moment it starts and a *guess* until it is corrected.
+// A break runs until it is ended. The length its kind usually takes is what
+// the dial expects of it (`breakDue`), never a stop: a coffee left running is
+// still coffee, and cutting it off would book the rest as work.
 describe("taking a break", () => {
-  it("writes the assumed end down with the start", () => {
+  it("leaves the end open until the break is ended", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
-    d = takeBreak(d, "lunch", h(12), 30 * 60, c);
+    d = takeBreak(d, "lunch", h(12), c);
     expect(d.breaks).toEqual([
-      { id: "id2", typeId: "lunch", start: h(12), end: h(12, 30) },
+      { id: "id2", typeId: "lunch", start: h(12), end: null },
     ]);
-    // Ten minutes in, the day knows it is on a break — and knows when it is
-    // meant to be over.
+    // Ten minutes in, the day knows it is on a break…
     const t = dayTotals(d, acme, h(12, 10));
     expect(t.state).toBe("break");
-    expect(t.currentBreak?.end).toBe(h(12, 30));
+    expect(t.currentBreak?.end).toBeNull();
     // …and the ten minutes taken so far are the only ten it has taken.
     expect(t.worked).toBe(h(4));
+    expect(t.breakTotal).toBe(h(0, 10));
   });
 
-  it("ends early when you are back before the assumed end", () => {
+  it("carries on past the length its kind usually takes", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
-    d = takeBreak(d, "lunch", h(12), 30 * 60, c);
+    d = takeBreak(d, "coffee", h(10), c);
+    // A fifteen-minute coffee forgotten for twenty-five is twenty-five
+    // minutes of coffee, not fifteen and ten minutes of work.
+    const t = dayTotals(d, acme, h(10, 25));
+    expect(t.state).toBe("break");
+    expect(t.breaks).toEqual({ coffee: h(0, 25) });
+    expect(t.worked).toBe(h(2));
+    d = endBreak(d, h(10, 25), c);
+    expect(d.breaks[0]!.end).toBe(h(10, 25));
+    expect(dayTotals(d, acme, h(11)).state).toBe("working");
+  });
+
+  it("ends early when you are back before its usual length", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = takeBreak(d, "lunch", h(12), c);
     d = endBreak(d, h(12, 12), c);
     expect(d.breaks[0]!.end).toBe(h(12, 12));
     expect(dayTotals(d, acme, h(13)).state).toBe("working");
   });
 
+  it("can be given an end still to come — back at half past", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = takeBreak(d, "lunch", h(12), c);
+    d = endBreak(d, h(12, 30), c);
+    expect(d.breaks[0]!.end).toBe(h(12, 30));
+    expect(dayTotals(d, acme, h(12, 10)).state).toBe("break");
+    expect(dayTotals(d, acme, h(12, 40)).state).toBe("working");
+  });
+
   it("drops a break ended in the second it started", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
-    d = takeBreak(d, "lunch", h(12), 30 * 60, c);
+    d = takeBreak(d, "lunch", h(12), c);
     d = endBreak(d, h(12), c);
     expect(d.breaks).toEqual([]);
   });
@@ -286,26 +313,27 @@ describe("taking a break", () => {
   it("drops the break it cut short when seconds of it are left", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
-    d = takeBreak(d, "lunch", h(12), 30 * 60, c);
+    d = takeBreak(d, "lunch", h(12), c);
     // The wrong pill, corrected three seconds later: one break, not two.
-    d = takeBreak(d, "coffee", h(12) + 3, 15 * 60, c);
+    d = takeBreak(d, "coffee", h(12) + 3, c);
     expect(d.breaks).toEqual([
-      { id: "id3", typeId: "coffee", start: h(12) + 3, end: h(12, 15) + 3 },
+      { id: "id3", typeId: "coffee", start: h(12) + 3, end: null },
     ]);
   });
 
-  it("leaving the office cuts an assumed end back to the door", () => {
+  it("leaving the office ends the break at the door", () => {
     const c = ctx();
     let d = clockIn(empty(), h(8), c);
-    d = takeBreak(d, "coffee", h(16, 50), 15 * 60, c);
+    d = takeBreak(d, "coffee", h(16, 50), c);
     d = clockOut(d, h(17), c);
     expect(d.breaks[0]!.end).toBe(h(17));
   });
 
-  it("gives a break of no stated length the shortest one there is", () => {
+  it("refuses an end before the break began", () => {
     const c = ctx();
-    const d = clockIn(empty(), h(8), c);
-    expect(takeBreak(d, "lunch", h(12), 0, c).breaks[0]!.end).toBe(h(12, 1));
+    let d = clockIn(empty(), h(8), c);
+    d = takeBreak(d, "lunch", h(12), c);
+    expect(endBreak(d, h(11, 50), c)).toBe(d);
   });
 });
 
@@ -380,11 +408,12 @@ describe("moving an edge of the day", () => {
 
   it("moves both ends of a lunch pressed at the end of it", () => {
     const c = ctx();
-    let d = takeBreak(clockIn(empty(), h(8), c), "lunch", h(12, 40), 1800, c);
+    let d = takeBreak(clockIn(empty(), h(8), c), "lunch", h(12, 40), c);
     const now = h(12, 41);
 
+    // The start is an edge; the end of a break still going is `endBreak`.
     d = moveBoundary(d, h(12, 40), h(12), c);
-    d = moveBoundary(d, h(13, 10), h(12, 30), c);
+    d = endBreak(d, h(12, 30), c);
     expect(d.breaks[0]).toMatchObject({ start: h(12), end: h(12, 30) });
     expect(daySegments(d, now)).toMatchObject([
       { kind: "work", start: h(8), end: h(12) },
