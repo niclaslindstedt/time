@@ -57,6 +57,10 @@ src/app/
   useLongPress.ts   a control held rather than tapped, and the right button
   backup.ts         export / restore a JSON file
   cloudHost.ts      the seam a host fills to offer a document store of its own (iCloud)
+  selfHosted.ts     the reader's own storage server: pairing codes, device name, which namespace (pure)
+  useSelfHosted.ts  the same, live: restore the pairing, open the namespace, retry when unreachable
+  SelfHostedConnectModal.tsx  pairing a device: the code, the first device's keys and recovery key, approval
+  SelfHostedSettings.tsx      the server in Settings: add a device (QR), approvals, recovery key, unpair
   Dial.tsx          the watch face, drawn, with the day's progress on the bezel and the printing — shared by Today and Settings
   ClockFace.tsx     the day on the dial, the switch, the cog, the light, and the way into the stretches
   DialPicker.tsx    the presets and the custom pickers in Settings

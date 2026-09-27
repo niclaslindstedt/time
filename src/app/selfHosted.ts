@@ -1,0 +1,188 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The self-hosted backend: a storage server the reader runs themselves — at
+// home or on a host of their choosing — that holds only ciphertext.
+//
+// What this module owns is the part a cloud with OAuth does not have: the
+// device is *paired* to the server with a one-time code (a QR from the
+// server's admin console, or from another of the reader's devices), and its
+// keys live in the device's key vault — IndexedDB holding non-extractable
+// keys in a browser, the platform keystore in a native wrapper — never in
+// localStorage and never on the server. Everything downstream is the
+// framework's: `ns.adapter()` is an ordinary `StorageAdapter` over one file,
+// `time.json`, so the engine's debounce, revision check, conflict and merge
+// are the same code path Dropbox and iCloud take.
+//
+// Kept free of Preact so the decisions — which pairing a link carries, what
+// the device is called, which namespace holds this app's document — are
+// tested in the node environment like the rest of the domain
+// (`tests/selfHosted_test.ts`). The hook that drives it is
+// `useSelfHosted.ts`.
+
+import {
+  createSelfHostedClient,
+  defaultKeyVault,
+  parseStoragePayload,
+  StorageNotFoundError,
+  StoragePayloadError,
+  type KeyVault,
+  type SelfHostedClient,
+  type StorageNamespace,
+} from "@niclaslindstedt/oss-framework/storage";
+
+/** The app id this app's namespaces are created and listed under. */
+export const SELF_HOSTED_APP = "time";
+
+/** What the namespace is called — encrypted on the device, so the server
+ *  never learns even this. */
+export const NAMESPACE_NAME = "Time";
+
+/** Which namespace holds the document, remembered per device. Not a secret:
+ *  an id alone opens nothing without the keys in the vault. */
+export const NAMESPACE_KEY = "time:sync:selfhosted";
+
+/** The URL fragment a pairing QR carries when it is an app link:
+ *  `https://<this app>/#oss=<code>`. A phone's camera opens the app with it. */
+const APP_LINK_MARK = "#oss=";
+
+/** The parts of the framework's client this app speaks — so a test can hand
+ *  in a fake with the same shape and nothing else. */
+export type TimeClient = Pick<
+  SelfHostedClient,
+  | "state"
+  | "session"
+  | "restore"
+  | "pair"
+  | "accountHasKeys"
+  | "createAccountKeys"
+  | "recover"
+  | "refreshKeys"
+  | "safetyCode"
+  | "waitForApproval"
+  | "namespaces"
+  | "namespace"
+  | "createNamespace"
+  | "addDevicePayload"
+  | "pendingDevices"
+  | "approveDevice"
+  | "regenerateRecoveryKey"
+  | "signOut"
+>;
+
+type Store = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
+export function createTimeClient(
+  vault: KeyVault = defaultKeyVault(SELF_HOSTED_APP),
+): SelfHostedClient {
+  return createSelfHostedClient({ app: SELF_HOSTED_APP, vault });
+}
+
+/** A pasted or scanned code, checked before a byte goes to a server. */
+export type PairingCheck =
+  | { ok: true; server: string; serverName: string | null; fromDevice: boolean }
+  | { ok: false; reason: "empty" | "invite" | "invalid"; message?: string };
+
+/** Read a pairing code the reader pasted or scanned: a bare
+ *  `oss-storage://pair?…` or an app link carrying one. An *invite* to someone
+ *  else's shared space is refused here — joining one is not what this form
+ *  does, and saying so beats a cryptic failure after the network call. */
+export function checkPairing(text: string): PairingCheck {
+  const input = text.trim();
+  if (!input) return { ok: false, reason: "empty" };
+  try {
+    const p = parseStoragePayload(input);
+    if (p.kind === "invite") return { ok: false, reason: "invite" };
+    return {
+      ok: true,
+      server: p.server,
+      serverName: p.name ?? null,
+      // A code another device made carries the account key; the device is
+      // ready the moment it pairs, with nothing more to ask.
+      fromDevice: p.secret !== undefined,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      reason: "invalid",
+      message: err instanceof StoragePayloadError ? err.message : undefined,
+    };
+  }
+}
+
+/** The pairing code an app link opened this page with, if any. */
+export function pairingFromUrl(href: string): string | null {
+  const at = href.indexOf(APP_LINK_MARK);
+  if (at < 0) return null;
+  const link = href.slice(at);
+  return checkPairing(link).ok ? link : null;
+}
+
+/** The page's address with a pairing fragment removed, so the one-time code
+ *  does not linger in the address bar, the history or a bookmark. */
+export function withoutPairing(href: string): string {
+  const at = href.indexOf(APP_LINK_MARK);
+  return at < 0 ? href : href.slice(0, at);
+}
+
+/** What a new device calls itself in the server's device list, until the
+ *  reader types something better. Read from the user agent's platform, never
+ *  more than that. */
+export function defaultDeviceName(userAgent: string): string {
+  const ua = userAgent.toLowerCase();
+  const what = /iphone/.test(ua)
+    ? "iPhone"
+    : /ipad/.test(ua)
+      ? "iPad"
+      : /android/.test(ua)
+        ? "Android"
+        : /mac os x|macintosh/.test(ua)
+          ? "Mac"
+          : /windows/.test(ua)
+            ? "Windows"
+            : /linux/.test(ua)
+              ? "Linux"
+              : "Browser";
+  return `Time on ${what}`;
+}
+
+function readNamespaceId(storage: Store): string | null {
+  try {
+    const raw = storage.getItem(NAMESPACE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { namespaceId?: unknown };
+    return typeof parsed.namespaceId === "string" ? parsed.namespaceId : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The namespace holding this app's document: the one this device used
+ *  before; else the account's first `time` namespace (another device made
+ *  it); else a new one. Remembered for the next start. */
+export async function openTimeNamespace(
+  client: Pick<TimeClient, "namespace" | "namespaces" | "createNamespace">,
+  storage: Store,
+): Promise<StorageNamespace> {
+  const remembered = readNamespaceId(storage);
+  let ns: StorageNamespace | null = null;
+  if (remembered) {
+    try {
+      ns = await client.namespace(remembered);
+    } catch (err) {
+      // Deleted, or this account was removed from it: look again rather
+      // than failing forever on a stale id. Anything else (offline) is real.
+      if (!(err instanceof StorageNotFoundError)) throw err;
+    }
+  }
+  if (!ns) {
+    const [first] = await client.namespaces(SELF_HOSTED_APP);
+    ns = first
+      ? await client.namespace(first.id)
+      : await client.createNamespace({ name: NAMESPACE_NAME });
+  }
+  storage.setItem(NAMESPACE_KEY, JSON.stringify({ namespaceId: ns.id }));
+  return ns;
+}
+
+export function forgetNamespace(storage: Store): void {
+  storage.removeItem(NAMESPACE_KEY);
+}

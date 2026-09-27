@@ -36,6 +36,7 @@ import { appearanceFor, resolveBacklight, resolveDial } from "./app/look.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { ReportScreen } from "./app/ReportScreen.tsx";
+import { SelfHostedConnectModal } from "./app/SelfHostedConnectModal.tsx";
 import { SettingsScreen } from "./app/SettingsScreen.tsx";
 import { SidePanel } from "./app/SidePanel.tsx";
 import { TodayScreen } from "./app/TodayScreen.tsx";
@@ -465,6 +466,17 @@ export function App() {
         logPanel={settings.devMode ? <LogViewer store={logStore} /> : undefined}
         onClose={() => setSyncDetailsOpen(false)}
       />
+
+      {/* Pairing with the reader's own server — asked for by the storage
+          picker, or by a pairing QR the phone's camera opened the app with. */}
+      {sync.selfHosted.connectRequest && (
+        <SelfHostedConnectModal
+          selfHosted={sync.selfHosted}
+          initialPayload={sync.selfHosted.connectRequest.payload}
+          onConnected={sync.adoptSelfHosted}
+          onClose={sync.selfHosted.closeConnect}
+        />
+      )}
 
       {/* Top, not the framework's default bottom: a toast at the bottom
           lands on the bar under the thumb. */}

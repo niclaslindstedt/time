@@ -37,6 +37,7 @@ import { logStore } from "./log.ts";
 import { mergeDocs } from "./merge.ts";
 import { parseDoc, serializeDoc } from "./migrations.ts";
 import type { DocStore } from "./useDocStore.ts";
+import { useSelfHosted, type SelfHosted } from "./useSelfHosted.ts";
 
 // The app's sync engine — the state machine the framework's `SyncStatus` glyph
 // and `SyncDetailsModal` command centre paint over. The local document
@@ -58,10 +59,16 @@ import type { DocStore } from "./useDocStore.ts";
 // that host exists because the app is native — it asks whether a document
 // store was offered, which is why `AVAILABLE_BACKENDS` is a reading rather
 // than a constant.
+//
+// A self-hosted server is the fourth: the reader's own storage server, which
+// holds only ciphertext. Connecting is pairing the device with a one-time code
+// (`useSelfHosted.ts` / `selfHosted.ts`), after which the namespace's
+// `adapter()` is one more `StorageAdapter` — and the only one that tells the
+// engine when another device changed the document (`watch`).
 
 const syncLog = logStore.createLogger("sync");
 
-export type SyncBackendId = "local" | "icloud" | "dropbox";
+export type SyncBackendId = "local" | "icloud" | "dropbox" | "selfhosted";
 
 const BACKEND_KEY = "time:sync:backend";
 const DROPBOX_TOKENS_KEY = "time:sync:dropbox";
@@ -94,6 +101,7 @@ export const PROVIDER_NAMES: Record<SyncBackendId, string> = {
   local: "This device",
   icloud: "iCloud Drive",
   dropbox: "Dropbox",
+  selfhosted: "Your server",
 };
 
 /** Which backends this build can offer without asking anything of its host —
@@ -103,6 +111,8 @@ export const PROVIDER_NAMES: Record<SyncBackendId, string> = {
 export const AVAILABLE_BACKENDS: SyncBackendId[] = [
   "local",
   ...(DROPBOX_APP_KEY ? (["dropbox"] as const) : []),
+  // Needs nothing from the build: the server is named by the pairing code.
+  "selfhosted",
 ];
 
 /** The document's folder on a host-offered store, as the reader would find it
@@ -114,7 +124,9 @@ type DropboxTokens = { accessToken: string; refreshToken: string | null };
 function readBackend(): SyncBackendId {
   try {
     const raw = localStorage.getItem(BACKEND_KEY);
-    return raw === "dropbox" || raw === "icloud" ? raw : "local";
+    return raw === "dropbox" || raw === "icloud" || raw === "selfhosted"
+      ? raw
+      : "local";
   } catch {
     return "local";
   }
@@ -137,11 +149,16 @@ function writeDropboxTokens(tokens: DropboxTokens | null): void {
 }
 
 /** The document's human-readable location on the active backend. */
-function backendPath(backend: SyncBackendId): string {
+function backendPath(
+  backend: SyncBackendId,
+  server: SelfHosted["server"] = null,
+): string {
   if (backend === "dropbox") {
     return `Apps/${DROPBOX_APP_FOLDER}/${CLOUD_FILE_NAME}`;
   }
   if (backend === "icloud") return `${ICLOUD_FOLDER}/${CLOUD_FILE_NAME}`;
+  if (backend === "selfhosted")
+    return server ? `${server.name ?? server.url}/${CLOUD_FILE_NAME}` : "";
   return "On this device only";
 }
 
@@ -172,6 +189,11 @@ export type SyncEngine = {
   reconnect: () => Promise<void>;
   /** Actively re-probe reachability, for the "Check connection" button. */
   checkConnection: () => Promise<ConnectionProbeResult>;
+  /** The self-hosted backend's pairing and devices — see `useSelfHosted.ts`. */
+  selfHosted: SelfHosted;
+  /** Make the reader's server the backend — for the connect sheet, once the
+   *  device it paired is ready. */
+  adoptSelfHosted: () => void;
 };
 
 export function useSyncEngine(
@@ -192,6 +214,10 @@ export function useSyncEngine(
   // so the picker gains the option when there is something behind it and not
   // a moment before.
   const cloudHost: CloudHost | null = useCloudHost();
+
+  // The reader's own server: paired or not, keyed or not, reachable or not.
+  const selfHosted = useSelfHosted();
+  const selfHostedNs = selfHosted.namespace;
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [statusDetail, setStatusDetail] = useState<string | null>(null);
@@ -246,8 +272,21 @@ export function useSyncEngine(
         key: localCacheKey("icloud", "time"),
       });
     }
+    if (backend === "selfhosted" && selfHostedNs) {
+      // The file is encrypted before it leaves the device and the server
+      // compares revisions itself, so a stale write is refused atomically.
+      const cloud = selfHostedNs.adapter({
+        fileName: CLOUD_FILE_NAME,
+        saveDebounceMs: SAVE_DEBOUNCE_MS,
+        label: PROVIDER_NAMES.selfhosted,
+      });
+      return withLocalCache(cloud, {
+        storage: localStorage,
+        key: localCacheKey("selfhosted", "time"),
+      });
+    }
     return null;
-  }, [backend, cloudHost, dropboxTokens]);
+  }, [backend, cloudHost, dropboxTokens, selfHostedNs]);
 
   const connected = adapter !== null;
 
@@ -397,6 +436,18 @@ export function useSyncEngine(
     void pull();
   }, [adapter, paused, pull]);
 
+  // A backend that says when another device changed the document (the
+  // self-hosted server does, over its event stream) is pulled right away
+  // instead of on the next open. Our own pushes echo back too; the merge
+  // makes that a no-op.
+  useEffect(() => {
+    if (!adapter?.watch || paused || !baselineReady) return;
+    return adapter.watch(() => {
+      syncLog.info("another device changed the document");
+      void pull();
+    });
+  }, [adapter, paused, baselineReady, pull]);
+
   // Local edits mark the document dirty regardless of backend, so switching
   // one on later still pushes what's already here.
   useEffect(() => {
@@ -415,6 +466,12 @@ export function useSyncEngine(
     return () => clearTimeout(timer);
   }, [adapter, paused, baselineReady, dirty, status, store.editCount, push]);
 
+  const adoptSelfHosted = useCallback((): void => {
+    localStorage.setItem(BACKEND_KEY, "selfhosted");
+    setBackendState("selfhosted");
+    syncLog.info("selfhosted: connected");
+  }, []);
+
   const connect = useCallback(
     async (next: SyncBackendId): Promise<void> => {
       if (next === "local") {
@@ -431,6 +488,20 @@ export function useSyncEngine(
         localStorage.setItem(BACKEND_KEY, "icloud");
         setBackendState("icloud");
         syncLog.info("icloud: connected");
+        return;
+      }
+      if (next === "selfhosted") {
+        // Pairing takes the reader's hands (a code to scan, keys to make or
+        // fetch), so an unpaired device is sent to the connect sheet; the
+        // sheet calls back here once the device is ready.
+        if (
+          selfHosted.phase === "ready" ||
+          selfHosted.phase === "unreachable"
+        ) {
+          adoptSelfHosted();
+        } else {
+          selfHosted.requestConnect();
+        }
         return;
       }
       if (!DROPBOX_APP_KEY) throw new Error("Dropbox is not configured");
@@ -467,7 +538,7 @@ export function useSyncEngine(
       // Redirects away; `completeDropboxAuth` picks the flow up on return.
       await startDropboxAuth(DROPBOX_APP_KEY, syncLog);
     },
-    [adoptDropbox],
+    [adoptDropbox, adoptSelfHosted, selfHosted],
   );
 
   const disconnect = useCallback((): void => {
@@ -491,8 +562,14 @@ export function useSyncEngine(
   }, [pull]);
 
   const reconnect = useCallback(async (): Promise<void> => {
+    if (backend === "selfhosted") {
+      // Unpaired from elsewhere: pair again. Otherwise try the server again.
+      if (selfHosted.phase === "signed-out") selfHosted.requestConnect();
+      else await selfHosted.activate();
+      return;
+    }
     await connect(backend);
-  }, [backend, connect]);
+  }, [backend, connect, selfHosted]);
 
   const checkConnection =
     useCallback(async (): Promise<ConnectionProbeResult> => {
@@ -526,8 +603,12 @@ export function useSyncEngine(
     status,
     statusDetail,
     dirty,
-    offline,
-    location: { path: backendPath(backend) },
+    // Paired and keyed, but the server could not be reached to open the
+    // namespace: that is offline, not "not connected".
+    offline:
+      offline ||
+      (backend === "selfhosted" && selfHosted.phase === "unreachable"),
+    location: { path: backendPath(backend, selfHosted.server) },
     // The stored choice is always offered even when its host has gone —
     // a segmented control whose value is not one of its options draws as
     // nothing selected, which would read as "your hours are nowhere".
@@ -541,5 +622,7 @@ export function useSyncEngine(
     reload,
     reconnect,
     checkConnection,
+    selfHosted,
+    adoptSelfHosted,
   };
 }
