@@ -9,8 +9,15 @@
 // is exactly what a localhost origin wants — and NOTHING in `src/` is changed
 // for the app. The one build parameter it sets is `VITE_EDITION=store`: this
 // is the build sold in the App Store, so its exported PDF specifications carry
-// no "made with the free web edition" notice (`src/app/edition.ts`). If the wrapper ever needs the web app to behave differently,
+// no "made with the free web edition" notice (`src/app/edition.ts`) — and, as
+// a build that is not the website, it carries no link back to the source
+// (owner decision D17): `vite.config.ts` leaves the web edition's address out
+// of the page. If the wrapper ever needs the web app to behave differently,
 // that is a sign it has stopped being thin.
+//
+// The parameter is build-time, so `--skip-build` re-zips whatever the last
+// build left in `dist/` — and a website build there names the web edition. The
+// zip is refused when it does (`assertNoSourceLink`).
 //
 // Usage:
 //   node scripts/bundle-web.mjs                 # build the site, then zip it
@@ -97,6 +104,28 @@ if (count === 0 || !files["index.html"]) {
     `dist/ has no index.html (${count} files) — the web build looks empty.`,
   );
 }
+
+/** Refuse a webroot that links back to the source (owner decision D17): no
+ *  GitHub repository, issues, releases or sponsor link, and not the author's
+ *  handle anywhere — web-edition address, package name or meta tag included.
+ *  The website keeps those; the app has none. Every file but a binary asset is
+ *  read, extensionless ones too, so nothing slips past on its suffix. */
+const BINARY = /\.(png|ico|jpe?g|webp|gif|woff2?|ttf|otf)$/i;
+function assertNoSourceLink(files) {
+  const decoder = new TextDecoder();
+  for (const [path, bytes] of Object.entries(files)) {
+    if (BINARY.test(path)) continue;
+    if (decoder.decode(bytes).toLowerCase().includes("niclaslindstedt")) {
+      throw new Error(
+        `dist/${path} carries a link back to the source ("niclaslindstedt") — ` +
+          `the phone app must not. Rebuild through this script (drop ` +
+          `--skip-build) so VITE_EDITION=store compiles it out.`,
+      );
+    }
+  }
+}
+
+assertNoSourceLink(files);
 
 // Deterministic zip: every entry pinned to the ZIP epoch (1980-01-01), so the
 // artifact is reproducible instead of drifting with the clock.

@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
+import { resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 
 import { appPwa } from "./pwa-plugin.ts";
 
@@ -81,6 +82,40 @@ const version = process.env.GITHUB_SHA
 // nothing left to prompt about.
 const shellBuild = process.env.VITE_SHELL_BUILD === "on";
 
+// Every build that is not the website: the desktop shell's, and the phone
+// wrapper's, which `native/scripts/bundle-web.mjs` builds as the store edition
+// (`VITE_EDITION=store`). An app from a store carries no link back to the
+// source (owner decision D17), and `websiteOnly` below leaves out what names
+// the web edition.
+const appBuild = shellBuild || process.env.VITE_EDITION === "store";
+
+// What only the website carries, left out of an app build (D17): the Open
+// Graph and Twitter tags in `index.html` that point at the web edition's
+// address, and the two public files that exist for them and for Pages — the
+// share card (`og.png`) and the custom-domain file (`CNAME`). The bundle
+// scripts refuse a webroot that still names the site's owner.
+function websiteOnly(): Plugin {
+  let outDir = "";
+  return {
+    name: "website-only",
+    apply: "build",
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    transformIndexHtml(html) {
+      return html.replace(
+        /[ \t]*<meta\b[^>]*\bcontent="https?:\/\/[^"]*"[^>]*>\n?/g,
+        "",
+      );
+    },
+    closeBundle() {
+      for (const file of ["CNAME", "og.png"]) {
+        rmSync(resolve(outDir, file), { force: true });
+      }
+    },
+  };
+}
+
 export default defineConfig({
   base,
   // No size budgets, by owner decision: this only keeps Vite's warning quiet.
@@ -106,5 +141,6 @@ export default defineConfig({
     preact(),
     tailwindcss(),
     appPwa({ base, version, ignorePaths, serviceWorker: !shellBuild }),
+    ...(appBuild ? [websiteOnly()] : []),
   ],
 });
