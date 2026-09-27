@@ -532,6 +532,8 @@ export const en = {
     defaults: {
       lunch: "Lunch",
       coffee: "Coffee",
+      // Kept as written: a new project no longer gets this break, and the
+      // name is only matched against documents that still carry one.
       toilet: "Toilet",
       training: "Training",
       healthcare: "Healthcare",
@@ -622,7 +624,7 @@ export const en = {
       maintenance: "Maintenance",
       coffee: "Coffee",
       meal: "Meal",
-      toilet: "Toilet",
+      toilet: "Bathroom",
       drop: "Drop",
       walk: "Walk",
       outside: "Outdoors",
@@ -764,7 +766,7 @@ export const en = {
       quartz: "The second hand steps once a second.",
       mechanical:
         "Eight small steps a second, the way a mechanical caliber beats.",
-      sweep: "The second hand glides round without a step.",
+      sweep: "The second hand glides around without a step.",
     },
     clockSize: "Size",
     clockSizeHint:
