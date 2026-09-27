@@ -35,7 +35,7 @@ export const en = {
     tomorrow: "Tomorrow",
     previous: "Previous",
     next: "Next",
-    uncategorised: "Uncategorised",
+    uncategorised: "Uncategorized",
     project: "Project",
   },
 
@@ -87,7 +87,7 @@ export const en = {
     breaks: "Breaks",
     categories: "Working on",
     paused: "paused",
-    pausedHint: "A break is on, so nothing is being counted towards this.",
+    pausedHint: "A break is on, so nothing is being counted toward this.",
     outHint: "Press the clock to start the day.",
     // The same invitation, one step earlier: the press that makes the first
     // project. The clock is already on the screen, so the words point at it
@@ -129,7 +129,7 @@ export const en = {
     editBreakHint:
       "Its mark, its name, and how long one is assumed to take. Breaks already written down keep the times they have.",
     editCategoryHint:
-      "Its mark, its colour and its name. Everything already logged under it follows the change.",
+      "Its mark, its color and its name. Everything already logged under it follows the change.",
     kindName: "Name",
     kindNamePlaceholder: "What to call it",
     kindMinutes: "Minutes",
@@ -149,7 +149,7 @@ export const en = {
     },
     clockLabel: "Today on a twelve-hour clock",
     clockDesc:
-      "Time worked is drawn as a ring around the dial, with breaks marked on it and the kind of work in its colour; the bezel fills as the day's target is worked. Press the face to start or stop working, or a stretch of the ring to correct it.",
+      "Time worked is drawn as a ring around the dial, with breaks marked on it and the kind of work in its color; the bezel fills as the day's target is worked. Press the face to start or stop working, or a stretch of the ring to correct it.",
     legend: {
       work: "Working",
       break: "Break",
@@ -161,7 +161,7 @@ export const en = {
     // actions where the pointer is.
     menuLabel: "The day",
     menuBreak: "{name} · {minutes} min",
-    stopLabelling: "Stop labelling {name}",
+    stopLabelling: "Stop labeling {name}",
     // The browser tab, while the app is open in one: the timer where the
     // page's name would be, so a glance at the tab strip is a glance at the
     // day.
@@ -328,9 +328,9 @@ export const en = {
     // that way.
     preset: {
       ledger: "Ledger",
-      ledgerHint: "Serif, centred, every row ruled.",
+      ledgerHint: "Serif, centered, every row ruled.",
       studio: "Studio",
-      studioHint: "A band of colour and a zebra under the figures.",
+      studioHint: "A band of color and a zebra under the figures.",
       editorial: "Editorial",
       editorialHint: "Serif headings, sans body, air between everything.",
       plain: "Plain",
@@ -354,10 +354,10 @@ export const en = {
       rule: "Rule",
       band: "Band",
       sidebar: "Side bar",
-      centred: "Centred",
+      centred: "Centered",
       plain: "Plain",
     },
-    accent: "Colour",
+    accent: "Color",
     accentOption: {
       ink: "Ink",
       navy: "Navy",
@@ -504,7 +504,7 @@ export const en = {
     name: "Name",
     namePlaceholder: "What you are working on",
     markHint:
-      "The mark and colour the project wears in the corner of the top bar, in the switcher and on its card. Tap the mark to change it.",
+      "The mark and color the project wears in the corner of the top bar, in the switcher and on its card. Tap the mark to change it.",
     nameRequired: "Give the project a name.",
     workDays: "Working days",
     workDaysHint: "The days a full day is expected. Any other day is extra.",
@@ -517,7 +517,7 @@ export const en = {
     addBreakType: "Add a break type",
     categories: "Kinds of work",
     categoriesHint:
-      "Optional labels for what you are doing, so the report can say where the hours went. Tap a mark to change it, or to pick the colour this kind of work is drawn in — on the clock, on its chip and in the report.",
+      "Optional labels for what you are doing, so the report can say where the hours went. Tap a mark to change it, or to pick the color this kind of work is drawn in — on the clock, on its chip and in the report.",
     categoryName: "Name",
     addCategory: "Add a kind of work",
     // Per kind, in the project form: the same answer `today.kindPinned` asks,
@@ -547,7 +547,7 @@ export const en = {
   kinds: {
     mark: "Mark",
     markOf: "Mark for {name}",
-    colour: "Colour",
+    colour: "Color",
     colourAuto: "Automatic",
     // What a break of this kind is assumed to take, and the two buttons that
     // step it. The step is printed on them rather than left implied, the way
@@ -761,7 +761,7 @@ export const en = {
     movementHint: {
       quartz: "The second hand steps once a second.",
       mechanical:
-        "Eight small steps a second, the way a mechanical calibre beats.",
+        "Eight small steps a second, the way a mechanical caliber beats.",
       sweep: "The second hand glides round without a step.",
     },
     clockSize: "Size",
@@ -779,7 +779,7 @@ export const en = {
     backlight: "Backlight",
     backlightHint:
       "A light behind the case while you are working, the way a television lights the wall behind it. It beats while the day is being counted, holds low on a break, and is off when you are not working.",
-    backlightColor: "Colour",
+    backlightColor: "Color",
     backlightColorName: {
       accent: "Theme",
       white: "White",
