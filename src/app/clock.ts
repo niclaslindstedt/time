@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// guidelines:allow-large-file: split when next touched; known deviation by owner decision
 // The geometry of the Today screen's clock: a twelve-hour dial, with the
 // day's spans laid on it as arcs. Pure arithmetic over seconds and angles so
 // the face can be tested without an SVG renderer.
