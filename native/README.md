@@ -47,21 +47,21 @@ and `merge.ts`.
 
 ## Layout
 
-| Path                       | What it is                                                                                                                                                             |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `App.tsx`                  | The whole app: a WebView, a spinner, and a failure screen.                                                                                                             |
-| `src/local-server.ts`      | Unpacks `assets/webroot.zip` and serves it on a **fixed** loopback port.                                                                                               |
-| `src/injected.ts`          | The theme reporter injected into the page, the status-bar style chosen from its report, and the service-worker teardown.                                               |
-| `src/icloudBridge.ts`      | **Pure.** The injected store host, and the request/response plumbing. Tested from the root.                                                                            |
-| `src/icloudWire.ts`        | **Import-free.** The shapes that cross the bridge, and nothing else.                                                                                                   |
-| `src/icloud.ts`            | Answers a store request through the native module, and maps a failure to its kind.                                                                                     |
-| `src/authSessionBridge.ts` | **Pure.** The injected sign-in provider (`window.__ossAuthSession`) and its request/response plumbing. Tested from the root.                                           |
-| `src/authSession.ts`       | Opens one sign-in in an authentication session (`expo-web-browser`) and hands back where it ended.                                                                     |
-| `src/saveFileBridge.ts`    | **Pure.** The `save-file` descriptor (`window.__ossShell`), the request check, and the script that answers the page. Tested from the root.                             |
-| `src/saveFile.ts`          | Writes one export to the cache and opens the share sheet (`expo-file-system`, `expo-sharing`).                                                                         |
-| `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by the bridges.                                                                                  |
-| `modules/icloud-store/`    | A local Expo module: list / read / write / remove inside the app's iCloud container.                                                                                   |
-| `scripts/bundle-web.mjs`   | Builds the web app as the store edition (`VITE_EDITION=store`), named `APP_DISPLAY_NAME` (env, then `.env`, then `Time`), and packs `dist/` into `assets/webroot.zip`. |
+| Path                       | What it is                                                                                                                                                                                                                                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `App.tsx`                  | The whole app: a WebView, a spinner, and a failure screen.                                                                                                                                                                                                                                |
+| `src/local-server.ts`      | Unpacks `assets/webroot.zip` and serves it on a **fixed** loopback port.                                                                                                                                                                                                                  |
+| `src/injected.ts`          | The theme reporter injected into the page, the status-bar style chosen from its report, and the service-worker teardown.                                                                                                                                                                  |
+| `src/icloudBridge.ts`      | **Pure.** The injected store host, and the request/response plumbing. Tested from the root.                                                                                                                                                                                               |
+| `src/icloudWire.ts`        | **Import-free.** The shapes that cross the bridge, and nothing else.                                                                                                                                                                                                                      |
+| `src/icloud.ts`            | Answers a store request through the native module, and maps a failure to its kind.                                                                                                                                                                                                        |
+| `src/authSessionBridge.ts` | **Pure.** The injected sign-in provider (`window.__ossAuthSession`) and its request/response plumbing. Tested from the root.                                                                                                                                                              |
+| `src/authSession.ts`       | Opens one sign-in in an authentication session (`expo-web-browser`) and hands back where it ended.                                                                                                                                                                                        |
+| `src/saveFileBridge.ts`    | **Pure.** The `save-file` descriptor (`window.__ossShell`), the request check, and the script that answers the page. Tested from the root.                                                                                                                                                |
+| `src/saveFile.ts`          | Writes one export to the cache and opens the share sheet (`expo-file-system`, `expo-sharing`).                                                                                                                                                                                            |
+| `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by the bridges.                                                                                                                                                                                                     |
+| `modules/icloud-store/`    | A local Expo module: list / read / write / remove inside the app's iCloud container.                                                                                                                                                                                                      |
+| `scripts/bundle-web.mjs`   | Builds the web app as the store edition (`VITE_EDITION=store`) and as a shell (`VITE_SHELL_BUILD=on`: no service worker, no update prompt), named `APP_DISPLAY_NAME` (env, then `.env`, then `Time`), and packs `dist/` into `assets/webroot.zip`, refusing a webroot with `sw.js` in it. |
 
 `ios/` and `android/` are **prebuild output**: regenerated from `app.config.js`
 by `expo prebuild --clean`, gitignored, and the source of truth for nothing.
@@ -222,8 +222,10 @@ Other off-origin links are unchanged: they still leave for the system browser.
 - **`localhost`, not `127.0.0.1`.** App Transport Security blocks the literal
   address from `WKWebView` even with exception domains declared. The failure
   mode is a silent blank page on iOS.
-- **The service worker is unregistered** (`src/injected.ts`). The origin is
-  stable across app updates, so a worker registered by an older build would
+- **There is no service worker, and any old one is unregistered.** The site
+  is built as a shell (`scripts/web-build.mts`), so the webroot has no
+  `sw.js`, and `src/injected.ts` still unregisters a worker an older build may
+  have left. The origin is stable across app updates, so such a worker would
   keep answering from its precache after a store update had already unpacked
   the new one.
 - **A file iCloud has listed is not a file iCloud has downloaded.** The Swift

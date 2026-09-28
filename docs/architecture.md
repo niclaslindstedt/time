@@ -217,3 +217,8 @@ the web manifest at build time — a "prompt to update" worker that precaches
 the build, parks in `waiting`, and applies on the framework's `UpdateToast`.
 Per deploy base (`/`, `/preview/`) the cache id (`src/app/pwa.ts`) and the
 manifest identity differ, so the channels install as separate apps.
+
+Only the website has one. The desktop and phone builds are shell builds
+(`VITE_SHELL_BUILD=on`): the site ships inside the binary, so they emit no
+worker and show no update prompt, and both bundle scripts refuse a webroot
+that holds `sw.js`.

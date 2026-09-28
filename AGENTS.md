@@ -57,10 +57,12 @@ that lets Dropbox sign in (`tauri/shell/src/oauth.rs`,
 `tauri/src-tauri/src/loopback.rs`). **The page is never told it is inside it**
 — no injected global, no Tauri command. `tauri/shell/` holds every decision and
 needs no GUI toolkit; `tauri/src-tauri/` holds every effect. One seam reaches
-back into this tree, `VITE_SHELL_BUILD`, set by the shell's site build, which
-switches off the service-worker half of `appPwa` and — through
-`__SHELL_BUILD__` — the in-app update prompt. A desktop build updates by being
-replaced. It, and the phone wrapper's store edition (`VITE_EDITION=store`),
+back into this tree, `VITE_SHELL_BUILD`, set by the shell's site build — and
+by the phone wrapper's, which is the same shape of thing — which switches off
+the service-worker half of `appPwa` and — through `__SHELL_BUILD__` — the
+in-app update prompt. A desktop or phone build updates by being replaced, and
+both bundle scripts refuse a webroot holding `sw.js`. The desktop build, and
+the phone wrapper's store edition (`VITE_EDITION=store`),
 are builds that are not the website: they carry no link back to the source
 (owner decision D17) — no Open Graph tags naming the web edition, no `CNAME`
 and no `og.png` (`websiteOnly` in `vite.config.ts`) — and both bundle scripts
@@ -794,8 +796,11 @@ ICloudStoreModule.swift`. Changing it after release strands every document
 - **`localhost`, never `127.0.0.1`.** App Transport Security blocks the literal
   address from `WKWebView` even with exception domains declared; the failure
   mode is a silent blank page on iOS.
-- **The service worker is unregistered** (`src/injected.ts`). The origin is
-  stable across app updates, so a worker registered by an older build keeps
+- **There is no service worker, and any old one is unregistered.** The phone
+  build is a shell build (`VITE_SHELL_BUILD=on`, `native/scripts/web-build.mts`),
+  so its webroot carries no `sw.js` — `bundle-web.mjs` refuses one — and
+  `src/injected.ts` still unregisters a worker an older build may have left.
+  The origin is stable across app updates, so such a worker would keep
   answering from its precache after a store update has already unpacked the
   new one — an App Store update that changes nothing until the app is deleted.
 - **`native/ios` and `native/android` are prebuild output.** Regenerated from

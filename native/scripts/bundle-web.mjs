@@ -5,15 +5,18 @@
 // what makes the app self-contained: the time report runs entirely on-device,
 // and changes only when a new build ships to the store.
 //
-// The web build is a plain `npm run build` at the repo root — base `/`, which
-// is exactly what a localhost origin wants — and NOTHING in `src/` is changed
-// for the app. The one build parameter it sets is `VITE_EDITION=store`: this
-// is the build sold in the App Store, so its exported PDF specifications carry
-// no "made with the free web edition" notice (`src/app/edition.ts`) — and, as
-// a build that is not the website, it carries no link back to the source
-// (owner decision D17): `vite.config.ts` leaves the web edition's address out
-// of the page. If the wrapper ever needs the web app to behave differently,
-// that is a sign it has stopped being thin.
+// The web build is `npm run build` at the repo root — base `/`, which is
+// exactly what a localhost origin wants — with two build parameters
+// (`webBuildEnv` in `web-build.mts`). `VITE_EDITION=store` is the channel:
+// this is the build sold in the App Store, so its exported PDF specifications
+// carry no "made with the free web edition" notice (`src/app/edition.ts`) —
+// and, as a build that is not the website, it carries no link back to the
+// source (owner decision D17): `vite.config.ts` leaves the web edition's
+// address out of the page. `VITE_SHELL_BUILD=on` is the medium, and is the
+// desktop shell's flag: the site ships inside the binary, so it has no service
+// worker and no in-app update prompt — a new version arrives from the store.
+// Nothing else in `src/` changes for the app. If the wrapper ever needs the web
+// app to behave differently, that is a sign it has stopped being thin.
 //
 // It also passes the listing's name, `APP_DISPLAY_NAME`, which the web build
 // shows wherever the app names itself (`src/app/appName.ts`) — so the watch
@@ -22,8 +25,9 @@
 // (`identifiers.js`), which is what a fresh checkout builds under.
 //
 // The parameters are build-time, so `--skip-build` re-zips whatever the last
-// build left in `dist/` — and a website build there names the web edition. The
-// zip is refused when it does (`assertNoSourceLink`).
+// build left in `dist/` — and a website build there names the web edition and
+// carries the worker. The zip is refused when it does (`assertNoSourceLink`,
+// `assertNoUpdateCycle`).
 //
 // Usage:
 //   node scripts/bundle-web.mjs                 # build the site, then zip it
@@ -54,6 +58,7 @@ import { zipSync } from "fflate";
 
 import { nativeEnv } from "../../scripts/lib/store-env.mjs";
 import identifiers from "../identifiers.js";
+import { updateMachinery, webBuildEnv } from "./web-build.mts";
 
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_DIR = resolve(APP_DIR, "..");
@@ -81,11 +86,7 @@ if (!skipBuild) {
   );
   execFileSync(NPM, ["run", "build"], {
     cwd: REPO_DIR,
-    env: {
-      ...process.env,
-      VITE_EDITION: process.env.VITE_EDITION ?? "store",
-      APP_DISPLAY_NAME: displayName,
-    },
+    env: webBuildEnv(process.env, displayName),
     stdio: "inherit",
     // npm on Windows is a batch shim, which Node cannot execute directly.
     shell: WINDOWS,
@@ -147,6 +148,26 @@ function assertNoSourceLink(files) {
 }
 
 assertNoSourceLink(files);
+
+/** Refuse a webroot that carries the website's update cycle — the service
+ *  worker (`sw.js`), the `version.json` it polls, its precache list. In the app
+ *  a worker would serve the page from its own cache of files already on the
+ *  device, so an app updated from the store could go on showing the old site,
+ *  and the update prompt would announce a version nobody can install from
+ *  inside it. `VITE_SHELL_BUILD=on` is what leaves them out; this is the check
+ *  that the build honoured it. */
+function assertNoUpdateCycle(files) {
+  const found = updateMachinery(Object.keys(files));
+  if (found.length) {
+    throw new Error(
+      `dist/ carries the website's update cycle (${found.join(", ")}) — the ` +
+        `phone app must not. Rebuild through this script (drop --skip-build) ` +
+        `so VITE_SHELL_BUILD=on leaves it out.`,
+    );
+  }
+}
+
+assertNoUpdateCycle(files);
 
 // Deterministic zip: every entry pinned to the ZIP epoch (1980-01-01), so the
 // artifact is reproducible instead of drifting with the clock.
