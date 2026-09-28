@@ -44,19 +44,19 @@ and `merge.ts`.
 
 ## Layout
 
-| Path                       | What it is                                                                                                                   |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `App.tsx`                  | The whole app: a WebView, a spinner, and a failure screen.                                                                   |
-| `src/local-server.ts`      | Unpacks `assets/webroot.zip` and serves it on a **fixed** loopback port.                                                     |
-| `src/injected.ts`          | The theme reporter injected into the page, the status-bar style chosen from its report, and the service-worker teardown.     |
-| `src/icloudBridge.ts`      | **Pure.** The injected store host, and the request/response plumbing. Tested from the root.                                  |
-| `src/icloudWire.ts`        | **Import-free.** The shapes that cross the bridge, and nothing else.                                                         |
-| `src/icloud.ts`            | Answers a store request through the native module, and maps a failure to its kind.                                           |
-| `src/authSessionBridge.ts` | **Pure.** The injected sign-in provider (`window.__ossAuthSession`) and its request/response plumbing. Tested from the root. |
-| `src/authSession.ts`       | Opens one sign-in in an authentication session (`expo-web-browser`) and hands back where it ended.                           |
-| `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by both bridges.                                       |
-| `modules/icloud-store/`    | A local Expo module: list / read / write / remove inside the app's iCloud container.                                         |
-| `scripts/bundle-web.mjs`   | Builds the web app as the store edition (`VITE_EDITION=store`) and packs `dist/` into `assets/webroot.zip`.                  |
+| Path                       | What it is                                                                                                                                                             |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `App.tsx`                  | The whole app: a WebView, a spinner, and a failure screen.                                                                                                             |
+| `src/local-server.ts`      | Unpacks `assets/webroot.zip` and serves it on a **fixed** loopback port.                                                                                               |
+| `src/injected.ts`          | The theme reporter injected into the page, the status-bar style chosen from its report, and the service-worker teardown.                                               |
+| `src/icloudBridge.ts`      | **Pure.** The injected store host, and the request/response plumbing. Tested from the root.                                                                            |
+| `src/icloudWire.ts`        | **Import-free.** The shapes that cross the bridge, and nothing else.                                                                                                   |
+| `src/icloud.ts`            | Answers a store request through the native module, and maps a failure to its kind.                                                                                     |
+| `src/authSessionBridge.ts` | **Pure.** The injected sign-in provider (`window.__ossAuthSession`) and its request/response plumbing. Tested from the root.                                           |
+| `src/authSession.ts`       | Opens one sign-in in an authentication session (`expo-web-browser`) and hands back where it ended.                                                                     |
+| `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by both bridges.                                                                                 |
+| `modules/icloud-store/`    | A local Expo module: list / read / write / remove inside the app's iCloud container.                                                                                   |
+| `scripts/bundle-web.mjs`   | Builds the web app as the store edition (`VITE_EDITION=store`), named `APP_DISPLAY_NAME` (env, then `.env`, then `Time`), and packs `dist/` into `assets/webroot.zip`. |
 
 `ios/` and `android/` are **prebuild output**: regenerated from `app.config.js`
 by `expo prebuild --clean`, gitignored, and the source of truth for nothing.

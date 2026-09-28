@@ -8,9 +8,14 @@
 // sentence in the catalog rather than concatenating fragments at the call
 // site: a translator needs the whole sentence to move its words around.
 
+import { APP_NAME } from "../appName.ts";
+
 export const en = {
   app: {
-    name: "Time",
+    // The listing's name in an app build, the project's on the website (see
+    // `appName.ts`) — which is why the sentences that name the app below are
+    // templates over it.
+    name: APP_NAME,
     tagline: "Your working day, on your device",
   },
 
@@ -475,7 +480,7 @@ export const en = {
       roundedNote: "Each day is billed up to the next {minutes} minutes.",
       roundedNoteHour: "Each day is billed up to the next whole hour.",
       page: "Page {page} of {pages}",
-      generated: "Made with Time",
+      generated: `Made with ${APP_NAME}`,
     },
     // The free edition's notice. It is an advertisement on somebody else's
     // document, so it says plainly what it is and how to be rid of it.
@@ -842,7 +847,7 @@ export const en = {
     importHint:
       "Merges the file into what is here — the newer copy of each day wins.",
     imported: "Restored {count} new days",
-    importFailed: "That file is not a Time backup.",
+    importFailed: `That file is not a ${APP_NAME} backup.`,
     deleteAll: "Delete everything",
     deleteAllHint:
       "Removes every project and day from this device. A connected cloud copy is not touched.",
@@ -862,8 +867,7 @@ export const en = {
     about: "About",
     version: "Version",
     build: "Build",
-    privacy:
-      "Time keeps your working hours on this device. Nothing is sent anywhere unless you connect your own cloud account, and then only there.",
+    privacy: `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you connect your own cloud account, and then only there.`,
   },
 
   sync: {
@@ -887,8 +891,7 @@ export const en = {
     codeInvalidPlain: "That is not a pairing code.",
     pairing: "Pairing with {server}…",
     newAccountTitle: "Make your keys",
-    newAccount:
-      "This is the first device on this account. Time will now make the encryption key for your hours — here, on this device. The server never sees it.",
+    newAccount: `This is the first device on this account. ${APP_NAME} will now make the encryption key for your hours — here, on this device. The server never sees it.`,
     makeKeys: "Make my keys",
     recoveryTitle: "Your recovery key",
     recovery:
@@ -908,8 +911,7 @@ export const en = {
     server: "Server",
     addDevice: "Add a device",
     addDeviceTitle: "Add a device",
-    addDeviceHint:
-      "Scan this with your other phone's camera, or paste the link into Time there. It works once, for {minutes} minutes, and carries your keys — show it only to your own devices.",
+    addDeviceHint: `Scan this with your other phone's camera, or paste the link into ${APP_NAME} there. It works once, for {minutes} minutes, and carries your keys — show it only to your own devices.`,
     expires: "Expires in {time}",
     expired: "Expired — close and make a new one",
     approvals: "Waiting for approval",

@@ -20,6 +20,10 @@ import {
   dialLayout,
   faceMarks,
   MINUTE_INK,
+  NAME_LOCKUP_MAX,
+  NAME_MARK,
+  NAME_TRACKING,
+  nameLockup,
   RING_BLEED,
   HANDS,
   handAngles,
@@ -332,6 +336,28 @@ describe("dialLayout", () => {
       SIGNATURE.name - SIGNATURE.nameSize / 2,
     );
     expect(SIGNATURE.window - SIGNATURE.windowHeight / 2).toBeGreaterThan(20);
+  });
+
+  it("keeps the widest name the lockup allows clear of eleven and one", () => {
+    // The name is the build's (the listing's, in an app build), so its width
+    // is not known here: the widest lockup `nameLockup` will set is. Its top
+    // corners are the nearest it comes to the hours either side of twelve.
+    const corner = {
+      x: NAME_LOCKUP_MAX / 2,
+      y: SIGNATURE.name + SIGNATURE.nameSize / 2,
+    };
+    for (const dial of every) {
+      const l = dialLayout(dial);
+      const reach = reachOf(dial, l);
+      const one = {
+        x: l.markerR * Math.sin(Math.PI / 6),
+        y: l.markerR * Math.cos(Math.PI / 6),
+      };
+      expect(
+        Math.hypot(one.x - corner.x, one.y - corner.y),
+        `${JSON.stringify(dial)} prints the name into one o'clock`,
+      ).toBeGreaterThan(reach);
+    }
   });
 
   it("prints a chapter ring's ticks inside it, and the face's under it", () => {
@@ -1206,5 +1232,38 @@ describe("windTurns", () => {
     // 11:47:06-and-a-bit — the seconds it took are seconds it made up.
     const landed = to + plan.total / 1000;
     expect(at(plan.total).minute).toBeCloseTo(handTurns(landed).minute, 9);
+  });
+});
+
+describe("nameLockup", () => {
+  it("sets the project's own name at full size, centred with its mark", () => {
+    const l = nameLockup("Time");
+    expect(l.text).toBe("TIME");
+    expect(l.size).toBe(SIGNATURE.nameSize);
+    expect(l.scale).toBe(1);
+    expect(l.tracking).toBeCloseTo(NAME_TRACKING * SIGNATURE.nameSize);
+    // Centred: the mark's left edge is half the lockup left of the centre.
+    expect(l.markX).toBeCloseTo(-l.width / 2);
+    expect(l.textX).toBeGreaterThan(l.markX + NAME_MARK);
+    expect(l.width).toBeLessThan(NAME_LOCKUP_MAX);
+  });
+
+  it("sets a listing's longer name smaller, to the widest the dial allows", () => {
+    const short = nameLockup("Time");
+    const l = nameLockup("Nird Time");
+    expect(l.text).toBe("NIRD TIME");
+    expect(l.width).toBeCloseTo(NAME_LOCKUP_MAX);
+    expect(l.size).toBeLessThan(short.size);
+    expect(l.markX).toBeCloseTo(-NAME_LOCKUP_MAX / 2);
+    // The text runs from its start to the lockup's right edge, and its
+    // advance is that plus the spacing after the last letter.
+    expect(l.textX + l.textLength - l.tracking).toBeCloseTo(l.width / 2);
+  });
+
+  it("takes a character it has no width for at a typical capital's", () => {
+    const l = nameLockup("Tid & Tår");
+    expect(l.text).toBe("TID & TÅR");
+    expect(Number.isFinite(l.width)).toBe(true);
+    expect(l.width).toBeLessThanOrEqual(NAME_LOCKUP_MAX + 1e-9);
   });
 });

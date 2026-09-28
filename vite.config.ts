@@ -89,6 +89,13 @@ const shellBuild = process.env.VITE_SHELL_BUILD === "on";
 // the web edition.
 const appBuild = shellBuild || process.env.VITE_EDITION === "store";
 
+// The name the app shows (`src/app/appName.ts`). An app build is a deployment
+// with a listing, and it says the listing's name — `APP_DISPLAY_NAME`, which
+// `native/scripts/bundle-web.mjs` and the desktop packaging pass in, the name
+// under the icon. The website keeps the project's own, whatever the shell
+// that built it had set.
+const appName = appBuild ? process.env.APP_DISPLAY_NAME?.trim() || "" : "";
+
 // What only the website carries, left out of an app build (D17): the Open
 // Graph and Twitter tags in `index.html` that point at the web edition's
 // address, and the two public files that exist for them and for Pages — the
@@ -123,6 +130,7 @@ export default defineConfig({
   define: {
     __SHELL_BUILD__: JSON.stringify(shellBuild),
     __APP_VERSION__: JSON.stringify(appVersion),
+    __APP_NAME__: JSON.stringify(appName),
     __BUILD_LABEL__: JSON.stringify(buildLabel),
     __BUILD_COMMIT__: JSON.stringify(commit),
     __BUILD_NUMBER__: JSON.stringify(buildNumber),

@@ -27,6 +27,8 @@ import {
   dialLayout,
   faceMarks,
   MINUTE_INK,
+  NAME_MARK_SCALE,
+  nameLockup,
   RING_BLEED,
   polar,
 } from "./clock.ts";
@@ -237,6 +239,7 @@ export function Dial({
   const ring = DIAL_RING[dial.ring];
   const handSet = DIAL_HANDS[dial.hands];
   const layout = dialLayout(dial);
+  const lockup = nameLockup(t("app.name"));
 
   // The day, while the watch is being set. The bands are the ones the last
   // render was handed and the arcs are `clock.ts`'s, so this is the same
@@ -657,7 +660,7 @@ export function Dial({
           hours are set in. */}
       <g aria-hidden="true">
         <g
-          transform={`translate(${C - 18.4} ${C - SIGNATURE.name - 4}) scale(0.08)`}
+          transform={`translate(${C + lockup.markX - 10 * NAME_MARK_SCALE * lockup.scale} ${C - SIGNATURE.name - 50 * NAME_MARK_SCALE * lockup.scale}) scale(${NAME_MARK_SCALE * lockup.scale})`}
           fill="none"
           stroke={face.ink}
           strokeWidth={12}
@@ -667,18 +670,20 @@ export function Dial({
           <path d="M50 50 V28 M50 50 L66 60" />
         </g>
         <text
-          x={C - 8.2}
+          x={C + lockup.textX}
           y={C - SIGNATURE.name}
           dy="0.36em"
           fill={face.ink}
+          textLength={lockup.textLength}
+          lengthAdjust="spacing"
           style={{
-            fontSize: `${SIGNATURE.nameSize}px`,
+            fontSize: `${lockup.size}px`,
             fontFamily: DIAL_FONT.geometric.family,
             fontWeight: DIAL_FONT.geometric.weight,
-            letterSpacing: "0.2em",
+            letterSpacing: `${lockup.tracking}px`,
           }}
         >
-          {t("app.name").toLocaleUpperCase()}
+          {lockup.text}
         </text>
         <text
           x={C}

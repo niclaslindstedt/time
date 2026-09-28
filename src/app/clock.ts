@@ -167,6 +167,119 @@ export const SIGNATURE = {
   windowHeight: 14,
 } as const;
 
+/**
+ * The advance of each capital in the name's face (Jost 500), in ems, as a
+ * browser lays it — measured, rather than guessed from an average, so the
+ * lockup below comes out the width the letters actually are. A character
+ * not listed is taken at a typical capital's width; the text is pinned to
+ * the width reckoned here (`textLength`), so a guess costs a hair of letter
+ * spacing and never the centring.
+ */
+const NAME_ADVANCE: Readonly<Record<string, number>> = {
+  A: 0.69,
+  B: 0.6,
+  C: 0.69,
+  D: 0.7,
+  E: 0.57,
+  F: 0.52,
+  G: 0.79,
+  H: 0.74,
+  I: 0.28,
+  J: 0.28,
+  K: 0.62,
+  L: 0.48,
+  M: 0.84,
+  N: 0.78,
+  O: 0.8,
+  P: 0.58,
+  Q: 0.82,
+  R: 0.6,
+  S: 0.58,
+  T: 0.5,
+  U: 0.66,
+  V: 0.69,
+  W: 1.02,
+  X: 0.61,
+  Y: 0.6,
+  Z: 0.58,
+  " ": 0.3,
+  "-": 0.22,
+  ".": 0.31,
+  "'": 0.29,
+  "&": 0.71,
+};
+const NAME_ADVANCE_OTHER = 0.62;
+/** The name's letter spacing, in ems: wide, the way a maker's name is. */
+export const NAME_TRACKING = 0.2;
+/** The app's mark beside the name: its drawn width, stroke included, and the
+ *  air between the two. `Dial.tsx` draws the mark on a 100-unit grid at
+ *  `NAME_MARK_SCALE`, its ring 10 units in from the grid's edge. */
+export const NAME_MARK = 6.4;
+const NAME_MARK_GAP = 3;
+export const NAME_MARK_SCALE = 0.08;
+/**
+ * The widest the mark and the name may stand together. Under twelve the
+ * lockup has the hours at eleven and one either side of it, and wider than
+ * this it reaches them on a dial with the largest numerals set inside the
+ * ring (`tests/clock_test.ts` walks every dial); a longer name is set
+ * smaller instead, on the same line.
+ */
+export const NAME_LOCKUP_MAX = 48;
+
+/** Where the mark and the name stand under twelve, centred on the dial. */
+export type NameLockup = {
+  /** The name as printed: in capitals. */
+  text: string;
+  /** The letters' size, which a long name brings down from `nameSize`, and
+   *  the mark's with them (a share of its own size, 1 at `nameSize`). */
+  size: number;
+  scale: number;
+  /** The letter spacing, in the same units. */
+  tracking: number;
+  /** The mark's left edge and the text's start, from the centre line. */
+  markX: number;
+  textX: number;
+  /** The text's advance, trailing spacing included — its `textLength`. */
+  textLength: number;
+  /** From the mark's left edge to the last letter's right edge. */
+  width: number;
+};
+
+/**
+ * The lockup of the app's mark and its name under twelve: centred as one
+ * group, at `SIGNATURE.nameSize` when that fits in `NAME_LOCKUP_MAX` and
+ * smaller when it does not. The name is whatever the build is called (the
+ * listing's, in an app build), so it is laid out rather than placed. Pure.
+ */
+export function nameLockup(name: string): NameLockup {
+  const text = name.toLocaleUpperCase();
+  const chars = [...text];
+  const glyphs = chars.reduce(
+    (sum, ch) => sum + (NAME_ADVANCE[ch] ?? NAME_ADVANCE_OTHER),
+    0,
+  );
+  // The ink runs to the last letter; the spacing after it is advance only.
+  const inkEms = glyphs + NAME_TRACKING * Math.max(0, chars.length - 1);
+  const natural = NAME_MARK + NAME_MARK_GAP + inkEms * SIGNATURE.nameSize;
+  const scale = natural > NAME_LOCKUP_MAX ? NAME_LOCKUP_MAX / natural : 1;
+  const size = SIGNATURE.nameSize * scale;
+  const markW = NAME_MARK * scale;
+  const gap = NAME_MARK_GAP * scale;
+  const ink = inkEms * size;
+  const width = markW + gap + ink;
+  const markX = -width / 2;
+  return {
+    text,
+    size,
+    scale,
+    tracking: NAME_TRACKING * size,
+    markX,
+    textX: markX + markW + gap,
+    textLength: ink + NAME_TRACKING * size,
+    width,
+  };
+}
+
 /** How far the printing reaches from the centre: the top of the name, and
  *  the foot of the window. What a ring has to stay outside of. */
 export const SIGNATURE_REACH = Math.max(

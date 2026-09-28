@@ -7,6 +7,11 @@
 // The app version, inlined by Vite's `define` (see `vite.config.ts`).
 declare const __APP_VERSION__: string;
 
+// The name the app shows — the listing's (`APP_DISPLAY_NAME`) in an app
+// build, the project's own on the website. Read it as `APP_NAME` from
+// `src/app/appName.ts`, which falls back when this is not defined.
+declare const __APP_NAME__: string | undefined;
+
 // The build identifier shown in Settings → About, composed at build time (see
 // `vite.config.ts`): `<version>[.<run>][-<slot>][+<commit>]`.
 declare const __BUILD_LABEL__: string;

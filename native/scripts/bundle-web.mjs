@@ -15,7 +15,13 @@
 // of the page. If the wrapper ever needs the web app to behave differently,
 // that is a sign it has stopped being thin.
 //
-// The parameter is build-time, so `--skip-build` re-zips whatever the last
+// It also passes the listing's name, `APP_DISPLAY_NAME`, which the web build
+// shows wherever the app names itself (`src/app/appName.ts`) — so the watch
+// and the bar say what the icon says. The process environment wins (CI takes
+// it from the secret), then `native/.env`, then the project's own name
+// (`identifiers.js`), which is what a fresh checkout builds under.
+//
+// The parameters are build-time, so `--skip-build` re-zips whatever the last
 // build left in `dist/` — and a website build there names the web edition. The
 // zip is refused when it does (`assertNoSourceLink`).
 //
@@ -46,6 +52,9 @@ import { fileURLToPath } from "node:url";
 
 import { zipSync } from "fflate";
 
+import { nativeEnv } from "../../scripts/lib/store-env.mjs";
+import identifiers from "../identifiers.js";
+
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO_DIR = resolve(APP_DIR, "..");
 const DIST_DIR = join(REPO_DIR, "dist");
@@ -60,11 +69,23 @@ const profile =
   process.env.EAS_BUILD_PROFILE ??
   "preview";
 
+/** The name under the icon, and so the name the app shows. */
+const displayName =
+  nativeEnv(REPO_DIR).value("APP_DISPLAY_NAME").trim() ||
+  identifiers.PROJECT_NAME;
+
 if (!skipBuild) {
-  console.log(`• building the web app (npm run build) — profile ${profile}…`);
+  console.log(
+    `• building the web app (npm run build) — profile ${profile}, ` +
+      `named "${displayName}"…`,
+  );
   execFileSync(NPM, ["run", "build"], {
     cwd: REPO_DIR,
-    env: { ...process.env, VITE_EDITION: process.env.VITE_EDITION ?? "store" },
+    env: {
+      ...process.env,
+      VITE_EDITION: process.env.VITE_EDITION ?? "store",
+      APP_DISPLAY_NAME: displayName,
+    },
     stdio: "inherit",
     // npm on Windows is a batch shim, which Node cannot execute directly.
     shell: WINDOWS,

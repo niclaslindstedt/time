@@ -170,6 +170,7 @@ is no secret to protect), and leaving either unset simply hides that provider:
 | `VITE_DROPBOX_APP_FOLDER` | Folder name the document is filed under (default `time`).                                                          |
 | `VITE_BASE`               | Deploy base path (default `/`).                                                                                    |
 | `VITE_EDITION`            | `store` for the App Store build, whose exported PDF specifications carry no notice. Default: the free web edition. |
+| `APP_DISPLAY_NAME`        | An app build's name, shown in the app: the listing's. The website always says `Time`.                              |
 | `VITE_SEED`               | `demo` boots onto the in-memory demo document (`make demo`, the store screenshots). Never set for a release.       |
 
 iCloud takes no variable at all: it is offered by the native wrapper's host,

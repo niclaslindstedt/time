@@ -326,6 +326,11 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the blob download, and the print, which shows the `.spec-print` copy of the
   pages and hands the printer the document rather than a picture of the
   preview.
+- `src/app/appName.ts` — the name the app shows: the listing's
+  (`APP_DISPLAY_NAME`, handed in as `__APP_NAME__`) in an app build, `Time`
+  on the website. The catalog's `app.name` and the sentences that name the
+  app read it, and `clock.ts`'s `nameLockup` sets it under twelve — centred
+  with the mark, and smaller when it is longer than `NAME_LOCKUP_MAX` allows.
 - `src/app/edition.ts` — which build this is (`VITE_EDITION`). The one thing
   that differs is the notice on an exported specification, and it is a build
   parameter because there is no server to ask and no account to check.
