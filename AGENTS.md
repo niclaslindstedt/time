@@ -123,7 +123,8 @@ same shared surface behind the sibling `contacts` and `period` apps.
 
 The framework owns the UI kit and the generic mechanics: modals, form
 primitives, the theme engine, the charts, the bottom bar and the tab-paging
-swipe, the storage adapters (localStorage / Dropbox), the i18n
+swipe, the storage adapters (localStorage / Dropbox / a self-hosted
+storage server's encrypted namespaces), the i18n
 runtime, logging, the toast store, and the PWA update state machine. What
 stays here is the vocabulary — what a day is made of, what a button on the
 Today screen does, and what a report adds up.
@@ -348,6 +349,18 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   routes on (`auth` → Reconnect, `offline` → keep the local copy, anything
   else → stop). Validates every host before trusting it: the value arrives
   from code outside this bundle.
+- `src/app/selfHosted.ts` / `useSelfHosted.ts` — the reader's **own storage
+  server** as a fourth backend, through the framework's self-hosted client:
+  pairing codes (pasted, or the `#oss=` app link a QR opens, wiped from the
+  address bar once read), the device's name, and which namespace holds
+  `time.json`. The keys stay in the framework's key vault — never add them to
+  localStorage, logs or a backup — and the server only ever gets ciphertext.
+  The namespace's `adapter()` is an ordinary `StorageAdapter` (one file, not
+  rows: the union merge would resurrect deletions record by record), so the
+  engine treats it like Dropbox; its `watch` pulls another device's push in
+  as it happens. The sheets are `SelfHostedConnectModal.tsx` (pair, first
+  keys + recovery key, wait for approval) and `SelfHostedSettings.tsx` (add a
+  device, approve one, new recovery key, unpair).
 - `src/app/useSyncEngine.ts` — the sync engine over the framework's storage
   adapters (debounced push, conflict / auth / throttle handling). Suspended
   wholesale while demo data has taken over storage.

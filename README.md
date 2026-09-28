@@ -68,7 +68,9 @@ adapters, same theme engine, same PWA update lifecycle.
 - **It is your record.** When you were at work, for whom and doing what is a
   record about a named person. It lives in your browser's localStorage, and
   leaves the device only if you connect **your own** iCloud, Dropbox or Google
-  Drive — to a folder you can open, in a JSON file you can read. No analytics, no
+  Drive — to a folder you can open, in a JSON file you can read — or your own
+  [storage server](https://github.com/niclaslindstedt/storage), end-to-end
+  encrypted so the server cannot read it. No analytics, no
   telemetry, no third-party requests at runtime.
 - **Two taps a day.** Enter, leave. Breaks and categories are one tap each,
   and anything you forgot can be added afterwards.
@@ -152,9 +154,9 @@ dialog, `Enter` saves and `Escape` cancels):
 
 …and one button for the screen you visit and leave — on the dial over Today, and on the top bar everywhere else:
 
-| Button | What it does                                                                                                                                                                                                                                                                                                                               |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, week start, cloud sync (Dropbox and iCloud in the app-store build), backup / restore / delete, developer tools, and the build. |
+| Button | What it does                                                                                                                                                                                                                                                                                                                                                         |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, week start, cloud sync (Dropbox, your own storage server, and iCloud in the app-store build), backup / restore / delete, developer tools, and the build. |
 
 ## Configuration
 

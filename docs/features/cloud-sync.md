@@ -14,6 +14,22 @@ whole of connecting. The file lands under **Files → iCloud Drive → Time**,
 where you can open it and copy it out. See
 [`native-app.md`](native-app.md).
 
+**Your server** is the option for keeping the copy on a machine you run
+yourself — a [storage server](https://github.com/niclaslindstedt/storage) at
+home or on a host you choose. It is end-to-end encrypted: the server holds the
+file but cannot read it, nor its name. Choosing it asks for a **pairing
+code**; paste the one the server's admin console shows (or point the phone's
+camera at its QR, which opens the app with the code in it). The first device
+makes the account's key and shows a **recovery key** — write it down, it is
+the only way back if every device is lost. Every other device is added from
+one already connected, under **Settings → Add a device**: a QR that pairs the
+new device with the keys in it. A device paired with a code from the console
+instead shows a **safety code** and waits until a connected device approves
+it under **Settings → Waiting for approval** (check the codes match), or until
+you type the recovery key. Changes from another device arrive within moments,
+without reopening the app. **Unpair this device** erases this device's keys;
+**Make a new recovery key** retires the old one.
+
 Once connected, a glyph on the top bar shows the sync state; tapping it opens
 the sync details with **Save now**, **Reload**, **Reconnect** and a connection
 check. Every edit is pushed after a short pause; the copy is pulled in when

@@ -24,6 +24,7 @@ import { downloadBackup, readBackupFile } from "./backup.ts";
 import type { DemoDataToggle } from "./dev/useDemoData.ts";
 import { useT } from "./i18n/index.ts";
 import { requestTilt, tiltSupport } from "./useTilt.ts";
+import { SelfHostedSettings } from "./SelfHostedSettings.tsx";
 import { mergeDocs } from "./merge.ts";
 import { serializeDoc } from "./migrations.ts";
 import { emptyDoc } from "./types.ts";
@@ -259,6 +260,15 @@ export function SettingsScreen({
               {t("settings.disconnect")}
             </Button>
           </div>
+        )}
+        {/* The reader's own server has a device of its own to look after:
+            which server, new devices, approvals, the recovery key. */}
+        {sync.backend === "selfhosted" && (
+          <SelfHostedSettings
+            selfHosted={sync.selfHosted}
+            onUnpaired={sync.disconnect}
+            onNotice={onNotice}
+          />
         )}
       </Section>
 
