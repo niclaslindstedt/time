@@ -116,8 +116,17 @@ export type Project = {
    *  day against, and what makes a Saturday of work overtime rather than a
    *  short day. */
   workDays: Weekday[];
-  /** The target length of a working day, in hours. Fractions allowed. */
+  /** The target length of a working day, in hours. Fractions allowed. When
+   *  the hours were given for the week this is the week spread evenly over
+   *  `workDays`, kept in step by the form so a build that predates
+   *  `hoursPerWeek` reads the same day; read it through `dayHours` rather
+   *  than directly. */
   hoursPerDay: number;
+  /** The hours a week, when that is what was entered rather than a day's.
+   *  Absent on every project whose hours are given per day — which is every
+   *  project written before a week could be entered — and absent means the
+   *  day's figure is the one that was typed. */
+  hoursPerWeek?: number;
   breakTypes: BreakType[];
   categories: WorkCategory[];
   /** ISO timestamp of the last edit — the tiebreak when two devices edited

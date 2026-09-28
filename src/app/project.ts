@@ -44,6 +44,14 @@ export const DEFAULT_HEALTHCARE_MINUTES = 60;
 export const MIN_HOURS_PER_DAY = 0.5;
 export const MAX_HOURS_PER_DAY = 16;
 
+/** The bounds a working week may be set to, in hours: a working day's, over
+ *  a week of seven of them. */
+export const MIN_HOURS_PER_WEEK = MIN_HOURS_PER_DAY;
+export const MAX_HOURS_PER_WEEK = MAX_HOURS_PER_DAY * 7;
+
+/** Which figure a project's hours were entered as. */
+export type HoursUnit = "day" | "week";
+
 /** The bounds a break's default length may be set to, in minutes. */
 export const MIN_BREAK_MINUTES = 1;
 export const MAX_BREAK_MINUTES = 240;
@@ -270,7 +278,79 @@ export function isWorkDay(project: Project, date: DayKey): boolean {
 
 /** The target length of a working day, in seconds. */
 export function targetSeconds(project: Project): Seconds {
-  return Math.round(project.hoursPerDay * 3600);
+  return Math.round(dayHours(project) * 3600);
+}
+
+/** Whether the project's hours were given for the day or for the week. */
+export function hoursUnit(project: Project): HoursUnit {
+  return project.hoursPerWeek === undefined ? "day" : "week";
+}
+
+/** The target length of a working day, in hours: the day's own figure, or
+ *  the week's spread evenly over the working days. A week with no working
+ *  day in it has nothing to spread over, so the day's figure stands; and a
+ *  week spread over too few days is held to the longest day there is. */
+export function dayHours(project: Project): number {
+  const week = project.hoursPerWeek;
+  const days = project.workDays.length;
+  if (week === undefined || days === 0) return project.hoursPerDay;
+  return clampHours(week / days, project.hoursPerDay);
+}
+
+/** The target of a working week, in hours: the week's own figure, or the
+ *  day's over every working day. */
+export function weekHours(project: Project): number {
+  return project.hoursPerWeek ?? project.hoursPerDay * project.workDays.length;
+}
+
+/** The project with its hours set to `hours` a day or a week. Either way
+ *  `hoursPerDay` comes out as the day's target, so a reader that knows only
+ *  that field reads the same day this one does; a day's figure drops the
+ *  week's. Call it again with the same figure after the working days change,
+ *  so a week goes on being spread over the days it now has. */
+export function withHours(
+  project: Project,
+  unit: HoursUnit,
+  hours: unknown,
+): Project {
+  const rest = { ...project };
+  delete rest.hoursPerWeek;
+  if (unit === "day") {
+    return { ...rest, hoursPerDay: clampHours(hours, project.hoursPerDay) };
+  }
+  const week = clampWeekHours(hours, weekHours(project));
+  const next = { ...rest, hoursPerWeek: week };
+  return { ...next, hoursPerDay: dayHours(next) };
+}
+
+/** The project's hours given the other way round, standing for the same
+ *  target: a day of 7.5 over five days is a week of 37.5, and back. */
+export function switchHoursUnit(project: Project, unit: HoursUnit): Project {
+  if (unit === hoursUnit(project)) return project;
+  if (unit === "day") return withHours(project, "day", dayHours(project));
+  // A week of no working days is nothing, so there is no week to carry over
+  // — the day's hours are taken as the week's until the days are picked.
+  const week = weekHours(project);
+  return withHours(project, "week", week > 0 ? week : project.hoursPerDay);
+}
+
+/** A number of hours as it is typed: "7.5", "7,5" — the decimal comma the
+ *  keyboard offers across most of Europe — or "7:30". Null when it is none of
+ *  them, or nothing at all, rather than the nought an empty field reads as. */
+export function parseHours(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+  const text = value.trim().replace(/\s+/g, "");
+  const clock = /^(\d+):([0-5]\d)$/.exec(text);
+  if (clock) return Number(clock[1]) + Number(clock[2]) / 60;
+  if (!/^(\d+([.,]\d*)?|[.,]\d+)$/.test(text)) return null;
+  return Number(text.replace(",", "."));
+}
+
+/** A number of hours for a field to show: at most two decimals, and none
+ *  that are nought — "7.5", "37.5", "13.33". */
+export function formatHoursField(hours: number): string {
+  return String(Math.round(hours * 100) / 100);
 }
 
 /** A break type by id, or null when the project no longer has it — which
@@ -294,9 +374,19 @@ export function categoryOf(
  *  number. Kept next to the bounds so the settings form and the document
  *  reader can't disagree about what is sane. */
 export function clampHours(value: unknown, fallback = DEFAULT_HOURS_PER_DAY) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return fallback;
+  const n = parseHours(value);
+  if (n === null) return fallback;
   return Math.min(MAX_HOURS_PER_DAY, Math.max(MIN_HOURS_PER_DAY, n));
+}
+
+/** The same for a working week. */
+export function clampWeekHours(
+  value: unknown,
+  fallback = DEFAULT_HOURS_PER_DAY * DEFAULT_WORK_DAYS.length,
+) {
+  const n = parseHours(value);
+  if (n === null) return fallback;
+  return Math.min(MAX_HOURS_PER_WEEK, Math.max(MIN_HOURS_PER_WEEK, n));
 }
 
 export function clampBreakMinutes(value: unknown, fallback: number): number {

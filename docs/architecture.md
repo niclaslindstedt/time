@@ -150,7 +150,8 @@ type Project = {
   glyph?: GlyphId; // its mark; absent takes the folder
   color?: CategoryColor; // its hue; absent takes the accent
   workDays: Weekday[]; // 0 = Sunday … 6 = Saturday
-  hoursPerDay: number;
+  hoursPerDay: number; // the day's target, kept in step with a week's
+  hoursPerWeek?: number; // present when the week was entered; spread over workDays
   breakTypes: {
     id: string;
     name: string;

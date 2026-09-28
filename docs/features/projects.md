@@ -13,8 +13,14 @@ or several; most people have one.
   picked none is drawn in. Tap the mark beside the name to change either.
 - **Working days** — the days a full day is expected. Any other day is extra:
   its hours are all balance, and it never counts as a shortfall.
-- **Hours per working day** — the target, and what the Today screen's
-  percentage measures against. Fractions allowed (7.5).
+- **Working hours** — the target, and what the Today screen's percentage
+  measures against, entered **per day** or **per week** by the switch above
+  the field. A week is spread evenly over the working days (37.5 over five is
+  7.5 a day) and stays the week's when a day is added or taken away — it is
+  the day that changes. The line under the field gives the figure the other
+  way round, and flipping the switch keeps the same target. Fractions are
+  allowed and may be typed with a point or a comma (7.5, 7,5), or as hours and
+  minutes (7:30).
 - **Break types** — one button each on the Today screen, with the minutes a
   break added afterwards is assumed to have taken — stepped five at a time by
   the **−5m** and **+5m** buttons either side of the number, or typed straight

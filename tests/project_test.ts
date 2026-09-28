@@ -5,7 +5,15 @@ import {
   DEFAULT_KINDS,
   breakTypeOf,
   clampHours,
+  clampWeekHours,
   creditSeconds,
+  dayHours,
+  formatHoursField,
+  hoursUnit,
+  parseHours,
+  switchHoursUnit,
+  weekHours,
+  withHours,
   isPinned,
   projectTemplate,
   isWorkDay,
@@ -158,6 +166,122 @@ describe("lookups and clamps", () => {
     expect(clampHours(0)).toBe(0.5);
     expect(clampHours(40)).toBe(16);
     expect(clampHours(7.5)).toBe(7.5);
+  });
+
+  it("reads a typed decimal comma, and an empty field as nothing", () => {
+    // An empty field used to read as nought and clamp to half an hour.
+    expect(clampHours("", 8)).toBe(8);
+    expect(clampHours(null, 8)).toBe(8);
+    expect(clampHours("7,5")).toBe(7.5);
+    expect(clampHours(" 7.25 ")).toBe(7.25);
+    expect(clampWeekHours("37,5")).toBe(37.5);
+    expect(clampWeekHours(200)).toBe(112);
+    expect(clampWeekHours("x")).toBe(40);
+  });
+});
+
+describe("hours typed", () => {
+  it("takes a point, a comma or hours and minutes", () => {
+    expect(parseHours("7.5")).toBe(7.5);
+    expect(parseHours("7,5")).toBe(7.5);
+    expect(parseHours(",5")).toBe(0.5);
+    expect(parseHours("8")).toBe(8);
+    expect(parseHours("8.")).toBe(8);
+    expect(parseHours("7:30")).toBe(7.5);
+    expect(parseHours("37:45")).toBe(37.75);
+    expect(parseHours(6.4)).toBe(6.4);
+  });
+
+  it("refuses what is not a number of hours", () => {
+    for (const bad of [
+      "",
+      "  ",
+      "abc",
+      "7.5.1",
+      "7,5,1",
+      "7:75",
+      "-3",
+      "1e3",
+    ]) {
+      expect(parseHours(bad), bad).toBeNull();
+    }
+    expect(parseHours(Number.NaN)).toBeNull();
+    expect(parseHours(undefined)).toBeNull();
+  });
+
+  it("shows at most two decimals and no trailing noughts", () => {
+    expect(formatHoursField(7.5)).toBe("7.5");
+    expect(formatHoursField(8)).toBe("8");
+    expect(formatHoursField(40 / 3)).toBe("13.33");
+  });
+});
+
+describe("hours per week", () => {
+  it("is a day's hours unless the week was entered", () => {
+    const p = project({ hoursPerDay: 7.5 });
+    expect(hoursUnit(p)).toBe("day");
+    expect(dayHours(p)).toBe(7.5);
+    expect(weekHours(p)).toBe(37.5);
+  });
+
+  it("spreads a week evenly over the working days", () => {
+    const p = withHours(project(), "week", "37,5");
+    expect(hoursUnit(p)).toBe("week");
+    expect(p.hoursPerWeek).toBe(37.5);
+    expect(weekHours(p)).toBe(37.5);
+    // Kept in step, so a build that reads only the day reads the same day.
+    expect(p.hoursPerDay).toBe(7.5);
+    expect(targetSeconds(p)).toBe(27_000);
+    const four = withHours(project({ workDays: [1, 2, 3, 4] }), "week", 30);
+    expect(dayHours(four)).toBe(7.5);
+    expect(
+      targetSeconds(project({ hoursPerWeek: 40, workDays: [1, 2, 3] })),
+    ).toBe(48_000);
+  });
+
+  it("holds the week when the working days change", () => {
+    const p = withHours(project(), "week", 40);
+    const three = withHours({ ...p, workDays: [1, 2, 3] }, "week", 40);
+    expect(weekHours(three)).toBe(40);
+    expect(three.hoursPerDay).toBeCloseTo(40 / 3);
+  });
+
+  it("stands on the day's figure with no working day to spread over", () => {
+    const p = project({ hoursPerDay: 6, hoursPerWeek: 40, workDays: [] });
+    expect(dayHours(p)).toBe(6);
+    expect(targetSeconds(p)).toBe(6 * 3600);
+  });
+
+  it("holds a week spread over too few days to the longest day", () => {
+    const p = project({ hoursPerWeek: 40, workDays: [1] });
+    expect(dayHours(p)).toBe(16);
+  });
+
+  it("switches between the two without changing the target", () => {
+    const day = project({ hoursPerDay: 7.5 });
+    const week = switchHoursUnit(day, "week");
+    expect(week.hoursPerWeek).toBe(37.5);
+    expect(targetSeconds(week)).toBe(targetSeconds(day));
+    const back = switchHoursUnit(week, "day");
+    expect(back.hoursPerWeek).toBeUndefined();
+    expect("hoursPerWeek" in back).toBe(false);
+    expect(back.hoursPerDay).toBe(7.5);
+    expect(switchHoursUnit(day, "day")).toBe(day);
+  });
+
+  it("takes the day's hours as the week's when there are no working days", () => {
+    const p = switchHoursUnit(
+      project({ hoursPerDay: 8, workDays: [] }),
+      "week",
+    );
+    expect(p.hoursPerWeek).toBe(8);
+    expect(dayHours(p)).toBe(8);
+  });
+
+  it("drops the week when a day's hours are set", () => {
+    const p = withHours(project({ hoursPerWeek: 40 }), "day", "6,5");
+    expect(hoursUnit(p)).toBe("day");
+    expect(p.hoursPerDay).toBe(6.5);
   });
 });
 
