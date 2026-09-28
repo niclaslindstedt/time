@@ -20,6 +20,15 @@
 //           bar, Settings slides in over the right-hand edge, and the Today
 //           screen has room for air round all three columns.
 //
+// The Today screen asks one more thing: which way round the desk stands. A
+// big tablet held upright (a 13-inch iPad is 1032px wide and 1376 tall) is
+// past the desk's edge, but three columns across it squeeze the dial between
+// two lists with half the screen empty under them — so a desk taller than it
+// is wide stacks Today the way the phone does, the dial as wide as the
+// column and the lists under it, and keeps the rest of the desk shell.
+// `todayBeside` is that answer; `useWide` and the stylesheet's `wide:`
+// variant are it live.
+//
 // Two edges decide it, and both are shared with the stylesheet — `lg:` and
 // `@media (min-width: 64rem)` are the first, the `wide:` variant and the
 // landscape blocks in `styles.css` are the pair. Keep the numbers here and
@@ -59,6 +68,13 @@ export const STAND_QUERY = [
   `(max-height: ${STAND_HEIGHT}rem)`,
 ].join(" and ");
 
+/** The desk, laid wide: past the desk's edge and at least as wide as tall. */
+export const DESK_WIDE_QUERY = `${DESK_QUERY} and (orientation: landscape)`;
+
+/** Where the Today screen stands its controls beside the dial rather than
+ *  under it: a desk laid wide, or the stand. One media query list. */
+export const WIDE_QUERY = `${DESK_WIDE_QUERY}, ${STAND_QUERY}`;
+
 /**
  * The shape of a window of this size, in CSS pixels.
  *
@@ -69,4 +85,14 @@ export function shapeOf(width: number, height: number): Shape {
   if (width >= DESK_WIDTH * REM) return "desk";
   if (width >= height && height <= STAND_HEIGHT * REM) return "stand";
   return "phone";
+}
+
+/**
+ * Whether the Today screen stands the day's controls beside the dial — the
+ * stand, and a desk at least as wide as it is tall — rather than stacking
+ * them under it, the way the phone does and an upright tablet does too.
+ */
+export function todayBeside(width: number, height: number): boolean {
+  const shape = shapeOf(width, height);
+  return shape === "stand" || (shape === "desk" && width >= height);
 }

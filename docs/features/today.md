@@ -102,7 +102,7 @@ The main screen, and the whole app for most of a day.
   still answer a hold, because what a kind looks like has nothing to do with
   being clocked in. The two **···** squares stay bright for the same reason:
   naming a kind is a change to the project, and a project is edited whenever.
-  Given the width — a desk, or a phone laid on its side — the two rows stand
+  Given the width — a desk laid wide, or a phone laid on its side — the two rows stand
   either side of the dial instead, breaks to its left and kinds of work to
   its right, and a list longer than the window is tall scrolls in its own
   column.
@@ -330,6 +330,13 @@ to its right, and more room round all three than a phone on its side has. The
 screen is laid out to the window and does not scroll — the
 light behind the dial reaches past the edge of it on purpose, and a
 decoration is not something to scroll to.
+
+A desk taller than it is wide — a big tablet held upright, which is past
+1024px either way round — keeps the tabs and the panel but stacks Today the
+way the phone does: the dial as wide as the column, then the breaks and the
+kinds of work under it. Three columns across an upright screen squeezed the
+dial between two lists and left the lower half of the glass empty; turned on
+its side it is the desk above again.
 
 Under a mouse the ring answers the pointer. Rest on a stretch and it says
 what the stretch was and when; press the right button anywhere on the dial

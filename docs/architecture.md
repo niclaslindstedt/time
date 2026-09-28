@@ -49,7 +49,7 @@ src/app/
   useNow.ts         the one place the clock is read
   useHands.ts       the hands: the movement's beat, and setting the watch
   shape.ts          phone, stand or desk — the two edges the shell is cut at
-  useShape.ts       the same, live: useDesk / useStand / useWide
+  useShape.ts       the same, live: useDesk / useStand / useWide (Today beside the dial: the stand, or a desk laid wide)
   useFocus.ts       focus mode: the stand left alone, where everything but the watch fades out
   shortcuts.ts      key → command, and whether Enter saves a modal   (pure)
   useShortcuts.ts   the window's keydown, turned into those commands

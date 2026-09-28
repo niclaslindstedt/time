@@ -498,7 +498,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   walk real windows through. `useShape.ts` is the live reading:
   `useDesk` for the shell — the top bar's tabs, the side panel, no swipe —
   and `useWide` for the pair of shapes that stand the day's controls beside
-  the dial, which is the stylesheet's `wide:` variant read from JavaScript.
+  the dial, which is the stylesheet's `wide:` variant read from JavaScript —
+  the stand, and the desk only when it is laid wide (`todayBeside`,
+  `WIDE_QUERY`): a desk taller than it is wide, a big tablet held upright,
+  stacks Today the way the phone does and keeps the rest of the desk shell.
   Keep the numbers here and the numbers in `styles.css` the same.
 - `src/app/useFocus.ts` — focus mode, which is the stand's alone: the phone
   propped up on the Today screen and left untouched, where everything but the

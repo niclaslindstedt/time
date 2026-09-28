@@ -19,7 +19,7 @@
 
 /* ── `wide:` ─────────────────────────────────────────────────────────────────
    The two shapes of window that stand the day's controls beside the dial
-   rather than under it: the desk, and a phone laid on its side (see
+   rather than under it: the desk laid wide, and a phone laid on its side (see
    `shape.ts`, which holds the same two edges for the JavaScript side of the
    shell). Tailwind has no variant for "either of these", so this is one:
    `wide:flex-col` emits the rule under both queries.
@@ -29,7 +29,7 @@
    the column widths in the Today grid below — and a wide, short window
    matching both of these is a window getting the same declaration twice. */
 @custom-variant wide {
-  @media (min-width: 64rem) {
+  @media (min-width: 64rem) and (orientation: landscape) {
     @slot;
   }
   @media (orientation: landscape) and (max-height: 44rem) {
@@ -510,6 +510,12 @@ input:not(
    what it wants is what the desk already has — the controls *beside* the
    dial, and a dial sized by the height there is rather than the width.
 
+   A desk stood upright is the one desk that does not: a big tablet held that
+   way is past 64rem, but three columns across its width squeeze the dial
+   between two lists and leave the lower half of the glass empty. It has the
+   height the phone's column wants, so it stacks Today the way the phone does
+   and keeps the rest of the desk shell (`todayBeside` in `shape.ts`).
+
    So the arrangement is shared and the spacing is not. This block is the
    arrangement, under both queries; the two after it are the room each shape
    has to spend on it. The `wide:` variant at the top of this file is the same
@@ -520,7 +526,8 @@ input:not(
    the dial's column takes the rest, and the dial itself is sized by height —
    `.app-dial-slot` is a square as tall as the column can spare, so a short
    window gets a smaller watch rather than a scrolling one. */
-@media (min-width: 64rem), (orientation: landscape) and (max-height: 44rem) {
+@media (min-width: 64rem) and (orientation: landscape),
+  (orientation: landscape) and (max-height: 44rem) {
   .app-today {
     height: 100%;
     display: grid;
@@ -617,8 +624,10 @@ input:not(
 }
 
 /* The desk's own room: wide side columns, air round all three, and a floor
-   under the dial so it is never smaller than a watch. */
-@media (min-width: 64rem) {
+   under the dial so it is never smaller than a watch. Laid wide only: a desk
+   taller than it is wide — a big tablet held upright — stacks Today the way
+   the phone does (`todayBeside` in `shape.ts`). */
+@media (min-width: 64rem) and (orientation: landscape) {
   .app-today {
     grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr) minmax(
         12rem,

@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   DESK_QUERY,
+  DESK_WIDE_QUERY,
   DESK_WIDTH,
   STAND_HEIGHT,
   STAND_QUERY,
+  WIDE_QUERY,
   shapeOf,
+  todayBeside,
 } from "../src/app/shape.ts";
 
 // The three shapes of window, walked at the sizes real devices actually
@@ -63,7 +66,41 @@ describe("shapeOf", () => {
   });
 });
 
+describe("todayBeside", () => {
+  it("stacks Today on a big tablet held upright, and stands it beside laid down", () => {
+    // A 13-inch iPad: past the desk's edge either way round. Upright, three
+    // columns across 1032px squeeze the dial between two lists, so it stacks
+    // the way the phone does; laid down it is the desk it always was.
+    expect(shapeOf(1032, 1376)).toBe("desk");
+    expect(todayBeside(1032, 1376)).toBe(false);
+    expect(shapeOf(1376, 1032)).toBe("desk");
+    expect(todayBeside(1376, 1032)).toBe(true);
+    // A 12.9-inch one, and the 11-inch, which upright was already a phone.
+    expect(todayBeside(1024, 1366)).toBe(false);
+    expect(todayBeside(1366, 1024)).toBe(true);
+    expect(todayBeside(834, 1194)).toBe(false);
+    expect(todayBeside(1194, 834)).toBe(true);
+  });
+
+  it("keeps a desktop window and a phone laid down beside, and a phone stacked", () => {
+    expect(todayBeside(1440, 900)).toBe(true);
+    expect(todayBeside(1280, 400)).toBe(true);
+    expect(todayBeside(852, 393)).toBe(true);
+    expect(todayBeside(393, 852)).toBe(false);
+    // A square desk is landscape, the way CSS counts it.
+    expect(todayBeside(1100, 1100)).toBe(true);
+    expect(todayBeside(1100, 1101)).toBe(false);
+  });
+});
+
 describe("the queries", () => {
+  it("stand Today beside the dial on a desk laid wide, or on the stand", () => {
+    expect(DESK_WIDE_QUERY).toBe(
+      "(min-width: 64rem) and (orientation: landscape)",
+    );
+    expect(WIDE_QUERY).toBe(`${DESK_WIDE_QUERY}, ${STAND_QUERY}`);
+  });
+
   it("say the same thing the function does", () => {
     expect(DESK_QUERY).toBe("(min-width: 64rem)");
     expect(STAND_QUERY).toBe(

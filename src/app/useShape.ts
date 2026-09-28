@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { useMediaQuery } from "@niclaslindstedt/oss-framework/hooks";
 
-import { DESK_QUERY, STAND_QUERY } from "./shape.ts";
+import { DESK_QUERY, STAND_QUERY, WIDE_QUERY } from "./shape.ts";
 
 // The window's shape, live (see `shape.ts` for what the three are and where
 // their edges fall).
@@ -23,11 +23,10 @@ export function useStand(): boolean {
   return useMediaQuery(STAND_QUERY);
 }
 
-/** Either of the two shapes that put the day's controls beside the dial.
- *  The companion of the stylesheet's `wide:` variant — keep the pair in
- *  step. */
+/** Either of the two shapes that put the day's controls beside the dial:
+ *  the stand, and a desk laid wide (an upright tablet stacks them the way
+ *  the phone does — `todayBeside` in `shape.ts`). The companion of the
+ *  stylesheet's `wide:` variant — keep the pair in step. */
 export function useWide(): boolean {
-  const desk = useDesk();
-  const stand = useStand();
-  return desk || stand;
+  return useMediaQuery(WIDE_QUERY);
 }
