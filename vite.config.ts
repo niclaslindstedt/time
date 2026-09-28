@@ -85,7 +85,7 @@ const shellBuild = process.env.VITE_SHELL_BUILD === "on";
 // Every build that is not the website: the desktop shell's, and the phone
 // wrapper's, which `native/scripts/bundle-web.mjs` builds as the store edition
 // (`VITE_EDITION=store`). An app from a store carries no link back to the
-// source (owner decision D17), and `websiteOnly` below leaves out what names
+// source (by owner decision), and `websiteOnly` below leaves out what names
 // the web edition.
 const appBuild = shellBuild || process.env.VITE_EDITION === "store";
 
@@ -96,7 +96,7 @@ const appBuild = shellBuild || process.env.VITE_EDITION === "store";
 // that built it had set.
 const appName = appBuild ? process.env.APP_DISPLAY_NAME?.trim() || "" : "";
 
-// What only the website carries, left out of an app build (D17): the Open
+// What only the website carries, left out of an app build (by owner decision): the Open
 // Graph and Twitter tags in `index.html` that point at the web edition's
 // address, and the two public files that exist for them and for Pages — the
 // share card (`og.png`) and the custom-domain file (`CNAME`). The bundle

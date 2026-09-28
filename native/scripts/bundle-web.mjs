@@ -11,7 +11,7 @@
 // this is the build sold in the App Store, so its exported PDF specifications
 // carry no "made with the free web edition" notice (`src/app/edition.ts`) —
 // and, as a build that is not the website, it carries no link back to the
-// source (owner decision D17): `vite.config.ts` leaves the web edition's
+// source (by owner decision): `vite.config.ts` leaves the web edition's
 // address out of the page. `VITE_SHELL_BUILD=on` is the medium, and is the
 // desktop shell's flag: the site ships inside the binary, so it has no service
 // worker and no in-app update prompt — a new version arrives from the store.
@@ -127,7 +127,7 @@ if (count === 0 || !files["index.html"]) {
   );
 }
 
-/** Refuse a webroot that links back to the source (owner decision D17): no
+/** Refuse a webroot that links back to the source (by owner decision): no
  *  GitHub repository, issues, releases or sponsor link, and not the author's
  *  handle anywhere — web-edition address, package name or meta tag included.
  *  The website keeps those; the app has none. Every file but a binary asset is

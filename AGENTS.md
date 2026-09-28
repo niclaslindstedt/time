@@ -64,7 +64,7 @@ in-app update prompt. A desktop or phone build updates by being replaced, and
 both bundle scripts refuse a webroot holding `sw.js`. The desktop build, and
 the phone wrapper's store edition (`VITE_EDITION=store`),
 are builds that are not the website: they carry no link back to the source
-(owner decision D17) — no Open Graph tags naming the web edition, no `CNAME`
+(by owner decision) — no Open Graph tags naming the web edition, no `CNAME`
 and no `og.png` (`websiteOnly` in `vite.config.ts`) — and both bundle scripts
 refuse a webroot that still contains `niclaslindstedt`. The package's name and identifier come from `APP_DISPLAY_NAME` and
 `APP_BUNDLE_ID` at packaging time (`tauri/scripts/package.mjs`), like the phone
