@@ -217,7 +217,8 @@ worked.
 
 - **Download PDF** saves the file as
   `<project>_<period>_specification.pdf`, lowercase and without a space in it —
-  `demo_ab_september_2026_specification.pdf`.
+  `demo_ab_september_2026_specification.pdf`. In the phone app it opens the
+  share sheet with the file, since there is nowhere for a download to go.
 - **Print** hands the printer the same pages the file is written from, rather
   than a picture of the preview.
 

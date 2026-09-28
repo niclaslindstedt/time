@@ -122,3 +122,7 @@ build without it launches to a blank screen.
 - [ ] **Settings → Cloud sync → Dropbox** opens Dropbox in a sheet over the
       app (not in Safari), and approving closes the sheet and connects.
       Closing the sheet instead leaves the backend as it was.
+- [ ] Report → **…** → the specification's **Download PDF** opens the share
+      sheet, and **Save to Files** writes
+      `<project>_<period>_specification.pdf`; the same for the invoice file and
+      **Settings → Download a backup**. Nothing opens Safari.

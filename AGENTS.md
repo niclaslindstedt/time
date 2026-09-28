@@ -332,7 +332,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   `InvoiceExportModal.tsx` is the form, opened from the Report's **…**.
 - `src/app/specExport.ts` — the way out: `specFilename`
   (`<project>_<period>_specification.pdf`, lowercase and not a space in it),
-  the blob download, and the print, which shows the `.spec-print` copy of the
+  `savePdf` (the framework's `saveFile`: a download on the web, the share
+  sheet in the phone app), and the print, which shows the `.spec-print` copy of the
   pages and hands the printer the document rather than a picture of the
   preview.
 - `src/app/appName.ts` — the name the app shows: the listing's
@@ -687,22 +688,29 @@ the App Store and Google Play. It is a **separate npm project** with its own
 root does not touch it, and neither does `make install`. Reach it with
 `--prefix native` (or the `make native-*` targets).
 
-**Thin is a constraint, not an aspiration.** The wrapper does five things:
+**Thin is a constraint, not an aspiration.** The wrapper does six things:
 
 1. packs the built web app into `assets/webroot.zip` and serves it from a
    loopback HTTP server (`src/local-server.ts`);
 2. points a `WebView` at that origin and otherwise gets out of the way;
-3. injects three scripts into the page — `src/injected.ts`, which reports the
+3. injects four scripts into the page — `src/injected.ts`, which reports the
    resolved theme colours so the native chrome follows them and unregisters
    the service worker, `src/icloudBridge.ts`, which offers the page a
-   document store, and `src/authSessionBridge.ts`, which offers it an
-   authentication session for signing in to Dropbox;
+   document store, `src/authSessionBridge.ts`, which offers it an
+   authentication session for signing in to Dropbox, and
+   `src/saveFileBridge.ts`'s descriptor, which tells the framework's
+   `saveFile` the shell can take a file;
 4. answers those store requests against the app's own iCloud container
    (`src/icloud.ts` → `modules/icloud-store`);
 5. opens a sign-in in an authentication session when the page asks
    (`src/authSession.ts` → `expo-web-browser`) and hands the redirect back.
    The page — the framework's `connectDropboxAuthSession`, reached through
-   `getAuthSessionHost()` — keeps the PKCE verifier and makes the exchange.
+   `getAuthSessionHost()` — keeps the PKCE verifier and makes the exchange;
+6. hands an export to the share sheet when the page's `saveFile` sends one
+   (`src/saveFile.ts` → `expo-sharing`). Every file `src/` hands the reader
+   goes through `saveFile` — never `downloadBlob`, `downloadText` or a
+   hand-clicked `download` link, which save nothing inside a WebView;
+   `tests/save_file_test.ts` keeps them out.
 
 ### The two native-only features, and why there have to be two
 
@@ -883,8 +891,11 @@ Vitest in the `node` environment — they cover the pure domain modules
 logic is. `native_icloud_test.ts` is the one that reaches outside `src/`: it
 pins the strings the wrapper and the app have to agree on, and guards the
 import discipline that lets it import from `native/` at all — see "The native
-wrapper" above. No
-DOM, no testing-library, no mocked clock. `tests/fixtures/helpers.ts` holds the shared
+wrapper" above. `native_save_file_test.ts` does the same for the save-file
+bridge, running it against the framework's own `saveFile`. No
+DOM, no testing-library, no mocked clock: where a test must meet a browser's
+download or the phone app's WebView, `tests/fixtures/shell.ts` stands in for
+exactly that boundary and nothing more. `tests/fixtures/helpers.ts` holds the shared
 fixtures (a project, a day, a named-id `ctx`).
 
 Run one file with `npx vitest run tests/day_test.ts`.

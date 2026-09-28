@@ -42,6 +42,9 @@ export const en = {
     next: "Next",
     uncategorised: "Uncategorized",
     project: "Project",
+    // A file the phone could not hand to the share sheet (the website's
+    // download cannot fail this way).
+    exportFailed: "Could not export {file}: {reason}",
   },
 
   // The main screen: the clock, the timer, and the buttons that move the day

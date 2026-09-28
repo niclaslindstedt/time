@@ -422,6 +422,7 @@ export function ReportScreen({
           onStyle={(style) => update("spec", style)}
           onDetails={(details) => update("specDetails", details)}
           onRounding={(rounding) => update("specRounding", rounding)}
+          onNotice={onNotice}
           onClose={() => setExporting(false)}
         />
       )}
@@ -440,6 +441,7 @@ export function ReportScreen({
           rounding={settings.specRounding}
           onGrain={(grain) => update("invoiceGrain", grain)}
           onRounding={(rounding) => update("specRounding", rounding)}
+          onNotice={onNotice}
           onClose={() => setExportingInvoice(false)}
         />
       )}

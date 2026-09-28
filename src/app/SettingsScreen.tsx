@@ -20,7 +20,7 @@ import { LogViewer } from "@niclaslindstedt/oss-framework/logging";
 import { DialPicker } from "./DialPicker.tsx";
 import { ClockIcon } from "./icons.tsx";
 import { logStore } from "./log.ts";
-import { downloadBackup, readBackupFile } from "./backup.ts";
+import { backupFileName, readBackupFile, saveBackup } from "./backup.ts";
 import type { DemoDataToggle } from "./dev/useDemoData.ts";
 import { useT } from "./i18n/index.ts";
 import { requestTilt, tiltSupport } from "./useTilt.ts";
@@ -299,7 +299,18 @@ export function SettingsScreen({
         icon={<DatabaseIcon className="h-3.5 w-3.5" />}
       >
         <div className="flex flex-col gap-1">
-          <Button onClick={() => downloadBackup(store.data)}>
+          <Button
+            onClick={() =>
+              void saveBackup(store.data).catch((err: unknown) =>
+                onNotice(
+                  t("common.exportFailed", {
+                    file: backupFileName(),
+                    reason: err instanceof Error ? err.message : String(err),
+                  }),
+                ),
+              )
+            }
+          >
             {t("settings.export")}
           </Button>
           <p className="text-xs text-muted">{t("settings.exportHint")}</p>

@@ -4,10 +4,11 @@
 // This is a deliberately thin wrapper. It starts a loopback server, points a
 // WebView at it, keeps the native chrome in step with the page's theme, sends
 // off-origin links to the system browser, answers the page when it asks its
-// iCloud container for the document, and opens a provider's sign-in in an
-// authentication session when the page asks for one. There is no native UI at
-// all beyond a spinner and a failure screen — everything a reader sees is the web app,
-// unchanged.
+// iCloud container for the document, opens a provider's sign-in in an
+// authentication session when the page asks for one, and hands an export to
+// the share sheet when the page saves a file. There is no native UI at all
+// beyond a spinner and a failure screen — everything a reader sees is the web
+// app, unchanged.
 //
 // The wrapper adds exactly two things the browser cannot do, and it has to add
 // something: App Store guideline 4.2 rejects a build that is only a viewer for
@@ -62,6 +63,13 @@ import {
   isAuthSessionRequest,
 } from "./src/authSessionBridge";
 import { answerAuthSession, authRedirectUri } from "./src/authSession";
+import {
+  SAVE_FILE_DESCRIPTOR,
+  isInPageUrl,
+  isSaveFileRequest,
+  type SaveFileRequest,
+} from "./src/saveFileBridge";
+import { answerSaveFile } from "./src/saveFile";
 
 // Hold the native splash until the WebView actually paints. Called at module
 // scope so the auto-hide never wins the race; a rejection only means the
@@ -182,6 +190,15 @@ export default function App() {
     webViewRef.current?.injectJavaScript(authSessionResolveScript(id, result));
   }, []);
 
+  // One export — a specification, an invoice file, a backup. The page's
+  // `saveFile` waits on the answer, which comes once the share sheet has been
+  // shown and closed; the bytes go to the sheet and nowhere else.
+  const saveFile = useCallback((request: SaveFileRequest) => {
+    void answerSaveFile(request, (script) =>
+      webViewRef.current?.injectJavaScript(script),
+    );
+  }, []);
+
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       let parsed: unknown;
@@ -199,6 +216,10 @@ export default function App() {
         void signIn(parsed.id, parsed.url);
         return;
       }
+      if (isSaveFileRequest(parsed)) {
+        saveFile(parsed);
+        return;
+      }
       if (!isThemeReport(parsed)) return;
 
       // The native chrome follows the page's theme so the status bar and the
@@ -208,7 +229,7 @@ export default function App() {
         setPageBackground(reported.trim());
       }
     },
-    [answerCloud, signIn],
+    [answerCloud, signIn, saveFile],
   );
 
   // --- navigation -----------------------------------------------------------
@@ -234,10 +255,13 @@ export default function App() {
   // at all: the page asks for an authentication session instead (see
   // `src/authSessionBridge.ts`), since a consent page in Safari redirects back
   // to Safari, not to the app. This stays the fallback for a page that finds
-  // no session provider.
+  // no session provider. A `blob:` or `data:` URL is a download some code
+  // clicked instead of calling `saveFile`: it exists only inside the page, so
+  // the system browser could not open it either, and it is refused.
   const onShouldStartLoadWithRequest = useCallback(
     (request: WebViewNavigation) => {
       if (!origin) return false;
+      if (isInPageUrl(request.url)) return false;
       if (request.url.startsWith(origin)) return true;
       if (request.url.startsWith("about:")) return true;
       void Linking.openURL(request.url);
@@ -292,7 +316,10 @@ export default function App() {
             incognito={false}
             allowsBackForwardNavigationGestures
             setSupportMultipleWindows={false}
-            injectedJavaScriptBeforeContentLoaded={BEFORE_LOAD_SCRIPT}
+            // Before the page's own scripts: the service-worker guard, and
+            // the descriptor that tells the framework this shell can save a
+            // file (so its `saveFile` hands exports to the share sheet).
+            injectedJavaScriptBeforeContentLoaded={`${BEFORE_LOAD_SCRIPT}\n${SAVE_FILE_DESCRIPTOR}`}
             // Three scripts, one prop: the theme reporter the chrome follows,
             // the iCloud host the page looks for, and the auth-session
             // provider its Dropbox sign-in looks for. All run once the page

@@ -3,10 +3,15 @@
 // wrapper, no proprietary container — so a file taken out of here can be read
 // with any text editor and put back with the same code path a cloud pull uses.
 //
-// The framework owns the browser download plumbing (`downloadText`); this
-// module owns the file name and the validation on the way back in.
+// The framework owns getting the file out (`saveFile`: a download on the web,
+// the share sheet in the phone app); this module owns the file name and the
+// validation on the way back in.
 
-import { MIME_JSON, downloadText } from "@niclaslindstedt/oss-framework/files";
+import {
+  MIME_JSON,
+  saveFile,
+  type SaveFileOutcome,
+} from "@niclaslindstedt/oss-framework/files";
 import { dayKeyOf } from "@niclaslindstedt/oss-framework/calendar";
 
 import { normalizeDoc, serializeDoc } from "./migrations.ts";
@@ -17,12 +22,17 @@ export function backupFileName(today = dayKeyOf(new Date())): string {
   return `time-backup-${today}.json`;
 }
 
-/** Save the whole document to a file the user picks a home for. */
-export function downloadBackup(data: AppData): void {
+/** Save the whole document to a file the user picks a home for. Rejects when
+ *  the phone could not share it. */
+export function saveBackup(data: AppData): Promise<SaveFileOutcome> {
   // Pretty-printed rather than the compact storage form: a backup is a file a
   // person may well open, and the extra bytes are irrelevant at this size.
   const pretty = JSON.stringify(JSON.parse(serializeDoc(data)), null, 2);
-  downloadText(backupFileName(), pretty, MIME_JSON);
+  return saveFile({
+    text: pretty,
+    filename: backupFileName(),
+    mimeType: MIME_JSON,
+  });
 }
 
 /**

@@ -62,6 +62,14 @@ closes the sheet and connects; closing it leaves the backend as it was. The
 sheet is the platform's own authentication session, and the wrapper never
 sees a token: the page makes the exchange itself, exactly as the website does.
 
+## Exporting
+
+A phone has nowhere for a download to go, so in the app the specification's
+**Download PDF**, the invoice file and **Settings → Download a backup** open the
+share sheet instead, with the file already named: save it to Files, AirDrop
+it, mail it. The website keeps its download. The wrapper is handed the file
+only to show the sheet, and keeps nothing but the latest one in its cache.
+
 ## What the wrapper is not allowed to do
 
 Two rules, and they are what keep the app and the website the same product:

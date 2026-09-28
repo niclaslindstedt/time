@@ -28,7 +28,7 @@ src/app/
   spec.ts           a range → the specification an invoice is sent with: billed days, decimal hours (pure, clock-free)
   specStyle.ts      how a specification looks: typefaces, headings, colours, tables, the six styles
   specLayout.ts     a specification + a style → pages of type and rules      (pure, clock-free)
-  specExport.ts     the file's name, the download, and the print
+  specExport.ts     the file's name, the file (saveFile), and the print
   pdf/              the two renderers over those pages
     metrics.ts        base-14 widths and the WinAnsi encoding             (pure)
     page.ts           a page as text, rectangles and rules                (pure)

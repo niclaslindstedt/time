@@ -22,7 +22,10 @@ Thin is the design, not an aspiration. The wrapper:
   drives exactly as it drives Dropbox;
 - opens a cloud provider's sign-in in an **authentication session** when the
   page asks for one (`src/authSessionBridge.ts` → `src/authSession.ts` →
-  `expo-web-browser`) — see [Signing in to Dropbox](#signing-in-to-dropbox).
+  `expo-web-browser`) — see [Signing in to Dropbox](#signing-in-to-dropbox);
+- hands an export to the **share sheet** when the page saves a file
+  (`src/saveFileBridge.ts` → `src/saveFile.ts` → `expo-sharing`) — see
+  [Exporting a file](#exporting-a-file).
 
 That is the entire list, and it is deliberately not empty: **App Store
 guideline 4.2 rejects a build that is only a viewer for a website**, so the
@@ -54,7 +57,9 @@ and `merge.ts`.
 | `src/icloud.ts`            | Answers a store request through the native module, and maps a failure to its kind.                                                                                     |
 | `src/authSessionBridge.ts` | **Pure.** The injected sign-in provider (`window.__ossAuthSession`) and its request/response plumbing. Tested from the root.                                           |
 | `src/authSession.ts`       | Opens one sign-in in an authentication session (`expo-web-browser`) and hands back where it ended.                                                                     |
-| `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by both bridges.                                                                                 |
+| `src/saveFileBridge.ts`    | **Pure.** The `save-file` descriptor (`window.__ossShell`), the request check, and the script that answers the page. Tested from the root.                             |
+| `src/saveFile.ts`          | Writes one export to the cache and opens the share sheet (`expo-file-system`, `expo-sharing`).                                                                         |
+| `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by the bridges.                                                                                  |
 | `modules/icloud-store/`    | A local Expo module: list / read / write / remove inside the app's iCloud container.                                                                                   |
 | `scripts/bundle-web.mjs`   | Builds the web app as the store edition (`VITE_EDITION=store`), named `APP_DISPLAY_NAME` (env, then `.env`, then `Time`), and packs `dist/` into `assets/webroot.zip`. |
 
@@ -126,6 +131,35 @@ per-record merge with no iCloud-shaped special case anywhere in `src/`.
 (all three iCloud entitlements), `modules/icloud-store/index.ts`, and its
 Swift twin. Changing it after release strands every document already synced
 under the old one.
+
+## Exporting a file
+
+On the web every file the app hands over — the specification PDF, the invoice
+file, the backup — is a download: an anchor clicked at a `blob:` URL. In a
+WebView that click goes nowhere, because nothing on the phone can open a URL
+that exists only inside the page. So every export goes through the
+framework's `saveFile`, and this wrapper implements the native half of its
+`save-file` contract (oss-framework's `docs/native-shell.md`):
+
+```
+Report / Settings → saveFile({ blob | text, filename })   (oss-framework)
+   │  window.__ossShell lists "save-file" — injected before the page loads
+   │  postMessage { type: "oss-framework/save-file", id, filename, mimeType, base64 }
+   ▼
+App.tsx → src/saveFile.ts → the cache → Sharing.shareAsync(file)
+   │  the reader saves to Files, AirDrops or mails it; the sheet closes
+   ▼
+injectJavaScript: "oss-framework/save-file-result" { id, ok } — saveFile resolves
+```
+
+As with iCloud, the page asks for a **capability**, not for this wrapper: a
+browser advertises nothing and keeps its download. The file is written under
+the name the page gave (its last path component only) into a directory of its
+own in the cache, and the next export deletes it: the wrapper keeps no more
+than the latest one, logs nothing of it and hands it to nothing but the sheet.
+A failure comes back as data (`ok: false`) and the page says so. A `blob:` or
+`data:` URL that still reaches the WebView as a navigation is refused rather
+than handed to the system browser, which could not open it either.
 
 ## Signing in to Dropbox
 

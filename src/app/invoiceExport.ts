@@ -13,7 +13,11 @@
 //
 // Pure and clock-free: the moment of export comes in as a parameter.
 
-import { MIME_JSON, downloadText } from "@niclaslindstedt/oss-framework/files";
+import {
+  MIME_JSON,
+  saveFile,
+  type SaveFileOutcome,
+} from "@niclaslindstedt/oss-framework/files";
 
 import type { SpecAmount, SpecDay, Specification } from "./spec.ts";
 import { decimalHours, sumHours } from "./spec.ts";
@@ -151,12 +155,17 @@ export function invoiceFilename(projectName: string, period: string): string {
   return `${[...parts, "invoice"].join("_")}.json`;
 }
 
-/** Save the file. Pretty-printed: it is a file a person may well open. */
-export function downloadInvoiceLines(
+/** Save the file — a download on the web, the share sheet in the phone app.
+ *  Pretty-printed: it is a file a person may well open. */
+export function saveInvoiceLines(
   file: InvoiceLinesFile,
   filename: string,
-): void {
-  downloadText(filename, `${JSON.stringify(file, null, 2)}\n`, MIME_JSON);
+): Promise<SaveFileOutcome> {
+  return saveFile({
+    text: `${JSON.stringify(file, null, 2)}\n`,
+    filename,
+    mimeType: MIME_JSON,
+  });
 }
 
 // `decimalHours` is re-exported for the form, which prints a day's hours

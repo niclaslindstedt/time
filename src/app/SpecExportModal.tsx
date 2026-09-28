@@ -20,12 +20,7 @@ import { breakName, categoryName } from "./labels.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
 import { PAPERS } from "./pdf/page.ts";
 import { SPEC_ROUNDINGS, specification, type SpecRounding } from "./spec.ts";
-import {
-  downloadPdf,
-  pageRule,
-  printSpec,
-  specFilename,
-} from "./specExport.ts";
+import { pageRule, printSpec, savePdf, specFilename } from "./specExport.ts";
 import { layoutSpec, type SpecLabels, type SpecNames } from "./specLayout.ts";
 import { SpecPages } from "./SpecPages.tsx";
 import {
@@ -80,6 +75,8 @@ type Props = {
   onStyle: (style: SpecStyle) => void;
   onDetails: (details: SpecDetails) => void;
   onRounding: (rounding: SpecRounding) => void;
+  /** Says what went wrong when the file could not be saved. */
+  onNotice: (message: string) => void;
   onClose: () => void;
 };
 
@@ -149,6 +146,7 @@ export function SpecExportModal({
   onStyle,
   onDetails,
   onRounding,
+  onNotice,
   onClose,
 }: Props) {
   const t = useT();
@@ -266,7 +264,16 @@ export function SpecExportModal({
         titleId="spec-export-title"
         title={t("spec.title")}
         onCancel={onClose}
-        onSave={() => downloadPdf(doc, filename)}
+        onSave={() =>
+          void savePdf(doc, filename).catch((err: unknown) =>
+            onNotice(
+              t("common.exportFailed", {
+                file: filename,
+                reason: err instanceof Error ? err.message : String(err),
+              }),
+            ),
+          )
+        }
         saveLabel={t("spec.download")}
         saveDisabled={empty}
         extra={

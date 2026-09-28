@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Getting the specification out of the app: the name the file takes, the
-// download, and the print.
+// file, and the print.
 //
-// Both ways out are local. The download is a blob the browser saves; the
-// print is the same pages handed to the printer through the browser's own
-// dialog. Nothing is uploaded, nothing is rendered by a service — the
+// Both ways out are local. The file is handed to the framework's `saveFile` —
+// a download in a browser, the share sheet in the phone app, where a download
+// has nowhere to go; the print is the same pages handed to the printer
+// through the browser's own dialog. Nothing is uploaded, nothing is rendered by a service — the
 // document is written on the device it was logged on, which is the whole
 // premise this app is built to (see the agent guide).
+
+import {
+  saveFile,
+  type SaveFileOutcome,
+} from "@niclaslindstedt/oss-framework/files";
 
 import { writePdf } from "./pdf/write.ts";
 import type { PdfDoc } from "./pdf/page.ts";
@@ -33,23 +39,20 @@ export function specFilename(projectName: string, period: string): string {
   return `${[...parts, "specification"].join("_")}.pdf`;
 }
 
-/** Save the document as a file. The blob URL is revoked on the next turn of
- *  the event loop rather than immediately: Safari reads the href after the
- *  click returns, and a URL revoked too early is a download that never
- *  starts. */
-export function downloadPdf(doc: PdfDoc, filename: string): void {
-  const blob = new Blob([writePdf(doc) as BlobPart], {
-    type: "application/pdf",
+/** The MIME type the specification is written as. */
+export const PDF_MIME = "application/pdf";
+
+/** Save the document as a file: a download on the web, the share sheet in the
+ *  phone app. Rejects when the phone could not share it, so the form can say
+ *  so. */
+export function savePdf(
+  doc: PdfDoc,
+  filename: string,
+): Promise<SaveFileOutcome> {
+  return saveFile({
+    blob: new Blob([writePdf(doc) as BlobPart], { type: PDF_MIME }),
+    filename,
   });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.rel = "noopener";
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
 /** The attribute that tells the stylesheet a specification is on its way to

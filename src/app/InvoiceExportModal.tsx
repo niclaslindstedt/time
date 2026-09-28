@@ -13,10 +13,10 @@ import { formatDayNamed, formatHours } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import {
   INVOICE_GRAINS,
-  downloadInvoiceLines,
   invoiceFilename,
   invoiceLinesFile,
   invoiceLinesTotal,
+  saveInvoiceLines,
   type InvoiceGrain,
 } from "./invoiceExport.ts";
 import { categoryName } from "./labels.ts";
@@ -47,6 +47,8 @@ type Props = {
   rounding: SpecRounding;
   onGrain: (grain: InvoiceGrain) => void;
   onRounding: (rounding: SpecRounding) => void;
+  /** Says what went wrong when the file could not be saved. */
+  onNotice: (message: string) => void;
   onClose: () => void;
 };
 
@@ -63,6 +65,7 @@ export function InvoiceExportModal({
   rounding,
   onGrain,
   onRounding,
+  onNotice,
   onClose,
 }: Props) {
   const t = useT();
@@ -102,7 +105,17 @@ export function InvoiceExportModal({
         title={t("invoiceExport.title")}
         onCancel={onClose}
         onSave={() => {
-          downloadInvoiceLines(file, invoiceFilename(project.name, periodSlug));
+          const filename = invoiceFilename(project.name, periodSlug);
+          // The form goes as the file leaves; a phone that could not share it
+          // says so over the Report behind.
+          saveInvoiceLines(file, filename).catch((err: unknown) =>
+            onNotice(
+              t("common.exportFailed", {
+                file: filename,
+                reason: err instanceof Error ? err.message : String(err),
+              }),
+            ),
+          );
           onClose();
         }}
         saveDisabled={file.lines.length === 0}
