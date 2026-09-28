@@ -14,7 +14,8 @@ tab and back.
 ## The range
 
 **Week** or **Month**, with arrows to step back and forward and the title to
-jump to the current one. The week follows the **Week starts on** setting. The
+jump to the current one. The week follows the **Week starts on** setting — the device's region
+unless it was chosen: Sunday in the United States, Monday in the Nordics. The
 **…** beside the title is what else can be done with the range: today that is
 [**Export to PDF**](#export-to-pdf).
 

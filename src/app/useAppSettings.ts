@@ -5,6 +5,7 @@ import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 import type { WeekStart } from "@niclaslindstedt/oss-framework/calendar";
 
 import { clampGrain, type InvoiceGrain } from "./invoiceExport.ts";
+import type { Auto, HourCycle } from "./locale.ts";
 import { DEFAULT_ROUNDING, clampRounding, type SpecRounding } from "./spec.ts";
 import {
   DEFAULT_SPEC_PRESET,
@@ -46,8 +47,14 @@ export type ThemeChoice = "light" | "dark" | "system";
 export type AppSettings = {
   theme: ThemeChoice;
   /** First day of the week (`Date.getDay()` numbering: 0 = Sunday,
-   *  1 = Monday) — decides what the weekly report covers. */
-  weekStartsOn: WeekStart;
+   *  1 = Monday) — decides what the weekly report covers, how the month's
+   *  rows run and the order the weekdays are listed in. "auto" is the
+   *  device's locale's (`locale.ts`): Sunday in the US, Monday in Sweden. */
+  weekStart: Auto<WeekStart>;
+  /** The clock a time of day is told on — "7:26 AM" or "07:26" — on every
+   *  screen and in an exported specification. "auto" is the device's
+   *  locale's. */
+  hourClock: Auto<HourCycle>;
   /** Which dial the Today screen draws: one of the presets, or the custom
    *  one below, piece by piece. Both are kept, so going back to a preset and
    *  then to "Custom" again finds the custom dial as it was left. See
@@ -118,7 +125,8 @@ const NOTE_MAX = 500;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
-  weekStartsOn: 1,
+  weekStart: "auto",
+  hourClock: "auto",
   clockPreset: DEFAULT_DIAL_PRESET,
   clock: DIAL_PRESET[DEFAULT_DIAL_PRESET],
   clockSize: "large",
@@ -210,7 +218,20 @@ export function parseSettings(raw: string): AppSettings {
     return DEFAULT_SETTINGS;
   }
   const merged = { ...DEFAULT_SETTINGS, ...(parsed as object) } as AppSettings;
-  const week = Math.round(Number(merged.weekStartsOn));
+  // The week's start was stored as `weekStartsOn` while it had no "auto",
+  // and every device that saved any setting at all saved it — Monday, the
+  // old default, whether or not anybody chose it. So Monday there reads as
+  // "never chosen" and follows the locale now; any other day was a choice
+  // and is kept.
+  const legacyWeek = (parsed as { weekStartsOn?: unknown }).weekStartsOn;
+  const week =
+    "weekStart" in (parsed as object)
+      ? merged.weekStart === "auto"
+        ? "auto"
+        : Math.round(Number(merged.weekStart))
+      : legacyWeek === undefined || Number(legacyWeek) === 1
+        ? "auto"
+        : Math.round(Number(legacyWeek));
   // Settings written before the rename called this key `activeEmployerId`.
   // Read it once so an existing device keeps the project it had on screen
   // rather than falling back to the first one by name.
@@ -227,7 +248,12 @@ export function parseSettings(raw: string): AppSettings {
       merged.theme === "light" || merged.theme === "dark"
         ? merged.theme
         : "system",
-    weekStartsOn: (week >= 0 && week <= 6 ? week : 1) as WeekStart,
+    weekStart:
+      week !== "auto" && week >= 0 && week <= 6 ? (week as WeekStart) : "auto",
+    hourClock:
+      merged.hourClock === "12" || merged.hourClock === "24"
+        ? merged.hourClock
+        : "auto",
     clockPreset:
       merged.clockPreset === "custom"
         ? "custom"

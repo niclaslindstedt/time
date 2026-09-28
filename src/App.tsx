@@ -44,6 +44,11 @@ import { TopBar, topBarNeeded } from "./app/TopBar.tsx";
 import { projectList } from "./app/types.ts";
 import { useAppSettings } from "./app/useAppSettings.ts";
 import { useFocus } from "./app/useFocus.ts";
+import {
+  resolveHourCycle,
+  resolveWeekStart,
+  setLocalePrefs,
+} from "./app/locale.ts";
 import { useDesk, useStand, useWide } from "./app/useShape.ts";
 import { localDocBackend, useDocStore } from "./app/useDocStore.ts";
 import { useShortcuts } from "./app/useShortcuts.ts";
@@ -85,6 +90,13 @@ const toasts = createToastStore();
 export function App() {
   const t = useT();
   const { settings, update } = useAppSettings();
+  // The clock and the week every screen is shown in: the device's locale's,
+  // unless Settings chose (`locale.ts`). Set before any screen renders, so
+  // the formatters they call read this render's answer.
+  setLocalePrefs({
+    hourCycle: resolveHourCycle(settings.hourClock),
+    weekStart: resolveWeekStart(settings.weekStart),
+  });
   useApplyTheme(useMemo(() => appearanceFor(settings.theme), [settings.theme]));
 
   // Developer "Demo data" takeover: while the toggle is on, an in-memory
@@ -235,7 +247,6 @@ export function App() {
     <TodayScreen
       store={store}
       project={project}
-      weekStartsOn={settings.weekStartsOn}
       dial={resolveDial(settings.clockPreset, settings.clock)}
       clockSize={settings.clockSize}
       backlight={resolveBacklight(settings.clockPreset, settings.backlight)}

@@ -38,7 +38,7 @@ import { KindPicker, MarkButton } from "./KindPicker.tsx";
 import {
   CATEGORY_COLORS,
   PROJECT_AUTO_COLOR,
-  WEEK,
+  weekFrom,
   weekdayLabel,
 } from "./labels.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
@@ -289,7 +289,7 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
         <div className="flex flex-col gap-1.5">
           <span className="text-xs text-muted">{t("projects.workDays")}</span>
           <div className="grid grid-cols-7 gap-1">
-            {WEEK.map((day) => {
+            {weekFrom().map((day) => {
               const on = draft.workDays.includes(day);
               return (
                 <button

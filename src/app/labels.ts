@@ -2,7 +2,11 @@
 // Domain value → label, in one place, so every screen names a thing the
 // same way.
 
-import { addDays, type DayKey } from "@niclaslindstedt/oss-framework/calendar";
+import {
+  addDays,
+  type DayKey,
+  type WeekStart,
+} from "@niclaslindstedt/oss-framework/calendar";
 
 import {
   AUTO_CATEGORY_COLORS,
@@ -13,6 +17,7 @@ import {
 import { breakTypeOf, categoryOf } from "./project.ts";
 import { formatDay, formatWeekday } from "./format.ts";
 import type { TFn } from "./i18n/index.ts";
+import { currentWeekStart } from "./locale.ts";
 import type { Project, Weekday } from "./types.ts";
 
 /** A day as a heading: "Today", "Yesterday", or the date. */
@@ -105,9 +110,12 @@ export function weekdayLabel(day: Weekday): string {
   return formatWeekday(addDays("2026-03-01", day));
 }
 
-/** The week as it is shown, Monday first — the order the day picker offers
- *  and the order a project's working days are listed in. */
-export const WEEK: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
+/** The week as it is shown, from the day it starts on — the order the day
+ *  picker offers and the order a project's working days are listed in:
+ *  Monday first in Sweden, Sunday first in the US (`locale.ts`). */
+export function weekFrom(start: WeekStart = currentWeekStart()): Weekday[] {
+  return Array.from({ length: 7 }, (_, i) => ((start + i) % 7) as Weekday);
+}
 
 /** Saturday and Sunday. A working day that falls on one is still a working
  *  day; it is only drawn in the flag colour so it reads as the exception it

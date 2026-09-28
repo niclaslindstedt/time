@@ -277,7 +277,16 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   midnight ("25:14"), because the span it ends belongs to the day before, and
   `formatWallTime` wraps into the day ("01:14"), because a moment being
   _pointed at_ rather than recorded — `workdayEnd` is the only one — is read
-  off a clock, and whoever prints one says which day it falls on.
+  off a clock, and whoever prints one says which day it falls on. Both are
+  told on the reader's clock: "7:26 AM" on a twelve-hour one, where the
+  record's 25th hour reads "1:14 AM +1" instead, and `formatDialTime` is the
+  rim chip's reading without the AM or PM. `toTimeInput` stays 24-hour — it
+  is a time control's value, and the control shows it the device's way.
+- `src/app/locale.ts` — the reader's conventions: the clock (`hourCycleOf`)
+  and the week's first day (`weekStartOf`), read off `Intl` for a locale tag,
+  and resolved against the two "auto" settings. `App.tsx` resolves them once
+  a render into `setLocalePrefs`, which `format.ts` and `labels.ts`'s
+  `weekFrom` read; the Report passes its week start explicitly, as before.
 - `src/app/spec.ts` — the **specification**: a range read as the document an
   invoice is sent with. A reading of `report.ts` and `daySegments` and never a
   second fold of the days, so a specification can never say seven and a half

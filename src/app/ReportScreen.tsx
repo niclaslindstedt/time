@@ -50,6 +50,7 @@ import { NoProject } from "./NoProject.tsx";
 import { RangeGlance } from "./RangeGlance.tsx";
 import { monthOf, runningBalance, summarizeRange, weekOf } from "./report.ts";
 import { SpecExportModal } from "./SpecExportModal.tsx";
+import { resolveWeekStart } from "./locale.ts";
 import type { Project } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
@@ -94,7 +95,7 @@ export function ReportScreen({
   const t = useT();
   const data = store.data;
   const now = useNow(60_000);
-  const weekStartsOn: WeekStart = settings.weekStartsOn;
+  const weekStartsOn: WeekStart = resolveWeekStart(settings.weekStart);
   const [range, setRange] = useState<Range>("week");
   const [rangeMenu, setRangeMenu] = useState(false);
   const [exporting, setExporting] = useState(false);

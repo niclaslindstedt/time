@@ -166,7 +166,6 @@ import { useShortcuts } from "./useShortcuts.ts";
 type Props = {
   store: DocStore;
   project: Project | null;
-  weekStartsOn: number;
   /** The dial the settings resolved to, how big, and the light behind it. */
   dial: DialConfig;
   clockSize: ClockSize;

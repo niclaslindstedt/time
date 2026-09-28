@@ -248,3 +248,43 @@ describe("the specification's style and details", () => {
     expect(s.specDetails).toEqual(DEFAULT_SETTINGS.specDetails);
   });
 });
+
+describe("the clock and the week", () => {
+  it("follows the device until a choice is made", () => {
+    expect(DEFAULT_SETTINGS.hourClock).toBe("auto");
+    expect(DEFAULT_SETTINGS.weekStart).toBe("auto");
+    expect(parseSettings("{}").hourClock).toBe("auto");
+  });
+
+  it("keeps a choice, and clamps one that is not", () => {
+    expect(parseSettings(JSON.stringify({ hourClock: "12" })).hourClock).toBe(
+      "12",
+    );
+    expect(parseSettings(JSON.stringify({ hourClock: 12 })).hourClock).toBe(
+      "auto",
+    );
+    expect(parseSettings(JSON.stringify({ weekStart: 0 })).weekStart).toBe(0);
+    expect(parseSettings(JSON.stringify({ weekStart: 1 })).weekStart).toBe(1);
+    expect(parseSettings(JSON.stringify({ weekStart: 9 })).weekStart).toBe(
+      "auto",
+    );
+  });
+
+  it("reads the old key's Monday as never chosen, and any other day as a choice", () => {
+    // Every device that saved a setting saved the old default with it.
+    expect(parseSettings(JSON.stringify({ weekStartsOn: 1 })).weekStart).toBe(
+      "auto",
+    );
+    expect(parseSettings(JSON.stringify({ weekStartsOn: 0 })).weekStart).toBe(
+      0,
+    );
+    // The new key wins once there is one.
+    expect(
+      parseSettings(JSON.stringify({ weekStartsOn: 0, weekStart: 1 }))
+        .weekStart,
+    ).toBe(1);
+    expect(
+      "weekStartsOn" in parseSettings(JSON.stringify({ weekStartsOn: 0 })),
+    ).toBe(false);
+  });
+});

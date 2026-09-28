@@ -10,6 +10,7 @@ import {
   type DayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
 
+import { currentHourCycle, type HourCycle } from "./locale.ts";
 import { DAY_SECONDS, type Seconds } from "./types.ts";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -46,12 +47,48 @@ export function formatTimer(seconds: Seconds): string {
   return `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 }
 
-/** "12:04" — a moment on the day's clock. Past midnight the hour keeps
- *  counting ("25:10"), because 01:10 would read as the morning of the same
- *  day, and the span it ends belongs to the day before. */
-export function formatTimeOfDay(seconds: Seconds): string {
+/** The space inside "7:26 AM": a no-break space, so a time never breaks
+ *  across a line, and one the PDF's WinAnsi encoding has a code for. */
+const NBSP = "\u00a0";
+
+/** "7:26 AM" / "12:04 PM" — a moment inside one day on the twelve-hour
+ *  clock, the hour unpadded the way an American clock shows it. */
+function twelveHour(s: number, withPeriod: boolean): string {
+  const h = Math.floor(s / 3600) % 24;
+  const time = `${h % 12 === 0 ? 12 : h % 12}:${pad(Math.floor((s % 3600) / 60))}`;
+  return withPeriod ? `${time}${NBSP}${h < 12 ? "AM" : "PM"}` : time;
+}
+
+/** "12:04" — a moment on the day's clock, or "12:04 PM" on a twelve-hour
+ *  clock (`locale.ts` says which; the device's locale unless Settings
+ *  chose). Past midnight the 24-hour reading keeps counting ("25:10"),
+ *  because 01:10 would read as the morning of the same day, and the span it
+ *  ends belongs to the day before. A twelve-hour clock has no 25th hour to
+ *  count on, so it says the same thing the way its readers do — "1:10 AM
+ *  +1", the next day's morning. */
+export function formatTimeOfDay(
+  seconds: Seconds,
+  cycle: HourCycle = currentHourCycle(),
+): string {
   const s = Math.floor(Math.max(0, seconds));
-  return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}`;
+  if (cycle === "24") {
+    return `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}`;
+  }
+  const days = Math.floor(s / DAY_SECONDS);
+  const time = twelveHour(s % DAY_SECONDS, true);
+  return days > 0 ? `${time}${NBSP}+${days}` : time;
+}
+
+/** "1:30" — a moment as the twelve-hour dial itself tells it, for the
+ *  small chips printed on its rim: the hour the hand points at, without the
+ *  AM or PM a dial has no room for and its reader does not need. On a
+ *  24-hour clock it is the record's own reading. */
+export function formatDialTime(
+  seconds: Seconds,
+  cycle: HourCycle = currentHourCycle(),
+): string {
+  if (cycle === "24") return formatTimeOfDay(seconds, cycle);
+  return twelveHour(Math.floor(Math.max(0, seconds)) % DAY_SECONDS, false);
 }
 
 /** "01:10" — the same moment as the clock on the wall would show it, wrapped
@@ -59,14 +96,22 @@ export function formatTimeOfDay(seconds: Seconds): string {
  *  midnight belongs to the day before it; a moment the app is *pointing at*
  *  rather than recording is read off a clock, and no clock has a 25th hour.
  *  Whoever prints one says which day it falls on — see `today.endsAtTomorrow`. */
-export function formatWallTime(seconds: Seconds): string {
-  return formatTimeOfDay(((seconds % DAY_SECONDS) + DAY_SECONDS) % DAY_SECONDS);
+export function formatWallTime(
+  seconds: Seconds,
+  cycle: HourCycle = currentHourCycle(),
+): string {
+  return formatTimeOfDay(
+    ((seconds % DAY_SECONDS) + DAY_SECONDS) % DAY_SECONDS,
+    cycle,
+  );
 }
 
-/** "HH:MM" as a `<input type="time">` wants it — the wall clock's reading,
+/** "HH:MM" as a `<input type="time">` wants it — always on the 24-hour
+ *  clock, which is the control's value format; the control shows it the
+ *  device's way. The wall clock's reading,
  *  since the control cannot show a 25th hour either. */
 export function toTimeInput(seconds: Seconds): string {
-  return formatWallTime(seconds);
+  return formatWallTime(seconds, "24");
 }
 
 /** "12:04" (or "12:04:30") → seconds since midnight, or null when it is not

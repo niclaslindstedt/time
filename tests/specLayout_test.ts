@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, expect, it } from "vitest";
 
+import { hourCycleOf, setLocalePrefs, weekStartOf } from "../src/app/locale.ts";
 import { PAPER, type PdfDoc, type TextItem } from "../src/app/pdf/page.ts";
 import { specification } from "../src/app/spec.ts";
 import {
@@ -248,6 +249,47 @@ describe("the laid-out specification", () => {
     // A break's length is in brackets, because it is not billed time.
     expect(texts(entries).some((t) => /^\(\d+m\)$/.test(t))).toBe(true);
     expect(entries.pages.length).toBeGreaterThan(daily.pages.length);
+  });
+
+  it("sets twelve-hour times whole in their columns, in every style", () => {
+    // "12:30 PM" and a night shift's "1:30 AM +1" are twice the width of
+    // "12:30": the start and end columns have to hold them without cutting.
+    const doc = data(3);
+    doc.days[dayKey("acme", "2026-03-06")] = day("2026-03-06", {
+      sessions: [{ id: "n", start: h(22, 15), end: h(25, 30) }],
+      breaks: [],
+      activities: [],
+    });
+    try {
+      setLocalePrefs({ hourCycle: "12", weekStart: 0 });
+      for (const id of SPEC_PRESETS) {
+        const laid = texts(
+          layoutSpec(
+            input({
+              spec: specification(
+                doc,
+                acme,
+                "2026-03-02",
+                "2026-03-08",
+                "2026-04-30",
+                0,
+              ),
+              style: { ...SPEC_PRESET[id], detail: "entries" },
+            }),
+          ),
+        );
+        expect(laid, id).toContain("8:00\u00a0AM");
+        expect(laid, id).toContain("12:30\u00a0PM");
+        expect(laid, id).toContain("10:15\u00a0PM");
+        expect(laid, id).toContain("1:30\u00a0AM\u00a0+1");
+        expect(
+          laid.filter((t) => /^\d{1,2}:\d\d.*…$/.test(t)),
+          id,
+        ).toEqual([]);
+      }
+    } finally {
+      setLocalePrefs({ hourCycle: hourCycleOf(), weekStart: weekStartOf() });
+    }
   });
 
   it("repeats the table's head on every page it runs onto", () => {

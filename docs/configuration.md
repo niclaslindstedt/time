@@ -55,16 +55,27 @@ never by the web app. See
 Under the **⚙** on the top bar. Persisted per device in localStorage
 (`time:settings`), never synced.
 
-| Setting                | Values                               | Default |
-| ---------------------- | ------------------------------------ | ------- |
-| Theme                  | Light / Dark / Device                | Device  |
-| Week starts on         | Monday / Sunday                      | Monday  |
-| Project in use         | any project                          | first   |
-| Developer mode         | on / off                             | off     |
-| Capture console output | on / off (developer mode)            | off     |
-| PDF style              | six styles / Custom                  | Studio  |
-| PDF rounding           | none / 5 / 6 / 10 / 15 / 30 / 60 min | none    |
-| PDF details            | Prepared by, Client, Reference, Note | empty   |
+| Setting                | Values                               | Default   |
+| ---------------------- | ------------------------------------ | --------- |
+| Theme                  | Light / Dark / Device                | Device    |
+| Times of day           | Automatic / 7:26 PM / 19:26          | Automatic |
+| Week starts on         | Automatic / Monday / Sunday          | Automatic |
+| Project in use         | any project                          | first     |
+| Developer mode         | on / off                             | off       |
+| Capture console output | on / off (developer mode)            | off       |
+| PDF style              | six styles / Custom                  | Studio    |
+| PDF rounding           | none / 5 / 6 / 10 / 15 / 30 / 60 min | none      |
+| PDF details            | Prepared by, Client, Reference, Note | empty     |
+
+**Automatic** is the device's region, read through the browser's `Intl`
+(`src/app/locale.ts`): a twelve-hour clock and a Sunday week in the United
+States, the 24-hour clock and a Monday week in the Nordics and most of
+Europe. The clock reaches every time the app prints — the Today line, the
+Log's pills, the Log's header, the chips on the dial's rim (which drop the AM
+or PM a twelve-hour dial already implies) and the exported specification; the
+week reaches the weekly report, the month chart's rows and the order a
+project's working days are listed in. Time fields are the device's own
+control, which already follows the device.
 
 The last three are the export form's (**Report** → **…** → **Export to PDF**).
 They are per device like everything else here: who you are is not a fact about

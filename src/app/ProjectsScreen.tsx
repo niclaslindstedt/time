@@ -17,7 +17,7 @@ import { ProjectEditModal } from "./ProjectEditModal.tsx";
 import { dayHours, formatHoursField, hoursUnit, weekHours } from "./project.ts";
 import { useT } from "./i18n/index.ts";
 import {
-  WEEK,
+  weekFrom,
   isWeekend,
   projectColor,
   projectGlyph,
@@ -74,7 +74,7 @@ export function ProjectsScreen({
 
       {projects.map((e) => {
         const active = e.id === activeId;
-        const workDays = WEEK.filter((day) => e.workDays.includes(day));
+        const workDays = weekFrom().filter((day) => e.workDays.includes(day));
         return (
           <div
             key={e.id}

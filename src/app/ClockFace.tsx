@@ -20,7 +20,7 @@ import {
   timesAt,
 } from "./clock.ts";
 import { DIAL_BOX, Dial, type Band, type Mark } from "./Dial.tsx";
-import { formatTimeOfDay } from "./format.ts";
+import { formatDialTime, formatTimeOfDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { breakName, categoryColor, categoryName } from "./labels.ts";
 import {
@@ -509,7 +509,7 @@ export function ClockFace({
               title={label}
               className="app-dial-chip absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-flag/50 bg-surface-2 px-1.5 py-0.5 text-[0.625rem] leading-none font-bold text-flag tabular-nums shadow-sm"
             >
-              {formatTimeOfDay(l.at)}
+              {formatDialTime(l.at)}
             </button>
           );
         })}

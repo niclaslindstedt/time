@@ -181,15 +181,37 @@ export function SettingsScreen({
             Sunday are answers to. The label is the one the control was already
             announced by, so the screen now says out loud what a screen reader
             was told all along. */}
+        {/* The clock is offered as the two readings themselves rather than
+            as "12-hour" and "24-hour": which one a reader wants is
+            recognised faster than it is named. */}
+        <Labelled label={t("settings.hourClock")}>
+          <SegmentedControl
+            value={settings.hourClock}
+            options={[
+              { value: "auto", label: t("settings.hourClockAuto") },
+              { value: "12", label: t("settings.hourClock12") },
+              { value: "24", label: t("settings.hourClock24") },
+            ]}
+            onChange={(next) =>
+              update("hourClock", next as AppSettings["hourClock"])
+            }
+            ariaLabel={t("settings.hourClock")}
+            fullWidth
+          />
+        </Labelled>
         <Labelled label={t("settings.weekStart")}>
           <SegmentedControl
-            value={String(settings.weekStartsOn)}
+            value={String(settings.weekStart)}
             options={[
+              { value: "auto", label: t("settings.weekStartAuto") },
               { value: "1", label: t("settings.monday") },
               { value: "0", label: t("settings.sunday") },
             ]}
             onChange={(next) =>
-              update("weekStartsOn", Number(next) as WeekStart)
+              update(
+                "weekStart",
+                next === "auto" ? "auto" : (Number(next) as WeekStart),
+              )
             }
             ariaLabel={t("settings.weekStart")}
             fullWidth
