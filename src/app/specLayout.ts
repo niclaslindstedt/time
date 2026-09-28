@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: split when next touched; known deviation by owner decision
 // The specification, laid out: a `Specification` and a `SpecStyle` in, pages
 // of type and rules out (`pdf/page.ts`).
 //
