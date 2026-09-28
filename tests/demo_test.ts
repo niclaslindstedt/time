@@ -100,6 +100,7 @@ describe("the demo document", () => {
     // midnight to just before the next one, and hold each opening to what
     // any frame of it assumes: nothing is written after the moment it opens,
     // every earlier day is closed, and every worked minute has a kind.
+    // Some 2,500 builds: seconds on a CI runner, so it gets its own timeout.
     const HOURS = [
       at(0, 20),
       at(6, 30),
@@ -133,7 +134,7 @@ describe("the demo document", () => {
         }
       }
     }
-  });
+  }, 60_000);
 
   it("writes today only up to the moment it opens", () => {
     const early = buildDemoData(new Date("2026-09-24T06:30:00"));
