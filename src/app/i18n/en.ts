@@ -876,7 +876,7 @@ export const en = {
     about: "About",
     version: "Version",
     build: "Build",
-    privacy: `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you connect your own cloud account, and then only there.`,
+    privacy: `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you connect your own cloud account or storage server, and then only there.`,
   },
 
   sync: {
