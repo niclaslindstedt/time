@@ -799,7 +799,7 @@ ICloudStoreModule.swift`. Changing it after release strands every document
 
 Native builds run on **EAS** and are dispatch-only
 (`.github/workflows/native.yml`) — every run costs build credits. CI's `native`
-job only type-checks. See `native/README.md` and `native/RELEASING.md`.
+job only type-checks and runs `npx expo-doctor`. See `native/README.md` and `native/RELEASING.md`.
 
 ## Where new code goes
 
