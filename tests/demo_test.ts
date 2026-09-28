@@ -94,6 +94,47 @@ describe("the demo document", () => {
     }
   });
 
+  it("holds at every hour of every day it is opened", () => {
+    // The walk above opens the demo at the frames' 9:41; a reader opens it at
+    // any hour. So open it on every day of a year at hours from just after
+    // midnight to just before the next one, and hold each opening to what
+    // any frame of it assumes: nothing is written after the moment it opens,
+    // every earlier day is closed, and every worked minute has a kind.
+    const HOURS = [
+      at(0, 20),
+      at(6, 30),
+      at(9, 41),
+      at(12, 10),
+      at(15, 5),
+      at(20, 0),
+      at(23, 50),
+    ];
+    const hhmm = (s: number) =>
+      `${String(Math.floor(s / H)).padStart(2, "0")}:${String((s % H) / 60).padStart(2, "0")}`;
+    for (let i = 0; i < 365; i++) {
+      const date = addDays("2026-01-01", i);
+      for (const now of HOURS) {
+        const doc = buildDemoData(new Date(`${date}T${hhmm(now)}:00`));
+        const logged = sortedDays(doc, DEMO_PROJECT_ID);
+        expect(logged[logged.length - 1]!.date <= date).toBe(true);
+        for (const day of logged) {
+          const clock = day.date === date ? now : 86_400;
+          const t = dayTotals(day, project, clock);
+          expect(t.uncategorised).toBe(0);
+          if (day.date < date) {
+            expect(t.state).toBe("out");
+            continue;
+          }
+          for (const span of [...day.sessions, ...day.activities]) {
+            expect(span.start).toBeLessThan(now);
+            if (span.end !== null) expect(span.end).toBeLessThanOrEqual(now);
+          }
+          for (const span of day.breaks) expect(span.start).toBeLessThan(now);
+        }
+      }
+    }
+  });
+
   it("writes today only up to the moment it opens", () => {
     const early = buildDemoData(new Date("2026-09-24T06:30:00"));
     expect(dayFor(early, DEMO_PROJECT_ID, FRAME_DAY)).toBeNull();

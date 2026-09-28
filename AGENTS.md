@@ -867,7 +867,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and `nat
 | A change to the light on the dial's metal          | `src/app/sheen.ts` (the light, and what it does to a facet or a dome — tested in `tests/sheen_test.ts`), `useTilt.ts` (the device's own readings) or `Dial.tsx` (paint)                                                                                                                |
 | A new setting                                      | `src/app/useAppSettings.ts` (shape + clamping) + a `Section` in `SettingsScreen.tsx`                                                                                                                                                                                                   |
 | A new developer-only affordance                    | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                                                                                                                                                             |
-| A change to what the demo shows                    | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demoData_test.ts`                                                                                                                                                                            |
+| A change to what the demo shows                    | `src/app/dev/demoData.ts` (offsets from `today`, never fixed dates), with tests in `tests/demo_test.ts`, which opens it on every day of a year and at hours around the clock                                                                                                           |
 | A new storage backend                              | The framework, not here — this app only wires adapters up in `useSyncEngine.ts`                                                                                                                                                                                                        |
 | A backend only some hosts can offer                | `src/app/cloudHost.ts` (the capability, tested in `tests/cloudHost_test.ts`) + a row in `useSyncEngine.ts`'s `PROVIDER_NAMES` and its `available` — never a check for the wrapper, and never a module constant that claims a host is there                                             |
 | Anything in the native wrapper                     | `native/...` — and read "The native wrapper" above first                                                                                                                                                                                                                               |
@@ -891,7 +891,9 @@ boundary and nothing more. `tests/fixtures/helpers.ts` holds the shared fixtures
 (a project, a day, a named-id `ctx`).
 
 `make test` runs them all; run one file with `npx vitest run tests/day_test.ts`.
-Use the Node `.nvmrc` pins (from nvm).
+`tests/demo_test.ts` walks the demo across a whole year, at hours from just
+after midnight to just before the next, so a demo that only holds on the day it
+was written fails. Use the Node `.nvmrc` pins (from nvm).
 
 A change to the derivation without a test that pins the new behaviour to real
 times is not finished. `dayTotals` takes the project as well as the day, because
