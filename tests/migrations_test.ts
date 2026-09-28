@@ -332,6 +332,22 @@ describe("shape validation", () => {
     expect(e.breakTypes[0]!.defaultMinutes).toBe(1);
     expect(e.categories).toEqual([]);
   });
+
+  it("keeps a week's hours when there are some, and only then", () => {
+    const read = (hoursPerWeek: unknown) =>
+      normalizeDoc({
+        version: 2,
+        projects: {
+          e: { id: "e", name: "E", hoursPerDay: 7.5, hoursPerWeek },
+        },
+        days: {},
+      }).projects.e!;
+    expect(read(37.5).hoursPerWeek).toBe(37.5);
+    expect(read(500).hoursPerWeek).toBe(112);
+    expect("hoursPerWeek" in read(undefined)).toBe(false);
+    expect("hoursPerWeek" in read("lots")).toBe(false);
+    expect(read(undefined).hoursPerDay).toBe(7.5);
+  });
 });
 
 describe("serializeDoc", () => {

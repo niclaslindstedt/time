@@ -14,6 +14,7 @@ import {
 
 import { KindGlyph } from "./icons.tsx";
 import { ProjectEditModal } from "./ProjectEditModal.tsx";
+import { dayHours, formatHoursField, hoursUnit, weekHours } from "./project.ts";
 import { useT } from "./i18n/index.ts";
 import {
   WEEK,
@@ -138,7 +139,13 @@ export function ProjectsScreen({
                 ))
               )}
               <span className={`${PILL} border-line bg-surface-2 text-muted`}>
-                {t("projects.summaryHours", { hours: String(e.hoursPerDay) })}
+                {hoursUnit(e) === "week"
+                  ? t("projects.summaryWeekHours", {
+                      hours: formatHoursField(weekHours(e)),
+                    })
+                  : t("projects.summaryHours", {
+                      hours: formatHoursField(dayHours(e)),
+                    })}
               </span>
             </div>
             {!active && (

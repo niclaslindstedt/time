@@ -34,6 +34,8 @@ import {
   clampBreakMinutes,
   clampCreditMinutes,
   clampHours,
+  clampWeekHours,
+  parseHours,
   suggestedGlyph,
 } from "./project.ts";
 import {
@@ -256,6 +258,11 @@ function parseProject(key: string, value: unknown): Project | null {
     ...(isCategoryColor(value.color) ? { color: value.color } : {}),
     workDays: parseWeekdays(value.workDays),
     hoursPerDay: clampHours(value.hoursPerDay, DEFAULT_HOURS_PER_DAY),
+    // Only there when the hours were entered for the week; a figure that is
+    // not one is dropped, and the day's figure beside it stands.
+    ...(parseHours(value.hoursPerWeek) === null
+      ? {}
+      : { hoursPerWeek: clampWeekHours(value.hoursPerWeek) }),
     breakTypes,
     categories,
     updatedAt: stampOf(value.updatedAt),

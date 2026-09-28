@@ -502,6 +502,7 @@ export const en = {
     deleteHint:
       "The project and every day logged for it are removed. This can't be undone.",
     summaryHours: "{hours} hour workday",
+    summaryWeekHours: "{hours} hour week",
     summaryNoDays: "No working days",
     name: "Name",
     namePlaceholder: "What you are working on",
@@ -510,7 +511,16 @@ export const en = {
     nameRequired: "Give the project a name.",
     workDays: "Working days",
     workDaysHint: "The days a full day is expected. Any other day is extra.",
+    hours: "Working hours",
+    hoursUnit: {
+      day: "Per day",
+      week: "Per week",
+    },
     hoursPerDay: "Hours per working day",
+    hoursPerWeek: "Hours per week",
+    hoursPerDayHint: "{hours} hours a week over the working days.",
+    hoursPerWeekHint: "{hours} hours on each working day.",
+    hoursPerWeekNoDays: "Pick the working days to spread the week over.",
     breakTypes: "Break types",
     breakTypesHint:
       "One button each on the Today screen. The minutes are how long a break of that kind usually takes — the clock expects it back then, and it runs until you end it. Tap a mark to change it.",

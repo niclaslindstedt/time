@@ -6,18 +6,23 @@ import {
   IconButton,
   LabeledInput,
   Modal,
+  SegmentedControl,
   StarIcon,
   TrashIcon,
 } from "@niclaslindstedt/oss-framework/components";
 
 import {
-  MAX_HOURS_PER_DAY,
-  MIN_HOURS_PER_DAY,
-  clampHours,
+  dayHours,
+  formatHoursField,
+  hoursUnit,
   isPinned,
   projectTemplate,
   storedCredit,
   storedPinned,
+  switchHoursUnit,
+  weekHours,
+  withHours,
+  type HoursUnit,
 } from "./project.ts";
 import { useT } from "./i18n/index.ts";
 import { makeId } from "./ids.ts";
@@ -190,13 +195,22 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
       }),
     }));
 
+  // A week's hours go on being the week's when a day is added or taken
+  // away: it is the day that changes, spread over the days there now are.
   const toggleDay = (day: Weekday) =>
-    setDraft((d) => ({
-      ...d,
-      workDays: d.workDays.includes(day)
-        ? d.workDays.filter((w) => w !== day)
-        : [...d.workDays, day].sort(),
-    }));
+    setDraft((d) => {
+      const next = {
+        ...d,
+        workDays: d.workDays.includes(day)
+          ? d.workDays.filter((w) => w !== day)
+          : [...d.workDays, day].sort(),
+      };
+      return next.hoursPerWeek === undefined
+        ? next
+        : withHours(next, "week", next.hoursPerWeek);
+    });
+  const unit = hoursUnit(draft);
+  const hours = unit === "day" ? draft.hoursPerDay : weekHours(draft);
 
   return (
     <Modal
@@ -297,21 +311,46 @@ export function ProjectEditModal({ project, onSave, onClose }: Props) {
           <p className="text-xs text-muted">{t("projects.workDaysHint")}</p>
         </div>
 
-        <LabeledInput
-          label={t("projects.hoursPerDay")}
-          type="number"
-          inputMode="decimal"
-          min={MIN_HOURS_PER_DAY}
-          max={MAX_HOURS_PER_DAY}
-          step={0.25}
-          value={String(draft.hoursPerDay)}
-          onCommit={(next) =>
-            setDraft((d) => ({
-              ...d,
-              hoursPerDay: clampHours(next, d.hoursPerDay),
-            }))
-          }
-        />
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs text-muted">{t("projects.hours")}</span>
+          <SegmentedControl<HoursUnit>
+            value={unit}
+            options={[
+              { value: "day", label: t("projects.hoursUnit.day") },
+              { value: "week", label: t("projects.hoursUnit.week") },
+            ]}
+            onChange={(next) => setDraft((d) => switchHoursUnit(d, next))}
+            ariaLabel={t("projects.hours")}
+            fullWidth
+          />
+          {/* Text rather than a number field: a number field hands back
+              nothing at all for "7,5", which is what the keyboard offers
+              wherever the decimal point is a comma. Keyed by what it shows,
+              because the field keeps a draft of its own and would otherwise
+              go on showing a figure the switch or the clamp has replaced. */}
+          <LabeledInput
+            key={`${unit}:${formatHoursField(hours)}`}
+            label={
+              unit === "day"
+                ? t("projects.hoursPerDay")
+                : t("projects.hoursPerWeek")
+            }
+            inputMode="decimal"
+            value={formatHoursField(hours)}
+            onCommit={(next) => setDraft((d) => withHours(d, unit, next))}
+          />
+          <p className="text-xs text-muted">
+            {unit === "day"
+              ? t("projects.hoursPerDayHint", {
+                  hours: formatHoursField(weekHours(draft)),
+                })
+              : draft.workDays.length === 0
+                ? t("projects.hoursPerWeekNoDays")
+                : t("projects.hoursPerWeekHint", {
+                    hours: formatHoursField(dayHours(draft)),
+                  })}
+          </p>
+        </div>
 
         <div className="flex flex-col gap-2">
           <span className="text-xs text-muted">{t("projects.breakTypes")}</span>
