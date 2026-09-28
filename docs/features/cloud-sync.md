@@ -1,9 +1,9 @@
 # Cloud sync
 
-Off by default. Under **Settings → Cloud sync**, choose Dropbox or Google
-Drive, grant access in the provider's own window, and the app keeps a copy of
-its document — one JSON file, `time.json` — in a folder of your account. Both
-providers appear only when the deploy was built with their client id (see
+Off by default. Under **Settings → Cloud sync**, choose Dropbox, grant access
+in Dropbox's own window, and the app keeps a copy of its document — one JSON
+file, `time.json` — in a folder of your account. Dropbox appears only when the
+deploy was built with its app key (see
 [`../configuration.md`](../configuration.md)).
 
 **iCloud Drive** is offered too, in the App Store build and nowhere else: a

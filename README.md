@@ -67,8 +67,8 @@ adapters, same theme engine, same PWA update lifecycle.
 
 - **It is your record.** When you were at work, for whom and doing what is a
   record about a named person. It lives in your browser's localStorage, and
-  leaves the device only if you connect **your own** iCloud, Dropbox or Google
-  Drive — to a folder you can open, in a JSON file you can read — or your own
+  leaves the device only if you connect **your own** iCloud or Dropbox — to a
+  folder you can open, in a JSON file you can read — or your own
   [storage server](https://github.com/niclaslindstedt/storage), end-to-end
   encrypted so the server cannot read it. No analytics, no
   telemetry, no third-party requests at runtime.

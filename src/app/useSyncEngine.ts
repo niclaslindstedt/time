@@ -72,8 +72,8 @@ export type SyncBackendId = "local" | "icloud" | "dropbox" | "selfhosted";
 
 const BACKEND_KEY = "time:sync:backend";
 const DROPBOX_TOKENS_KEY = "time:sync:dropbox";
-// Google Drive is gone as a backend. The key stays named so a token a device
-// may still hold is cleared rather than left sitting in storage.
+// A backend the app no longer offers kept its token here. The key stays named
+// so a token a device may still hold is cleared rather than left in storage.
 const RETIRED_GDRIVE_TOKEN_KEY = "time:sync:gdrive";
 
 /** How long after the last edit a push is sent. Long enough to coalesce a

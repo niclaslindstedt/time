@@ -26,8 +26,8 @@ to the last pixel of the dial.
 
 ## iCloud
 
-**Settings → Cloud sync** offers **iCloud Drive** beside Dropbox and Google
-Drive, and only in the app — a browser has no way to reach a device's iCloud,
+**Settings → Cloud sync** offers **iCloud Drive** beside Dropbox, and only in
+the app — a browser has no way to reach a device's iCloud,
 so on the website the option is simply not there.
 
 Choosing it is all there is to it. There is no account to connect and no
