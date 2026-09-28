@@ -61,9 +61,11 @@ private let DOWNLOAD_POLL: TimeInterval = 0.2
 /// container reaches the ubiquity daemon, and a read waits — for seconds, on
 /// a file another device has only just written. Both would otherwise hold up
 /// everything else the module has been asked to do. Serial, so two writes
-/// cannot interleave inside the container.
+/// cannot interleave inside the container. Labelled from the running app's own
+/// bundle id, so the label follows whatever identity the build was given.
 private let WORK_QUEUE = DispatchQueue(
-  label: "se.agilator.time.icloud-store", qos: .utility
+  label: "\(Bundle.main.bundleIdentifier ?? "dev.local.time").icloud-store",
+  qos: .utility
 )
 
 public class ICloudStoreModule: Module {
