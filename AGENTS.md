@@ -4,19 +4,7 @@ This file is the canonical source of truth for AI coding agents working in this
 repo. `CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`, and
 `.github/copilot-instructions.md` are symlinks to this file.
 
-## OSS Spec conformance
-
-This repository adheres to [`OSS_SPEC.md`](OSS_SPEC.md), a prescriptive
-specification for open source project layout, documentation, automation, and
-governance. A copy of the spec lives at the repository root so contributors and
-AI agents can consult it without leaving the repo; its version is recorded in
-the YAML front matter at the top of the file.
-
-Run `oss-spec validate .` (or the standalone
-[`validate.sh`](https://github.com/niclaslindstedt/oss-spec/blob/main/scripts/validate.sh))
-to verify conformance. When in doubt about a layout, naming, or workflow
-decision, consult the relevant section of `OSS_SPEC.md` — it is the source of
-truth for the conventions this repo follows.
+Fleet guidelines: APP_GUIDELINES 1.0.1
 
 ## What this app is, and the one rule that follows from it
 
@@ -629,8 +617,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   and the marks in it are
   drawn in the hue being chosen, so the grid is the preview.
 - `src/app/i18n/en.ts` — every user-facing string.
-- `src/output.ts` — the §19.4 central output module (semantic log helpers
-  over the in-app log store).
+- `src/output.ts` — the central output module (semantic log helpers over the
+  in-app log store); no bare `console.*` outside it and the log store.
 - `pwa-plugin.ts` — emits the service worker + version/precache manifests the
   framework's `usePwaUpdate` consumes.
 
@@ -883,22 +871,22 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and `nat
 
 ## Test conventions
 
-Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and run under
-Vitest in the `node` environment — they cover the pure domain modules
-(`intervals`, `day`, `actions`, `report`, `monthChart`, `clock`, `sheen`,
-`format`, `project`, `kinds`, `merge`, `migrations`, `demoData`,
-`shortcuts`, `cloudHost`), which is where the app's real
-logic is. `native_icloud_test.ts` is the one that reaches outside `src/`: it
-pins the strings the wrapper and the app have to agree on, and guards the
+Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
+environment — they cover the pure domain modules (`intervals`, `day`, `actions`,
+`report`, `monthChart`, `clock`, `sheen`, `format`, `project`, `kinds`, `merge`,
+`migrations`, `demoData`, `shortcuts`, `cloudHost`), which is where the app's
+real logic is. `native_icloud_test.ts` is the one that reaches outside `src/`:
+it pins the strings the wrapper and the app have to agree on, and guards the
 import discipline that lets it import from `native/` at all — see "The native
 wrapper" above. `native_save_file_test.ts` does the same for the save-file
-bridge, running it against the framework's own `saveFile`. No
-DOM, no testing-library, no mocked clock: where a test must meet a browser's
-download or the phone app's WebView, `tests/fixtures/shell.ts` stands in for
-exactly that boundary and nothing more. `tests/fixtures/helpers.ts` holds the shared
-fixtures (a project, a day, a named-id `ctx`).
+bridge, running it against the framework's own `saveFile`. No DOM, no
+testing-library, no mocked clock: where a test must meet a browser's download or
+the phone app's WebView, `tests/fixtures/shell.ts` stands in for exactly that
+boundary and nothing more. `tests/fixtures/helpers.ts` holds the shared fixtures
+(a project, a day, a named-id `ctx`).
 
-Run one file with `npx vitest run tests/day_test.ts`.
+`make test` runs them all; run one file with `npx vitest run tests/day_test.ts`.
+Use the Node `.nvmrc` pins (from nvm).
 
 A change to the derivation without a test that pins the new behaviour to real
 times is not finished. `dayTotals` takes the project as well as the day, because
@@ -906,6 +894,14 @@ what a break counts for belongs to the project; `tests/fixtures/helpers.ts`'s
 `project()` counts no break, so a test that cares must say so. UI changes should keep the boot smoke path working:
 `npm run build && npm run preview`, add a project, start working, and
 check that the light comes up and the Log shows the session.
+
+## Source file size
+
+Non-test source files stay under **1000 physical lines**; prefer splitting by
+concern over relaxing the cap. A file may opt out with
+`guidelines:allow-large-file: <reason>` in a comment in its first 20 lines, and
+the reason must be real. The files marked "split when next touched" are known
+deviations: whoever next changes one splits it.
 
 ## Changelog and feature docs
 
@@ -1030,22 +1026,21 @@ with `[Learn more](feature:<slug>)`.
 
 ## Website staleness
 
-The app _is_ the website (OSS_SPEC §11.2 / §11.4) — `pages.yml` builds it and
-deploys `dist/`. There is no separate marketing site to drift out of date, but
-the `<head>` copy does: when the app's description changes, update
-`index.html`'s title/description/OG and the manifest copy in `pwa-plugin.ts`
-together.
+The app _is_ the website — `pages.yml` builds it and deploys `dist/`. There is
+no separate marketing site to drift out of date, but the `<head>` copy does:
+when the app's description changes, update `index.html`'s title/description/OG
+and the manifest copy in `pwa-plugin.ts` together.
 
-The website is unlisted (OSS_SPEC §11.3.12), so the spec's SEO, Lighthouse and
-size-budget mandates do not apply; every page carries a robots `noindex`.
-
-oss-spec:unlisted-website: the web build is a testing surface; users install the app from its store listing
+The website is unlisted: it is a testing surface, and people install the app
+from its store listing. Every page it emits carries a robots `noindex`, and it
+ships no sitemap, structured data, `llms.txt`, SEO or Lighthouse workflow, and
+no page-weight or chunk budget.
 
 ## Maintenance skills
 
-Skills live under `.agents/skills/` (OSS_SPEC §21); `.claude/skills` is a
-symlink into that tree. Each has a `SKILL.md` with its discovery process, its
-source→output mapping, and a `.last-updated` marker.
+Skills live under `.agents/skills/`; `.claude/skills` is a symlink into that
+tree. Each has a `SKILL.md` with its discovery process, its source→output
+mapping, and a `.last-updated` marker.
 
 | Skill             | Runs when                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
