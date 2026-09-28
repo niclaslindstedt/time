@@ -80,7 +80,7 @@ dependency of the app — the script says how to install it outside the lockfile
 
 ## Tests
 
-Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and cover the
+Tests live in `tests/` with a `_test` suffix and cover the
 pure domain modules — the interval arithmetic, the day derivation, the edits,
 the report, the clock geometry, the document merge, and the storage
 migrations. Run one file with `npx vitest run tests/day_test.ts`. UI changes
