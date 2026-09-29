@@ -97,11 +97,14 @@ module.exports = () => ({
 
     android: {
       package: BUNDLE_ID,
-      // None. The wrapper reads no sensor, no contact and no file outside its
-      // own sandbox — and Play's data-safety form is answered against this
-      // list. iCloud is Apple's, so on Android the app is the web app served
-      // from inside the download and nothing else.
-      permissions: [],
+      // The camera, for the pairing QR code, and nothing else: the wrapper
+      // reads no other sensor, no contact and no file outside its own sandbox
+      // — and Play's data-safety form is answered against this list. The
+      // camera plugin would add the microphone too; the scanner records
+      // nothing, so it is blocked outright. iCloud is Apple's, so on Android
+      // the app is otherwise the web app served from inside the download.
+      permissions: ["android.permission.CAMERA"],
+      blockedPermissions: ["android.permission.RECORD_AUDIO"],
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: MARK_INK,
@@ -124,6 +127,22 @@ module.exports = () => ({
       [
         "expo-build-properties",
         { android: { minSdkVersion: 28, usesCleartextTraffic: true } },
+      ],
+      // The in-app QR scanner (src/QrScanner.tsx): the camera is asked for the
+      // first time the reader taps Scan on the pairing sheet, never at launch.
+      // The string is what iOS shows in that prompt, and App Review reads it
+      // against what the app does — the camera, only, for the pairing code,
+      // no picture kept. No microphone on either platform. English is the
+      // only language the app ships; a second one adds its translation of
+      // this string through Expo's `locales` in the same change.
+      [
+        "expo-camera",
+        {
+          cameraPermission:
+            "The camera is used only to scan the pairing code that connects this app to your storage server. No picture is kept.",
+          microphonePermission: false,
+          recordAudioAndroid: false,
+        },
       ],
     ],
 

@@ -70,6 +70,18 @@ share sheet instead, with the file already named: save it to Files, AirDrop
 it, mail it. The website keeps its download. The wrapper is handed the file
 only to show the sheet, and keeps nothing but the latest one in its cache.
 
+## Scanning a pairing code
+
+Connecting the app to **your own storage server** takes a pairing code, which
+the server's console or one of your other devices shows as a QR code. In the
+app, the pairing sheet has a **Scan** button: tap it, allow the camera the
+first time, and point the phone at the code. The camera is used for nothing
+else — it is asked for only when you tap Scan, and no picture is kept; only
+the code it reads is used. Pasting the code still works, and if you turned
+the camera off for the app, the sheet says so and you can allow it again in
+Settings or paste instead. (The phone's own camera app would open the code's
+link in the browser, on the website, rather than here.)
+
 ## What the wrapper is not allowed to do
 
 Two rules, and they are what keep the app and the website the same product:

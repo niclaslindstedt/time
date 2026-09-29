@@ -19,9 +19,14 @@
 // `useSelfHosted.ts`.
 
 import {
+  ScanQrError,
+  type ScanQrLabels,
+} from "@niclaslindstedt/oss-framework/qr";
+import {
   createSelfHostedClient,
   defaultKeyVault,
   parseStoragePayload,
+  scanStorageCode,
   StorageNotFoundError,
   StoragePayloadError,
   type KeyVault,
@@ -106,6 +111,69 @@ export function checkPairing(text: string): PairingCheck {
       message: err instanceof StoragePayloadError ? err.message : undefined,
     };
   }
+}
+
+/** How a tap on Scan ended. `code` is the text as read — the string a paste
+ *  gives — and goes down the same path; the rest say what to tell the reader. */
+export type ScanOutcome =
+  | { kind: "code"; code: string }
+  | { kind: "cancelled" }
+  | { kind: "denied" }
+  | { kind: "unavailable" }
+  | { kind: "invite" }
+  | { kind: "invalid"; message?: string };
+
+/** Scan a pairing code with the phone app's camera (the framework's scanner,
+ *  offered only where `canScanQrCode()` is true) and say how it went. The
+ *  scanned code is a one-time secret: it is returned, never logged or kept. */
+export async function scanPairing(labels: ScanQrLabels): Promise<ScanOutcome> {
+  try {
+    const code = await scanStorageCode({ labels });
+    return code === null ? { kind: "cancelled" } : { kind: "code", code };
+  } catch (err) {
+    if (err instanceof ScanQrError) {
+      return { kind: err.reason === "denied" ? "denied" : "unavailable" };
+    }
+    if (err instanceof StoragePayloadError) {
+      // An invite to a shared space is a storage code too, of the other kind:
+      // the framework says so in its message (pinned by the tests).
+      return err.message.startsWith("that is an invite")
+        ? { kind: "invite" }
+        : { kind: "invalid", message: err.message };
+    }
+    return { kind: "unavailable" };
+  }
+}
+
+/** What the pairing sheet says when a scan brought no code back. Denied
+ *  points to Settings, or to pasting — the paste field is always there. */
+export function scanProblemKey(
+  outcome: Exclude<ScanOutcome, { kind: "code" | "cancelled" }>,
+):
+  | "selfHosted.scanDenied"
+  | "selfHosted.scanUnavailable"
+  | "selfHosted.codeInvite"
+  | "selfHosted.scanInvalid" {
+  switch (outcome.kind) {
+    case "denied":
+      return "selfHosted.scanDenied";
+    case "unavailable":
+      return "selfHosted.scanUnavailable";
+    case "invite":
+      return "selfHosted.codeInvite";
+    case "invalid":
+      return "selfHosted.scanInvalid";
+  }
+}
+
+/** How the pairing sheet tells the reader to hand it a code. The phone app
+ *  scans in the app (its Scan button): the phone's own camera would open the
+ *  code's link in the browser, not here. Everywhere else — the website, the
+ *  desktop app — the code is scanned with a phone's camera or pasted. */
+export function pairingHintKey(
+  canScan: boolean,
+): "selfHosted.codeHintScan" | "selfHosted.codeHint" {
+  return canScan ? "selfHosted.codeHintScan" : "selfHosted.codeHint";
 }
 
 /** The pairing code an app link opened this page with, if any. */

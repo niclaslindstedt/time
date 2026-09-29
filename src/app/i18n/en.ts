@@ -876,7 +876,7 @@ export const en = {
     about: "About",
     version: "Version",
     build: "Build",
-    privacy: `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you connect your own cloud account or storage server, and then only there.`,
+    privacy: `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you connect your own cloud account or storage server, and then only there. In the phone app, the camera is used only when you tap Scan to read a pairing code, and no picture is kept.`,
   },
 
   sync: {
@@ -890,6 +890,16 @@ export const en = {
     codeLabel: "Pairing code",
     codeHint:
       "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then scan its QR code with this phone's camera or paste the link here. A code from one of your other devices works too.",
+    // The phone app, where the sheet offers its own scanner: the phone's
+    // camera app would open the code's link in the browser, not here.
+    codeHintScan:
+      "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then tap Scan and point this phone at its QR code — or paste the link here. A code from one of your other devices works too.",
+    scan: "Scan",
+    scanHint: "Point the camera at the pairing code",
+    scanDenied:
+      "Camera access is off for this app. Allow it in Settings, or paste the code.",
+    scanUnavailable: "The camera could not be opened. Paste the code instead.",
+    scanInvalid: "That QR code is not a pairing code.",
     codePlaceholder: "oss-storage://pair?…",
     deviceLabel: "This device's name",
     connect: "Connect",

@@ -5,10 +5,11 @@
 // WebView at it, keeps the native chrome in step with the page's theme, sends
 // off-origin links to the system browser, answers the page when it asks its
 // iCloud container for the document, opens a provider's sign-in in an
-// authentication session when the page asks for one, and hands an export to
-// the share sheet when the page saves a file. There is no native UI at all
-// beyond a spinner and a failure screen — everything a reader sees is the web
-// app, unchanged.
+// authentication session when the page asks for one, hands an export to the
+// share sheet when the page saves a file, and opens the camera to read a
+// pairing code when the reader taps Scan. There is no native UI at all beyond
+// a spinner, a failure screen and that scanner — everything else a reader
+// sees is the web app, unchanged.
 //
 // The wrapper adds exactly two things the browser cannot do, and it has to add
 // something: App Store guideline 4.2 rejects a build that is only a viewer for
@@ -70,6 +71,16 @@ import {
   type SaveFileRequest,
 } from "./src/saveFileBridge";
 import { answerSaveFile } from "./src/saveFile";
+import {
+  SCAN_QR_DESCRIPTOR,
+  isFromOrigin,
+  isScanQrRequest,
+  refusal,
+  scanQrResultScript,
+  type ScanQrAnswer,
+  type ScanQrRequest,
+} from "./src/scanQrBridge";
+import { QrScanner } from "./src/QrScanner";
 
 // Hold the native splash until the WebView actually paints. Called at module
 // scope so the auto-hide never wins the race; a rejection only means the
@@ -199,6 +210,16 @@ export default function App() {
     );
   }, []);
 
+  // One scan, open while the page waits on it (see `scanQrBridge.ts`). The
+  // camera is mounted only while this holds a request.
+  const [scan, setScan] = useState<ScanQrRequest | null>(null);
+  const scanOpen = useRef(false);
+  const answerScan = useCallback((id: string, answer: ScanQrAnswer) => {
+    webViewRef.current?.injectJavaScript(scanQrResultScript(id, answer));
+  }, []);
+
+  const origin = server.status === "ready" ? server.origin : null;
+
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       let parsed: unknown;
@@ -220,6 +241,18 @@ export default function App() {
         saveFile(parsed);
         return;
       }
+      if (isScanQrRequest(parsed)) {
+        // Only the bundled page may open the camera.
+        if (!origin || !isFromOrigin(event.nativeEvent.url, origin)) return;
+        const refused = refusal(parsed, scanOpen.current);
+        if (refused) {
+          answerScan(parsed.id, refused);
+          return;
+        }
+        scanOpen.current = true;
+        setScan(parsed);
+        return;
+      }
       if (!isThemeReport(parsed)) return;
 
       // The native chrome follows the page's theme so the status bar and the
@@ -229,7 +262,7 @@ export default function App() {
         setPageBackground(reported.trim());
       }
     },
-    [answerCloud, signIn, saveFile],
+    [answerCloud, signIn, saveFile, answerScan, origin],
   );
 
   // --- navigation -----------------------------------------------------------
@@ -246,8 +279,6 @@ export default function App() {
     });
     return () => sub.remove();
   }, []);
-
-  const origin = server.status === "ready" ? server.origin : null;
 
   // Keep the WebView on the embedded app. Anything else — a link out of the
   // app — belongs in the system browser, because App Review expects external
@@ -317,9 +348,10 @@ export default function App() {
             allowsBackForwardNavigationGestures
             setSupportMultipleWindows={false}
             // Before the page's own scripts: the service-worker guard, and
-            // the descriptor that tells the framework this shell can save a
-            // file (so its `saveFile` hands exports to the share sheet).
-            injectedJavaScriptBeforeContentLoaded={`${BEFORE_LOAD_SCRIPT}\n${SAVE_FILE_DESCRIPTOR}`}
+            // the descriptors that tell the framework this shell can save a
+            // file (so its `saveFile` hands exports to the share sheet) and
+            // scan a QR code (so the pairing sheet offers Scan).
+            injectedJavaScriptBeforeContentLoaded={`${BEFORE_LOAD_SCRIPT}\n${SAVE_FILE_DESCRIPTOR}\n${SCAN_QR_DESCRIPTOR}`}
             // Three scripts, one prop: the theme reporter the chrome follows,
             // the iCloud host the page looks for, and the auth-session
             // provider its Dropbox sign-in looks for. All run once the page
@@ -349,6 +381,16 @@ export default function App() {
           </View>
         )}
       </SafeAreaView>
+      {scan ? (
+        <QrScanner
+          request={scan}
+          onAnswer={(answer) => {
+            scanOpen.current = false;
+            setScan(null);
+            answerScan(scan.id, answer);
+          }}
+        />
+      ) : null}
     </SafeAreaProvider>
   );
 }

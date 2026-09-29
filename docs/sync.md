@@ -72,9 +72,12 @@ decisions live in `src/app/selfHosted.ts` (pure, tested in
   **recovery key** once; the sheet stays open until the reader says it is
   stored. It is the only way back if every device is lost.
 - **A code another device made** carries the account key sealed inside it, so
-  that device is syncing the moment it pairs. A phone's camera opens the app
-  straight from the QR (`https://…/#oss=…`); the code is wiped from the
-  address bar as soon as it is read.
+  that device is syncing the moment it pairs. A phone's camera opens the
+  website straight from the QR (`https://…/#oss=…`); the code is wiped from
+  the address bar as soon as it is read. The phone app scans it itself: its
+  pairing sheet offers **Scan** where the shell advertises the framework's
+  `scan-qr` capability (`canScanQrCode()`), and `scanPairing` in
+  `selfHosted.ts` hands the code down the same path as a paste.
 - **A code the server made**, for an account that already has keys, leaves
   the new device waiting: it shows a **safety code**, and a device that holds
   the keys approves it in Settings after checking the same code is shown

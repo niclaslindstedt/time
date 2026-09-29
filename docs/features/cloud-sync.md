@@ -18,8 +18,10 @@ where you can open it and copy it out. See
 yourself — a [storage server](https://github.com/niclaslindstedt/storage) at
 home or on a host you choose. It is end-to-end encrypted: the server holds the
 file but cannot read it, nor its name. Choosing it asks for a **pairing
-code**; paste the one the server's admin console shows (or point the phone's
-camera at its QR, which opens the app with the code in it). The first device
+code**; paste the one the server's admin console shows — or, in the phone
+app, tap **Scan** and point the phone at its QR (the camera is asked for then,
+and no picture is kept). On the website, pointing a phone's camera at the QR
+opens the website with the code in it. The first device
 makes the account's key and shows a **recovery key** — write it down, it is
 the only way back if every device is lost. Every other device is added from
 one already connected, under **Settings → Add a device**: a QR that pairs the

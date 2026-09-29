@@ -5,17 +5,26 @@ import {
   LABELED_FIELD_CLASS,
   Modal,
 } from "@niclaslindstedt/oss-framework/components";
+import { canScanQrCode } from "@niclaslindstedt/oss-framework/qr";
 import { describeStorageError } from "@niclaslindstedt/oss-framework/storage";
 
 import { useT } from "./i18n/index.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
-import { checkPairing, defaultDeviceName } from "./selfHosted.ts";
+import {
+  checkPairing,
+  defaultDeviceName,
+  pairingHintKey,
+  scanPairing,
+  scanProblemKey,
+} from "./selfHosted.ts";
 import type { SelfHosted } from "./useSelfHosted.ts";
 
 // Connecting a device to the reader's own server, one step at a time:
 //
-//   code      — the pairing code, pasted or handed over by an app link, and
-//               what this device will be called in the server's device list;
+//   code      — the pairing code, pasted, scanned with the phone app's camera
+//               (Scan, only where the shell offers a scanner) or handed over
+//               by an app link, and what this device will be called in the
+//               server's device list;
 //   new       — the account's first device: make the account key, here;
 //   recovery  — show the recovery key, once, and hold the sheet open until
 //               the reader says it is stored (it is the only way back);
@@ -68,6 +77,9 @@ export function SelfHostedConnectModal({
   const waiting = useRef<AbortController | null>(null);
 
   const check = checkPairing(payload);
+  // Only the phone app's shell offers a scanner; it says so before the page
+  // loads, so this holds for the sheet's life. Everywhere else: paste.
+  const canScan = canScanQrCode();
 
   async function finish(): Promise<void> {
     await selfHosted.activate();
@@ -91,15 +103,32 @@ export function SelfHostedConnectModal({
     }
   }
 
-  const pair = () =>
+  async function connect(code: string): Promise<void> {
+    if (!checkPairing(code).ok) return;
+    const state = await client.pair(code.trim(), {
+      name: deviceName.trim() || defaultDeviceName(navigator.userAgent),
+      platform: "web",
+    });
+    if (state === "ready") return finish();
+    setStep((await client.accountHasKeys()) ? "existing" : "new");
+  }
+
+  const pair = () => run(() => connect(payload));
+
+  // A scanned code takes the pasted one's path: into the field, then
+  // connected at once — the tap on Scan was the reader's go-ahead.
+  const scan = () =>
     run(async () => {
-      if (!check.ok) return;
-      const state = await client.pair(payload.trim(), {
-        name: deviceName.trim() || defaultDeviceName(navigator.userAgent),
-        platform: "web",
+      const outcome = await scanPairing({
+        hint: t("selfHosted.scanHint"),
+        cancel: t("common.cancel"),
       });
-      if (state === "ready") return finish();
-      setStep((await client.accountHasKeys()) ? "existing" : "new");
+      if (outcome.kind === "cancelled") return;
+      if (outcome.kind === "code") {
+        setPayload(outcome.code);
+        return connect(outcome.code);
+      }
+      throw new Error(t(scanProblemKey(outcome)));
     });
 
   const makeKeys = () =>
@@ -206,6 +235,16 @@ export function SelfHostedConnectModal({
         {step === "code" && (
           <>
             <p className="text-xs text-muted">{t("selfHosted.intro")}</p>
+            {canScan && (
+              <button
+                type="button"
+                onClick={() => void scan()}
+                disabled={busy}
+                className="min-h-11 rounded-xl border border-line bg-surface-3 px-3 text-sm font-bold text-fg hover:bg-surface-2 disabled:opacity-50"
+              >
+                {t("selfHosted.scan")}
+              </button>
+            )}
             <label className="flex min-w-0 flex-col gap-1">
               <span className="text-xs text-muted">
                 {t("selfHosted.codeLabel")}
@@ -220,7 +259,7 @@ export function SelfHostedConnectModal({
                 className={`${TEXT_CLASS} font-mono text-xs`}
               />
             </label>
-            <p className="text-xs text-muted">{t("selfHosted.codeHint")}</p>
+            <p className="text-xs text-muted">{t(pairingHintKey(canScan))}</p>
             {codeProblem && (
               <p className="text-xs text-danger" role="alert">
                 {codeProblem}
