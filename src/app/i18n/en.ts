@@ -108,8 +108,9 @@ export const en = {
     // screen reader reaches it out of order.
     moreBreaks: "More breaks",
     moreKinds: "More kinds of work",
-    // Tapping the timer: the moment the work started is the one time of day
-    // that is wrong most often, because the app is opened after the fact.
+    // Tapping the line under the dial: the moment the work started is the one
+    // time of day that is wrong most often, because the app is opened after
+    // the fact.
     arrival: "Correct when you started",
     arrivalTitle: "When did you start?",
     arrivalHint:
@@ -117,6 +118,13 @@ export const en = {
     arrivalWorked: "That makes {duration} worked so far.",
     arrivalEarlier: "{minutes} min earlier",
     arrivalLater: "{minutes} min later",
+    // The same line once the day is stopped: the end is now the time most
+    // likely to be wrong, because the watch was stopped after leaving.
+    departure: "Correct when you stopped",
+    departureTitle: "When did you stop?",
+    departureHint:
+      "Moves the end of the last stretch you worked. The day and the balance follow.",
+    departureWorked: "That makes {duration} worked.",
     // Creating a break type or a kind of work from the Today screen, without
     // going to the project form for it. Naming one is a change to the
     // project, so it is offered before the day has started too — and then it

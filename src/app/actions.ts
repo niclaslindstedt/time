@@ -383,6 +383,46 @@ export function setSessionStart(
 }
 
 /**
+ * Move when a session ended — "I actually left at half four", tapped on the
+ * line under the dial once the day is stopped. What stopping closed goes
+ * with it: a break or a kind of work that ended at the old end ends at the
+ * new one, one that would now run past it is cut there, and one that would
+ * start after it is dropped — it did not happen inside the session. Refused
+ * on a session still open, when the end would come before a minute of it, or
+ * when it would reach over the start of a later session.
+ */
+export function setSessionEnd(
+  day: WorkDay,
+  id: string,
+  end: Seconds,
+  ctx: EditContext,
+): WorkDay {
+  const session = day.sessions.find((s) => s.id === id);
+  if (!session || session.end === null) return day;
+  if (!isValidSpan(session.start, end)) return day;
+  if (end - session.start < MIN_SESSION_SECONDS) return day;
+  if (end === session.end) return day;
+  for (const other of day.sessions) {
+    if (other.id === id) continue;
+    if (other.start >= session.start && other.start < end) return day;
+  }
+
+  const old = session.end;
+  const follow = <S extends Span>(span: S): S => {
+    if (span.start < session.start || span.start >= old || span.end === null) {
+      return span;
+    }
+    const next = span.end === old ? end : Math.min(span.end, end);
+    return next === span.end ? span : { ...span, end: next };
+  };
+  return stamp(day, ctx, {
+    sessions: day.sessions.map((s) => (s.id === id ? { ...s, end } : s)),
+    breaks: dropEmpty(day.breaks.map(follow)),
+    activities: dropEmpty(day.activities.map(follow)),
+  });
+}
+
+/**
  * Move the moment two stretches of the day meet — the end of the break and
  * the start of the work after it are one edge, so pushing a lunch's end from
  * 12:10 to 12:20 starts the coding at 12:20 rather than leaving ten minutes

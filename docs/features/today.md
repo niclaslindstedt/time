@@ -156,10 +156,15 @@ you go back to when the break ends.
 Two corrections live on this screen, because they are the two that are noticed
 here:
 
-- **The line under the dial** opens the arrival. The app tends to be opened
-  after the fact — you are at the desk, the kettle has boiled, and it is
-  twenty past — so the nudges go backwards first (−30, −15, −5) and the modal
-  says what the change makes of the day before you save it.
+- **The line under the dial** opens the arrival while you are working. The
+  app tends to be opened after the fact — you are at the desk, the kettle has
+  boiled, and it is twenty past — so the nudges go backwards first (−30, −15,
+  −5) and the modal says what the change makes of the day before you save it.
+  Once the day is stopped the same line opens the departure instead — when
+  the last stretch ended, since the watch tends to be stopped after leaving
+  rather than at the door. Whatever stopping closed moves with it: a kind of
+  work that ran to the end still does, and a break the new end cuts into is
+  cut there.
 - **A stretch on the ring** opens the day stretch by stretch: working, lunch,
   working, with the one pressed marked. Every stretch shows both its start and
   its end, each of which can be moved by typing a time or nudging it five

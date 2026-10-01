@@ -551,7 +551,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   makes of it, each end movable. The only edit it can make is `moveBoundary`,
   which moves both sides of a moment at once.
 - `src/app/ArrivalModal.tsx`, `KindModal.tsx` — the Today screen's two
-  small forms: when you started (opened by the timer), and a kind of break or
+  small forms: when you started — or, once the day is stopped, when you
+  stopped (`setSessionEnd`) — opened by the line under the dial, and a kind of break or
   work — named on the spot from the "Custom" pill, or held open on one the
   project already has to change what it is called and what it wears. One form
   for both, because they are the same four questions; held open it starts on

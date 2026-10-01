@@ -12,6 +12,7 @@ import {
   moveBoundary,
   removeSpan,
   setCategory,
+  setSessionEnd,
   setSessionStart,
   takeBreak,
   updateSpan,
@@ -442,5 +443,66 @@ describe("correcting the arrival", () => {
     expect(setSessionStart(d, session.id, h(11), c)).toBe(d);
     expect(setSessionStart(d, session.id, h(18), c)).toBe(d);
     expect(setSessionStart(d, "nope", h(9), c)).toBe(d);
+  });
+});
+
+describe("correcting the departure", () => {
+  it("moves the end of a stopped session and what stopping closed", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = setCategory(d, "code", h(8), c);
+    d = takeBreak(d, "lunch", h(12), c);
+    d = endBreak(d, h(12, 30), c);
+    d = clockOut(d, h(17), c);
+    const session = latestSession(d)!;
+
+    const later = setSessionEnd(d, session.id, h(17, 30), c);
+    expect(later.sessions[0]).toMatchObject({ start: h(8), end: h(17, 30) });
+    expect(later.activities[0]).toMatchObject({ start: h(8), end: h(17, 30) });
+    expect(later.breaks[0]).toMatchObject({ start: h(12), end: h(12, 30) });
+    expect(dayTotals(later, acme, h(18)).worked).toBe(h(9));
+
+    const earlier = setSessionEnd(d, session.id, h(16, 30), c);
+    expect(earlier.sessions[0]!.end).toBe(h(16, 30));
+    expect(earlier.activities[0]!.end).toBe(h(16, 30));
+    expect(dayTotals(earlier, acme, h(18)).worked).toBe(h(8));
+  });
+
+  it("cuts a break the new end runs into and drops one after it", () => {
+    const c = ctx();
+    let d = clockIn(empty(), h(8), c);
+    d = takeBreak(d, "lunch", h(12), c);
+    d = endBreak(d, h(12, 30), c);
+    d = takeBreak(d, "coffee", h(15), c);
+    d = clockOut(d, h(15, 20), c);
+    const session = latestSession(d)!;
+
+    const cut = setSessionEnd(d, session.id, h(15, 10), c);
+    expect(cut.breaks).toHaveLength(2);
+    expect(cut.breaks[1]).toMatchObject({ start: h(15), end: h(15, 10) });
+
+    const dropped = setSessionEnd(d, session.id, h(12, 15), c);
+    expect(dropped.breaks).toEqual([
+      expect.objectContaining({ start: h(12), end: h(12, 15) }),
+    ]);
+    const gone = setSessionEnd(d, session.id, h(11), c);
+    expect(gone.breaks).toEqual([]);
+  });
+
+  it("refuses an open session, an inverted one and one over the next", () => {
+    const c = ctx();
+    const open = clockIn(empty(), h(8), c);
+    expect(setSessionEnd(open, latestSession(open)!.id, h(9), c)).toBe(open);
+
+    let d = addSession(empty(), h(8), h(12), c);
+    d = addSession(d, h(13), h(17), c);
+    const morning = d.sessions.find((s) => s.start === h(8))!;
+    expect(setSessionEnd(d, morning.id, h(13, 30), c)).toBe(d);
+    expect(setSessionEnd(d, morning.id, h(8), c)).toBe(d);
+    expect(setSessionEnd(d, morning.id, h(7), c)).toBe(d);
+    expect(setSessionEnd(d, "nope", h(11), c)).toBe(d);
+    expect(setSessionEnd(d, morning.id, h(12, 30), c).sessions).toContainEqual(
+      expect.objectContaining({ start: h(8), end: h(12, 30) }),
+    );
   });
 });
