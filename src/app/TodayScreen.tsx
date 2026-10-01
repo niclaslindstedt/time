@@ -25,11 +25,12 @@ import {
   latestSession,
   moveBoundary,
   setCategory,
+  setSessionEnd,
   setSessionStart,
   takeBreak,
   type EditContext,
 } from "./actions.ts";
-import { ArrivalModal } from "./ArrivalModal.tsx";
+import { ArrivalModal, type Edge } from "./ArrivalModal.tsx";
 import { ClockFace } from "./ClockFace.tsx";
 import { DayTimelineModal } from "./DayTimelineModal.tsx";
 import { breakDue, dayKinds, dayTotals, progress, workdayEnd } from "./day.ts";
@@ -89,7 +90,8 @@ import { useShortcuts } from "./useShortcuts.ts";
 // already draws, and it was the loudest thing on the screen.
 //
 // Three corrections live here rather than on the Log, because they are the
-// three noticed here: the line under the dial opens the arrival, a stretch
+// three noticed here: the line under the dial opens the arrival — or, once
+// the day is stopped, the departure — a stretch
 // on the ring opens the day stretch by stretch, and the square marked "…" at
 // the end of each row reaches the kinds that are not on the screen and
 // invents the one nobody thought to set up in advance. None of them leave
@@ -408,6 +410,13 @@ export function TodayScreen({
    *  hold, so they say so rather than being shut. */
   const out = state === "out";
   const session = latestSession(day);
+  /** Which end of that session the line under the dial corrects: the
+   *  arrival while it is running, and once it is stopped the moment it
+   *  stopped — the time a stopped day is most likely to have wrong, since the
+   *  watch tends to be stopped after leaving rather than at the door. */
+  const edge: Edge | null =
+    session === null ? null : session.end === null ? "start" : "end";
+  const edgeLabel = edge === "end" ? t("today.departure") : t("today.arrival");
   const fraction = progress(totals.worked, project);
   /** When today's hours are done, if the work goes on from here unbroken.
    *  Null on a day the project expects nothing of, before the day has
@@ -540,10 +549,10 @@ export function TodayScreen({
     },
     ...(state !== "out" ? project.breakTypes.map(breakRow) : []),
     ...(state !== "out" ? project.categories.map(categoryRow) : []),
-    ...(session
+    ...(edge
       ? [
           {
-            label: t("today.arrival"),
+            label: edgeLabel,
             onSelect: () => setArriving(true),
           } satisfies RowAction,
         ]
@@ -567,7 +576,8 @@ export function TodayScreen({
     >
       {/* The dial, and under it the one line of words: what the day is doing
           and since when. The line is a button — the arrival is the time of
-          day that is wrong most often, and this is where you see it. */}
+          day that is wrong most often, and this is where you see it; once
+          the day is stopped it is the departure instead. */}
       <div data-area="dial" className="flex flex-col items-center gap-2">
         {/* On a desk the slot is sized by height rather than width, and the
             size is the share of the window it may take (`styles.css`). */}
@@ -616,7 +626,7 @@ export function TodayScreen({
             type="button"
             disabled={!session}
             onClick={() => setArriving(true)}
-            title={session ? t("today.arrival") : undefined}
+            title={edge ? edgeLabel : undefined}
             className={`rounded-md px-2 py-1 text-xs font-bold tracking-wide uppercase transition-colors enabled:hover:bg-surface-2 disabled:cursor-default ${
               onBreak
                 ? "text-flag"
@@ -922,9 +932,10 @@ export function TodayScreen({
         />
       )}
 
-      {arriving && session && (
+      {arriving && session && edge === "start" && (
         <ArrivalModal
-          start={session.start}
+          edge="start"
+          value={session.start}
           min={earliestArrival(day, session.start)}
           max={Math.min(now.seconds, (session.end ?? Infinity) - 60)}
           workedAt={(start) =>
@@ -936,6 +947,33 @@ export function TodayScreen({
           }
           onSave={(start) => {
             const next = setSessionStart(day, session.id, start, ctx());
+            if (next === day) {
+              onNotice(t("editor.invalid"));
+              return;
+            }
+            apply(next);
+            onNotice(t("log.saved"));
+            setArriving(false);
+          }}
+          onClose={() => setArriving(false)}
+        />
+      )}
+
+      {arriving && session && session.end !== null && (
+        <ArrivalModal
+          edge="end"
+          value={session.end}
+          min={session.start + 60}
+          max={Math.max(now.seconds, session.end)}
+          workedAt={(end) =>
+            dayTotals(
+              setSessionEnd(day, session.id, end, ctx()),
+              project,
+              now.seconds,
+            ).worked
+          }
+          onSave={(end) => {
+            const next = setSessionEnd(day, session.id, end, ctx());
             if (next === day) {
               onNotice(t("editor.invalid"));
               return;

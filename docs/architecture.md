@@ -73,7 +73,7 @@ src/app/
   KindPicker.tsx    a project's or a kind's mark, and its colour
   ModalHeader.tsx   a dialog's top bar: cancel, the title, save — and Enter / Escape
   DayTimelineModal.tsx  the day stretch by stretch; moves one edge at a time
-  ArrivalModal.tsx  when you started, corrected from the timer
+  ArrivalModal.tsx  when you started (or, once stopped, stopped), corrected from the line under the dial
   KindModal.tsx     a kind of break or work — invented, or held open to correct
   BreakCreditField.tsx  how much of a kind of break counts as work — one control, both forms
   BreakMinutesField.tsx what a kind of break is assumed to take — one control, both forms

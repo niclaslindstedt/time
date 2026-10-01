@@ -176,6 +176,7 @@ day to a new day:
 | `setCategory`                           | Needs an open session; closes the running activity, opens one of the new kind.                                                                            |
 | `addBreak`, `addSession`, `addActivity` | After the fact, with both ends (or an open end, if none of that kind is open).                                                                            |
 | `setSessionStart`                       | Moves when a session began — the arrival, corrected from the timer. Refused if it reaches back over an earlier session.                                   |
+| `setSessionEnd`                         | Moves when a stopped session ended — the departure, corrected from the line under the dial. What ended with it follows; what runs past it is cut.         |
 | `moveBoundary`                          | Moves a moment two stretches meet at: everything that starts or ends there moves, so a later lunch end is a later start for the work after it.            |
 | `updateSpan`, `removeSpan`              | Move a span's ends or kind, or drop it. An edit that would make it invalid is refused.                                                                    |
 
