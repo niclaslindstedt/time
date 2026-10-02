@@ -663,11 +663,9 @@ export function Dial({
           transform={`translate(${C + lockup.markX - 10 * NAME_MARK_SCALE * lockup.scale} ${C - SIGNATURE.name - 50 * NAME_MARK_SCALE * lockup.scale}) scale(${NAME_MARK_SCALE * lockup.scale})`}
           fill="none"
           stroke={face.ink}
-          strokeWidth={12}
-          strokeLinecap="round"
+          strokeWidth={22}
         >
-          <circle cx="50" cy="50" r="34" />
-          <path d="M50 50 V28 M50 50 L66 60" />
+          <circle cx="50" cy="50" r="29" />
         </g>
         <text
           x={C + lockup.textX}
