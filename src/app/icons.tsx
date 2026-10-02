@@ -39,15 +39,17 @@ function Glyph({
 }
 
 /**
- * The app mark — a clock face with its two hands, the same shape as the
- * favicon and the install icon, drawn in `currentColor` on nothing.
+ * The app mark — a thick ring with its middle cut out, like a record button,
+ * the same shape as the favicon and the install icon, drawn in
+ * `currentColor` on nothing.
  *
  * The difference from `public/icons/icon.svg` is the point of it: that file
  * paints the mark green on the dark install surface, because an icon's job is
  * to be found on a home screen next to its sibling apps. This one drops the
  * background and swaps the inks for `currentColor`, so inside the app the mark
  * is whatever the element around it is. Geometry is mirrored by hand into
- * `public/icons/icon.svg` and `scripts/generate-icons.mjs`.
+ * `public/icons/icon.svg`, `scripts/generate-icons.mjs` and the dial's
+ * printing in `Dial.tsx`.
  */
 export function AppMarkIcon({ className }: IconProps) {
   return (
@@ -58,13 +60,7 @@ export function AppMarkIcon({ className }: IconProps) {
       aria-hidden="true"
       focusable="false"
     >
-      <circle cx="50" cy="50" r="34" stroke="currentColor" strokeWidth="12" />
-      <path
-        d="M50 50 V28 M50 50 L66 60"
-        stroke="currentColor"
-        strokeWidth="12"
-        strokeLinecap="round"
-      />
+      <circle cx="50" cy="50" r="29" stroke="currentColor" strokeWidth="22" />
     </svg>
   );
 }

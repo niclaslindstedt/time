@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Generate the PWA install icons and the social-preview image from the same
-// geometry as public/icons/icon.svg — a clock face, a ring with two hands,
-// drawn in flat green on the app's dark surface. Pure Node (zlib + a minimal
+// geometry as public/icons/icon.svg — a thick ring with its middle cut out,
+// like a record button, drawn in flat green on the app's dark surface. Pure Node (zlib + a minimal
 // PNG encoder), so the pipeline needs no native image dependencies. Rerun
 // with `npm run icons` / `make icons` after changing the mark.
 import { deflateSync } from "node:zlib";
@@ -151,49 +151,26 @@ function encodePng(width, height, rgba, { opaque = false } = {}) {
 
 // --- the mark ----------------------------------------------------------------
 
-// The mark: a clock face — a ring and two hands at ten past twelve, the first
-// minutes of a working day. Analytic, so `inStroke` below is the definition
-// rather than a sampling of one: a pixel is on the mark if it lies within half
-// a stroke of the ring, or within half a stroke of either hand's segment
-// (round caps included). That is what an SVG renderer does with
-// public/icons/icon.svg too, which is why the .ico and the .svg agree.
+// The mark: a thick ring with its middle cut out, like a record button.
+// Analytic, so `inStroke` below is the definition rather than a sampling of
+// one: a pixel is on the mark if it lies within half a stroke of the ring's
+// centre line. That is what an SVG renderer does with public/icons/icon.svg
+// too, which is why the .ico and the .svg agree.
 //
 // Everything below is unit space — the 100 viewBox divided by 100 — and is
-// mirrored into public/icons/icon.svg and src/app/icons.tsx by hand.
+// mirrored into public/icons/icon.svg, src/app/icons.tsx and the dial's
+// printing in src/app/Dial.tsx by hand.
 
 const CX = 0.5;
 const CY = 0.5;
-const R = 0.34;
-/** Half the stroke width (SVG stroke-width 12 on the 100 viewBox). */
-const STROKE_HALF = 0.06;
-/** The two hands, as segments from the centre. */
-const HANDS = [
-  [
-    [0.5, 0.5],
-    [0.5, 0.28],
-  ],
-  [
-    [0.5, 0.5],
-    [0.66, 0.6],
-  ],
-];
-
-/** Distance from (x, y) to the segment a–b. */
-function segmentDistance(x, y, [ax, ay], [bx, by]) {
-  const dx = bx - ax;
-  const dy = by - ay;
-  const len2 = dx * dx + dy * dy;
-  const t =
-    len2 === 0
-      ? 0
-      : Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / len2));
-  return Math.hypot(x - (ax + t * dx), y - (ay + t * dy));
-}
+const R = 0.29;
+/** Half the stroke width (SVG stroke-width 22 on the 100 viewBox), so the
+ *  ring runs from 0.18 out to 0.4. */
+const STROKE_HALF = 0.11;
 
 /** Whether unit-space point (x, y) lands on the mark. */
 function inStroke(x, y) {
-  if (Math.abs(Math.hypot(x - CX, y - CY) - R) < STROKE_HALF) return true;
-  return HANDS.some(([a, b]) => segmentDistance(x, y, a, b) < STROKE_HALF);
+  return Math.abs(Math.hypot(x - CX, y - CY) - R) < STROKE_HALF;
 }
 
 // Render size×size RGBA. `pad` insets the mark (maskable icons need a safe
