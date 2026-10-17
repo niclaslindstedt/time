@@ -33,6 +33,7 @@ import {
   useCloudHost,
   type CloudHost,
 } from "./cloudHost.ts";
+import { DROPBOX_OFFERED } from "./edition.ts";
 import { logStore } from "./log.ts";
 import { mergeDocs } from "./merge.ts";
 import { parseDoc, serializeDoc } from "./migrations.ts";
@@ -84,9 +85,13 @@ const SAVE_DEBOUNCE_MS = 1200;
 const CLOUD_FILE_NAME = "time.json";
 
 // OAuth app identities, injected at build time. Without them the matching
-// backend is hidden rather than offered and then failing at connect time.
-export const DROPBOX_APP_KEY: string =
-  (import.meta.env.VITE_DROPBOX_APP_KEY as string | undefined) ?? "";
+// backend is hidden rather than offered and then failing at connect time. The
+// phone app's store build offers no Dropbox whatever its environment says
+// (`DROPBOX_OFFERED`), so there the key is empty and every Dropbox branch
+// below folds away.
+export const DROPBOX_APP_KEY: string = DROPBOX_OFFERED
+  ? ((import.meta.env.VITE_DROPBOX_APP_KEY as string | undefined) ?? "")
+  : "";
 
 // Dropbox fixes the app-folder name from the app's own configuration (an
 // "App folder"-scoped app lives under `Apps/<name>/`), so it isn't always
@@ -121,18 +126,22 @@ const ICLOUD_FOLDER = "iCloud Drive/Time";
 
 type DropboxTokens = { accessToken: string; refreshToken: string | null };
 
-function readBackend(): SyncBackendId {
+/** The backend the reader chose last, as this build can honour it. */
+export function readBackend(): SyncBackendId {
   try {
     const raw = localStorage.getItem(BACKEND_KEY);
-    return raw === "dropbox" || raw === "icloud" || raw === "selfhosted"
-      ? raw
-      : "local";
+    // A build with no Dropbox reads a stored Dropbox choice (a phone that had
+    // it connected before) the way it reads a retired backend: as this
+    // device. The days are all in the local copy; the file in Dropbox stays.
+    if (raw === "dropbox") return DROPBOX_OFFERED ? raw : "local";
+    return raw === "icloud" || raw === "selfhosted" ? raw : "local";
   } catch {
     return "local";
   }
 }
 
 function readDropboxTokens(): DropboxTokens | null {
+  if (!DROPBOX_OFFERED) return null;
   try {
     const raw = localStorage.getItem(DROPBOX_TOKENS_KEY);
     if (!raw) return null;
@@ -239,7 +248,7 @@ export function useSyncEngine(
   // The storage adapter for the active cloud backend, wrapped so the cloud
   // copy stays readable offline (`withLocalCache`).
   const adapter: StorageAdapter | null = useMemo(() => {
-    if (backend === "dropbox" && dropboxTokens) {
+    if (DROPBOX_OFFERED && backend === "dropbox" && dropboxTokens) {
       const auth = {
         accessToken: dropboxTokens.accessToken,
         refreshToken: dropboxTokens.refreshToken,

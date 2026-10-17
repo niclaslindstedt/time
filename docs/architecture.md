@@ -128,7 +128,9 @@ a WebView on a loopback origin, so the wrapper offers an authentication
 session at `window.__ossAuthSession` — the framework's name — and the page's
 `connectDropboxAuthSession` uses it when `getAuthSessionHost()` finds one. The
 sheet returns on `<bundle id>://oauth` (`se.agilator.time://oauth` in the
-store build), the redirect URI the Dropbox app must list.
+store build), the redirect URI the Dropbox app must list. The store build
+offers no Dropbox, though (`src/app/edition.ts`), so nothing in the shipped
+page asks for the session today; it stays for a provider that needs one.
 
 See [`features/native-app.md`](features/native-app.md) and
 [`../native/README.md`](../native/README.md).

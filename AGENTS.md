@@ -4,7 +4,7 @@ This file is the canonical source of truth for AI coding agents working in this
 repo. `CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`, and
 `.github/copilot-instructions.md` are symlinks to this file.
 
-Fleet guidelines: APP_GUIDELINES 1.2.0
+Fleet guidelines: APP_GUIDELINES 2.0.0
 
 ## What this app is, and the one rule that follows from it
 
@@ -331,9 +331,14 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   on the website. The catalog's `app.name` and the sentences that name the
   app read it, and `clock.ts`'s `nameLockup` sets it under twelve — centred
   with the mark, and smaller when it is longer than `NAME_LOCKUP_MAX` allows.
-- `src/app/edition.ts` — which build this is (`VITE_EDITION`). The one thing
-  that differs is the notice on an exported specification, and it is a build
-  parameter because there is no server to ask and no account to check.
+- `src/app/edition.ts` — which build this is (`VITE_EDITION`). Two things
+  differ: the notice on an exported specification, and Dropbox, which the
+  phone app's store build does not offer at all (`DROPBOX_OFFERED` — the
+  picker, the sign-in and the sentences that name it fold out of that build,
+  and a Dropbox choice an earlier install stored reads as this device). They
+  are build parameters because there is no server to ask and no account to
+  check. This is about the channel, not the wrapper: the website and the
+  desktop app keep Dropbox.
 - `src/app/merge.ts` — the per-record, last-edit-wins document merge that
   both cloud sync and backup restore run through.
 - `src/app/migrations.ts` — parse / normalise / serialize; the only module
@@ -698,7 +703,10 @@ root does not touch it, and neither does `make install`. Reach it with
 5. opens a sign-in in an authentication session when the page asks
    (`src/authSession.ts` → `expo-web-browser`) and hands the redirect back.
    The page — the framework's `connectDropboxAuthSession`, reached through
-   `getAuthSessionHost()` — keeps the PKCE verifier and makes the exchange;
+   `getAuthSessionHost()` — keeps the PKCE verifier and makes the exchange.
+   The store build offers no Dropbox (`edition.ts`), so nothing in the
+   shipped page asks for one today; the bridge stays for a provider that
+   needs it;
 6. hands an export to the share sheet when the page's `saveFile` sends one
    (`src/saveFile.ts` → `expo-sharing`). Every file `src/` hands the reader
    goes through `saveFile` — never `downloadBlob`, `downloadText` or a

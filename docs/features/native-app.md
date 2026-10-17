@@ -26,15 +26,15 @@ to the last pixel of the dial.
 
 ## iCloud
 
-**Settings → Cloud sync** offers **iCloud Drive** beside Dropbox, and only in
-the app — a browser has no way to reach a device's iCloud,
+**Settings → Cloud sync** offers **iCloud Drive** beside This device and
+your own server, and only in the app — a browser has no way to reach a device's iCloud,
 so on the website the option is simply not there.
 
 Choosing it is all there is to it. There is no account to connect and no
 window to grant anything in: the container belongs to the iCloud account the
 phone is already signed into. From then on the document — one file,
 `time.json` — is kept in the app's own iCloud folder, and every device signed
-into the same account merges the same way two Dropbox devices do: day by day,
+into the same account merges the way any two synced devices do: day by day,
 the later edit of each winning (see [`../sync.md`](../sync.md)).
 
 The file lives under **Files → iCloud Drive → Time**, where you can open it,
@@ -51,16 +51,15 @@ Two things it will tell you rather than guess about:
   do not arrive it keeps working from the copy on this device and says it is
   offline — it never treats a file it could not read as an empty one.
 
-Android has no iCloud, so there the app is the web app served from inside the
-download, with Dropbox as before.
+Android has no iCloud, so there the app keeps the hours on the phone or on
+your own server.
 
-## Dropbox
+## No Dropbox
 
-**Settings → Cloud sync → Dropbox** opens Dropbox's sign-in in a sheet over
-the app — not in Safari, which could never hand the result back. Approving
-closes the sheet and connects; closing it leaves the backend as it was. The
-sheet is the platform's own authentication session, and the wrapper never
-sees a token: the page makes the exchange itself, exactly as the website does.
+The phone app does not offer Dropbox: the picker has no such option and
+nothing on the screen names it. The website and the desktop app keep it. A
+phone that had Dropbox connected under an earlier build opens on the copy on
+the phone, with every day it held; the file in Dropbox stays where it was.
 
 ## Exporting
 

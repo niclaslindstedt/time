@@ -4,7 +4,8 @@ Off by default. Under **Settings → Cloud sync**, choose Dropbox, grant access
 in Dropbox's own window, and the app keeps a copy of its document — one JSON
 file, `time.json` — in a folder of your account. Dropbox appears only when the
 deploy was built with its app key (see
-[`../configuration.md`](../configuration.md)).
+[`../configuration.md`](../configuration.md)), and only on the website and in
+the desktop app — the phone app does not offer it.
 
 **iCloud Drive** is offered too, in the App Store build and nowhere else: a
 browser cannot reach a device's iCloud, so on the website the option is not

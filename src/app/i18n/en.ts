@@ -9,6 +9,7 @@
 // site: a translator needs the whole sentence to move its words around.
 
 import { APP_NAME } from "../appName.ts";
+import { DROPBOX_OFFERED } from "../edition.ts";
 
 export const en = {
   app: {
@@ -843,14 +844,18 @@ export const en = {
     monday: "Monday",
     sunday: "Sunday",
     sync: "Cloud sync",
-    syncHint:
-      "Off by default. Connect your own Dropbox, or a storage server you run yourself, to keep a copy there and sync between devices.",
+    // Each sentence names what the picker below it offers, so the phone app's
+    // store build, which offers no Dropbox (`edition.ts`), has its own.
+    syncHint: DROPBOX_OFFERED
+      ? "Off by default. Connect your own Dropbox, or a storage server you run yourself, to keep a copy there and sync between devices."
+      : "Off by default. Connect a storage server you run yourself to keep a copy there and sync between devices.",
     // The same sentence with iCloud in it, shown only where the app has a
     // store to offer — which is the app-store build. A browser has none, so
     // naming iCloud there would be offering something that is not on the
     // picker below it.
-    syncHintICloud:
-      "Off by default. Keep a copy in your own iCloud, Dropbox or storage server to sync between devices.",
+    syncHintICloud: DROPBOX_OFFERED
+      ? "Off by default. Keep a copy in your own iCloud, Dropbox or storage server to sync between devices."
+      : "Off by default. Keep a copy in your own iCloud or storage server to sync between devices.",
     backend: "Storage",
     connected: "Connected to {name}",
     localOnly: "Kept on this device only",

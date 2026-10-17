@@ -64,16 +64,12 @@ the log to say why.
 
 ### 5. Dropbox
 
-The phone app signs in to Dropbox through an in-app authentication session
-that returns on **`<bundle id>://oauth`** — `se.agilator.time://oauth` for the
-store build (see
-[README → Signing in to Dropbox](README.md#signing-in-to-dropbox)). In the
-[Dropbox App Console](https://www.dropbox.com/developers/apps), open the app
-whose key is the `VITE_DROPBOX_APP_KEY` secret and add
-`se.agilator.time://oauth` under **Settings → OAuth 2 → Redirect URIs**,
-exactly as written. The native workflow passes that secret (and
-`VITE_DROPBOX_APP_FOLDER`) to the web bundle; without it the app offers no
-Dropbox at all.
+Nothing to do: the phone app offers no Dropbox. Its bundle is the store
+edition, which folds the backend out (`src/app/edition.ts`), and the native
+workflow passes no Dropbox secrets to it (see
+[README → Signing in to Dropbox](README.md#signing-in-to-dropbox)). The
+website and the desktop app keep Dropbox, with their own redirect URIs
+(`docs/configuration.md`).
 
 ## Cutting a build
 
@@ -119,9 +115,8 @@ build without it launches to a blank screen.
       Drive**, log a day, and see `time.json` appear under **Files → iCloud
       Drive → Time**. Then sign out of iCloud and confirm the app says so
       rather than losing the day.
-- [ ] **Settings → Cloud sync → Dropbox** opens Dropbox in a sheet over the
-      app (not in Safari), and approving closes the sheet and connects.
-      Closing the sheet instead leaves the backend as it was.
+- [ ] **Settings → Cloud sync** offers This device, iCloud Drive and Your
+      server, and no Dropbox — nor does any sentence on the screen name it.
 - [ ] Report → **…** → the specification's **Download PDF** opens the share
       sheet, and **Save to Files** writes
       `<project>_<period>_specification.pdf`; the same for the invoice file and

@@ -4,6 +4,15 @@ Cloud sync is optional and off by default. When it is on, the app keeps a copy
 of its one document — `time.json` — in a folder of the user's own Dropbox,
 iCloud or storage server, and pulls that copy in when it opens.
 
+Which of them a build offers is decided by the build. Dropbox is the
+website's and the desktop app's (when they are built with an app key); the
+phone app's store build (`VITE_EDITION=store`) offers none, and folds the
+backend out at build time (`DROPBOX_OFFERED` in `src/app/edition.ts`). A
+Dropbox choice an earlier install stored on the phone reads there as this
+device — the local copy holds every day, and the file in Dropbox is left
+where it is. iCloud is offered wherever the host offers a document store
+(`src/app/cloudHost.ts`).
+
 ## The shape of it
 
 The local document in localStorage is always the working copy. The sync engine

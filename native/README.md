@@ -19,7 +19,7 @@ Thin is the design, not an aspiration. The wrapper:
   WebView's history;
 - offers the page an **iCloud document store** (`src/icloudBridge.ts` →
   `src/icloud.ts` → `modules/icloud-store`), which the app's own sync engine
-  drives exactly as it drives Dropbox;
+  drives exactly as the website's drives Dropbox;
 - opens a cloud provider's sign-in in an **authentication session** when the
   page asks for one (`src/authSessionBridge.ts` → `src/authSession.ts` →
   `expo-web-browser`) — see [Signing in to Dropbox](#signing-in-to-dropbox);
@@ -108,8 +108,8 @@ open, copy and delete the file holding their own hours. A time report that
 synced to a place its owner could not see would be a worse answer than not
 syncing at all.
 
-It appears in **Settings → Cloud sync** beside Dropbox, and
-there is no OAuth: the container belongs to the device's iCloud account, so
+It appears in **Settings → Cloud sync** beside This device and Your server,
+and there is no OAuth: the container belongs to the device's iCloud account, so
 "connecting" is choosing it. Signing in and out of iCloud happens in iOS
 Settings, which is why the app re-asks whether the store is usable every time
 the page is shown again.
@@ -198,6 +198,15 @@ string in `app.config.js` says exactly that (the camera, only, for the
 pairing code, no picture kept), and neither platform gets the microphone.
 
 ## Signing in to Dropbox
+
+**The store build offers no Dropbox.** The bundle is the store edition
+(`VITE_EDITION=store`), which folds the Dropbox backend out of the page
+(`src/app/edition.ts`), and `.github/workflows/native.yml` passes no Dropbox
+secrets to it — the phone app keeps the hours on the phone, in iCloud or on
+the reader's own server. The website and the desktop app keep Dropbox. What
+follows is how the authentication session works, which stays in the wrapper
+for a provider that needs it, and how Dropbox signed in through it while the
+phone app offered it.
 
 The page's own Dropbox sign-in is a redirect: consent at dropbox.com, then
 back to the page's origin with a code, which the page trades for tokens using

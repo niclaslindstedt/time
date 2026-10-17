@@ -53,9 +53,9 @@ break moves every downstream figure.
 The same app ships to the **App Store** and **Google Play** through a thin
 native wrapper in [`native/`](native/README.md) — the whole web build packed
 inside the download and served from the device, so it runs with no network at
-all. On a phone that gains one thing a browser cannot: **iCloud**, as a third
-option beside Dropbox, keeping the document in your own
-container under Files → iCloud Drive → Time.
+all. On a phone that gains one thing a browser cannot: **iCloud**, keeping the
+document in your own container under Files → iCloud Drive → Time. The phone
+app offers no Dropbox; the website and the desktop app do.
 
 It is built on [`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework),
 the shared React/Preact surface behind the sibling
@@ -154,9 +154,9 @@ dialog, `Enter` saves and `Escape` cancels):
 
 …and one button for the screen you visit and leave — on the dial over Today, and on the top bar everywhere else:
 
-| Button | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, the clock (12- or 24-hour) and the week's first day — both following the device's region unless you choose — cloud sync (Dropbox, your own storage server, and iCloud in the app-store build), backup / restore / delete, developer tools, and the build. |
+| Button | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **⚙**  | Settings: theme, the watch dial (nine presets or a custom face, markers, numerals, ring, hands, size and movement, each face with a backlight of its own), reflections on its metal as you tilt the device, the clock (12- or 24-hour) and the week's first day — both following the device's region unless you choose — cloud sync (Dropbox on the website and the desktop app, your own storage server, and iCloud in the app-store build), backup / restore / delete, developer tools, and the build. |
 
 ## Configuration
 
