@@ -1,6 +1,6 @@
 # Time
 
-> A local-first time report PWA — start working, take your breaks, stop, and read your working hours back as a clock, a log and charts. No account, no server.
+> A local-first time report PWA — start working, take your breaks, stop, and read your working hours back as a clock, a log and charts. Nothing to sign up for, no server.
 
 [![ci](https://github.com/niclaslindstedt/time/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/time/actions/workflows/ci.yml)
 [![pages](https://github.com/niclaslindstedt/time/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/time/actions/workflows/pages.yml)

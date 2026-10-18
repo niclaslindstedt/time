@@ -30,7 +30,7 @@ to the last pixel of the dial.
 your own server, and only in the app — a browser has no way to reach a device's iCloud,
 so on the website the option is simply not there.
 
-Choosing it is all there is to it. There is no account to connect and no
+Choosing it is all there is to it. There is nothing to sign up for and no
 window to grant anything in: the container belongs to the iCloud account the
 phone is already signed into. From then on the document — one file,
 `time.json` — is kept in the app's own iCloud folder, and every device signed

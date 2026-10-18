@@ -2,7 +2,7 @@
   "name": "time",
   "version": "0.1.0",
   "private": true,
-  "description": "A local-first time report PWA built on @niclaslindstedt/oss-framework — clock in and out, log breaks and work categories, and read your working hours back as charts. No account, no server.",
+  "description": "A local-first time report PWA built on @niclaslindstedt/oss-framework — clock in and out, log breaks and work categories, and read your working hours back as charts. Nothing to sign up for, no server.",
   "license": "PolyForm-Noncommercial-1.0.0",
   "author": "Niclas Lindstedt <niclas@agilator.se>",
   "type": "module",
