@@ -529,7 +529,7 @@ export function useSyncEngine(
         // Pairing takes the reader's hands (a code to scan, keys to make or
         // fetch), so an unpaired device is sent to the connect sheet; the
         // sheet calls back here once the device is ready.
-        if (!selfHosted) throw new Error("No server is offered here");
+        if (!selfHosted) return; // a build that offers no server
         if (
           selfHosted.phase === "ready" ||
           selfHosted.phase === "unreachable"
