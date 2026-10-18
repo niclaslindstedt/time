@@ -4,6 +4,11 @@ Builds run on **EAS Build** (Expo's infrastructure), not on GitHub's runners
 and not on a laptop. Everything below is a one-time setup followed by a
 one-click dispatch.
 
+> **License note.** The source is `PolyForm-Noncommercial-1.0.0`, which
+> governs what others may do with it. The copyright holder is not bound by it
+> and sells the App Store build: paid up front, with no in-app purchases and no
+> ads.
+
 ## One-time setup
 
 ### 1. The Expo project
@@ -44,7 +49,7 @@ For submission, fill in the placeholders in `eas.json` →
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Apple ID (not committed)    | Asked for by `eas submit` when it signs in; never written into `eas.json`.                                                                                                                                                                                 |
 | `ascAppId`                  | App Store Connect → the app → App Information → **Apple ID** (digits). Add it under `submit.production.ios` once the app record exists; until then the key is absent, not a placeholder — `eas submit` rejects placeholder values before it does anything. |
-| `appleTeamId`               | developer.apple.com → Membership details → **Team ID** (10 characters). Added beside `ascAppId`.                                                                                                                                                           |
+| `appleTeamId`               | developer.apple.com → Membership details → **Team ID** (10 characters). Committed under `submit.production.ios` (`8Z7JSMA9SB`); not a secret.                                                                                                              |
 | `play-service-account.json` | Play Console → Setup → API access → a service account key. Gitignored; upload it to EAS with `eas credentials` rather than committing it.                                                                                                                  |
 
 ### 4. iOS capabilities
@@ -85,8 +90,10 @@ The job builds the web app, packs it into `native/assets/webroot.zip`, and
 queues the build on EAS with `--no-wait` — it exits immediately, so watch the
 build itself at <https://expo.dev>.
 
-The **marketing version** comes from the repo root's `package.json`, so the app
-and the website never disagree about which release they are. Store **build
+The **marketing version** is the release's: `app.config.js` reads it from the
+repo root's `package.json`, which the **Release** workflow bumps when it tags
+`v<version>` — so cut the release first, then build from it, and the app and
+the website never disagree about which release they are. Store **build
 numbers** are auto-incremented by EAS (`appVersionSource: remote`); nothing is
 bumped by hand.
 
@@ -95,6 +102,21 @@ profile, the same major as `.nvmrc`. Without it EAS falls back to its image's
 default Node, whose npm 10 reads the lockfile npm 11 wrote as out of sync and
 stops the build at `npm ci` ("Missing: typescript@5.9.3 from lock file"). Move
 the pin when `.nvmrc` moves.
+
+## The store listing
+
+The listing's words and rules live in [`store/`](store/README.md). Its URLs:
+
+- privacy policy: `https://apps.agilator.se/time/privacy/` (Settings → About
+  links to it too)
+- marketing: `https://apps.agilator.se/time/`
+- support: `https://apps.agilator.se/time/support/`
+
+The required screenshot sizes are the 6.9″ iPhone (1320×2868) and, since
+`ios.supportsTablet` is true, the 13″ iPad (2064×2752); App Store Connect
+scales each down to the smaller devices in its family. They are produced
+outside this repository and staged into `store/screenshots/` by the listing
+tooling — see [`store/README.md`](store/README.md#the-screenshots).
 
 ## Doing it from a laptop instead
 
@@ -121,8 +143,9 @@ build without it launches to a blank screen.
       Drive**, log a day, and see `time.json` appear under **Files → iCloud
       Drive → Time**. Then sign out of iCloud and confirm the app says so
       rather than losing the day.
-- [ ] **Settings → Cloud sync** offers This device, iCloud Drive and Your
-      server, and no Dropbox — nor does any sentence on the screen name it.
+- [ ] **Settings → Cloud sync** offers This device and iCloud Drive, and no
+      Dropbox or server — nor does any sentence on the screen name either.
+- [ ] The app never asks for the camera: there is nothing in it to scan.
 - [ ] Report → **…** → the specification's **Download PDF** opens the share
       sheet, and **Save to Files** writes
       `<project>_<period>_specification.pdf`; the same for the invoice file and
