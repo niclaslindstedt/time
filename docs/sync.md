@@ -61,6 +61,15 @@ shown and stopped on.
 
 ## Your own server
 
+The phone app's store build (`VITE_EDITION=store`) has no self-hosted
+backend for now — the owner's decision, until it has been proven on the web.
+It drops the option from the picker, never restores a pairing or reads one
+from a link, and reads a stored `selfhosted` choice as this device, so a
+phone paired under an earlier build carries on from its local copy. The
+website and the desktop app are unchanged. Every gate tests
+`import.meta.env.VITE_EDITION` itself, so the bundler leaves the client, the
+sheets and their sentences out of that build (`tests/server_offered_test.ts`).
+
 The fourth backend is a storage server the reader runs themselves —
 [`storage-server`](https://github.com/niclaslindstedt/storage), at home or on a
 host of their choosing — that stores only ciphertext. The framework's

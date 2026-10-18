@@ -371,7 +371,14 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   engine treats it like Dropbox; its `watch` pulls another device's push in
   as it happens. The sheets are `SelfHostedConnectModal.tsx` (pair, first
   keys + recovery key, wait for approval) and `SelfHostedSettings.tsx` (add a
-  device, approve one, new recovery key, unpair).
+  device, approve one, new recovery key, unpair). **The phone app's store
+  build has no self-hosted backend for now** (the owner's decision): every
+  gate — the picker option, the `useServer` hook in `useSyncEngine.ts`, the
+  sheets, the catalog's `selfHosted` copy and the sentences naming the server
+  — tests `import.meta.env.VITE_EDITION === "store"` itself, never a constant
+  derived from it, because only the direct test is folded and a derived one
+  ships the code anyway. A stored `selfhosted` choice reads as this device
+  there (`tests/server_offered_test.ts`).
 - `src/app/useSyncEngine.ts` — the sync engine over the framework's storage
   adapters (debounced push, conflict / auth / throttle handling). Suspended
   wholesale while demo data has taken over storage.

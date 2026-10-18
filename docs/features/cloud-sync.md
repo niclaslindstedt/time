@@ -15,7 +15,8 @@ whole of connecting. The file lands under **Files → iCloud Drive → Time**,
 where you can open it and copy it out. See
 [`native-app.md`](native-app.md).
 
-**Your server** is the option for keeping the copy on a machine you run
+**Your server** — on the website and in the desktop app; the phone app does
+not offer it for now — is the option for keeping the copy on a machine you run
 yourself — a [storage server](https://github.com/niclaslindstedt/storage) at
 home or on a host you choose. It is end-to-end encrypted: the server holds the
 file but cannot read it, nor its name. Choosing it asks for a **pairing

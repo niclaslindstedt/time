@@ -479,15 +479,19 @@ export function App() {
       />
 
       {/* Pairing with the reader's own server — asked for by the storage
-          picker, or by a pairing QR the phone's camera opened the app with. */}
-      {sync.selfHosted.connectRequest && (
-        <SelfHostedConnectModal
-          selfHosted={sync.selfHosted}
-          initialPayload={sync.selfHosted.connectRequest.payload}
-          onConnected={sync.adoptSelfHosted}
-          onClose={sync.selfHosted.closeConnect}
-        />
-      )}
+          picker, or by a pairing QR the phone's camera opened the app with.
+          Not in the phone app's store build, which offers no server for now:
+          the flag is tested here, not through a constant, so the bundler
+          leaves the sheet and its sentences out of that build. */}
+      {import.meta.env.VITE_EDITION !== "store" &&
+        sync.selfHosted?.connectRequest && (
+          <SelfHostedConnectModal
+            selfHosted={sync.selfHosted}
+            initialPayload={sync.selfHosted.connectRequest.payload}
+            onConnected={sync.adoptSelfHosted}
+            onClose={sync.selfHosted.closeConnect}
+          />
+        )}
 
       {/* Top, not the framework's default bottom: a toast at the bottom
           lands on the bar under the thumb. */}

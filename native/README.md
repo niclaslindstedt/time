@@ -29,7 +29,8 @@ Thin is the design, not an aspiration. The wrapper:
 - opens the **camera to read a pairing code** when the reader taps Scan on
   the storage server's pairing sheet (`src/scanQrBridge.ts` →
   `src/QrScanner.tsx` → `expo-camera`) — see
-  [Scanning a pairing code](#scanning-a-pairing-code).
+  [Scanning a pairing code](#scanning-a-pairing-code). The store build has no
+  storage server backend for now, so nothing in it asks for this.
 
 That is the entire list, and it is deliberately not empty: **App Store
 guideline 4.2 rejects a build that is only a viewer for a website**, so the
@@ -108,7 +109,7 @@ open, copy and delete the file holding their own hours. A time report that
 synced to a place its owner could not see would be a worse answer than not
 syncing at all.
 
-It appears in **Settings → Cloud sync** beside This device and Your server,
+It appears in **Settings → Cloud sync** beside This device,
 and there is no OAuth: the container belongs to the device's iCloud account, so
 "connecting" is choosing it. Signing in and out of iCloud happens in iOS
 Settings, which is why the app re-asks whether the store is usable every time
@@ -169,6 +170,15 @@ than handed to the system browser, which could not open it either.
 
 ## Scanning a pairing code
 
+**The store build has no storage server backend for now** — the owner's
+decision, until the server has been proven on the web. The bundle is the store
+edition (`VITE_EDITION=store`), which folds the "Your server" option, the
+pairing sheet and every sentence about the server out of the page, and a phone
+that was paired under an earlier build opens on the copy on the phone. The
+page therefore never asks for a scan, and the half below stays in the wrapper,
+unreached, for when the server comes back; so do the camera permission and
+`expo-camera`. The website and the desktop app keep the server.
+
 Pairing the app with the reader's own storage server takes a one-time code,
 shown as a QR code by the server's console or by another of the reader's
 devices. The phone's own camera app would open that code's link in the
@@ -202,8 +212,7 @@ pairing code, no picture kept), and neither platform gets the microphone.
 **The store build offers no Dropbox.** The bundle is the store edition
 (`VITE_EDITION=store`), which folds the Dropbox backend out of the page
 (`src/app/edition.ts`), and `.github/workflows/native.yml` passes no Dropbox
-secrets to it — the phone app keeps the hours on the phone, in iCloud or on
-the reader's own server. The website and the desktop app keep Dropbox. What
+secrets to it — the phone app keeps the hours on the phone and in iCloud. The website and the desktop app keep Dropbox. What
 follows is how the authentication session works, which stays in the wrapper
 for a provider that needs it, and how Dropbox signed in through it while the
 phone app offered it.

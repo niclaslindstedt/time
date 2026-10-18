@@ -37,7 +37,8 @@ describe("the phone app's store build", () => {
     const { sync } = await load(STORE);
     expect(sync.DROPBOX_APP_KEY).toBe("");
     expect(sync.AVAILABLE_BACKENDS).not.toContain("dropbox");
-    expect(sync.AVAILABLE_BACKENDS).toEqual(["local", "selfhosted"]);
+    // Nor a server, for now — see `server_offered_test.ts`.
+    expect(sync.AVAILABLE_BACKENDS).toEqual(["local"]);
   });
 
   it("names no Dropbox over the picker", async () => {

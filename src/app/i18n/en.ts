@@ -9,7 +9,79 @@
 // site: a translator needs the whole sentence to move its words around.
 
 import { APP_NAME } from "../appName.ts";
-import { DROPBOX_OFFERED } from "../edition.ts";
+
+// The pairing sheet and the server's settings, which only a build that offers
+// a server shows. The phone app's store build offers none for now (the
+// owner's decision), and `selfHosted` below tests the flag itself so that
+// build carries none of these sentences.
+const selfHostedCopy = {
+  title: "Connect to your server",
+  intro:
+    "A storage server you run yourself — at home or on a host you choose. Your hours are encrypted on this device before they leave it; the server only ever holds ciphertext.",
+  codeLabel: "Pairing code",
+  codeHint:
+    "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then scan its QR code with this phone's camera or paste the link here. A code from one of your other devices works too.",
+  // The phone app, where the sheet offers its own scanner: the phone's
+  // camera app would open the code's link in the browser, not here.
+  codeHintScan:
+    "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then tap Scan and point this phone at its QR code — or paste the link here. A code from one of your other devices works too.",
+  scan: "Scan",
+  scanHint: "Point the camera at the pairing code",
+  scanDenied:
+    "Camera access is off for this app. Allow it in Settings, or paste the code.",
+  scanUnavailable: "The camera could not be opened. Paste the code instead.",
+  scanInvalid: "That QR code is not a pairing code.",
+  codePlaceholder: "oss-storage://pair?…",
+  deviceLabel: "This device's name",
+  connect: "Connect",
+  codeEmpty: "Paste or scan a pairing code first.",
+  codeInvite:
+    "That is an invite to someone's shared space, not a pairing code for this device.",
+  codeInvalid: "That is not a pairing code: {reason}",
+  codeInvalidPlain: "That is not a pairing code.",
+  pairing: "Pairing with {server}…",
+  newAccountTitle: "Make your keys",
+  newAccount: `This is the first device on this account. ${APP_NAME} will now make the encryption key for your hours — here, on this device. The server never sees it.`,
+  makeKeys: "Make my keys",
+  recoveryTitle: "Your recovery key",
+  recovery:
+    "Write this down or store it in your password manager. It is the only way back to your hours if you lose every device, and nobody — not the server, not us — can recover it for you.",
+  copy: "Copy",
+  copied: "Copied",
+  savedIt: "I have stored my recovery key somewhere safe",
+  done: "Done",
+  existingTitle: "Get your keys",
+  existing:
+    "This account already has keys on another device. Approve this device there — Settings → Your server → Approve — and check it shows this code:",
+  waiting: "Waiting for approval…",
+  orRecovery: "Or type your recovery key",
+  recoveryPlaceholder: "XXXX-XXXX-…",
+  recover: "Use recovery key",
+  recoverFailed: "That recovery key does not match this account.",
+  server: "Server",
+  addDevice: "Add a device",
+  addDeviceTitle: "Add a device",
+  addDeviceHint: `Scan this with your other phone's camera, or paste the link into ${APP_NAME} there. It works once, for {minutes} minutes, and carries your keys — show it only to your own devices.`,
+  expires: "Expires in {time}",
+  expired: "Expired — close and make a new one",
+  approvals: "Waiting for approval",
+  approvalsHint:
+    "Approve only a device you are holding, and only if it shows the same code.",
+  approve: "Approve",
+  noApprovals: "No device is waiting.",
+  checkApprovals: "Check for devices",
+  newRecovery: "Make a new recovery key",
+  newRecoveryConfirm: "Make a new recovery key?",
+  newRecoveryHint:
+    "The old one stops working. Store the new one before you close this.",
+  unpair: "Unpair this device",
+  unpairConfirm: "Unpair this device?",
+  unpairHint:
+    "Its keys are erased from this device, so it must be paired again to sync. Your hours stay on this device and on the server.",
+  unreachable: "Server unreachable — working on this device's copy",
+  needsKeys: "Paired, waiting for this device's keys",
+  finish: "Finish connecting",
+} as const;
 
 export const en = {
   app: {
@@ -845,17 +917,22 @@ export const en = {
     sunday: "Sunday",
     sync: "Cloud sync",
     // Each sentence names what the picker below it offers, so the phone app's
-    // store build, which offers no Dropbox (`edition.ts`), has its own.
-    syncHint: DROPBOX_OFFERED
-      ? "Off by default. Connect your own Dropbox, or a storage server you run yourself, to keep a copy there and sync between devices."
-      : "Off by default. Connect a storage server you run yourself to keep a copy there and sync between devices.",
+    // store build, which offers no Dropbox (`edition.ts`) and, for now, no
+    // server, has its own. The flag is tested here rather than through
+    // `DROPBOX_OFFERED`: a constant imported from another module is not
+    // folded, and the sentence the build cannot show would ship in it.
+    syncHint:
+      import.meta.env.VITE_EDITION === "store"
+        ? "Your hours are kept on this device."
+        : "Off by default. Connect your own Dropbox, or a storage server you run yourself, to keep a copy there and sync between devices.",
     // The same sentence with iCloud in it, shown only where the app has a
     // store to offer — which is the app-store build. A browser has none, so
     // naming iCloud there would be offering something that is not on the
     // picker below it.
-    syncHintICloud: DROPBOX_OFFERED
-      ? "Off by default. Keep a copy in your own iCloud, Dropbox or storage server to sync between devices."
-      : "Off by default. Keep a copy in your own iCloud or storage server to sync between devices.",
+    syncHintICloud:
+      import.meta.env.VITE_EDITION === "store"
+        ? "Off by default. Keep a copy in your own iCloud to sync between devices."
+        : "Off by default. Keep a copy in your own iCloud, Dropbox or storage server to sync between devices.",
     backend: "Storage",
     connected: "Connected to {name}",
     localOnly: "Kept on this device only",
@@ -889,81 +966,20 @@ export const en = {
     about: "About",
     version: "Version",
     build: "Build",
-    privacy: `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you connect your own cloud account or storage server, and then only there. In the phone app, the camera is used only when you tap Scan to read a pairing code, and no picture is kept.`,
+    privacy:
+      import.meta.env.VITE_EDITION === "store"
+        ? `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you choose to keep a copy in your own iCloud, and then only there.`
+        : `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you connect your own cloud account or storage server, and then only there.`,
   },
 
   sync: {
     syncedTo: "Synced to {name}",
   },
 
-  selfHosted: {
-    title: "Connect to your server",
-    intro:
-      "A storage server you run yourself — at home or on a host you choose. Your hours are encrypted on this device before they leave it; the server only ever holds ciphertext.",
-    codeLabel: "Pairing code",
-    codeHint:
-      "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then scan its QR code with this phone's camera or paste the link here. A code from one of your other devices works too.",
-    // The phone app, where the sheet offers its own scanner: the phone's
-    // camera app would open the code's link in the browser, not here.
-    codeHintScan:
-      "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then tap Scan and point this phone at its QR code — or paste the link here. A code from one of your other devices works too.",
-    scan: "Scan",
-    scanHint: "Point the camera at the pairing code",
-    scanDenied:
-      "Camera access is off for this app. Allow it in Settings, or paste the code.",
-    scanUnavailable: "The camera could not be opened. Paste the code instead.",
-    scanInvalid: "That QR code is not a pairing code.",
-    codePlaceholder: "oss-storage://pair?…",
-    deviceLabel: "This device's name",
-    connect: "Connect",
-    codeEmpty: "Paste or scan a pairing code first.",
-    codeInvite:
-      "That is an invite to someone's shared space, not a pairing code for this device.",
-    codeInvalid: "That is not a pairing code: {reason}",
-    codeInvalidPlain: "That is not a pairing code.",
-    pairing: "Pairing with {server}…",
-    newAccountTitle: "Make your keys",
-    newAccount: `This is the first device on this account. ${APP_NAME} will now make the encryption key for your hours — here, on this device. The server never sees it.`,
-    makeKeys: "Make my keys",
-    recoveryTitle: "Your recovery key",
-    recovery:
-      "Write this down or store it in your password manager. It is the only way back to your hours if you lose every device, and nobody — not the server, not us — can recover it for you.",
-    copy: "Copy",
-    copied: "Copied",
-    savedIt: "I have stored my recovery key somewhere safe",
-    done: "Done",
-    existingTitle: "Get your keys",
-    existing:
-      "This account already has keys on another device. Approve this device there — Settings → Your server → Approve — and check it shows this code:",
-    waiting: "Waiting for approval…",
-    orRecovery: "Or type your recovery key",
-    recoveryPlaceholder: "XXXX-XXXX-…",
-    recover: "Use recovery key",
-    recoverFailed: "That recovery key does not match this account.",
-    server: "Server",
-    addDevice: "Add a device",
-    addDeviceTitle: "Add a device",
-    addDeviceHint: `Scan this with your other phone's camera, or paste the link into ${APP_NAME} there. It works once, for {minutes} minutes, and carries your keys — show it only to your own devices.`,
-    expires: "Expires in {time}",
-    expired: "Expired — close and make a new one",
-    approvals: "Waiting for approval",
-    approvalsHint:
-      "Approve only a device you are holding, and only if it shows the same code.",
-    approve: "Approve",
-    noApprovals: "No device is waiting.",
-    checkApprovals: "Check for devices",
-    newRecovery: "Make a new recovery key",
-    newRecoveryConfirm: "Make a new recovery key?",
-    newRecoveryHint:
-      "The old one stops working. Store the new one before you close this.",
-    unpair: "Unpair this device",
-    unpairConfirm: "Unpair this device?",
-    unpairHint:
-      "Its keys are erased from this device, so it must be paired again to sync. Your hours stay on this device and on the server.",
-    unreachable: "Server unreachable — working on this device's copy",
-    needsKeys: "Paired, waiting for this device's keys",
-    finish: "Finish connecting",
-  },
+  // Empty in the phone app's store build, which never shows the sheet.
+  selfHosted: (import.meta.env.VITE_EDITION === "store"
+    ? {}
+    : selfHostedCopy) as typeof selfHostedCopy,
 
   update: {
     available: "A new version is ready",

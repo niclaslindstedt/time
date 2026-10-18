@@ -284,14 +284,17 @@ export function SettingsScreen({
           </div>
         )}
         {/* The reader's own server has a device of its own to look after:
-            which server, new devices, approvals, the recovery key. */}
-        {sync.backend === "selfhosted" && (
-          <SelfHostedSettings
-            selfHosted={sync.selfHosted}
-            onUnpaired={sync.disconnect}
-            onNotice={onNotice}
-          />
-        )}
+            which server, new devices, approvals, the recovery key. Never in
+            the phone app's store build, which offers no server for now. */}
+        {import.meta.env.VITE_EDITION !== "store" &&
+          sync.backend === "selfhosted" &&
+          sync.selfHosted && (
+            <SelfHostedSettings
+              selfHosted={sync.selfHosted}
+              onUnpaired={sync.disconnect}
+              onNotice={onNotice}
+            />
+          )}
       </Section>
 
       <Section

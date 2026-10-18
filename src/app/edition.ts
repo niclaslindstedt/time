@@ -23,8 +23,8 @@ export const EDITION: Edition =
 export const EXPORT_NOTICE = EDITION === "web";
 
 /** Whether this build offers Dropbox at all. The phone app's store build does
- *  not: it keeps the hours on the phone, in iCloud or on the reader's own
- *  server, and
+ *  not: it keeps the hours on the phone and in iCloud (no self-hosted server
+ *  either, for now — see `useSyncEngine.ts`), and
  *  a constant here lets the bundler fold the Dropbox picker, its sign-in and
  *  its sentences out of that build rather than hide them at run time. The
  *  website and the desktop app (neither sets `VITE_EDITION=store`) keep it,

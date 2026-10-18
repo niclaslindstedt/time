@@ -66,6 +66,13 @@ import { useSelfHosted, type SelfHosted } from "./useSelfHosted.ts";
 // (`useSelfHosted.ts` / `selfHosted.ts`), after which the namespace's
 // `adapter()` is one more `StorageAdapter` — and the only one that tells the
 // engine when another device changed the document (`watch`).
+//
+// The phone app's store build (`VITE_EDITION=store`) has no self-hosted
+// backend for now — the owner's decision, until it has been proven on the
+// web. Every place below that would offer, pair with or restore the server
+// tests `import.meta.env.VITE_EDITION` itself rather than a constant derived
+// from it, because that is what the bundler folds: the picker option, the
+// client, the pairing sheet and its sentences all leave that build.
 
 const syncLog = logStore.createLogger("sync");
 
@@ -106,7 +113,8 @@ export const PROVIDER_NAMES: Record<SyncBackendId, string> = {
   local: "This device",
   icloud: "iCloud Drive",
   dropbox: "Dropbox",
-  selfhosted: "Your server",
+  // Never shown in the phone app's store build, which offers no server.
+  selfhosted: import.meta.env.VITE_EDITION === "store" ? "" : "Your server",
 };
 
 /** Which backends this build can offer without asking anything of its host —
@@ -117,7 +125,10 @@ export const AVAILABLE_BACKENDS: SyncBackendId[] = [
   "local",
   ...(DROPBOX_APP_KEY ? (["dropbox"] as const) : []),
   // Needs nothing from the build: the server is named by the pairing code.
-  "selfhosted",
+  // Not in the phone app's store build, for now.
+  ...(import.meta.env.VITE_EDITION === "store"
+    ? []
+    : (["selfhosted"] as const)),
 ];
 
 /** The document's folder on a host-offered store, as the reader would find it
@@ -134,7 +145,12 @@ export function readBackend(): SyncBackendId {
     // it connected before) the way it reads a retired backend: as this
     // device. The days are all in the local copy; the file in Dropbox stays.
     if (raw === "dropbox") return DROPBOX_OFFERED ? raw : "local";
-    return raw === "icloud" || raw === "selfhosted" ? raw : "local";
+    // The same for a server a phone was paired with before its store build
+    // stopped offering one: the hours are in the local copy, and the copy on
+    // the server stays where it is.
+    if (raw === "selfhosted")
+      return import.meta.env.VITE_EDITION === "store" ? "local" : raw;
+    return raw === "icloud" ? raw : "local";
   } catch {
     return "local";
   }
@@ -198,12 +214,18 @@ export type SyncEngine = {
   reconnect: () => Promise<void>;
   /** Actively re-probe reachability, for the "Check connection" button. */
   checkConnection: () => Promise<ConnectionProbeResult>;
-  /** The self-hosted backend's pairing and devices — see `useSelfHosted.ts`. */
-  selfHosted: SelfHosted;
+  /** The self-hosted backend's pairing and devices — see `useSelfHosted.ts`.
+   *  Null in a build that offers no server (the phone app's store build). */
+  selfHosted: SelfHosted | null;
   /** Make the reader's server the backend — for the connect sheet, once the
    *  device it paired is ready. */
   adoptSelfHosted: () => void;
 };
+
+/** The reader's own server, or none: the phone app's store build neither
+ *  restores a pairing nor picks one up from a link. */
+const useServer: () => SelfHosted | null =
+  import.meta.env.VITE_EDITION === "store" ? () => null : useSelfHosted;
 
 export function useSyncEngine(
   store: DocStore,
@@ -225,8 +247,8 @@ export function useSyncEngine(
   const cloudHost: CloudHost | null = useCloudHost();
 
   // The reader's own server: paired or not, keyed or not, reachable or not.
-  const selfHosted = useSelfHosted();
-  const selfHostedNs = selfHosted.namespace;
+  const selfHosted = useServer();
+  const selfHostedNs = selfHosted?.namespace ?? null;
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [statusDetail, setStatusDetail] = useState<string | null>(null);
@@ -281,7 +303,11 @@ export function useSyncEngine(
         key: localCacheKey("icloud", "time"),
       });
     }
-    if (backend === "selfhosted" && selfHostedNs) {
+    if (
+      import.meta.env.VITE_EDITION !== "store" &&
+      backend === "selfhosted" &&
+      selfHostedNs
+    ) {
       // The file is encrypted before it leaves the device and the server
       // compares revisions itself, so a stale write is refused atomically.
       const cloud = selfHostedNs.adapter({
@@ -503,6 +529,7 @@ export function useSyncEngine(
         // Pairing takes the reader's hands (a code to scan, keys to make or
         // fetch), so an unpaired device is sent to the connect sheet; the
         // sheet calls back here once the device is ready.
+        if (!selfHosted) throw new Error("No server is offered here");
         if (
           selfHosted.phase === "ready" ||
           selfHosted.phase === "unreachable"
@@ -571,7 +598,7 @@ export function useSyncEngine(
   }, [pull]);
 
   const reconnect = useCallback(async (): Promise<void> => {
-    if (backend === "selfhosted") {
+    if (backend === "selfhosted" && selfHosted) {
       // Unpaired from elsewhere: pair again. Otherwise try the server again.
       if (selfHosted.phase === "signed-out") selfHosted.requestConnect();
       else await selfHosted.activate();
@@ -616,8 +643,8 @@ export function useSyncEngine(
     // namespace: that is offline, not "not connected".
     offline:
       offline ||
-      (backend === "selfhosted" && selfHosted.phase === "unreachable"),
-    location: { path: backendPath(backend, selfHosted.server) },
+      (backend === "selfhosted" && selfHosted?.phase === "unreachable"),
+    location: { path: backendPath(backend, selfHosted?.server ?? null) },
     // The stored choice is always offered even when its host has gone —
     // a segmented control whose value is not one of its options draws as
     // nothing selected, which would read as "your hours are nowhere".
