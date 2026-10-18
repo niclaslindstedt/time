@@ -25,12 +25,7 @@ Thin is the design, not an aspiration. The wrapper:
   `expo-web-browser`) — see [Signing in to Dropbox](#signing-in-to-dropbox);
 - hands an export to the **share sheet** when the page saves a file
   (`src/saveFileBridge.ts` → `src/saveFile.ts` → `expo-sharing`) — see
-  [Exporting a file](#exporting-a-file);
-- opens the **camera to read a pairing code** when the reader taps Scan on
-  the storage server's pairing sheet (`src/scanQrBridge.ts` →
-  `src/QrScanner.tsx` → `expo-camera`) — see
-  [Scanning a pairing code](#scanning-a-pairing-code). The store build has no
-  storage server backend for now, so nothing in it asks for this.
+  [Exporting a file](#exporting-a-file).
 
 That is the entire list, and it is deliberately not empty: **App Store
 guideline 4.2 rejects a build that is only a viewer for a website**, so the
@@ -64,8 +59,6 @@ and `merge.ts`.
 | `src/authSession.ts`       | Opens one sign-in in an authentication session (`expo-web-browser`) and hands back where it ended.                                                                                                                                                                                        |
 | `src/saveFileBridge.ts`    | **Pure.** The `save-file` descriptor (`window.__ossShell`), the request check, and the script that answers the page. Tested from the root.                                                                                                                                                |
 | `src/saveFile.ts`          | Writes one export to the cache and opens the share sheet (`expo-file-system`, `expo-sharing`).                                                                                                                                                                                            |
-| `src/scanQrBridge.ts`      | **Pure.** The `scan-qr` descriptor (`window.__ossShell`), the request check, the origin check, and the script that answers the page. Tested from the root.                                                                                                                                |
-| `src/QrScanner.tsx`        | The camera, mounted only while the page waits on a scan: asks for the camera then, reads one QR code, keeps no frame (`expo-camera`).                                                                                                                                                     |
 | `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by the bridges.                                                                                                                                                                                                     |
 | `modules/icloud-store/`    | A local Expo module: list / read / write / remove inside the app's iCloud container.                                                                                                                                                                                                      |
 | `scripts/bundle-web.mjs`   | Builds the web app as the store edition (`VITE_EDITION=store`) and as a shell (`VITE_SHELL_BUILD=on`: no service worker, no update prompt), named `APP_DISPLAY_NAME` (env, then `.env`, then `Time`), and packs `dist/` into `assets/webroot.zip`, refusing a webroot with `sw.js` in it. |
@@ -168,44 +161,20 @@ A failure comes back as data (`ok: false`) and the page says so. A `blob:` or
 `data:` URL that still reaches the WebView as a navigation is refused rather
 than handed to the system browser, which could not open it either.
 
-## Scanning a pairing code
+## No camera
 
 **The store build has no storage server backend for now** — the owner's
 decision, until the server has been proven on the web. The bundle is the store
 edition (`VITE_EDITION=store`), which folds the "Your server" option, the
 pairing sheet and every sentence about the server out of the page, and a phone
 that was paired under an earlier build opens on the copy on the phone. The
-page therefore never asks for a scan, and the half below stays in the wrapper,
-unreached, for when the server comes back; so do the camera permission and
-`expo-camera`. The website and the desktop app keep the server.
+website and the desktop app keep the server.
 
-Pairing the app with the reader's own storage server takes a one-time code,
-shown as a QR code by the server's console or by another of the reader's
-devices. The phone's own camera app would open that code's link in the
-browser — the website, not this app — so the pairing sheet offers **Scan**
-instead, and this wrapper implements the native half of the framework's
-`scan-qr` contract (oss-framework's `docs/native-shell.md`):
-
-```
-Settings → Your server → Scan → scanStorageCode({ labels })   (oss-framework)
-   │  window.__ossShell lists "scan-qr" — injected before the page loads
-   │  postMessage { type: "oss-framework/scan-qr", version: 1, id, labels }
-   ▼
-App.tsx (the page's own origin only) → src/QrScanner.tsx → expo-camera
-   │  the camera is asked for now, on the first Scan; one QR code, then it closes
-   ▼
-injectJavaScript: "oss-framework/scan-qr-result" { id, ok, text | reason }
-```
-
-The page checks the text is a pairing code and takes it down the same path
-as a pasted one; the paste field stays, and a reader who refuses the camera
-pastes. The camera is never mounted or asked for at launch. No picture is
-taken and no frame is kept: only the decoded text leaves the scanner, into
-the answer script and nowhere else — the code is a one-time secret, so it is
-never logged. A second request while the scanner is open, an unknown version
-or a request from any page but the bundled one is refused. The permission
-string in `app.config.js` says exactly that (the camera, only, for the
-pairing code, no picture kept), and neither platform gets the microphone.
+The camera was there only to scan a server's pairing code, so with the server
+gone the wrapper carries no camera at all: no `expo-camera`, no
+`NSCameraUsageDescription`, no Android `CAMERA` permission, and no `scan-qr`
+descriptor for the page to find. When the server comes back to the phone app,
+the scanner comes back with it, from history (`git log -- native/src/QrScanner.tsx`).
 
 ## Signing in to Dropbox
 

@@ -37,6 +37,10 @@ import {
   type SyncEngine,
 } from "./useSyncEngine.ts";
 
+/** The phone app's full privacy policy, on the company's apps site — the page
+ *  its store listing points at too. */
+const PRIVACY_POLICY_URL = "https://apps.agilator.se/time/privacy/";
+
 // One scrolling page rather than the tabbed dialog the sibling apps use: this
 // app has a handful of groups of settings, and paging between tabs to find one
 // toggle costs more than scrolling past it. The projects — the settings that
@@ -416,6 +420,17 @@ export function SettingsScreen({
         <p className="text-xs leading-snug text-muted">
           {t("settings.privacy")}
         </p>
+        {/* The phone app links to its full policy, which App Review reads it
+            against; the wrapper opens it in the system browser. */}
+        {import.meta.env.VITE_EDITION === "store" && (
+          <a
+            href={PRIVACY_POLICY_URL}
+            rel="noopener noreferrer"
+            className="self-start text-xs text-accent underline"
+          >
+            {t("settings.privacyPolicy")}
+          </a>
+        )}
       </Section>
 
       <ConfirmDialog

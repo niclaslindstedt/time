@@ -33,7 +33,6 @@ import {
   useCloudHost,
   type CloudHost,
 } from "./cloudHost.ts";
-import { DROPBOX_OFFERED } from "./edition.ts";
 import { logStore } from "./log.ts";
 import { mergeDocs } from "./merge.ts";
 import { parseDoc, serializeDoc } from "./migrations.ts";
@@ -95,10 +94,14 @@ const CLOUD_FILE_NAME = "time.json";
 // backend is hidden rather than offered and then failing at connect time. The
 // phone app's store build offers no Dropbox whatever its environment says
 // (`DROPBOX_OFFERED`), so there the key is empty and every Dropbox branch
-// below folds away.
-export const DROPBOX_APP_KEY: string = DROPBOX_OFFERED
-  ? ((import.meta.env.VITE_DROPBOX_APP_KEY as string | undefined) ?? "")
-  : "";
+// below folds away. Each of them tests `import.meta.env.VITE_EDITION` where it
+// stands rather than `DROPBOX_OFFERED`: a constant imported from another
+// module is not folded, and the Dropbox sign-in and its adapter would ride
+// along in the phone bundle as dead code.
+export const DROPBOX_APP_KEY: string =
+  import.meta.env.VITE_EDITION !== "store"
+    ? ((import.meta.env.VITE_DROPBOX_APP_KEY as string | undefined) ?? "")
+    : "";
 
 // Dropbox fixes the app-folder name from the app's own configuration (an
 // "App folder"-scoped app lives under `Apps/<name>/`), so it isn't always
@@ -144,7 +147,8 @@ export function readBackend(): SyncBackendId {
     // A build with no Dropbox reads a stored Dropbox choice (a phone that had
     // it connected before) the way it reads a retired backend: as this
     // device. The days are all in the local copy; the file in Dropbox stays.
-    if (raw === "dropbox") return DROPBOX_OFFERED ? raw : "local";
+    if (raw === "dropbox")
+      return import.meta.env.VITE_EDITION !== "store" ? raw : "local";
     // The same for a server a phone was paired with before its store build
     // stopped offering one: the hours are in the local copy, and the copy on
     // the server stays where it is.
@@ -157,7 +161,7 @@ export function readBackend(): SyncBackendId {
 }
 
 function readDropboxTokens(): DropboxTokens | null {
-  if (!DROPBOX_OFFERED) return null;
+  if (import.meta.env.VITE_EDITION === "store") return null;
   try {
     const raw = localStorage.getItem(DROPBOX_TOKENS_KEY);
     if (!raw) return null;
@@ -270,7 +274,11 @@ export function useSyncEngine(
   // The storage adapter for the active cloud backend, wrapped so the cloud
   // copy stays readable offline (`withLocalCache`).
   const adapter: StorageAdapter | null = useMemo(() => {
-    if (DROPBOX_OFFERED && backend === "dropbox" && dropboxTokens) {
+    if (
+      import.meta.env.VITE_EDITION !== "store" &&
+      backend === "dropbox" &&
+      dropboxTokens
+    ) {
       const auth = {
         accessToken: dropboxTokens.accessToken,
         refreshToken: dropboxTokens.refreshToken,
@@ -424,6 +432,7 @@ export function useSyncEngine(
   // Persist a finished sign-in's tokens and adopt the backend — the one ending
   // both connect flows share (the redirect's, below, and the desktop's).
   const adoptDropbox = useCallback((result: DropboxAuthResult) => {
+    if (import.meta.env.VITE_EDITION === "store") return;
     const tokens: DropboxTokens = {
       accessToken: result.accessToken,
       refreshToken: result.refreshToken ?? null,
@@ -438,6 +447,7 @@ export function useSyncEngine(
   // Complete a Dropbox OAuth redirect: trade the `?code=` for tokens, persist
   // them, and adopt the backend. Runs once on boot when a flow is mid-flight.
   useEffect(() => {
+    if (import.meta.env.VITE_EDITION === "store") return;
     if (!DROPBOX_APP_KEY || !hasPendingDropboxAuth()) return;
     const code = new URLSearchParams(window.location.search).get("code");
     if (!code) return;
@@ -540,6 +550,8 @@ export function useSyncEngine(
         }
         return;
       }
+      // The phone app's store build has no Dropbox to connect.
+      if (import.meta.env.VITE_EDITION === "store") return;
       if (!DROPBOX_APP_KEY) throw new Error("Dropbox is not configured");
       // In the phone app the page's host OFFERS an authentication session —
       // asked for as a capability, not a platform: consent opens in a sheet

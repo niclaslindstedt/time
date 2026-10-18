@@ -75,19 +75,8 @@ owner's decision, until it has been proven on the web: the picker has no such
 option and nothing on the screen names it. The website and the desktop app
 keep it. A phone that was paired with a server under an earlier build opens
 on the copy on the phone, with every day it held; the copy on the server stays
-where it was.
-
-## Scanning a pairing code
-
-While the phone app offered the server, connecting it took a pairing code, which
-the server's console or one of your other devices shows as a QR code. In the
-app, the pairing sheet has a **Scan** button: tap it, allow the camera the
-first time, and point the phone at the code. The camera is used for nothing
-else — it is asked for only when you tap Scan, and no picture is kept; only
-the code it reads is used. Pasting the code still works, and if you turned
-the camera off for the app, the sheet says so and you can allow it again in
-Settings or paste instead. (The phone's own camera app would open the code's
-link in the browser, on the website, rather than here.)
+where it was. With no server to pair with, the app has no use for the camera
+and never asks for it.
 
 ## What the wrapper is not allowed to do
 

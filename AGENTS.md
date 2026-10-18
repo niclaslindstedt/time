@@ -66,7 +66,15 @@ the phone wrapper's store edition (`VITE_EDITION=store`),
 are builds that are not the website: they carry no link back to the source
 (by owner decision) — no Open Graph tags naming the web edition, no `CNAME`
 and no `og.png` (`websiteOnly` in `vite.config.ts`) — and both bundle scripts
-refuse a webroot that still contains `niclaslindstedt`. The package's name and identifier come from `APP_DISPLAY_NAME` and
+refuse a webroot that still contains `niclaslindstedt`. The phone app's page
+names no other edition of itself either (the owner's decision): `phoneOnlyHtml`
+in `vite.config.ts` drops the source's HTML comments and the remaining share
+tags from a store build's `index.html` and gives it its own description, every
+Dropbox gate tests `import.meta.env.VITE_EDITION` where it stands (never
+`DROPBOX_OFFERED`, which the bundler would not fold), Settings → About links
+to the full policy on apps.agilator.se, and the wrapper carries no camera —
+it was there only for the storage server's pairing code
+(`tests/phone_build_test.ts`, `tests/native_config_test.ts`). The package's name and identifier come from `APP_DISPLAY_NAME` and
 `APP_BUNDLE_ID` at packaging time (`tauri/scripts/package.mjs`), like the phone
 app's. See [`tauri/README.md`](tauri/README.md).
 
@@ -361,9 +369,8 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   from code outside this bundle.
 - `src/app/selfHosted.ts` / `useSelfHosted.ts` — the reader's **own storage
   server** as a fourth backend, through the framework's self-hosted client:
-  pairing codes (pasted, scanned in the phone app with the framework's
-  `scanStorageCode`, or the `#oss=` app link a QR opens on the website, wiped
-  from the address bar once read), the device's name, and which namespace holds
+  pairing codes (pasted, or the `#oss=` app link a QR opens on the website,
+  wiped from the address bar once read), the device's name, and which namespace holds
   `time.json`. The keys stay in the framework's key vault — never add them to
   localStorage, logs or a backup — and the server only ever gets ciphertext.
   The namespace's `adapter()` is an ordinary `StorageAdapter` (one file, not
@@ -692,7 +699,7 @@ the App Store and Google Play. It is a **separate npm project** with its own
 root does not touch it, and neither does `make install`. Reach it with
 `--prefix native` (or the `make native-*` targets).
 
-**Thin is a constraint, not an aspiration.** The wrapper does seven things:
+**Thin is a constraint, not an aspiration.** The wrapper does six things:
 
 1. packs the built web app into `assets/webroot.zip` and serves it from a
    loopback HTTP server (`src/local-server.ts`);
@@ -703,8 +710,7 @@ root does not touch it, and neither does `make install`. Reach it with
    document store, `src/authSessionBridge.ts`, which offers it an
    authentication session for signing in to Dropbox, and
    `src/saveFileBridge.ts`'s descriptor, which tells the framework's
-   `saveFile` the shell can take a file (and `src/scanQrBridge.ts`'s, which
-   tells its `scanQrCode` the shell can scan a QR code);
+   `saveFile` the shell can take a file;
 4. answers those store requests against the app's own iCloud container
    (`src/icloud.ts` → `modules/icloud-store`);
 5. opens a sign-in in an authentication session when the page asks
@@ -718,12 +724,7 @@ root does not touch it, and neither does `make install`. Reach it with
    (`src/saveFile.ts` → `expo-sharing`). Every file `src/` hands the reader
    goes through `saveFile` — never `downloadBlob`, `downloadText` or a
    hand-clicked `download` link, which save nothing inside a WebView;
-   `tests/save_file_test.ts` keeps them out;
-7. opens the camera to read one pairing code when the page's `scanQrCode`
-   asks (`src/QrScanner.tsx` → `expo-camera`) — only for the bundled page's
-   own origin, only then (never at launch), keeping no frame and logging no
-   code. The pairing sheet shows **Scan** only where `canScanQrCode()` is
-   true, and keeps the paste field.
+   `tests/save_file_test.ts` keeps them out.
 
 ### The two native-only features, and why there have to be two
 
@@ -907,9 +908,7 @@ real logic is. `native_icloud_test.ts` is the one that reaches outside `src/`:
 it pins the strings the wrapper and the app have to agree on, and guards the
 import discipline that lets it import from `native/` at all — see "The native
 wrapper" above. `native_save_file_test.ts` does the same for the save-file
-bridge, running it against the framework's own `saveFile`, and
-`native_scan_qr_test.ts` for the scan-qr bridge and the pairing sheet's scan,
-against its `scanQrCode`. No DOM, no
+bridge, running it against the framework's own `saveFile`. No DOM, no
 testing-library, no mocked clock: where a test must meet a browser's download or
 the phone app's WebView, `tests/fixtures/shell.ts` stands in for exactly that
 boundary and nothing more. `tests/fixtures/helpers.ts` holds the shared fixtures

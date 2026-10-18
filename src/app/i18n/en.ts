@@ -21,16 +21,6 @@ const selfHostedCopy = {
   codeLabel: "Pairing code",
   codeHint:
     "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then scan its QR code with this phone's camera or paste the link here. A code from one of your other devices works too.",
-  // The phone app, where the sheet offers its own scanner: the phone's
-  // camera app would open the code's link in the browser, not here.
-  codeHintScan:
-    "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then tap Scan and point this phone at its QR code — or paste the link here. A code from one of your other devices works too.",
-  scan: "Scan",
-  scanHint: "Point the camera at the pairing code",
-  scanDenied:
-    "Camera access is off for this app. Allow it in Settings, or paste the code.",
-  scanUnavailable: "The camera could not be opened. Paste the code instead.",
-  scanInvalid: "That QR code is not a pairing code.",
   codePlaceholder: "oss-storage://pair?…",
   deviceLabel: "This device's name",
   connect: "Connect",
@@ -876,8 +866,11 @@ export const en = {
     reflect: "Reflections",
     reflectHint:
       "Move the light on the dial's metal as you turn the device, the way a watch on your wrist catches it. Needs the motion sensors; the readings are used for the next frame and nothing else — they are never stored or sent.",
+    // The phone app has no browser settings to point at.
     reflectDenied:
-      "The device did not allow access to its motion sensors, so the light stays where it is. You can allow it in the browser's settings for this site and try again.",
+      import.meta.env.VITE_EDITION === "store"
+        ? "The device did not allow access to its motion sensors, so the light stays where it is."
+        : "The device did not allow access to its motion sensors, so the light stays where it is. You can allow it in the browser's settings for this site and try again.",
     // The light behind the dial.
     backlight: "Backlight",
     backlightHint:
@@ -966,6 +959,9 @@ export const en = {
     about: "About",
     version: "Version",
     build: "Build",
+    // The phone app's link to its full policy (App Store guideline 5.1.1
+    // asks for one inside the app).
+    privacyPolicy: "Privacy policy",
     privacy:
       import.meta.env.VITE_EDITION === "store"
         ? `${APP_NAME} keeps your working hours on this device. Nothing is sent anywhere unless you choose to keep a copy in your own iCloud, and then only there.`

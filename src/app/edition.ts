@@ -24,9 +24,13 @@ export const EXPORT_NOTICE = EDITION === "web";
 
 /** Whether this build offers Dropbox at all. The phone app's store build does
  *  not: it keeps the hours on the phone and in iCloud (no self-hosted server
- *  either, for now — see `useSyncEngine.ts`), and
- *  a constant here lets the bundler fold the Dropbox picker, its sign-in and
- *  its sentences out of that build rather than hide them at run time. The
- *  website and the desktop app (neither sets `VITE_EDITION=store`) keep it,
- *  still subject to an app key being configured (`useSyncEngine.ts`). */
+ *  either, for now — see `useSyncEngine.ts`). The website and the desktop app
+ *  (neither sets `VITE_EDITION=store`) keep it, still subject to an app key
+ *  being configured (`useSyncEngine.ts`).
+ *
+ *  This states the answer; the code does not read it. Every Dropbox gate tests
+ *  `import.meta.env.VITE_EDITION` where it stands, because the bundler folds a
+ *  test written in place but keeps a constant imported from another module as
+ *  a variable — and the picker, the sign-in and the adapter would then ride
+ *  along in the phone bundle as dead code. */
 export const DROPBOX_OFFERED = EDITION === "web";

@@ -123,6 +123,43 @@ function websiteOnly(): Plugin {
   };
 }
 
+// The phone app's own description, in place of the web edition's (which calls
+// it a PWA and names the sync only the website offers).
+const PHONE_DESCRIPTION =
+  "Time is a time report. Start working with one tap and stop with the same one, log breaks and what kind of work you are doing, and read your hours back per project as a clock, a log and charts. Your hours stay on your device unless you choose to sync them.";
+
+// What the phone app's page leaves out on top of `websiteOnly` (by owner
+// decision): it names no other edition of itself. The source's HTML comments
+// talk about an installed PWA and the web edition, the remaining share tags
+// are written for a link to the website and read by nothing on a phone, and
+// the description gives way to the phone app's own. Runs after the PWA plugin
+// has written its tags, on the emitted page.
+function phoneOnlyHtml(): Plugin {
+  return {
+    name: "phone-only-html",
+    apply: "build",
+    enforce: "post",
+    generateBundle(_options, bundle) {
+      for (const file of Object.values(bundle)) {
+        if (file.type !== "asset" || !file.fileName.endsWith(".html")) {
+          continue;
+        }
+        file.source = String(file.source)
+          .replace(/[ \t]*<!--[\s\S]*?-->\n?/g, "")
+          .replace(
+            /[ \t]*<meta\b[^>]*\b(?:property="og:|name="twitter:)[^>]*>\n?/g,
+            "",
+          )
+          .replace(/\n(?:[ \t]*\n)+/g, "\n")
+          .replace(
+            /(<meta\s+name="description"\s+content=")[\s\S]*?("\s*\/>)/,
+            `$1${PHONE_DESCRIPTION}$2`,
+          );
+      }
+    },
+  };
+}
+
 export default defineConfig({
   base,
   // No size budgets, by owner decision: this only keeps Vite's warning quiet.
@@ -150,5 +187,6 @@ export default defineConfig({
     tailwindcss(),
     appPwa({ base, version, ignorePaths, serviceWorker: !shellBuild }),
     ...(appBuild ? [websiteOnly()] : []),
+    ...(process.env.VITE_EDITION === "store" ? [phoneOnlyHtml()] : []),
   ],
 });
