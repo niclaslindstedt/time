@@ -6,11 +6,11 @@ import {
   ConfirmDialog,
   LabeledInput,
   Modal,
-  SegmentedControl,
   ToggleRow,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { isValidSpan, type SpanKind } from "./actions.ts";
+import { Chips } from "./Chips.tsx";
 import { parseTimeOfDay, toTimeInput } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
@@ -131,7 +131,10 @@ export function SpanEditModal({
               <span className="text-xs text-muted">
                 {kind === "break" ? t("editor.type") : t("editor.category")}
               </span>
-              <SegmentedControl
+              <Chips
+                label={
+                  kind === "break" ? t("editor.type") : t("editor.category")
+                }
                 value={draft.typeId ?? ""}
                 options={options}
                 onChange={(typeId) =>
@@ -148,10 +151,6 @@ export function SpanEditModal({
                       : { ...d, typeId },
                   )
                 }
-                ariaLabel={
-                  kind === "break" ? t("editor.type") : t("editor.category")
-                }
-                fullWidth
               />
             </div>
           )}
