@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { SegmentedControl } from "@niclaslindstedt/oss-framework/components";
 
+import { Chips } from "./Chips.tsx";
 import { Dial, type Band } from "./Dial.tsx";
 import { useT } from "./i18n/index.ts";
 import { CATEGORY_COLORS } from "./labels.ts";
@@ -565,48 +566,6 @@ function Slider({
         className="app-range w-full"
       />
     </label>
-  );
-}
-
-/** A wrapping row of choices, for the two pickers with eight words each
- *  that a segmented control could not fit on a phone. */
-function Chips<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: { value: T; label: React.ReactNode }[];
-  onChange: (next: T) => void;
-}) {
-  return (
-    <div
-      role="radiogroup"
-      aria-label={label}
-      className="flex flex-wrap gap-1.5"
-    >
-      {options.map((o) => {
-        const on = o.value === value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            onClick={() => onChange(o.value)}
-            className={`min-h-8 rounded-full border px-3 text-sm transition-colors ${
-              on
-                ? "border-accent bg-accent/15 text-fg-bright"
-                : "border-line bg-surface-2 text-fg hover:bg-surface-1"
-            }`}
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
   );
 }
 

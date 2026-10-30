@@ -78,6 +78,7 @@ src/app/
   BreakCreditField.tsx  how much of a kind of break counts as work — one control, both forms
   BreakMinutesField.tsx what a kind of break is assumed to take — one control, both forms
   SpanEditModal.tsx the one editor behind every span
+  Chips.tsx         a choice that wraps onto the next row — the span's kind, the dial's markers and typefaces
   ProjectEditModal.tsx  name, mark, working days, breaks, kinds of work
   NoProject.tsx     the card a screen stands on before there is a project, and the form behind it
   ProjectPickerModal.tsx  the top bar's mark, and the list of projects it opens
